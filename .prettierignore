@@ -1,0 +1,17 @@
+# Build artifacts
+dist
+dist-ssr
+build
+coverage
+
+# Package Manager files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Editor config
+.vscode
+.idea
+
+# Public assets (optional, if you don't want to format static files)
+public
