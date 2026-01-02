@@ -2,9 +2,8 @@
 name: Feature request
 about: 새로운 기능 개발
 title: "[Feat] "
-labels: ''
-assignees: ''
-
+labels: ""
+assignees: ""
 ---
 
 ## ✨ 기능 설명
