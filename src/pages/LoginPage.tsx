@@ -9,7 +9,7 @@ export const LoginPage = () => {
       {/* 1. 왼쪽 로그인 영역 */}
       <div className="flex flex-[57] items-center justify-center">
         <div
-          className="flex shrink-0 flex-col items-center justify-center rounded-[32px] bg-[#F5F5F5]"
+          className="flex shrink-0 flex-col items-center justify-center rounded-[20px] bg-[#F5F5F5]"
           style={{
             width: "600px",
             height: "400px",
@@ -51,7 +51,7 @@ export const LoginPage = () => {
               }}
             >
               {/* 카카오 버튼 */}
-              <button className="flex h-[54px] w-full items-center justify-center rounded-[10px] border-none bg-[#FEE500] text-[16px] text-[#191919] outline-none">
+              <button className="flex h-[54px] w-full items-center justify-center rounded-[10px] border-none bg-[#FEE500] text-[16px] text-[#000000] outline-none">
                 <div className="flex w-full items-center justify-center gap-3">
                   <img
                     src={icKakao}
