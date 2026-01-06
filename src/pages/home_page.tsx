@@ -1,6 +1,8 @@
+import { MathChatInput } from "../features/canvas/components/MathChatInput";
+
 export default function HomePage() {
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-100">
+    <div className="flex h-screen w-full flex-col items-center justify-center gap-10 bg-slate-100 p-8">
       <div className="rounded-xl bg-white p-10 shadow-xl">
         <h1 className="mb-4 text-4xl font-bold text-indigo-600">
           Proovy Frontend 🚀
@@ -19,6 +21,13 @@ export default function HomePage() {
             #Tailwind
           </span>
         </div>
+      </div>
+
+      <div className="w-full">
+        <h2 className="mb-4 text-center text-xl font-bold text-gray-500">
+          👇 컴포넌트 재사용 테스트 (넓은 버전) 👇
+        </h2>
+        <MathChatInput className="ml-auto max-w-xl" />
       </div>
     </div>
   );
