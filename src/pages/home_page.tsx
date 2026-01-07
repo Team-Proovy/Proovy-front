@@ -1,4 +1,4 @@
-import { MathChatInput } from "../features/canvas/components/MathChatInput";
+import { MathChatInput } from "../features/editor/components/MathChatInput";
 
 export default function HomePage() {
   return (
