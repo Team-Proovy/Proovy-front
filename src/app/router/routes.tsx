@@ -1,12 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
-import HomePage from "../../pages/home_page";
 import { MathChatInput } from "../../features/editor/components/MathChatInput";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <HomePage />,
-  },
   {
     path: "/editor",
     element: (
