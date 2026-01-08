@@ -1,9 +1,17 @@
 import { createBrowserRouter } from "react-router-dom";
 import { MathChatInput } from "../../features/editor/components/MathChatInput";
-import HomePage from "../../pages/home_page";
+import HomePage from "../../pages/HomePage";
 import { LoginPage } from "../../pages/LoginPage";
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
   {
     path: "/editor",
     element: (
@@ -11,9 +19,5 @@ export const router = createBrowserRouter([
         <MathChatInput />
       </div>
     ),
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
   },
 ]);
