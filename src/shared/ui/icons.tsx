@@ -1,4 +1,5 @@
 import type { SVGProps } from "react";
+import { useId } from "react";
 
 // 1. HomeIcon
 export function HomeIcon({
@@ -142,6 +143,213 @@ export function RepositoryIcon({
           />
         </linearGradient>
       </defs>
+    </svg>
+  );
+}
+
+// 5. SlideIcon (사이드바 접기/펴기 버튼)
+export function SlideIcon({
+  color = "currentColor",
+  size = 40,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  const gid = useId();
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M16.6053 10.741H7.30694V29.2592H16.6053V10.741Z"
+        fill={`url(#${gid})`}
+      />
+      <path
+        d="M33.8848 30.4352H6.13093V9.56494H33.8848V30.4352ZM8.48295 28.0832H31.5327V11.917H8.48295V28.0832Z"
+        fill={color}
+      />
+      <defs>
+        <linearGradient
+          id={gid}
+          x1="11.9483"
+          y1="10.741"
+          x2="11.9483"
+          y2="29.2592"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor={color}
+            stopOpacity="0.3"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+/** 6. UserIcon (프로필 아바타 아이콘) */
+export function UserIcon({
+  color = "#2A6AFF",
+  size = 40,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  const gid = useId();
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M30.6076 33.9945H9.3924L9.42376 32.7872C9.5492 27.9734 11.9169 18.8789 20.0078 18.8789C28.0988 18.8789 30.4665 27.9734 30.5919 32.7872L30.6233 33.9945H30.6076ZM11.8542 31.6425H28.1458C27.8322 28.6633 26.3897 21.2309 20.0078 21.2309C13.626 21.2309 12.1835 28.6633 11.8699 31.6425H11.8542Z"
+        fill={color}
+      />
+      <path
+        d="M20.0078 6.00537C23.4418 6.00537 26.2328 8.79643 26.2328 12.2304C26.2328 15.6643 23.4418 18.4554 20.0078 18.4554C16.5739 18.4554 13.7828 15.6643 13.7828 12.2304C13.7828 8.79643 16.5739 6.00537 20.0078 6.00537Z"
+        fill={`url(#${gid})`}
+      />
+      <defs>
+        <linearGradient
+          id={gid}
+          x1="20.0078"
+          y1="6.00537"
+          x2="20.0078"
+          y2="18.4397"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor={color}
+            stopOpacity="0.3"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/** 7. NewChatIcon (새 채팅 시작 아이콘) */
+export function NewChatIcon({
+  color = "#2A6AFF",
+  size = 24,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 23"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M7.14073 22.0855L4.0784 18.3457H0L0.0705608 0H23.0592V14.5637H12.4328L7.14073 22.0855ZM2.34261 16.0314H5.19326L7.01372 18.2611L11.2474 12.2493H20.7589V2.3285H2.38495L2.3285 16.0455L2.34261 16.0314Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
+/** 8. ToolIcon (도구 버튼 왼쪽 아이콘) */
+export function ToolIcon({
+  color = "#666666",
+  size = 24,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  const gradId1 = useId(); //
+  const gradId2 = useId();
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 10"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M4.26186 6.07762L2.26735 3.65974H0V2.24853H2.92591L4.27127 3.86672L7.49824 0H15.0529V1.41121H8.1568L4.26186 6.07762Z"
+        fill={color}
+      />
+      <path
+        d="M6.47275 4.80753L3.23638 3.62211L0 2.4461L0.884359 0L7.36652 2.35202L6.47275 4.80753Z"
+        fill={`url(#${gradId1})`}
+      />
+      <path
+        d="M2.78664 3.46385L1.7478 6.31958L2.63193 6.6412L3.67076 3.78547L2.78664 3.46385Z"
+        fill={color}
+      />
+      <path
+        d="M0 2.24853V9.61505H15.0529V0H7.82752L4.26186 4.27127L2.59663 2.24853H0Z"
+        fill={`url(#${gradId2})`}
+      />
+      <defs>
+        <linearGradient
+          id={gradId1}
+          x1="3.22742"
+          y1="3.63852"
+          x2="4.11938"
+          y2="1.18788"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor={color}
+            stopOpacity="0.5"
+          />
+        </linearGradient>
+        <linearGradient
+          id={gradId2}
+          x1="7.52646"
+          y1="0"
+          x2="7.52646"
+          y2="9.61505"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor={color}
+            stopOpacity="0.5"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+/** 9. SendArrowIcon (전송 버튼 아이콘) */
+export function SendArrowIcon({
+  color = "#666666",
+  size = 16,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) {
+  return (
+    <svg
+      width={size * 0.75} // 비율 유지를 위해 보정
+      height={size}
+      viewBox="0 0 12 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M6 15V2 M1 7L6 2L11 7"
+        stroke={color}
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
