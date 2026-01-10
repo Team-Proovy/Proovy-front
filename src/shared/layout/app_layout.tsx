@@ -1,5 +1,4 @@
-import { Sidebar } from "./sidebar";
-
+import { Sidebar } from "./Sidebar";
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-[#F8F9FA]">
