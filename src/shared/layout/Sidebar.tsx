@@ -120,10 +120,10 @@ export function Sidebar() {
           // 접힌 상태 UI: GeminiBadge 및 UserIcon 반영
           <div className="flex flex-col items-center">
             <div className="mb-[41px]">
-              <GeminiBadge
+              {/* <GeminiBadge
                 count={200}
                 logoSrc={geminiLogo}
-              />
+              /> */}
             </div>
             <div className="mb-[25px]">
               <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
