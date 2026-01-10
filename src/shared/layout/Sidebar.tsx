@@ -1,5 +1,5 @@
 import ProovyLogo from "../../features/viewer/components/ProovyLogo";
-import { Settings, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Settings, ChevronLeft } from "lucide-react";
 import React from "react";
 import {
   ChattingIcon,
@@ -8,9 +8,7 @@ import {
   RepositoryIcon,
   SlideIcon,
   UserIcon,
-  NewChatIcon,
-  SendArrowIcon,
-} from "../ui/icons";
+} from "../ui/sidebarIcons";
 import { SidebarIconButton } from "../ui/SidebarIconButton";
 // import gemini.png from "/Users/ldy/Desktop/proovy_project/Proovy-front/src/shared/assets/images/gemini.png"
 import { NavLink } from "react-router-dom";
@@ -26,33 +24,34 @@ export function Sidebar() {
       onClick={() => {
         if (isCollapsed) setIsCollapsed(false);
       }}
-      className={`flex h-screen flex-col border-r border-[#C6C6C6] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer hover:bg-gray-50/50" : "w-64 p-4"}`}
+      className={`flex h-screen flex-col border-r border-[#C6C6C6] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer hover:bg-gray-50/50" : "w-[200px] px-2 py-4"}`}
     >
-      <div>
+      <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
         {/* 접혔을 때 로고와 버튼 사이 정렬을 위해 justify-center 동적 변경 */}
-        <div className="relative flex flex-col pt-[41px]">
+        <div className={`relative flex flex-col pt-[20px] ${isCollapsed ? "items-center mb-10" : ""}`}>
           {!isCollapsed ? (
-            <div className="mb-8 flex w-full items-center justify-between px-2">
-              <ProovyLogo className="h-8 w-auto text-gray-900" />
+            <div className="mb-6 flex w-full items-center justify-between">
+              <ProovyLogo className="h-7 w-auto text-gray-900" />
               <button
                 onClick={() => setIsCollapsed(true)}
                 className="rounded p-1 transition-colors hover:bg-gray-100"
               >
                 <ChevronLeft
-                  size={20}
+                  size={19}
                   className="text-gray-400"
                 />
               </button>
             </div>
           ) : (
             // 사이드바가 졉힌 상태인 경우:
+            // 사이드바 펼치기 버튼
             <SidebarIconButton
               ariaLabel="sidebar toggle"
-              size="40"
+              size="36"
               onClick={() => setIsCollapsed(false)}
             >
-              <SlideIcon color="#666" />
+              <SlideIcon color="#666" size={36} />
             </SidebarIconButton>
           )}
         </div>
@@ -90,18 +89,25 @@ export function Sidebar() {
         {/* 사이드바가 펼쳐졌을 때(false)만 하단 user 정보(요금제, 프로필..)를 보여주는 로직 추가됨 */}
         {!isCollapsed ? (
           <div className="mt-auto space-y-4 border-t border-gray-100 pt-4">
-            <div className="space-y-2 rounded-xl bg-gray-50 p-3 text-xs">
+            <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 text-xs">
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-600">
-                  Free
-                </span>
-                <button className="rounded bg-[#2A6AFF] px-4 py-1 text-[11px] font-bold text-white transition-opacity hover:opacity-80">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded-full bg-[#2A6AFF]" />
+                  <span className="text-[11px] text-gray-600">Free</span>
+                </div>
+                <button className="rounded bg-[#2A6AFF] px-[13px] py-[2.5px] text-[11px] text-white transition-opacity hover:opacity-80">
                   업그레이드
                 </button>
               </div>
-              <div className="flex justify-between text-gray-500">
-                <span>✨ 200</span>
-                <span>📄 5/5</span>
+              <div className="flex items-center justify-between text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <span>✨</span>
+                  <span className="font-medium">200</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px]">📄</span>
+                  <span className="font-medium">5/5</span>
+                </div>
               </div>
             </div>
 
@@ -111,14 +117,14 @@ export function Sidebar() {
                 <span className="text-sm font-medium">닉네임</span>
               </div>
               <Settings
-                size={18}
+                size={17}
                 className="cursor-pointer text-gray-400"
               />
             </div>
           </div>
         ) : (
           // 접힌 상태 UI: GeminiBadge 및 UserIcon 반영
-          <div className="flex flex-col items-center">
+          <div className="mt-auto flex flex-col items-center">
             <div className="mb-[41px]">
               {/* <GeminiBadge
                 count={200}
@@ -127,7 +133,7 @@ export function Sidebar() {
             </div>
             <div className="mb-[25px]">
               <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
-                <UserIcon size={40} />
+                <UserIcon size={38} />
               </button>
             </div>
           </div>
@@ -142,7 +148,6 @@ function NavItem({
   to, // 이동할 경로 추가
   icon: Icon,
   label,
-  active,
   isCollapsed,
 }: {
   to: string;
@@ -155,21 +160,24 @@ function NavItem({
     <NavLink
       to={to}
       onClick={(e) => e.stopPropagation()} // 메뉴 어딘가(?) 클릭 시 aside 펼처짐 이벤트 방지
-      className={({ isActive }) =>
-        // sidebar 접히면 아이콘을 중앙으로, 펼치면 gap생기게 구현
-        `flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-all ${isCollapsed ? "justify-center" : "gap-3"} ${isActive ? "bg-blue-50 text-blue-600" : "text-gray-600 hover:bg-gray-50"}`
-      }
+      className={({ isActive }) => {
+        if (isCollapsed) {
+          // 사이드바가 접힌 상태인 경우:
+          return `flex w-full cursor-pointer items-center justify-center py-4 transition-all ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"}`;
+        }
+        return `flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 transition-all gap-3 ${isActive ? "z-10 w-[108%] translate-x-1 bg-white shadow-xl text-blue-600 ring-1 ring-black/5" : "text-gray-600 hover:bg-gray-50"}`;
+      }}
     >
       {({ isActive }) => (
         <>
-          <div className="flex h-7 w-7 items-center justify-center">
+          <div className="flex items-center justify-center">
             <Icon
-              size={26}
+              size={isCollapsed ? 36 : 28}
               color={isActive ? "#2A6AFF" : "#9CA3AF"}
             />
           </div>
           {/* 사이드바 펼쳤을때만(false) 메뉴 글자들 ui에 표시하기 */}
-          {!isCollapsed && <span className="text-sm font-medium">{label}</span>}
+          {!isCollapsed && <span className="font-size-[12px] font-medium">{label}</span>}
         </>
       )}
     </NavLink>
