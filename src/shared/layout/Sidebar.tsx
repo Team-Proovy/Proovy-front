@@ -66,7 +66,7 @@ export function Sidebar() {
             isCollapsed={isCollapsed}
           />
           <NavItem
-            to="/note"
+            to="/testPage"
             icon={NoteIcon}
             label="노트 목록"
             isCollapsed={isCollapsed}
