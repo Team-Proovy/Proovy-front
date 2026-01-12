@@ -3,6 +3,7 @@ import HomePage from "../../pages/HomePage";
 import { MathChatInput } from "../../features/editor/components/MathChatInput";
 import { LoginPage } from "../../pages/LoginPage";
 import { TestPage } from "../../pages/TestPage";
+import WorkspacePage from "../../features/chat/pages/WorkspacePage";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +15,14 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/workspace",
+    element: <WorkspacePage />,
+  },
+  {
+    path: "/chatting",
+    element: <WorkspacePage />,
   },
   {
     path: "/editor",
