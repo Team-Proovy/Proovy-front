@@ -1,6 +1,9 @@
 import { AppLayout } from "../shared/layout/app_layout";
 import { ArrowUp, ChevronDown, Paperclip } from "lucide-react"; // 화살표 아이콘
-import { PdfIcon, ToolIcon } from "../shared/ui/homepageInputIcons";
+import {
+  PdfIcon,
+  ToolIcon,
+} from "../shared/components/icons/HomepageInputIcons";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 

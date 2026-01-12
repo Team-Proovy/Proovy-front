@@ -8,7 +8,7 @@ import {
   RepositoryIcon,
   SlideIcon,
   UserIcon,
-} from "../ui/sidebarIcons";
+} from "../components/icons/SidebarIcons";
 import { SidebarIconButton } from "../ui/SidebarIconButton";
 // import gemini.png from "/Users/ldy/Desktop/proovy_project/Proovy-front/src/shared/assets/images/gemini.png"
 import { NavLink } from "react-router-dom";
@@ -29,7 +29,9 @@ export function Sidebar() {
       <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
         {/* 접혔을 때 로고와 버튼 사이 정렬을 위해 justify-center 동적 변경 */}
-        <div className={`relative flex flex-col pt-[20px] ${isCollapsed ? "items-center mb-10" : ""}`}>
+        <div
+          className={`relative flex flex-col pt-[20px] ${isCollapsed ? "mb-10 items-center" : ""}`}
+        >
           {!isCollapsed ? (
             <div className="mb-6 flex w-full items-center justify-between">
               <ProovyLogo className="h-7 w-auto text-gray-900" />
@@ -51,7 +53,10 @@ export function Sidebar() {
               size="36"
               onClick={() => setIsCollapsed(false)}
             >
-              <SlideIcon color="#666" size={36} />
+              <SlideIcon
+                color="#666"
+                size={36}
+              />
             </SidebarIconButton>
           )}
         </div>
@@ -165,7 +170,7 @@ function NavItem({
           // 사이드바가 접힌 상태인 경우:
           return `flex w-full cursor-pointer items-center justify-center py-4 transition-all ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"}`;
         }
-        return `flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 transition-all gap-3 ${isActive ? "z-10 w-[108%] translate-x-1 bg-white shadow-xl text-blue-600 ring-1 ring-black/5" : "text-gray-600 hover:bg-gray-50"}`;
+        return `flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 transition-all ${isActive ? "z-10 w-[108%] translate-x-1 bg-white text-blue-600 shadow-xl ring-1 ring-black/5" : "text-gray-600 hover:bg-gray-50"}`;
       }}
     >
       {({ isActive }) => (
@@ -177,7 +182,9 @@ function NavItem({
             />
           </div>
           {/* 사이드바 펼쳤을때만(false) 메뉴 글자들 ui에 표시하기 */}
-          {!isCollapsed && <span className="font-size-[12px] font-medium">{label}</span>}
+          {!isCollapsed && (
+            <span className="font-size-[12px] font-medium">{label}</span>
+          )}
         </>
       )}
     </NavLink>

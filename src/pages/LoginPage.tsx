@@ -1,4 +1,9 @@
-import { LogoIcon, KakaoIcon, NaverIcon, GoogleIcon } from "../shared/ui/Icons";
+import {
+  LogoIcon,
+  KakaoIcon,
+  NaverIcon,
+  GoogleIcon,
+} from "../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../shared/ui/SocialLoginButton";
 
 export const LoginPage = () => {
