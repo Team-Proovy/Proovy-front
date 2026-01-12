@@ -40,7 +40,7 @@ Copilot must follow these instructions when generating code or performing code r
 ## 6. Code Style Guide
 
 - **Function Syntax:** Always use **Arrow Functions** (`const`) for components and regular functions.
-- **Component Placement:** - Place the **Main Component** at the top of the file to ensure visibility.
+- **Component Placement:** Place the **Main Component** at the top of the file to ensure visibility.
     - Define helper functions or sub-components below the main component or in separate files.
 - **Concise Syntax:** - For short utility functions (one-liners), use **implicit return**.
     - Example: `const add = (a, b) => a + b;`
