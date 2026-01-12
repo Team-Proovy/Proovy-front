@@ -42,7 +42,7 @@ Copilot must follow these instructions when generating code or performing code r
 - **Function Syntax:** Always use **Arrow Functions** (`const`) for components and regular functions.
 - **Component Placement:** Place the **Main Component** at the top of the file to ensure visibility.
     - Define helper functions or sub-components below the main component or in separate files.
-- **Concise Syntax:** - For short utility functions (one-liners), use **implicit return**.
+- **Concise Syntax:** For short utility functions (one-liners), use **implicit return**.
     - Example: `const add = (a, b) => a + b;`
 - **Functional Components:** Always use Functional Components with Hooks. Avoid Class Components.
 - **Interfaces:** Define interfaces for Props and State explicitly.
