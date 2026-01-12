@@ -363,8 +363,8 @@ export function ToolIcon(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
- * 전송 화살표 아이콘 (수정된 버전)
- * - 머리와 꼬리를 하나의 SVG로 통합하여 끊김 현상 해결
+ * 전송 화살표 아이콘
+ * - 머리와 꼬리를 하나의 SVG로 통합
  * - 두께를 통일하여 자연스러운 연결
  */
 export function SendArrowIcon(props: React.HTMLAttributes<HTMLDivElement>) {

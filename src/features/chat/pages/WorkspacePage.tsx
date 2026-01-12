@@ -1,5 +1,4 @@
 import { WorkspaceLayout } from "../../../shared/layout/workspace_layout";
-import { LeftSidebar } from "../ui/LeftSidebar";
 import {
   ViewerTabsBar,
   ViewerFileBar,
@@ -13,8 +12,6 @@ export default function WorkspacePage() {
   return (
     <WorkspaceLayout>
       <div className="flex h-full w-full">
-        <LeftSidebar />
-
         <div className="ml-[18px] flex flex-1 flex-col">
           {/* 상단 첫 번째 줄: ViewerTabsBar + ChatTopBlankBar */}
           <div className="flex">
