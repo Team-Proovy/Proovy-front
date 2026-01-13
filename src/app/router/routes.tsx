@@ -27,8 +27,9 @@ export const router = createBrowserRouter([
   {
     path: "/editor",
     element: (
-      <div className="flex h-screen w-full items-center justify-center bg-gray-50 p-10">
-        <MathChatInput />
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-[50px] bg-gray-50 p-10">
+        <MathChatInput variant="home" />
+        <MathChatInput variant="chat" />
       </div>
     ),
   },
