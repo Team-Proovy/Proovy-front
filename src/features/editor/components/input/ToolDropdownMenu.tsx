@@ -4,6 +4,7 @@ interface ToolDropdownMenuProps {
   onSelect: (toolName: string) => void;
   onClose: () => void;
   className?: string; // For positioning
+  style?: React.CSSProperties; // For dynamic positioning (Portal)
   onMouseEnter?: () => void;
   focusedIndex?: number | null; // 키보드 네비게이션용 포커스 인덱스
   onFocusChange?: (index: number) => void; // 마우스 호버 시 포커스 변경 업데이트
@@ -20,6 +21,7 @@ export const ToolDropdownMenu = ({
   onSelect,
   onClose,
   className = "",
+  style,
   onMouseEnter,
   focusedIndex = null,
   onFocusChange,
@@ -27,6 +29,7 @@ export const ToolDropdownMenu = ({
   return (
     <div
       className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[180px] flex-col gap-1 rounded-[12px] border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
+      style={style}
       onMouseEnter={onMouseEnter}
       onClick={(e) => e.stopPropagation()}
     >
