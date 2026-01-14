@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { AppLayout } from "../shared/layout/app_layout";
+import { AppLayout } from "../shared/layout/AppLayout";
 
 export function TestPage() {
   const location = useLocation();

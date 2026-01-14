@@ -1,6 +1,10 @@
-import { AppLayout } from "../shared/layout/app_layout";
+import { AppLayout } from "../shared/layout/AppLayout";
 import { ArrowUp, ChevronDown, Paperclip } from "lucide-react"; // 화살표 아이콘
-import { PdfIcon, ToolIcon } from "../shared/ui/homepageInputIcons";
+import { useFileUpload } from "../shared/hooks/use_file_upload";
+import {
+  PdfIcon,
+  ToolIcon,
+} from "../shared/components/icons/HomepageInputIcons";
 import { useNavigate } from "react-router-dom";
 import React from "react";
 
@@ -25,6 +29,14 @@ export default function HomePage() {
     }, 150);
   };
 
+  // 파일 업로드 훅 사용
+  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
+    (file) => {
+      // TODO: 선택된 파일 처리 로직 (예: 서버 전송, 상태 저장 등)
+      console.log("HomePage에서 파일 선택됨:", file);
+    },
+  );
+
   const navigateToEditor = (text: string) => {
     navigate("/testPage", { state: { initialInput: text } });
   };
@@ -32,19 +44,30 @@ export default function HomePage() {
   return (
     <AppLayout>
       {/* 1. 전체 컨테이너: 높이를 꽉 채우고(min-h-full) 요소들을 세로로 배치 */}
-      <div className="flex min-h-full w-full max-w-4xl flex-col items-center px-6 pt-32 pb-10">
+      <div className="mx-auto flex min-h-full w-full max-w-[1280px] flex-col items-center px-6 pt-[320px] pb-10">
         {/* 2. 상단 타이틀 영역 */}
         <div className="mb-8 w-full">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="font-['Pretendard'] text-[40px] font-semibold leading-[52px] tracking-[-0.008px] text-black">
             파일을 업로드하고 완벽한 해설을,
           </h1>
         </div>
 
         {/* 3. 메인 입력 카드 */}
-        <div className="mb-10 flex h-44 w-full rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="mb-10 flex h-44 w-full gap-6">
+          {/* hidden input for file upload */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={handleFileChange}
+            accept=".pdf,.png,.jpg,.jpeg,.txt" // 필요에 따라 허용 확장자 설정
+          />
           {/* 왼쪽: 업로드 섹션 */}
-          <button className="flex w-44 flex-col items-center justify-center rounded-l-2xl border-r border-gray-100 transition-colors hover:bg-gray-50">
-            <div className="mb-2">
+          <button
+            onClick={openFileExplorer}
+            className="flex h-[176px] w-[220px] cursor-pointer flex-col items-center justify-center gap-[10px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[42px] py-[36px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors hover:bg-gray-100"
+          >
+            <div>
               <PdfIcon size={48} />
             </div>
             <p className="text-sm font-medium text-gray-500">
@@ -53,7 +76,7 @@ export default function HomePage() {
           </button>
 
           {/* 오른쪽: 텍스트 입력 섹션 */}
-          <div className="flex flex-1 flex-col p-5">
+          <div className="flex h-[176px] w-[952px] shrink-0 flex-col rounded-2xl border border-[#C6C6C6] bg-white p-5 shadow-sm">
             <textarea
               placeholder="@을 통해 도구를 선택하거나, 요청을 입력하세요."
               className="flex-1 resize-none text-base text-gray-600 outline-none placeholder:text-gray-300"

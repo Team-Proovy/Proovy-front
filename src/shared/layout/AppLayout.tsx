@@ -6,7 +6,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
 
       {/* 오른쪽 본문 영역 */}
-      <main className="flex flex-1 flex-col items-center overflow-y-auto">
+      <main className="flex flex-1 flex-col overflow-hidden">
         {children}
       </main>
     </div>
