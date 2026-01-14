@@ -2,6 +2,8 @@ import { AppLayout } from "../shared/layout/app_layout";
 import { useRepositoryStore } from "../features/repository/model/useRepositoryStore";
 import { RepositoryToolbar } from "../features/repository/ui/RepositoryToolbar";
 import { NoteGroup } from "../features/repository/ui/NoteGroup";
+import { DeleteNotesModal } from "../features/repository/ui/DeleteNotesModal";
+import { DeletionSuccessModal } from "../features/repository/ui/DeletionSuccessModal";
 
 /**
  * RepositoryPage
@@ -13,25 +15,18 @@ export default function RepositoryPage() {
     isNoteGroup2Open,
     setNoteGroupOpen,
     setNoteGroup2Open,
+    noteCards,
+    isDeleteModalOpen,
+    isSuccessModalOpen,
   } = useRepositoryStore();
 
   // 반응형 간격 클래스 정의
   const responsivePaddingL = "pl-6 md:pl-[8%] lg:pl-[12%] 2xl:pl-[302px]";
   const responsivePaddingR = "pr-6 md:pr-[12%] lg:pr-[18%] 2xl:pr-[542px]";
 
-  // 공통 노트 카드 리스트
-  const noteCards = [
-    { label: "file_name.py", type: "업로드" as const },
-    { label: "파일 가능.pdf", type: "업로드" as const },
-    { label: "file_name.py", type: "업로드" as const },
-    { label: "LLM 생성 파일", type: "AI 생성" as const },
-    { label: "file_name.py", type: "업로드" as const },
-    { label: "file_name.py", type: "업로드" as const },
-    { label: "파일 가능.pdf", type: "업로드" as const },
-    { label: "file_name.py", type: "업로드" as const },
-    { label: "LLM 생성 파일", type: "AI 생성" as const },
-    { label: "file_name.py", type: "업로드" as const },
-  ];
+  // NoteGroup에 전달할 데이터를 id 기준으로 나누기 (임시 처리)
+  const group1Notes = noteCards.filter((note) => note.id < 10);
+  const group2Notes = noteCards.filter((note) => note.id >= 10); // 실제 데이터 성격에 따라 조정 필요
 
   return (
     <AppLayout>
@@ -66,21 +61,21 @@ export default function RepositoryPage() {
           >
             <NoteGroup
               title="여기는 노트 제목이 오는 위치"
-              notes={noteCards}
+              notes={group1Notes}
               isOpen={isNoteGroupOpen}
               onToggle={() => setNoteGroupOpen(!isNoteGroupOpen)}
-              startIndex={0}
             />
             <NoteGroup
               title="여기는 노트 제목이 오는 위치"
-              notes={noteCards}
+              notes={group2Notes}
               isOpen={isNoteGroup2Open}
               onToggle={() => setNoteGroup2Open(!isNoteGroup2Open)}
-              startIndex={10}
             />
           </div>
         </div>
       </div>
+      {isDeleteModalOpen && <DeleteNotesModal />}
+      {isSuccessModalOpen && <DeletionSuccessModal />}
     </AppLayout>
   );
 }

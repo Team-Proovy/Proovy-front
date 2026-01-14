@@ -10,7 +10,18 @@ export function RepositoryToolbar({
   responsivePaddingL,
   responsivePaddingR,
 }: RepositoryToolbarProps) {
-  const { isSelectMode, toggleSelectMode } = useRepositoryStore();
+  const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
+    useRepositoryStore();
+
+  const handleActionClick = () => {
+    if (isSelectMode) {
+      if (selectedIds.length > 0) {
+        setDeleteModalOpen(true);
+      }
+    } else {
+      toggleSelectMode();
+    }
+  };
 
   return (
     <div
@@ -37,7 +48,7 @@ export function RepositoryToolbar({
           />
         </div>
         <button
-          onClick={toggleSelectMode}
+          onClick={handleActionClick}
           className="flex items-center justify-center rounded-xl border border-gray-200 bg-white font-['Pretendard'] text-[14px] font-medium text-[#6B6B6B] shadow-sm transition-all hover:bg-gray-50"
           style={{
             width: isSelectMode ? "80px" : "56px",

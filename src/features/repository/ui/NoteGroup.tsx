@@ -3,6 +3,7 @@ import { NoteCard } from "./NoteCard";
 import { useRepositoryStore } from "../model/useRepositoryStore";
 
 interface Note {
+  id: number;
   label: string;
   type: "업로드" | "AI 생성";
 }
@@ -12,16 +13,9 @@ interface NoteGroupProps {
   notes: Note[];
   isOpen: boolean;
   onToggle: () => void;
-  startIndex: number;
 }
 
-export function NoteGroup({
-  title,
-  notes,
-  isOpen,
-  onToggle,
-  startIndex,
-}: NoteGroupProps) {
+export function NoteGroup({ title, notes, isOpen, onToggle }: NoteGroupProps) {
   const { isSelectMode, selectedIds, toggleIdSelection } = useRepositoryStore();
 
   return (
@@ -105,16 +99,15 @@ export function NoteGroup({
 
       {isOpen && (
         <div className="mt-[20px] flex flex-wrap gap-[20px]">
-          {notes.map((note, idx) => {
-            const uniqueId = startIndex + idx;
+          {notes.map((note) => {
             return (
               <NoteCard
-                key={uniqueId}
+                key={note.id}
                 label={note.label}
                 type={note.type}
-                isSelected={selectedIds.includes(uniqueId)}
+                isSelected={selectedIds.includes(note.id)}
                 isSelectMode={isSelectMode}
-                onSelect={() => toggleIdSelection(uniqueId)}
+                onSelect={() => toggleIdSelection(note.id)}
               />
             );
           })}
