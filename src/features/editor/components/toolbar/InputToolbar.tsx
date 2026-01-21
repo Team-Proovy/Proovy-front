@@ -10,7 +10,6 @@ import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
 
 interface InputToolbarProps {
-  variant?: "home" | "chat";
   isMathOpen: boolean;
   onToggleMath: () => void;
   isCanvasOpen?: boolean;
@@ -22,7 +21,6 @@ interface InputToolbarProps {
 }
 
 export const InputToolbar = ({
-  variant = "home", // Prop still exists but styles are unified
   isMathOpen,
   onToggleMath,
   isCanvasOpen = false,
