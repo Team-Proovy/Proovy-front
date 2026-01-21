@@ -13,16 +13,24 @@ interface InputToolbarProps {
   variant?: "home" | "chat";
   isMathOpen: boolean;
   onToggleMath: () => void;
+  isCanvasOpen?: boolean;
+  onToggleCanvas?: () => void;
   onSend: () => void;
   onToolSelect?: (toolName: string) => void;
+  activeToolName?: string | null;
+  hasContent?: boolean;
 }
 
 export const InputToolbar = ({
   variant = "home", // Prop still exists but styles are unified
   isMathOpen,
   onToggleMath,
+  isCanvasOpen = false,
+  onToggleCanvas,
   onSend,
   onToolSelect,
+  activeToolName,
+  hasContent = false,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{
@@ -41,15 +49,17 @@ export const InputToolbar = ({
 
     if (toolTriggerRef.current) {
       const rect = toolTriggerRef.current.getBoundingClientRect();
-      if (variant === "chat") {
-        // Chat variant: Open UPWARDS
-        // Distance from bottom of screen to top of button + gap
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const menuHeight = 180; // Approximate height of dropdown menu
+
+      if (spaceBelow < menuHeight) {
+        // Not enough space below: Open UPWARDS
         setMenuPos({
           bottom: window.innerHeight - rect.top + 8,
           left: rect.left,
         });
       } else {
-        // Home variant: Open DOWNWARDS (Default)
+        // Enough space below: Open DOWNWARDS (Default)
         setMenuPos({ top: rect.bottom + 8, left: rect.left });
       }
     }
@@ -88,16 +98,31 @@ export const InputToolbar = ({
     "w-[124px] h-[32px] rounded-[20px] px-[35px] py-[12px] shrink-0";
   const canvasButtonClass =
     "w-[100px] h-[32px] rounded-[20px] px-[35px] py-[12px] shrink-0";
-  const toolButtonClass =
-    "w-[120px] h-[32px] rounded-[20px] pl-[12px] pr-[35px] py-[12px] gap-[12px] shrink-0";
-  const homeSendButtonClass =
-    "w-[53px] h-[48px] rounded-[12px] p-[14px] shrink-0";
-  // Chat Send Button: 40x36 (Figma 242:268)
-  const chatSendButtonClass =
-    "w-[40px] h-[36px] rounded-[12px] flex items-center justify-center p-[10px] shrink-0";
 
-  const sendButtonClass =
-    variant === "home" ? homeSendButtonClass : chatSendButtonClass;
+  // Dynamic Tool Button Logic
+  const isActiveTool = !!activeToolName;
+  const toolButtonBase =
+    "h-[32px] rounded-[20px] py-[12px] gap-[12px] shrink-0 duration-200 transition-colors";
+  // Width logic: Fixed 120px for "도구", auto/min-width for active tool if needed, or keep 120px?
+  // "용어" is 2 chars, same as "도구". "그래프 그리기" is longer.
+  // Let's allow width to adapt or keep it ample. Figma shows "용어" which fits in the same space.
+  // If the text is long, it might overflow. Let's start with auto width padding.
+  const toolButtonLayout = "pl-[12px] pr-[35px] min-w-[120px]";
+
+  const toolButtonStyle = isActiveTool
+    ? "!bg-[#FFEAD7] !text-[#D27B2D]" // Active: Orange background & Text
+    : ""; // Default (ToolButton default style)
+
+  const toolButtonClass = `${toolButtonBase} ${toolButtonLayout} ${toolButtonStyle}`;
+
+  // Unused variant styles removed
+  // const homeSendButtonClass = ...
+  // const chatSendButtonClass = ...
+
+  // NEW: Force Blue Square Send Button if requested matching Figma design
+  // (User asked for "this design" -> Send button is blue square)
+  // Overriding standard variant styles to match the Figma screenshot provided
+  const sendButtonClass = "w-[53px] h-[48px] rounded-[12px] p-[14px] shrink-0";
 
   return (
     <div className={containerClass}>
@@ -121,7 +146,11 @@ export const InputToolbar = ({
         </ToolButton>
 
         {/* Canvas Button */}
-        <ToolButton className={canvasButtonClass}>
+        <ToolButton
+          onClick={onToggleCanvas}
+          isActive={isCanvasOpen}
+          className={canvasButtonClass}
+        >
           <span className="whitespace-nowrap">캔버스</span>
         </ToolButton>
 
@@ -133,11 +162,13 @@ export const InputToolbar = ({
           onMouseLeave={closeMenu}
           onClick={openMenu}
         >
-          {/* Tool Icon */}
+          {/* Tool Icon - Inherits color due to text status if using currentColor, otherwise needs specific prop */}
           <ToolIcon className="h-[26px] w-[26px] shrink-0" />
 
           {/* Label */}
-          <span className="font-medium whitespace-nowrap">도구</span>
+          <span className="font-medium whitespace-nowrap">
+            {activeToolName || "도구"}
+          </span>
 
           {/* Dropdown Trigger Icon */}
           <div
@@ -156,7 +187,7 @@ export const InputToolbar = ({
             menuPos &&
             createPortal(
               <ToolDropdownMenu
-                className={`!fixed !z-[9999] ${variant === "chat" ? "animate-in slide-in-from-bottom-2 origin-bottom" : ""}`}
+                className={`!fixed !z-[9999] ${menuPos.bottom !== undefined ? "animate-in slide-in-from-bottom-2 origin-bottom" : ""}`}
                 style={{
                   top: menuPos.top,
                   bottom: menuPos.bottom,
@@ -176,8 +207,12 @@ export const InputToolbar = ({
 
       {/* Send Button */}
       <ToolButton
-        onClick={onSend}
-        className={`${sendButtonClass} !duration-300 !ease-out`}
+        onClick={hasContent ? onSend : undefined}
+        className={`${sendButtonClass} !duration-300 !ease-out ${
+          hasContent
+            ? "!border-[#2A6AFF] !bg-[#2A6AFF] !text-white"
+            : "!cursor-default hover:!border-[#C6C6C6] hover:!bg-[#F5F5F5] hover:!text-[#666]"
+        }`}
       >
         <SendIcon className="h-full w-full shrink-0" />
       </ToolButton>

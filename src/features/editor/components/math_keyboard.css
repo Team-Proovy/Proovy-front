@@ -1,0 +1,115 @@
+/* MathLive Virtual Keyboard Styles */
+/* Custom container and keyboard theme for MathChatInput */
+
+/* Style the keyboard container */
+#math-keyboard-container {
+  overflow: visible;
+}
+
+#math-keyboard-container .ML__keyboard {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: auto !important;
+
+  /* Remove "Top Gray Box" */
+  background-color: transparent !important;
+  --keyboard-background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  /* Style the Inner Keyplate (The actual keys) */
+  --variant-panel-background: #cacfd7 !important;
+  --keyboard-toolbar-background: #cacfd7 !important;
+
+  /* Default keycap styles */
+  --keycap-background: #f0f0f0 !important;
+  --keycap-background-hover: #e0e0e0 !important;
+  --keycap-background-active: #d0d0d0 !important;
+  --keycap-text: #000000 !important;
+  --keycap-text-hover: #000000 !important;
+  --keycap-text-active: #000000 !important;
+
+  /* Style Shift, Backspace, <, >, Enter keys (action/shift class) */
+  /* These keys use --keycap-secondary-* variables */
+  --keycap-secondary-background: #a0a9b8 !important;
+  --keycap-secondary-background-hover: #8a939f !important;
+  --keycap-secondary-text: #000000 !important;
+
+  /* Clean up padding */
+  --keyboard-padding-top: 0px !important;
+  --keyboard-padding-bottom: 0px !important;
+  --keyboard-padding-left: 0px !important;
+  --keyboard-padding-right: 0px !important;
+
+  /* Hide backdrop if present */
+  --backdrop-color: transparent !important;
+
+  /* Ensure keyboard element itself has rounded corners */
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* Force visibility for keyboard in custom container */
+#math-keyboard-container .ML__keyboard,
+#math-keyboard-container .ML__keyboard.is-visible,
+#math-keyboard-container .MLK__backdrop,
+#math-keyboard-container .MLK__plate {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+
+/* Style the backdrop inside container */
+#math-keyboard-container .MLK__backdrop {
+  position: relative !important;
+  bottom: auto !important;
+  height: auto !important;
+  width: 100% !important;
+  background: transparent !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* Style the plate (actual keyboard content) */
+#math-keyboard-container .MLK__plate {
+  position: relative !important;
+  background-color: #cacfd7 !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Ensure .shift and .action keys have correct styling */
+#math-keyboard-container .ML__keyboard .shift,
+#math-keyboard-container .ML__keyboard .action {
+  background: #a0a9b8 !important;
+  color: #000000 !important;
+}
+
+#math-keyboard-container .ML__keyboard .shift:hover,
+#math-keyboard-container .ML__keyboard .action:hover {
+  background: #8a939f !important;
+  color: #000000 !important;
+}
+
+/* Ensure SVGs inside shift/action keys are black */
+#math-keyboard-container .ML__keyboard .shift svg,
+#math-keyboard-container .ML__keyboard .action svg {
+  fill: #000000 !important;
+  color: #000000 !important;
+}
+
+/* Remove extra backgrounds from internal containers */
+#math-keyboard-container .ML__keyboard .rows,
+#math-keyboard-container .ML__keyboard .MLK__rows {
+  background: transparent !important;
+}
+
+/* Hide the toggle button */
+.ML__keyboard-toggle {
+  display: none !important;
+}
