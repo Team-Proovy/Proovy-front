@@ -53,10 +53,7 @@ export function ChatTitleBar({ title }: ChatTitleBarProps) {
         onClick={() => console.log("새 채팅 클릭")}
       >
         <NewChatIcon className="h-[22.085px] w-[23.059px]" />
-        <span
-          className="text-sm leading-5 font-medium text-black"
-          style={{ fontFamily: "Pretendard" }}
-        >
+        <span className="text-sm leading-5 font-medium text-black">
           새 채팅
         </span>
       </button>

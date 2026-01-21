@@ -357,6 +357,7 @@ export function SendArrowIcon({
 // 10. BarArrowIcon (사이드바 접기/펴기 버튼)
 
 export const BarArrowIcon = ({
+  color = "currentColor",
   size = 24,
   ...props
 }: SVGProps<SVGSVGElement> & { size?: number }) => {
@@ -371,28 +372,28 @@ export const BarArrowIcon = ({
     >
       <path
         d="M1 25L0.999998 0.999999"
-        stroke="#666666"
+        stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M25 13L7 13"
-        stroke="#666666"
+        stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M15.666 3.66658L6.33268 12.9999L15.666 22.3333"
-        stroke="#666666"
+        stroke={color}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
   );
-}
+};
 
 // 11. 사이드바 하단 paper 아이콘.
 export const PaperIcon = ({
@@ -414,4 +415,4 @@ export const PaperIcon = ({
       />
     </svg>
   );
-}
+};
