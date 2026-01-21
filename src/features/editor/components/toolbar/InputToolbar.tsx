@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ClipIcon,
@@ -71,6 +71,16 @@ export const InputToolbar = ({
       setIsToolMenuOpen(false);
     }, 150);
   };
+
+  // Cleanup: Cancel pending timer on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Unified Styles (Based on Home Variant Specs)
 
@@ -195,7 +205,6 @@ export const InputToolbar = ({
                 }}
                 onSelect={(tool) => {
                   onToolSelect?.(tool);
-                  closeMenu();
                 }}
                 onClose={closeMenu}
                 onMouseEnter={openMenu}

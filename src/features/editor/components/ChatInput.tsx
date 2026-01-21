@@ -180,7 +180,7 @@ export const ChatInput = ({
     };
   }, [positionKeyboardContainer]);
 
-  const insertHtmlAtCursor = (html: string) => {
+  const insertHtmlAtCursor = useCallback((html: string) => {
     // ... existing logic ...
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -208,102 +208,105 @@ export const ChatInput = ({
     } else {
       inputRef.current?.insertAdjacentHTML("beforeend", html);
     }
-  };
+  }, []);
 
   // Revised insertMathField with unique ID for focus
-  const insertMathField = (initialCmd?: any) => {
-    const uniqueId = `mf-${Date.now()}`;
-    const styleId = `style-${uniqueId}`;
-    const btnId = `btn-${uniqueId}`;
+  const insertMathField = useCallback(
+    (initialCmd?: any) => {
+      const uniqueId = `mf-${Date.now()}`;
+      const styleId = `style-${uniqueId}`;
+      const btnId = `btn-${uniqueId}`;
 
-    // Wraps the math-field in a span with contenteditable="false" to isolate it from the parent editor.
-    // Also adds onkeydown listener to stop propagation so the parent editor doesn't intercept keys.
-    const mathFieldHtml = `<style id="${styleId}">#${uniqueId}::part(virtual-keyboard-toggle){display:none}#${uniqueId}::part(menu-toggle){display:none}#${btnId}:hover{background:#eee;color:#333;}</style><span contenteditable="false" class="math-field-wrapper" style="display:inline-flex;align-items:center;vertical-align:middle;line-height:0;margin:0 2px;position:relative;padding-right:20px;"><math-field id="${uniqueId}" math-virtual-keyboard-policy="manual" menu-items="none" style="display:inline-block;min-width:20px;width:auto;padding:2px 4px;border-radius:4px;border:1px solid #ddd;background-color:white;font-size:16px;line-height:normal;color:black;cursor:text;box-shadow:none;margin:0;" onkeydown="event.stopPropagation()"></math-field><button id="${btnId}" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:16px;height:16px;display:flex;align-items:center;justify-content:center;background:#ccc;color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;margin-left:4px;" contenteditable="false">✕</button></span>&nbsp;`;
+      // Wraps the math-field in a span with contenteditable="false" to isolate it from the parent editor.
+      // Also adds onkeydown listener to stop propagation so the parent editor doesn't intercept keys.
+      const mathFieldHtml = `<style id="${styleId}">#${uniqueId}::part(virtual-keyboard-toggle){display:none}#${uniqueId}::part(menu-toggle){display:none}#${btnId}:hover{background:#eee;color:#333;}</style><span contenteditable="false" class="math-field-wrapper" style="display:inline-flex;align-items:center;vertical-align:middle;line-height:0;margin:0 2px;position:relative;padding-right:20px;"><math-field id="${uniqueId}" math-virtual-keyboard-policy="manual" menu-items="none" style="display:inline-block;min-width:20px;width:auto;padding:2px 4px;border-radius:4px;border:1px solid #ddd;background-color:white;font-size:16px;line-height:normal;color:black;cursor:text;box-shadow:none;margin:0;" onkeydown="event.stopPropagation()"></math-field><button id="${btnId}" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:16px;height:16px;display:flex;align-items:center;justify-content:center;background:#ccc;color:white;border:none;border-radius:50%;font-size:10px;cursor:pointer;line-height:1;margin-left:4px;" contenteditable="false">✕</button></span>&nbsp;`;
 
-    if (
-      document.activeElement !== inputRef.current &&
-      !inputRef.current?.contains(document.activeElement)
-    ) {
-      inputRef.current?.focus();
-    }
+      if (
+        document.activeElement !== inputRef.current &&
+        !inputRef.current?.contains(document.activeElement)
+      ) {
+        inputRef.current?.focus();
+      }
 
-    insertHtmlAtCursor(mathFieldHtml);
+      insertHtmlAtCursor(mathFieldHtml);
 
-    setTimeout(() => {
-      const mf = document.getElementById(uniqueId) as any;
-      if (mf) {
-        mf.menuItems = [];
-        mf.focus();
+      setTimeout(() => {
+        const mf = document.getElementById(uniqueId) as any;
+        if (mf) {
+          mf.menuItems = [];
+          mf.focus();
 
-        // Execute initial command if provided (late binding)
-        if (initialCmd) {
-          mf.executeCommand(initialCmd);
-        }
+          // Execute initial command if provided (late binding)
+          if (initialCmd) {
+            mf.executeCommand(initialCmd);
+          }
 
-        if (window.mathVirtualKeyboard) {
-          window.mathVirtualKeyboard.show();
-        }
+          if (window.mathVirtualKeyboard) {
+            window.mathVirtualKeyboard.show();
+          }
 
-        // Ensure the wrapper doesn't trap selection
-        const wrapper = mf.parentElement;
-        if (wrapper) {
-          wrapper.addEventListener("click", (e: MouseEvent) => {
-            mf.focus();
-            e.stopPropagation();
-          });
-
-          // Handle delete button
-          const btn = document.getElementById(btnId);
-          if (btn) {
-            btn.addEventListener("click", (e) => {
-              e.stopPropagation(); // prevent focus on math field
-              e.preventDefault();
-
-              // style 태그도 함께 제거
-              const styleEl = document.getElementById(styleId);
-              if (styleEl) {
-                styleEl.remove();
-              }
-
-              // wrapper 뒤의 &nbsp; 제거
-              if (
-                wrapper.nextSibling &&
-                wrapper.nextSibling.nodeType === Node.TEXT_NODE &&
-                wrapper.nextSibling.textContent === "\u00A0"
-              ) {
-                wrapper.nextSibling.remove();
-              }
-              wrapper.remove();
-
-              // 삭제 후 콘텐츠 상태 즉시 업데이트
-              setTimeout(() => {
-                if (inputRef.current) {
-                  // 남은 텍스트가 공백만 있는지 확인
-                  const remainingText =
-                    inputRef.current.textContent?.trim() || "";
-                  const remainingHtml = inputRef.current.innerHTML.trim();
-
-                  // 완전히 비었거나 <br>만 남았으면 정리
-                  if (
-                    remainingText === "" ||
-                    remainingHtml === "<br>" ||
-                    remainingHtml === ""
-                  ) {
-                    inputRef.current.innerHTML = "";
-                    setHasContent(false);
-                  } else {
-                    setHasContent(remainingText.length > 0);
-                  }
-                }
-              }, 0);
-
-              inputRef.current?.focus();
+          // Ensure the wrapper doesn't trap selection
+          const wrapper = mf.parentElement;
+          if (wrapper) {
+            wrapper.addEventListener("click", (e: MouseEvent) => {
+              mf.focus();
+              e.stopPropagation();
             });
+
+            // Handle delete button
+            const btn = document.getElementById(btnId);
+            if (btn) {
+              btn.addEventListener("click", (e: any) => {
+                e.stopPropagation(); // prevent focus on math field
+                e.preventDefault();
+
+                // style 태그도 함께 제거
+                const styleEl = document.getElementById(styleId);
+                if (styleEl) {
+                  styleEl.remove();
+                }
+
+                // wrapper 뒤의 &nbsp; 제거
+                if (
+                  wrapper.nextSibling &&
+                  wrapper.nextSibling.nodeType === Node.TEXT_NODE &&
+                  wrapper.nextSibling.textContent === "\u00A0"
+                ) {
+                  wrapper.nextSibling.remove();
+                }
+                wrapper.remove();
+
+                // 삭제 후 콘텐츠 상태 즉시 업데이트
+                setTimeout(() => {
+                  if (inputRef.current) {
+                    // 남은 텍스트가 공백만 있는지 확인
+                    const remainingText =
+                      inputRef.current.textContent?.trim() || "";
+                    const remainingHtml = inputRef.current.innerHTML.trim();
+
+                    // 완전히 비었거나 <br>만 남았으면 정리
+                    if (
+                      remainingText === "" ||
+                      remainingHtml === "<br>" ||
+                      remainingHtml === ""
+                    ) {
+                      inputRef.current.innerHTML = "";
+                      setHasContent(false);
+                    } else {
+                      setHasContent(remainingText.length > 0);
+                    }
+                  }
+                }, 0);
+
+                inputRef.current?.focus();
+              });
+            }
           }
         }
-      }
-    }, 10);
-  };
+      }, 10);
+    },
+    [insertHtmlAtCursor],
+  );
 
   // Toggle Math keyboard visibility only
   const handleMathToggle = () => {
@@ -337,6 +340,9 @@ export const ChatInput = ({
   const insertCanvasImage = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     const img = document.createElement("img");
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+    };
     img.src = url;
     img.alt = "Canvas drawing";
     img.style.cssText =
@@ -418,7 +424,7 @@ export const ChatInput = ({
         );
       }
     };
-  }, []);
+  }, [insertMathField]);
 
   const handleToolSelect = (toolName: string, isFromMenu: boolean = false) => {
     setSelectedTool(toolName);
