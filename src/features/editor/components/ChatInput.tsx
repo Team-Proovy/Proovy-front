@@ -23,18 +23,18 @@ const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
 
-interface MathChatInputProps {
+interface ChatInputProps {
   className?: string; // Additional classes
   style?: React.CSSProperties; // Inline style overrides (Optional fallback)
   /** 뷰어 영역의 ref (뷰어가 있는 페이지에서 전달) */
   viewerRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const MathChatInput = ({
+export const ChatInput = ({
   className = "",
   style,
   viewerRef,
-}: MathChatInputProps) => {
+}: ChatInputProps) => {
   const [isAtMenuOpen, setIsAtMenuOpen] = useState(false);
   const [isMathOpen, setIsMathOpen] = useState(false);
   const [isCanvasOpen, setIsCanvasOpen] = useState(false);
