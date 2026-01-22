@@ -15,7 +15,7 @@ export function SidebarIconButton({
   onClick,
   children,
 }: Props) {
-  const sizeClass = size === "40" ? "h-[40px] w-[40px]" : "h-[36px] w-[36px]";
+  const sizeClass = size === "40" ? "h-[40px] w-[40px]" : "h-[40px] w-[40px]";
 
   return (
     <button

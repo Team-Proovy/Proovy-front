@@ -1,8 +1,10 @@
 import ProovyLogo from "../../features/viewer/components/ProovyLogo";
-import { Settings, ChevronLeft } from "lucide-react";
+import { Settings } from "lucide-react";
 import React from "react";
 import {
+  BarArrowIcon,
   ChattingIcon,
+  PaperIcon,
   HomeIcon,
   NoteIcon,
   RepositoryIcon,
@@ -10,52 +12,56 @@ import {
   UserIcon,
 } from "../components/icons/SidebarIcons";
 import { SidebarIconButton } from "../ui/SidebarIconButton";
-// import gemini.png from "/Users/ldy/Desktop/proovy_project/Proovy-front/src/shared/assets/images/gemini.png"
+import geminiLogo from "../assets/images/img_gemini.png";
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
 
-export function Sidebar() {
-  // sidebar 접히고/펼치고 상태 관리
-  // isCollapsed = true 이면 사이드바가 접힌 상태가 된다
-  const [isCollapsed, setIsCollapsed] = useState(false);
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: (collapsed: boolean) => void;
+}
+
+export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  // sidebar 접히고/펼치고 상태 관리 -> 상위 컴포넌트(AppLayout)으로 위임
+  // const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <aside
       onClick={() => {
-        if (isCollapsed) setIsCollapsed(false);
+        if (isCollapsed) onToggle(false);
       }}
-      className={`flex h-screen flex-col border-r border-[#C6C6C6] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer hover:bg-gray-50/50" : "w-[200px] px-2 py-4"}`}
+      className={`mb-[37px] flex min-h-[1024px] flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
     >
       <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
         {/* 접혔을 때 로고와 버튼 사이 정렬을 위해 justify-center 동적 변경 */}
         <div
-          className={`relative flex flex-col pt-[20px] ${isCollapsed ? "mb-10 items-center" : ""}`}
+          className={`relative flex flex-col pt-[41px] ${isCollapsed ? "mb-8 items-center" : ""}`}
         >
           {!isCollapsed ? (
-            <div className="mb-6 flex w-full items-center justify-between">
-              <ProovyLogo className="h-7 w-auto text-gray-900" />
+            <div className="mb-6 flex w-full items-center justify-between pr-2 pl-3">
+              <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
               <button
-                onClick={() => setIsCollapsed(true)}
-                className="rounded p-1 transition-colors hover:bg-gray-100"
+                onClick={() => onToggle(true)}
+                className="group rounded p-1 transition-colors"
               >
-                <ChevronLeft
-                  size={19}
-                  className="text-gray-400"
+                <BarArrowIcon
+                  className="mr-2 text-[#666] transition-colors duration-500 group-hover:text-[#2A6AFF]"
+                  size={26}
                 />
               </button>
             </div>
           ) : (
-            // 사이드바가 졉힌 상태인 경우:
+            // {사이드바가 졉힌 상태인 경우}
+
             // 사이드바 펼치기 버튼
             <SidebarIconButton
               ariaLabel="sidebar toggle"
               size="36"
-              onClick={() => setIsCollapsed(false)}
+              onClick={() => onToggle(false)}
             >
               <SlideIcon
                 color="#666"
-                size={36}
+                size={40}
               />
             </SidebarIconButton>
           )}
@@ -63,17 +69,13 @@ export function Sidebar() {
 
         {/* 2. 메인 메뉴 */}
         {/* [추가] 사이드바 접힘/펼침 여부에 따른 로직 구현 */}
-        <nav className="mb-8 space-y-1">
+        <nav
+          className={`mb-8 ${isCollapsed ? "flex flex-col gap-[24px]" : "flex flex-col gap-[2px] px-2 font-normal"}`}
+        >
           <NavItem
             to="/"
             icon={HomeIcon}
             label="홈"
-            isCollapsed={isCollapsed}
-          />
-          <NavItem
-            to="/testPage"
-            icon={NoteIcon}
-            label="노트 목록"
             isCollapsed={isCollapsed}
           />
           <NavItem
@@ -82,6 +84,13 @@ export function Sidebar() {
             label="채팅"
             isCollapsed={isCollapsed}
           />
+          <NavItem
+            to="/note"
+            icon={NoteIcon}
+            label="노트목록"
+            isCollapsed={isCollapsed}
+          />
+
           <NavItem
             to="/repository"
             icon={RepositoryIcon}
@@ -93,54 +102,62 @@ export function Sidebar() {
         {/* 3. 하단 유저 및 상태 정보 */}
         {/* 사이드바가 펼쳐졌을 때(false)만 하단 user 정보(요금제, 프로필..)를 보여주는 로직 추가됨 */}
         {!isCollapsed ? (
-          <div className="mt-auto space-y-4 border-t border-gray-100 pt-4">
-            <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4 text-xs">
+          <div className="mt-auto mb-[20px] space-y-4 border-t border-gray-100 px-[20px]">
+            <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded-full bg-[#2A6AFF]" />
-                  <span className="text-[11px] text-gray-600">Free</span>
+                  <div className="h-6 w-6 rounded-full bg-[#2A6AFF]" />
+                  <span className="text-[14px] leading-[20px] font-medium text-[#333333]">
+                    Free
+                  </span>
                 </div>
-                <button className="rounded bg-[#2A6AFF] px-[13px] py-[2.5px] text-[11px] text-white transition-opacity hover:opacity-80">
+                <button className="flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-opacity hover:opacity-80">
                   업그레이드
                 </button>
               </div>
               <div className="flex items-center justify-between text-gray-500">
                 <div className="flex items-center gap-1.5">
-                  <span>✨</span>
-                  <span className="font-medium">200</span>
+                  <img
+                    src={geminiLogo}
+                    alt="Gemini"
+                    className="h-3 w-3"
+                  />
+                  <span className="text-[14px] font-medium">200</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px]">📄</span>
-                  <span className="font-medium">5/5</span>
+                <div className="mr-[24px] flex items-center gap-1.5">
+                  <PaperIcon />
+                  <span className="text-[14px] font-medium">5/5</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gray-200" />
-                <span className="text-sm font-medium">닉네임</span>
+                <div className="h-10 w-10 rounded-full bg-gray-200" />
+                <span className="text-[20px] font-semibold">닉네임</span>
               </div>
               <Settings
-                size={17}
+                size={20}
                 className="cursor-pointer text-gray-400"
               />
             </div>
           </div>
         ) : (
           // 접힌 상태 UI: GeminiBadge 및 UserIcon 반영
-          <div className="mt-auto flex flex-col items-center">
-            <div className="mb-[41px]">
-              {/* <GeminiBadge
-                count={200}
-                logoSrc={geminiLogo}
-              /> */}
+          <div className="mt-auto mb-[76px] flex flex-col items-center gap-[20px]">
+            <div className="flex h-[28px] w-[60px] items-center justify-center gap-[10px] rounded-[8px] border-[0.5px] border-[#C6C6C6] px-[7px] py-[9px] shadow-sm">
+              <img
+                src={geminiLogo}
+                alt="Gemini Logo"
+                className="h-3 w-3"
+              />
+              <span className="text-[10px] font-semibold text-gray-700">
+                200
+              </span>
             </div>
-            <div className="mb-[25px]">
-              <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
-                <UserIcon size={38} />
-              </button>
-            </div>
+            <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
+              <UserIcon size={38} />
+            </button>
           </div>
         )}
       </div>
@@ -164,26 +181,31 @@ function NavItem({
   return (
     <NavLink
       to={to}
-      onClick={(e) => e.stopPropagation()} // 메뉴 어딘가(?) 클릭 시 aside 펼처짐 이벤트 방지
+      onClick={(e) => e.stopPropagation()} // 사이드바 아무 빈 영역 클릭 시 사이드바 펼처짐 이벤트 방지
       className={({ isActive }) => {
         if (isCollapsed) {
           // 사이드바가 접힌 상태인 경우:
-          return `flex w-full cursor-pointer items-center justify-center py-4 transition-all ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"}`;
+          return `flex w-full cursor-pointer items-center px-[20px] py-0 transition-all ${isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"}`;
         }
-        return `flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 transition-all ${isActive ? "z-10 w-[108%] translate-x-1 bg-white text-blue-600 shadow-xl ring-1 ring-black/5" : "text-gray-600 hover:bg-gray-50"}`;
+        // 사이드바가 펼쳐진 상태인 경우:
+        return `flex cursor-pointer items-center gap-3 rounded-l-none rounded-r-[12px] px-3 ${isActive ? "py-2" : "py-3"} transition-all ${isActive ? "z-10 -ml-2 w-[252px] bg-white pl-[20px] text-[#000000] shadow-[0px_4px_10px_2px_rgba(0,0,0,0.1)]" : "text-[#333333]"}`;
       }}
     >
       {({ isActive }) => (
         <>
           <div className="flex items-center justify-center">
             <Icon
-              size={isCollapsed ? 36 : 28}
-              color={isActive ? "#2A6AFF" : "#9CA3AF"}
+              size={36}
+              color={isActive ? "#2A6AFF" : "#666666"}
             />
           </div>
-          {/* 사이드바 펼쳤을때만(false) 메뉴 글자들 ui에 표시하기 */}
+          {/* 사이드바 펼쳤을때 메뉴 글자들 ui에 표시하기 */}
           {!isCollapsed && (
-            <span className="font-size-[12px] font-medium">{label}</span>
+            <span
+              className={`${isActive ? "text-[22px]" : "text-[18px]"} leading-[28px] font-semibold tracking-[-0.01%]`}
+            >
+              {label}
+            </span>
           )}
         </>
       )}

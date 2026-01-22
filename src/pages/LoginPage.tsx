@@ -8,7 +8,7 @@ import { SocialLoginButton } from "../shared/ui/SocialLoginButton";
 
 export const LoginPage = () => {
   return (
-    <div className="relative flex h-screen w-full overflow-hidden bg-white font-['Pretendard'] select-none">
+    <div className="relative flex h-screen w-full overflow-hidden bg-white select-none">
       {/* 콘텐츠 레이어 */}
       <div className="relative z-10 flex h-full w-full">
         {/* 로그인 박스 영역 */}

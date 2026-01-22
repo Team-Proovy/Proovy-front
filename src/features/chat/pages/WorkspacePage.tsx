@@ -1,4 +1,4 @@
-import { AppLayout } from "../../../shared/layout/app_layout";
+import { AppLayout } from "../../../shared/layout/AppLayout";
 import {
   ViewerTabsBar,
   ViewerFileBar,
