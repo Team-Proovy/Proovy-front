@@ -18,6 +18,7 @@ Copilot must follow these instructions when generating code or performing code r
 | Type                   | Case       | Example                            |
 | ---------------------- | ---------- | ---------------------------------- |
 | **Pages & Components** | PascalCase | `LoginPage.tsx`, `SidebarItem.tsx` |
+| **Hooks**              | camelCase  | `useAuth.ts`, `useMathKeyboard.ts` |
 | **Utilities/Others**   | snake_case | `auth_api.ts`, `data_utils.ts`     |
 
 ## 4. Code Writing Conventions

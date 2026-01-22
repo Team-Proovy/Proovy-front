@@ -5,11 +5,10 @@ import {
   PdfIcon,
   ToolIcon,
 } from "../shared/components/icons/HomepageInputIcons";
-import { useNavigate } from "react-router-dom";
 import React from "react";
 
 export default function HomePage() {
-  const navigate = useNavigate();
+  
   const [isToolMenuOpen, setIsToolMenuOpen] = React.useState(false);
   const closeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
     null,
