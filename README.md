@@ -138,6 +138,7 @@ src/
 │   ├── LoginPage.tsx
 │
 └── main.tsx                  # 앱 진입점
+```
 
 ---
 
