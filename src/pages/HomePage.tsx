@@ -1,32 +1,15 @@
 import { AppLayout } from "../shared/layout/AppLayout";
-import { ArrowUp, ChevronDown, Paperclip } from "lucide-react"; // 화살표 아이콘
-import { useFileUpload } from "../shared/hooks/use_file_upload";
+import { ChevronDown} from "lucide-react"; // 화살표 아이콘
+import { useFileUpload } from "../shared/hooks/useFileUpload";
 import {
   PdfIcon,
-  ToolIcon,
+
 } from "../shared/components/icons/HomepageInputIcons";
-import React from "react";
-
+import { ChatInput } from "../features/editor/components/ChatInput";
 export default function HomePage() {
-  
-  const [isToolMenuOpen, setIsToolMenuOpen] = React.useState(false);
-  const closeTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
 
-  const openMenu = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-    setIsToolMenuOpen(true);
-  };
 
-  const closeMenu = () => {
-    closeTimerRef.current = setTimeout(() => {
-      setIsToolMenuOpen(false);
-    }, 150);
-  };
+
 
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
@@ -71,55 +54,7 @@ export default function HomePage() {
           </button>
 
           {/* 오른쪽: 텍스트 입력 섹션 */}
-          <div className="flex h-[160px] w-[660px] flex-col rounded-2xl border-[0.5px] border-[#C6C6C6] bg-white p-5 shadow-[4px_4px_20px_0px_rgba(0,0,0,0.05)]">
-            <textarea
-              placeholder="@을 통해 도구를 선택하거나, 요청을 입력하세요."
-              className="flex-1 resize-none text-[18px] font-normal text-gray-600 outline-none placeholder:text-[#666666]"
-            />
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex gap-2">
-                <button className="flex h-[32px] w-[56px] items-center justify-center rounded-full border border-[#C6C6C6] bg-[#F5F5F5] px-3 py-1.5 text-[#666666] transition-colors duration-700 hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white">
-                  <Paperclip size={16} />
-                </button>
-                <ToolChip label="수식 입력기" />
-                <ToolChip label="캔버스" />
-                <div className="relative">
-                  <ToolChip
-                    className="!px-[12px]"
-                    icon={
-                      <ToolIcon
-                        size={25}
-                        color="currentColor"
-                      />
-                    }
-                    label="도구"
-                    suffix={<ChevronDown size={25} />}
-                    onSuffixMouseEnter={openMenu}
-                    onSuffixMouseLeave={closeMenu}
-                    onSuffixClick={openMenu}
-                  />
-                  {isToolMenuOpen && (
-                    <div
-                      className="absolute top-full left-0 z-10 mt-2 flex w-48 flex-col gap-1 rounded-2xl border border-gray-100 bg-white p-2 shadow-lg"
-                      onMouseEnter={openMenu}
-                      onMouseLeave={closeMenu}
-                    >
-                      <DropdownItem label="그래프 그리기" />
-                      <DropdownItem label="해설지 생성하기" />
-                      <DropdownItem label="캔버스 열기" />
-                      <DropdownItem label="코드 검산 진행하기" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button className="flex h-[48px] w-[48px] items-center justify-center rounded-xl bg-[#F2F2F2] text-[#555555] transition-colors duration-400 hover:bg-[#2A6AFF] hover:text-white active:scale-95">
-                <ArrowUp
-                  size={20}
-                  strokeWidth={3}
-                />
-              </button>
-            </div>
-          </div>
+          <ChatInput />
         </div>
 
         {/* 4. 하단 예시 섹션 */}
@@ -141,55 +76,3 @@ export default function HomePage() {
   );
 }
 
-// 추가 로직 구현 파트
-interface ToolChipProps {
-  label: string;
-  icon?: React.ReactNode;
-  suffix?: React.ReactNode;
-  onSuffixClick?: (e: React.MouseEvent) => void;
-  onSuffixMouseEnter?: () => void;
-  onSuffixMouseLeave?: () => void;
-  className?: string;
-}
-function ToolChip({
-  label,
-  icon,
-  suffix,
-  onSuffixClick,
-  onSuffixMouseEnter,
-  onSuffixMouseLeave,
-  className,
-}: ToolChipProps) {
-  return (
-    <button
-      className={`group flex h-[32px] items-center justify-center gap-2 rounded-full border border-[#c6c6c6b2] bg-[#F5F5F5] px-[35px] text-[16px] font-medium text-[#666666] transition-colors duration-700 hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white ${className}`}
-    >
-      {icon && (
-        <span className="text-[#666666] group-hover:text-white">{icon}</span>
-      )}
-      <span>{label}</span>
-      {suffix && (
-        <span
-          className="text-gray-400 hover:text-white"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSuffixClick?.(e);
-          }}
-          onMouseEnter={onSuffixMouseEnter}
-          onMouseLeave={onSuffixMouseLeave}
-        >
-          {suffix}
-        </span>
-      )}
-    </button>
-  );
-}
-
-function DropdownItem({ label }: { label: string }) {
-  return (
-    <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50">
-      <div className="h-4 w-4 rounded-full bg-gray-200" />
-      <span>{label}</span>
-    </button>
-  );
-}
