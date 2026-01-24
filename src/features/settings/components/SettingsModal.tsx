@@ -66,7 +66,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             {/* 프로필 이미지 */}
             <div className="flex flex-col items-center gap-2">
               <div className="flex h-[80px] w-[80px] items-center justify-center rounded-full bg-[#4CAF50] text-[24px] font-bold text-white">
-                유진
+                구현지
               </div>
               <div className="h-[40px] w-[40px] rounded-full bg-[#FEE500]" />
             </div>
