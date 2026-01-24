@@ -1,32 +1,42 @@
+import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import React, { useState } from "react";
+import { useState } from "react";
+import { SearchModal } from "../../features/search/components/SearchModal";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-  backgroundColor?: string;
-}
-
-export function AppLayout({
-  children,
-  backgroundColor = "bg-[#F8F9FA]",
-}: AppLayoutProps) {
+/**
+ * AppLayout - 앱 전체 레이아웃
+ *
+ * Protected Routes (/app/*) 에서 사용
+ * Sidebar + Outlet 구조
+ */
+export const AppLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // TODO: 인증 체크 로직 추가 예정
+  // const { isAuthenticated, isLoading } = useAuth();
+  // if (isLoading) return <LoadingSpinner />;
+  // if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   return (
-    <div className={`flex min-h-screen w-full ${backgroundColor}`}>
-      {/* 왼쪽 사이드바 고정 */}
+    <div className="flex h-screen w-full bg-[#F8F9FA]">
+      {/* 왼쪽 사이드바 */}
       <Sidebar
         isCollapsed={isCollapsed}
         onToggle={setIsCollapsed}
+        onSearchClick={() => setIsSearchOpen(true)}
       />
 
-      {/* 오른쪽 본문 영역 */}
-      {/* Sidebar가 접히면(80px), 줄어든 160px(240px - 80px)만큼 padding-left를 추가하여 콘텐츠 위치 고정 */}
-      <main
-        className={`relative flex flex-1 flex-col transition-all duration-300 ${isCollapsed ? "pl-[160px]" : ""}`}
-      >
-        {children}
+      {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
+      <main className="relative flex flex-1 flex-col overflow-hidden transition-all duration-300">
+        <Outlet />
       </main>
+
+      {/* 검색 모달 */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
     </div>
   );
-}
+};

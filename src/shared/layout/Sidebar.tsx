@@ -1,4 +1,4 @@
-import ProovyLogo from "../../features/viewer/components/ProovyLogo";
+import { ProovyLogo } from "../components/ProovyLogo";
 import { Settings } from "lucide-react";
 import React from "react";
 import {
@@ -18,9 +18,14 @@ import { NavLink } from "react-router-dom";
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: (collapsed: boolean) => void;
+  onSearchClick: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export function Sidebar({
+  isCollapsed,
+  onToggle,
+  onSearchClick,
+}: SidebarProps) {
   // sidebar 접히고/펼치고 상태 관리 -> 상위 컴포넌트(AppLayout)으로 위임
   // const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -29,7 +34,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       onClick={() => {
         if (isCollapsed) onToggle(false);
       }}
-      className={`mb-[37px] flex min-h-[1024px] flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
+      className={`flex h-full flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] rounded-r-[12px] border-r border-[#C6C6C6]"}`}
     >
       <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
@@ -73,26 +78,27 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           className={`mb-8 ${isCollapsed ? "flex flex-col gap-[24px]" : "flex flex-col gap-[2px] px-2 font-normal"}`}
         >
           <NavItem
-            to="/"
+            to="/app/home"
             icon={HomeIcon}
             label="홈"
             isCollapsed={isCollapsed}
           />
-          <NavItem
-            to="/chatting"
+          {/* 검색 - 모달로 열기 (페이지 이동 X) */}
+          <SearchButton
             icon={ChattingIcon}
-            label="채팅"
+            label="검색"
             isCollapsed={isCollapsed}
+            onClick={onSearchClick}
           />
           <NavItem
-            to="/note"
+            to="/app/notes"
             icon={NoteIcon}
             label="노트목록"
             isCollapsed={isCollapsed}
           />
 
           <NavItem
-            to="/repository"
+            to="/app/storage"
             icon={RepositoryIcon}
             label="저장소"
             isCollapsed={isCollapsed}
@@ -164,7 +170,46 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     </aside>
   );
 }
-// Sidebar 함수 정의
+
+// 검색 버튼 컴포넌트 (모달 열기용, 페이지 이동 X)
+function SearchButton({
+  icon: Icon,
+  label,
+  isCollapsed,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  isCollapsed: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={
+        isCollapsed
+          ? "flex w-full cursor-pointer items-center px-[20px] py-0 text-gray-500 transition-all hover:text-gray-900"
+          : "flex cursor-pointer items-center gap-3 rounded-l-none rounded-r-[12px] px-3 py-3 text-[#333333] transition-all hover:bg-gray-50"
+      }
+    >
+      <div className="flex items-center justify-center">
+        <Icon
+          size={36}
+          color="#666666"
+        />
+      </div>
+      {!isCollapsed && (
+        <span className="text-[18px] leading-[28px] font-semibold tracking-[-0.01%]">
+          {label}
+        </span>
+      )}
+    </button>
+  );
+}
+
 // 메인 메뉴 아이템 컴포넌트
 function NavItem({
   to, // 이동할 경로 추가
