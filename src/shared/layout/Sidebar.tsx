@@ -11,6 +11,7 @@ import {
   UserIcon,
   SearchIcon,
   SettingIcon,
+  CreditIcon,
 } from "../components/icons/SidebarIcons";
 import { SidebarIconButton } from "../ui/SidebarIconButton";
 import geminiLogo from "../assets/images/img_gemini.png";
@@ -107,7 +108,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* 4. 하단 유저 및 상태 정보 */}
         {/* 사이드바가 펼쳐졌을 때(false)만 하단 user 정보(요금제, 프로필..)를 보여주는 로직 추가됨 */}
         {!isCollapsed ? (
-          <div className="mt-auto mb-[20px] space-y-4 border-t border-gray-100 px-[20px]">
+          <div className="mt-auto mb-[20px] space-y-2 border-t border-gray-100 px-[20px]">
             <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -122,11 +123,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </div>
               <div className="flex items-center justify-between text-gray-500">
                 <div className="flex items-center gap-1.5">
-                  <img
-                    src={geminiLogo}
-                    alt="Gemini"
-                    className="h-3 w-3"
-                  />
+                 <CreditIcon/>
                   <span className="text-[14px] font-medium">200</span>
                 </div>
                 <div className="mr-[24px] flex items-center gap-1.5">
@@ -138,7 +135,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2">
-                <div className="h-10 w-10 rounded-full bg-gray-200" />
+                <UserIcon size={40} />
                 <span className="text-[20px] font-semibold">닉네임</span>
               </div>
               <SettingIcon
@@ -149,7 +146,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </div>
         ) : (
           // 접힌 상태 UI: GeminiBadge 및 UserIcon 반영
-          <div className="mt-auto mb-[76px] flex flex-col items-center gap-[20px]">
+          <div className="mt-auto mb-[20px] flex flex-col items-center gap-[20px]">
             <div className="flex h-[28px] w-[60px] items-center justify-center gap-[10px] rounded-[8px] border-[0.5px] border-[#C6C6C6] px-[7px] py-[9px] shadow-sm">
               <img
                 src={geminiLogo}
@@ -170,7 +167,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   );
 }
 
-// Recent Notes Section Component
+// Recent Notes Section 컴포넌트
 function RecentNotesSection() {
   const [notes, setNotes] = useState<{ id: string; title: string }[]>([]);
 

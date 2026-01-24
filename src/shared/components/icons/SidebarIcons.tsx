@@ -1,4 +1,3 @@
-import { Currency } from "lucide-react";
 import type { SVGProps } from "react";
 import { useId } from "react";
 
@@ -192,10 +191,10 @@ export function SlideIcon({
     </svg>
   );
 }
-/** 6. UserIcon (프로필 아바타 아이콘) */
+// 6. UserIcon (프로필 아바타 아이콘)
 export function UserIcon({
   color = "#2A6AFF",
-  size = 40,
+  size = 26,
   ...props
 }: SVGProps<SVGSVGElement> & { size?: number }) {
   const gid = useId();
@@ -203,33 +202,28 @@ export function UserIcon({
     <svg
       width={size}
       height={size}
-      viewBox="0 0 40 40"
+      viewBox="0 0 26 26"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M30.6076 33.9945H9.3924L9.42376 32.7872C9.5492 27.9734 11.9169 18.8789 20.0078 18.8789C28.0988 18.8789 30.4665 27.9734 30.5919 32.7872L30.6233 33.9945H30.6076ZM11.8542 31.6425H28.1458C27.8322 28.6633 26.3897 21.2309 20.0078 21.2309C13.626 21.2309 12.1835 28.6633 11.8699 31.6425H11.8542Z"
-        fill={color}
-      />
-      <path
-        d="M20.0078 6.00537C23.4418 6.00537 26.2328 8.79643 26.2328 12.2304C26.2328 15.6643 23.4418 18.4554 20.0078 18.4554C16.5739 18.4554 13.7828 15.6643 13.7828 12.2304C13.7828 8.79643 16.5739 6.00537 20.0078 6.00537Z"
+        d="M12.7601 4.03027C7.28008 4.03027 2.83008 8.47027 2.83008 13.9603C2.83008 16.9703 4.17008 19.6603 6.29008 21.4803V20.9203C6.29008 17.8803 8.76008 15.4103 11.8001 15.4103H13.7201C16.7601 15.4103 19.2301 17.8803 19.2301 20.9203V21.4803C21.3401 19.6603 22.6901 16.9703 22.6901 13.9603C22.6901 8.48027 18.2501 4.03027 12.7601 4.03027ZM12.7601 15.2303C10.6501 15.2303 8.93008 13.5203 8.93008 11.4003C8.93008 9.28027 10.6401 7.57027 12.7601 7.57027C14.8801 7.57027 16.5901 9.28027 16.5901 11.4003C16.5901 13.5203 14.8801 15.2303 12.7601 15.2303Z"
         fill={`url(#${gid})`}
       />
       <defs>
         <linearGradient
           id={gid}
-          x1="20.0078"
-          y1="6.00537"
-          x2="20.0078"
-          y2="18.4397"
+          x1="12.7601"
+          y1="4.03027"
+          x2="12.7601"
+          y2="21.4803"
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="white" />
           <stop
             offset="1"
             stopColor={color}
-            stopOpacity="0.3"
           />
         </linearGradient>
       </defs>
@@ -470,3 +464,67 @@ export const SettingIcon = ({
     </svg>
   );
 };
+
+// 14. CreditIcon (크레딧 아이콘)
+export const CreditIcon = ({
+  size = 20,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number }) => {
+  const gradId1 = useId();
+  const gradId2 = useId();
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 26 26"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M5.85453 11.8419L7.46797 13.7753L11.3216 9.14834H18.4954L12.2683 1.85449L3.73438 11.8419H5.85453Z"
+        fill={`url(#${gradId1})`}
+      />
+      <path
+        d="M20.1089 10.7754H12.2816L7.62799 16.3491L5.24115 13.4556H3.73438L12.4417 23.6563L21.7757 12.7222L20.1089 10.7754Z"
+        fill={`url(#${gradId2})`}
+      />
+      <defs>
+        <linearGradient
+          id={gradId1}
+          x1="11.1149"
+          y1="1.85449"
+          x2="11.1149"
+          y2="13.7753"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor="#2A6AFF"
+            stopOpacity="0.5"
+          />
+        </linearGradient>
+        <linearGradient
+          id={gradId2}
+          x1="12.755"
+          y1="10.7754"
+          x2="12.755"
+          y2="23.6563"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop
+            stopColor="#2A6AFF"
+            stopOpacity="0.5"
+          />
+          <stop
+            offset="1"
+            stopColor="#2A6AFF"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
+
