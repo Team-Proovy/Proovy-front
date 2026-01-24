@@ -187,7 +187,7 @@ function RecentNotesSection() {
 
   return (
     <div className="px-6 mb-4">
-      <h3 className="text-[12px] font-regular text-[#454545] mb-[12px]leading-[160%] tracking-[-0.05em]">최근 노트</h3>
+      <h3 className="text-[12px] font-normal text-[#454545] mb-[12px] leading-[160%] tracking-[-0.05em]">최근 노트</h3>
       <ul>
         {notes.map((note) => (
           <li key={note.id}>
