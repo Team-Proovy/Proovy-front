@@ -1,15 +1,16 @@
 import ProovyLogo from "../../features/viewer/components/ProovyLogo";
-import { Settings } from "lucide-react";
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import {
   BarArrowIcon,
-  ChattingIcon,
   PaperIcon,
   HomeIcon,
   NoteIcon,
   RepositoryIcon,
   SlideIcon,
   UserIcon,
+  SearchIcon,
+  SettingIcon,
 } from "../components/icons/SidebarIcons";
 import { SidebarIconButton } from "../ui/SidebarIconButton";
 import geminiLogo from "../assets/images/img_gemini.png";
@@ -29,7 +30,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       onClick={() => {
         if (isCollapsed) onToggle(false);
       }}
-      className={`mb-[37px] flex min-h-[1024px] flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
+      className={`sticky top-0 h-screen flex flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
     >
       <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
@@ -70,7 +71,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         {/* 2. 메인 메뉴 */}
         {/* [추가] 사이드바 접힘/펼침 여부에 따른 로직 구현 */}
         <nav
-          className={`mb-8 ${isCollapsed ? "flex flex-col gap-[24px]" : "flex flex-col gap-[2px] px-2 font-normal"}`}
+          className={`mb-2 ${isCollapsed ? "flex flex-col gap-[24px]" : "flex flex-col gap-[2px] px-2 font-normal"}`}
         >
           <NavItem
             to="/"
@@ -79,9 +80,9 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             isCollapsed={isCollapsed}
           />
           <NavItem
-            to="/chatting"
-            icon={ChattingIcon}
-            label="채팅"
+            to="/search"
+            icon={SearchIcon}
+            label="검색"
             isCollapsed={isCollapsed}
           />
           <NavItem
@@ -99,7 +100,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           />
         </nav>
 
-        {/* 3. 하단 유저 및 상태 정보 */}
+        {/* 3. 최근 노트 */}
+        {/* 사이드바 펼쳤을때 "최근 노트 목록 보여주는 부분" */}
+        {!isCollapsed && <RecentNotesSection />}
+
+        {/* 4. 하단 유저 및 상태 정보 */}
         {/* 사이드바가 펼쳐졌을 때(false)만 하단 user 정보(요금제, 프로필..)를 보여주는 로직 추가됨 */}
         {!isCollapsed ? (
           <div className="mt-auto mb-[20px] space-y-4 border-t border-gray-100 px-[20px]">
@@ -136,7 +141,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <div className="h-10 w-10 rounded-full bg-gray-200" />
                 <span className="text-[20px] font-semibold">닉네임</span>
               </div>
-              <Settings
+              <SettingIcon
                 size={20}
                 className="cursor-pointer text-gray-400"
               />
@@ -164,6 +169,47 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     </aside>
   );
 }
+
+// Recent Notes Section Component
+function RecentNotesSection() {
+  const [notes, setNotes] = useState<{ id: string; title: string }[]>([]);
+
+  useEffect(() => {
+    // TODO: API 호출 로직 추가
+    console.log("최근 노트 호출 로직 추가 필요");
+    // fetch('/api/notes/recent').then(...)
+    setNotes([
+      { id: "1", title: "최근 노트 1" },
+      { id: "2", title: "최근 노트 2" },
+      { id: "3", title: "최근 노트 3" },
+    ]);
+  }, []);
+
+  return (
+    <div className="px-6 mb-4">
+      <h3 className="text-[12px] font-regular text-[#454545] mb-[12px]leading-[160%] tracking-[-0.05em]">최근 노트</h3>
+      <ul>
+        {notes.map((note) => (
+          <li key={note.id}>
+            <NavLink
+              to={`/note/${note.id}`}
+              className={({ isActive }) =>
+                `truncate transition-colors text-[14px] font-bold flex items-center px-2 ${
+                  isActive
+                    ? "w-[178px] h-[32px] rounded-[9px] bg-[#EBEBEB] text-[#454545]"
+                    : "py-1.5 rounded text-[#454545] hover:bg-gray-50 hover:text-gray-900"
+                }`
+              }
+            >
+              {note.title}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // Sidebar 함수 정의
 // 메인 메뉴 아이템 컴포넌트
 function NavItem({
