@@ -1,9 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 
-// Pages
+// Pages (특정 feature에 속하지 않는 독립 페이지)
 import { LandingPage } from "../../pages/LandingPage";
-import { LoginPage } from "../../pages/LoginPage";
 import { HomePage } from "../../pages/HomePage";
+
+// Features - Auth
+import { LoginPage } from "../../features/auth/pages/LoginPage";
 
 // Layouts
 import { AppLayout } from "../../shared/layout/AppLayout";
