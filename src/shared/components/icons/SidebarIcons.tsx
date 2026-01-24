@@ -1,4 +1,3 @@
-import { Currency } from "lucide-react";
 import type { SVGProps } from "react";
 import { useId } from "react";
 

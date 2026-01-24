@@ -1,4 +1,3 @@
-import { AppLayout } from "../../../shared/layout/AppLayout";
 import {
   ViewerTabsBar,
   ViewerFileBar,
@@ -10,7 +9,7 @@ import { ChatInput } from "../ui/ChatInput";
 
 export default function WorkspacePage() {
   return (
-    <AppLayout>
+    <>
       <div className="flex h-screen w-full">
         <div className="ml-[18px] flex flex-1 flex-col">
           {/* 상단 첫 번째 줄: ViewerTabsBar + ChatTopBlankBar */}
@@ -45,6 +44,6 @@ export default function WorkspacePage() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </>
   );
 }

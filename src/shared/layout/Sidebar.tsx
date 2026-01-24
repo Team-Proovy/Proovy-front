@@ -149,7 +149,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </div>
         ) : (
           // 접힌 상태 UI: GeminiBadge 및 UserIcon 반영
-          <div className="mt-auto mb-[76px] flex flex-col items-center gap-[20px]">
+          <div className="mt-auto mb-[20px] flex flex-col items-center gap-[20px]">
             <div className="flex h-[28px] w-[60px] items-center justify-center gap-[10px] rounded-[8px] border-[0.5px] border-[#C6C6C6] px-[7px] py-[9px] shadow-sm">
               <img
                 src={geminiLogo}

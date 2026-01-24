@@ -1,4 +1,3 @@
-import { AppLayout } from "../shared/layout/AppLayout";
 import { ChevronDown} from "lucide-react"; // 화살표 아이콘
 import { useFileUpload } from "../shared/hooks/useFileUpload";
 import {
@@ -20,9 +19,9 @@ export default function HomePage() {
   );
 
   return (
-    <AppLayout backgroundColor="bg-white">
+    <>
       {/* 1. 전체 컨테이너: 높이를 꽉 채우고(min-h-full) 요소들을 세로로 배치 */}
-      <div className="flex min-h-screen w-full flex-1 flex-col items-center pt-[39vh] pr-[20px] pb-[37px] pl-[20px]">
+      <div className="bg-[#FFFFFF] flex min-h-screen w-full flex-1 flex-col items-center pt-[39vh] pr-[20px] pb-[37px] pl-[20px]">
         <div className="flex w-full max-w-[904px] flex-col">
           {/* 2. 상단 타이틀 영역 */}
           <div className="mb-8 w-full">
@@ -74,7 +73,7 @@ export default function HomePage() {
           <ChevronDown size={50} />
         </div>
       </div>
-    </AppLayout>
+  </>
   );
 }
 
