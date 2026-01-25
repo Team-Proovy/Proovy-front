@@ -56,7 +56,7 @@ const RecentNoteItem = ({ note }: { note: RecentNote }) => {
   return (
     <li>
       <NavLink
-        to={`/app/note/${note.id}`}
+        to={`/app/chat/${note.id}`}
         className={({ isActive }) =>
           `block truncate rounded-lg px-3 py-2 text-[14px] transition-colors ${
             isActive
