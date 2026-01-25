@@ -6,18 +6,20 @@ import { Settings } from "lucide-react";
 import { ProovyLogo } from "../../../shared/components/ProovyLogo";
 import {
   BarArrowIcon,
-  ChattingIcon,
   PaperIcon,
   HomeIcon,
   NoteIcon,
   RepositoryIcon,
   SlideIcon,
   UserIcon,
+  SearchIcon,
+  SettingIcon,
+  CreditIcon,
 } from "../../../shared/components/icons/SidebarIcons";
-import { SidebarIconButton } from "../../../shared/ui/SidebarIconButton";
 import geminiLogo from "../../../shared/assets/images/img_gemini.png";
 
 // Sidebar Components
+import { SidebarIconButton } from "./SidebarIconButton";
 import { RecentNotes } from "./RecentNotes";
 
 interface SidebarProps {
@@ -116,7 +118,7 @@ export const Sidebar = ({
                 isCollapsed={isCollapsed}
               />
               <SearchButton
-                icon={ChattingIcon}
+                icon={SearchIcon}
                 label="검색"
                 isCollapsed={isCollapsed}
                 onClick={onSearchClick}
@@ -164,11 +166,7 @@ export const Sidebar = ({
                 </div>
                 <div className="flex items-center justify-between text-gray-500">
                   <div className="flex items-center gap-1.5">
-                    <img
-                      src={geminiLogo}
-                      alt="Gemini"
-                      className="h-3 w-3"
-                    />
+                    <CreditIcon />
                     <span className="text-[14px] font-medium">200</span>
                   </div>
                   <div className="mr-[24px] flex items-center gap-1.5">
@@ -180,7 +178,7 @@ export const Sidebar = ({
 
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
-                  <div className="h-10 w-10 rounded-full bg-gray-200" />
+                  <UserIcon size={38} />
                   <span className="text-[20px] font-semibold">닉네임</span>
                 </div>
                 <button
@@ -190,25 +188,22 @@ export const Sidebar = ({
                   }}
                   className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100"
                 >
-                  <Settings size={20} />
+                  <SettingIcon
+                    size={20}
+                    className="cursor-pointer text-gray-400"
+                  />
                 </button>
               </div>
             </div>
           ) : (
             <div className="flex w-[80px] shrink-0 flex-col items-center gap-[20px] pb-[76px]">
               <div className="flex h-[28px] w-[60px] items-center justify-center gap-[10px] rounded-[8px] border-[0.5px] border-[#C6C6C6] px-[7px] py-[9px] shadow-sm">
-                <img
-                  src={geminiLogo}
-                  alt="Gemini Logo"
-                  className="h-3 w-3"
-                />
+                <CreditIcon />
                 <span className="text-[10px] font-semibold text-gray-700">
                   200
                 </span>
               </div>
-              <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
-                <UserIcon size={38} />
-              </button>
+              <UserIcon size={40} />
             </div>
           )}
         </div>
