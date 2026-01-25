@@ -4,6 +4,7 @@ import { ChatInput } from "../../features/editor/components/ChatInput";
 import { LoginPage } from "../../pages/LoginPage";
 import WorkspacePage from "../../features/chat/pages/WorkspacePage";
 import { AppLayout } from "../../shared/layout/AppLayout";
+import RepositoryPage from "../../pages/RepositoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
       {
         path: "/chatting",
         element: <WorkspacePage />,
+      },
+      {
+        path: "/repository",
+        element: <RepositoryPage />,
       },
       {
         path: "/editor",
