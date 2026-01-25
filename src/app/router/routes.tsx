@@ -10,8 +10,8 @@ import { LoginPage } from "../../features/auth/pages/LoginPage";
 // Layouts
 import { AppLayout } from "../../shared/layout/AppLayout";
 
-// Features - Note
-import { NotePage } from "../../features/note/pages/NotePage";
+// Features - Chat
+import { ChatPage } from "../../features/chat/pages/ChatPage";
 
 // Features - Notes
 import { NotesPage } from "../../features/notes/pages/NotesPage";
@@ -54,11 +54,11 @@ export const router = createBrowserRouter([
         path: "storage",
         element: <StoragePage />,
       },
-      // 노트 대화방
+      // 대화방
       // ?panel=viewer|storage, ?file=fileId
       {
-        path: "note/:noteId",
-        element: <NotePage />,
+        path: "chat/:chatId",
+        element: <ChatPage />,
       },
     ],
   },

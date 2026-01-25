@@ -1,6 +1,5 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Settings } from "lucide-react";
 
 // Shared
 import { ProovyLogo } from "../../../shared/components/ProovyLogo";
@@ -16,7 +15,6 @@ import {
   SettingIcon,
   CreditIcon,
 } from "../../../shared/components/icons/SidebarIcons";
-import geminiLogo from "../../../shared/assets/images/img_gemini.png";
 
 // Sidebar Components
 import { SidebarIconButton } from "./SidebarIconButton";

@@ -136,7 +136,7 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
               filteredResults.map((result) => (
                 <Link
                   key={result.id}
-                  to={`/app/note/${result.noteId}`}
+                  to={`/app/chat/${result.noteId}`}
                   onClick={onClose}
                   className="flex flex-col rounded-lg px-3 py-2 hover:bg-gray-700"
                 >

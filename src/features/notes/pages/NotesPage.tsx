@@ -5,7 +5,7 @@
  *
  * 기능:
  * - 전체 노트 목록 표시
- * - 노트 카드 클릭 → /app/note/:noteId 로 이동
+ * - 노트 카드 클릭 → /app/chat/:chatId 로 이동
  * - "노트 추가하기" 클릭 → /app/home 으로 이동
  */
 
@@ -44,7 +44,7 @@ export const NotesPage = () => {
         {mockNotes.map((note) => (
           <Link
             key={note.id}
-            to={`/app/note/${note.id}`}
+            to={`/app/chat/${note.id}`}
             className="flex h-40 flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 hover:border-blue-400 hover:shadow-md"
           >
             <h3 className="font-medium text-gray-900">{note.title}</h3>

@@ -1,7 +1,7 @@
 /**
- * NotePage - 노트 대화방
+ * ChatPage - 대화방
  *
- * URL: /app/note/:noteId
+ * URL: /app/chat/:chatId
  * Query Params:
  *   - panel: 'viewer' | 'storage' (기본값: 'viewer')
  *   - file: fileId (특정 파일 열기)
@@ -15,8 +15,8 @@
 import { useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 
-export const NotePage = () => {
-  const { noteId } = useParams<{ noteId: string }>();
+export const ChatPage = () => {
+  const { chatId } = useParams<{ chatId: string }>();
   const [searchParams] = useSearchParams();
 
   const panel = searchParams.get("panel") || "viewer";
@@ -90,7 +90,7 @@ export const NotePage = () => {
               Chat History
             </button>
           </div>
-          <span className="text-sm text-gray-600">노트 ID: {noteId}</span>
+          <span className="text-sm text-gray-600">채팅 ID: {chatId}</span>
         </div>
 
         {/* 메시지 영역 */}
