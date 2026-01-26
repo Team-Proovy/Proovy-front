@@ -53,7 +53,7 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           >
             <CloseIcon
               size={24}
-              className="text-black transition-colors group-hover:[&_path]:fill-[#2A6AFF] ease-out duration-300 cursor-pointer"
+              className="cursor-pointer text-black transition-colors duration-300 ease-out group-hover:[&_path]:fill-[#2A6AFF]"
             />
           </button>
 

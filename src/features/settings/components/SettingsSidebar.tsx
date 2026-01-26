@@ -74,7 +74,7 @@ export const SettingsSidebar = ({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`relative flex items-center gap-[12px] rounded-r-[12px] py-[10px] pl-0 text-left transition-all cursor-pointer ${
+                className={`relative flex cursor-pointer items-center gap-[12px] rounded-r-[12px] py-[10px] pl-0 text-left transition-all ${
                   isActive
                     ? "-ml-[40px] w-[268px] bg-white pl-[40px] shadow-[0px_4px_10px_2px_rgba(0,0,0,0.1)]"
                     : "w-full hover:opacity-70"
@@ -102,8 +102,6 @@ export const SettingsSidebar = ({
 
         {/* 스페이서 */}
         <div className="flex-1" />
-
-        
       </div>
     </div>
   );
