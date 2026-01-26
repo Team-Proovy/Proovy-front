@@ -1,6 +1,6 @@
-import { RepositoryChevronIcon } from "../../../shared/components/icons/RepositoryIcons";
+import { StorageChevronIcon } from "../../../shared/components/icons/StorageIcons";
 import { NoteCard } from "./NoteCard";
-import { useRepositoryStore } from "../model/useRepositoryStore";
+import { useStorageStore } from "../store/useStorageStore";
 
 interface Note {
   id: number;
@@ -15,8 +15,13 @@ interface NoteGroupProps {
   onToggle: () => void;
 }
 
-export function NoteGroup({ title, notes, isOpen, onToggle }: NoteGroupProps) {
-  const { isSelectMode, selectedIds, toggleIdSelection } = useRepositoryStore();
+export const NoteGroup = ({
+  title,
+  notes,
+  isOpen,
+  onToggle,
+}: NoteGroupProps) => {
+  const { isSelectMode, selectedIds, toggleIdSelection } = useStorageStore();
 
   return (
     <div className="flex flex-col">
@@ -38,7 +43,7 @@ export function NoteGroup({ title, notes, isOpen, onToggle }: NoteGroupProps) {
         }}
       >
         <div className="flex items-center">
-          <RepositoryChevronIcon isOpen={isOpen} />
+          <StorageChevronIcon isOpen={isOpen} />
           <span
             className="ml-[28px] font-['Pretendard']"
             style={{
@@ -115,4 +120,4 @@ export function NoteGroup({ title, notes, isOpen, onToggle }: NoteGroupProps) {
       )}
     </div>
   );
-}
+};

@@ -1,8 +1,8 @@
-import { useRepositoryStore } from "../model/useRepositoryStore";
+import { useStorageStore } from "../store/useStorageStore";
 
-export function DeleteNotesModal() {
+export const DeleteNotesModal = () => {
   const { setDeleteModalOpen, deleteSelectedNotes, selectedIds } =
-    useRepositoryStore();
+    useStorageStore();
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -122,4 +122,4 @@ export function DeleteNotesModal() {
       </div>
     </div>
   );
-}
+};

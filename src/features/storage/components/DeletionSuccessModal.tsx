@@ -1,7 +1,7 @@
-import { useRepositoryStore } from "../model/useRepositoryStore";
+import { useStorageStore } from "../store/useStorageStore";
 
-export function DeletionSuccessModal() {
-  const { setSuccessModalOpen } = useRepositoryStore();
+export const DeletionSuccessModal = () => {
+  const { setSuccessModalOpen } = useStorageStore();
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -77,4 +77,4 @@ export function DeletionSuccessModal() {
       </div>
     </div>
   );
-}
+};

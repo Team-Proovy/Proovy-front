@@ -6,7 +6,7 @@ interface Note {
   type: "업로드" | "AI 생성";
 }
 
-interface RepositoryState {
+interface StorageState {
   isSelectMode: boolean;
   selectedIds: number[];
   isNoteGroupOpen: boolean;
@@ -45,7 +45,7 @@ const INITIAL_NOTES: Note[] = [
   ...TEMPLATE_NOTES.map((note, idx) => ({ ...note, id: idx + 10 })),
 ];
 
-export const useRepositoryStore = create<RepositoryState>((set) => ({
+export const useStorageStore = create<StorageState>((set) => ({
   isSelectMode: false,
   selectedIds: [],
   isNoteGroupOpen: true,

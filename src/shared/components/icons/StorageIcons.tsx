@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-export const RepositoryChevronIcon = ({
+export const StorageChevronIcon = ({
   isOpen = false,
   ...props
 }: SVGProps<SVGSVGElement> & { isOpen?: boolean }) => (
@@ -26,7 +26,7 @@ export const RepositoryChevronIcon = ({
   </svg>
 );
 
-export const RepositorySearchIcon = (props: SVGProps<SVGSVGElement>) => (
+export const StorageSearchIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="20"
@@ -49,7 +49,7 @@ export const RepositorySearchIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const RepositoryCheckboxUncheckedIcon = (
+export const StorageCheckboxUncheckedIcon = (
   props: SVGProps<SVGSVGElement>,
 ) => (
   <svg
@@ -77,9 +77,7 @@ export const RepositoryCheckboxUncheckedIcon = (
   </svg>
 );
 
-export const RepositoryCheckboxCheckedIcon = (
-  props: SVGProps<SVGSVGElement>,
-) => (
+export const StorageCheckboxCheckedIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="20"

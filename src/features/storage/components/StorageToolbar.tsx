@@ -1,17 +1,17 @@
-import { RepositorySearchIcon } from "../../../shared/components/icons/RepositoryIcons";
-import { useRepositoryStore } from "../model/useRepositoryStore";
+import { StorageSearchIcon } from "../../../shared/components/icons/StorageIcons";
+import { useStorageStore } from "../store/useStorageStore";
 
-interface RepositoryToolbarProps {
+interface StorageToolbarProps {
   responsivePaddingL: string;
   responsivePaddingR: string;
 }
 
-export function RepositoryToolbar({
+export const StorageToolbar = ({
   responsivePaddingL,
   responsivePaddingR,
-}: RepositoryToolbarProps) {
+}: StorageToolbarProps) => {
   const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
-    useRepositoryStore();
+    useStorageStore();
 
   const handleActionClick = () => {
     if (isSelectMode) {
@@ -37,7 +37,7 @@ export function RepositoryToolbar({
             placeholder="검색어를 입력해주세요."
             className="h-full w-full rounded-[70px] border-[0.5px] border-[#C6C6C6] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-[#6B6B6B] outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#6B6B6B]"
           />
-          <RepositorySearchIcon
+          <StorageSearchIcon
             style={{
               position: "absolute",
               top: "6px",
@@ -185,4 +185,4 @@ export function RepositoryToolbar({
       </div>
     </div>
   );
-}
+};

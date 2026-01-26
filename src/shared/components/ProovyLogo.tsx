@@ -1,4 +1,7 @@
-const ProovyLogo = ({ className }: { className?: string }) => (
+/**
+ * ProovyLogo - Proovy 로고 SVG 컴포넌트
+ */
+export const ProovyLogo = ({ className }: { className?: string }) => (
   <svg
     viewBox="0 0 1463 494"
     fill="none"
@@ -36,5 +39,3 @@ const ProovyLogo = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
-export default ProovyLogo;

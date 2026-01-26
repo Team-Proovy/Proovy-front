@@ -1,12 +1,22 @@
+import { useNavigate } from "react-router-dom";
 import {
   LogoIcon,
   KakaoIcon,
   NaverIcon,
   GoogleIcon,
-} from "../shared/components/icons/LoginIcons";
-import { SocialLoginButton } from "../shared/ui/SocialLoginButton";
+} from "../../../shared/components/icons/LoginIcons";
+import { SocialLoginButton } from "../components/SocialLoginButton";
+import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
 
 export const LoginPage = () => {
+  const navigate = useNavigate();
+
+  // TODO: 실제 OAuth 로그인 로직으로 교체 예정
+  const handleSocialLogin = () => {
+    // 임시: 바로 홈으로 이동
+    navigate("/app/home");
+  };
+
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white select-none">
       {/* 콘텐츠 레이어 */}
@@ -49,16 +59,19 @@ export const LoginPage = () => {
                   provider="kakao"
                   icon={<KakaoIcon className="h-[18px] w-[20px]" />}
                   label="카카오 로그인"
+                  onClick={handleSocialLogin}
                 />
                 <SocialLoginButton
                   provider="naver"
                   icon={<NaverIcon className="h-[16px] w-[16px]" />}
                   label="네이버 로그인"
+                  onClick={handleSocialLogin}
                 />
                 <SocialLoginButton
                   provider="google"
                   icon={<GoogleIcon className="h-[24px] w-[24px]" />}
                   label="구글 로그인"
+                  onClick={handleSocialLogin}
                 />
               </div>
             </div>
@@ -68,14 +81,10 @@ export const LoginPage = () => {
 
       {/* 배경 이미지 레이어 */}
       <div className="pointer-events-none absolute inset-0 z-0 h-full w-full">
-        <div
-          className="h-full w-full bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('/src/shared/assets/images/img_login_bg.png')",
-            backgroundSize: "auto 100%",
-            backgroundPosition: "right center",
-          }}
+        <img
+          src={loginBgImage}
+          alt="login background"
+          className="absolute top-0 right-0 h-full w-auto object-cover"
         />
       </div>
     </div>
