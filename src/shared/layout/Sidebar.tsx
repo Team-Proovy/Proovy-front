@@ -158,7 +158,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </span>
             </div>
             <button className="flex h-[40px] w-[40px] items-center justify-center rounded-full border-[0.5px] border-[#C6C6C6] bg-white transition hover:bg-black/5 active:scale-[0.98]">
-              <UserIcon size={38} />
+              <UserIcon size={40} />
             </button>
           </div>
         )}
