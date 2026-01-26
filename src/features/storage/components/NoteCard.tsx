@@ -1,7 +1,7 @@
 import {
-  RepositoryCheckboxUncheckedIcon,
-  RepositoryCheckboxCheckedIcon,
-} from "../../../shared/components/icons/RepositoryIcons";
+  StorageCheckboxUncheckedIcon,
+  StorageCheckboxCheckedIcon,
+} from "../../../shared/components/icons/StorageIcons";
 
 interface NoteCardProps {
   label: string;
@@ -11,13 +11,13 @@ interface NoteCardProps {
   onSelect: () => void;
 }
 
-export function NoteCard({
+export const NoteCard = ({
   label,
   type,
   isSelected,
   isSelectMode,
   onSelect,
-}: NoteCardProps) {
+}: NoteCardProps) => {
   const isUpload = type === "업로드";
 
   return (
@@ -48,9 +48,9 @@ export function NoteCard({
           }}
         >
           {isSelected ? (
-            <RepositoryCheckboxCheckedIcon />
+            <StorageCheckboxCheckedIcon />
           ) : (
-            <RepositoryCheckboxUncheckedIcon />
+            <StorageCheckboxUncheckedIcon />
           )}
         </div>
       )}
@@ -96,4 +96,4 @@ export function NoteCard({
       </div>
     </div>
   );
-}
+};
