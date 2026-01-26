@@ -31,7 +31,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       onClick={() => {
         if (isCollapsed) onToggle(false);
       }}
-      className={`sticky top-0 h-screen flex flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
+      className={`sticky top-0 flex h-screen flex-col bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer rounded-r-[12px] border-[0.5px] border-[#C6C6C6] hover:bg-gray-50/50" : "w-[240px] border-r border-[#C6C6C6]"}`}
     >
       <div className="flex h-full flex-col">
         {/* 1. 로고 및 접기 버튼 */}
@@ -123,7 +123,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               </div>
               <div className="flex items-center justify-between text-gray-500">
                 <div className="flex items-center gap-1.5">
-                 <CreditIcon/>
+                  <CreditIcon />
                   <span className="text-[14px] font-medium">200</span>
                 </div>
                 <div className="mr-[24px] flex items-center gap-1.5">
@@ -183,18 +183,20 @@ function RecentNotesSection() {
   }, []);
 
   return (
-    <div className="px-6 mb-4">
-      <h3 className="text-[12px] font-normal text-[#454545] mb-[12px] leading-[160%] tracking-[-0.05em]">최근 노트</h3>
+    <div className="mb-4 px-6">
+      <h3 className="mb-[12px] text-[12px] leading-[160%] font-normal tracking-[-0.05em] text-[#454545]">
+        최근 노트
+      </h3>
       <ul>
         {notes.map((note) => (
           <li key={note.id}>
             <NavLink
               to={`/note/${note.id}`}
               className={({ isActive }) =>
-                `truncate transition-colors text-[14px] font-bold flex items-center px-2 ${
+                `flex items-center truncate px-2 text-[14px] font-bold transition-colors ${
                   isActive
-                    ? "w-[178px] h-[32px] rounded-[9px] bg-[#EBEBEB] text-[#454545]"
-                    : "py-1.5 rounded text-[#454545] hover:bg-gray-50 hover:text-gray-900"
+                    ? "h-[32px] w-[178px] rounded-[9px] bg-[#EBEBEB] text-[#454545]"
+                    : "rounded py-1.5 text-[#454545] hover:bg-gray-50 hover:text-gray-900"
                 }`
               }
             >
