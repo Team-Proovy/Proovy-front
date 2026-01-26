@@ -194,7 +194,7 @@ export function SlideIcon({
 // 6. UserIcon (프로필 아바타 아이콘)
 export function UserIcon({
   color = "#2A6AFF",
-  size = 26,
+  size = 40,
   ...props
 }: SVGProps<SVGSVGElement> & { size?: number }) {
   const gid = useId();

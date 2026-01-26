@@ -1,7 +1,9 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { useFileUpload } from "../shared/hooks/useFileUpload";
 import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
+import { useState } from "react";
+import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 
 /**
  * HomePage - 새 노트 시작점
@@ -14,13 +16,32 @@ import { ChatInput } from "../features/editor/components/ChatInput";
  * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
  */
 export const HomePage = () => {
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>("");
+
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
     (file) => {
-      // TODO: 선택된 파일 처리 로직 (예: 서버 전송, 상태 저장 등)
-      console.log("HomePage에서 파일 선택됨:", file);
+      // 선택된 파일 처리 로직
+      // console.log("HomePage에서 파일 선택됨:", file);
+
+      if (file && file.type === "application/pdf") {
+        setFileName(file.name);
+        const url = URL.createObjectURL(file);
+        setPdfUrl(url);
+      }
     },
   );
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 버튼 클릭 이벤트 전파 방지
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    setPdfUrl(null);
+    setFileName("");
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+  };
 
   return (
     // AppLayout의 Outlet에서 렌더링됨 - 정중앙 배치
@@ -44,20 +65,51 @@ export const HomePage = () => {
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
-              accept=".pdf,.png,.jpg,.jpeg,.txt"
+              accept=".pdf" 
             />
-            {/* 왼쪽: 업로드 섹션 */}
-            <button
-              onClick={openFileExplorer}
-              className="group flex h-[160px] w-[220px] shrink-0 cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-[0.5px] border-[#C6C6C6] bg-white/40 px-5 py-9 shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
-            >
-              <div>
-                <PdfIcon size={56} />
-              </div>
-              <p className="text-[18px] font-normal text-[#666666] transition-colors duration-700 group-hover:text-[#2542F0] group-active:text-[#2542F0]">
-                뷰어로 파일 업로드
-              </p>
-            </button>
+            
+            {pdfUrl ? (
+                /* PDF 업로드 완료 시: 카드 형태 UI */
+                <div className="group relative flex h-[160px] w-[220px] flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
+                  
+                  {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
+                  <div className="relative flex h-[160px] w-[140px] items-start justify-center overflow-hidden bg-[#F2F2F2]">
+                    <div className="w-full">
+                      <PdfPreview fileUrl={pdfUrl} width={140} />
+                    </div>
+        
+                    {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}
+                    <div className="absolute inset-0 flex items-start justify-end bg-black/20 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                      <button 
+                        onClick={handleRemove}
+                        className="rounded-full bg-white/10 p-1 transition-colors hover:bg-white/30 cursor-pointer"
+                      >
+                        <X size={20} color="black" />
+                      </button>
+                    </div>
+                  </div>
+        
+                  {/* 하단: 파일명 영역 */}
+                  <div className="flex h-[50px] w-full items-center justify-center border-t-[0.5px] border-[#C6C6C6] bg-white px-3">
+                    <p className="truncate text-[13px] font-medium text-[#333333]">
+                      {fileName}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* 기본 상태: 업로드 버튼 */
+                <button
+                  onClick={openFileExplorer}
+                  className="group flex h-[160px] w-[220px] cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[36px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
+                >
+                  <div>
+                    <PdfIcon size={56} />
+                  </div>
+                  <p className="text-[18px] font-normal text-[#666666] transition-colors duration-700 group-hover:text-[#2542F0]">
+                    뷰어로 파일 업로드
+                  </p>
+                </button>
+              )}
 
             {/* 오른쪽: 텍스트 입력 섹션 */}
             <ChatInput />
