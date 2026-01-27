@@ -80,7 +80,7 @@ export const ConfirmModal = ({
           {/* 취소 버튼 - 너비 200px */}
           <button
             onClick={onClose}
-            className="flex h-[48px] w-[200px] items-center justify-center rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] font-['Pretendard'] text-[18px] font-semibold text-[#6B7280] transition-colors hover:bg-[#E5E8EC]"
+            className="flex h-[48px] w-[200px] cursor-pointer items-center justify-center rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] font-['Pretendard'] text-[18px] font-semibold text-[#6B7280] transition-colors hover:bg-[#E5E8EC]"
           >
             {cancelText}
           </button>
@@ -88,7 +88,7 @@ export const ConfirmModal = ({
           {/* 확인 버튼 - 너비 120px */}
           <button
             onClick={onConfirm}
-            className={`flex h-[48px] w-[120px] items-center justify-center rounded-[12px] font-['Pretendard'] text-[18px] font-semibold text-white transition-colors ${confirmButtonStyle}`}
+            className={`flex h-[48px] w-[120px] cursor-pointer items-center justify-center rounded-[12px] font-['Pretendard'] text-[18px] font-semibold text-white transition-colors ${confirmButtonStyle}`}
           >
             {confirmText}
           </button>
