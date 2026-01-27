@@ -51,6 +51,9 @@ export const ConfirmModal = ({
     // 오버레이
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-modal-title"
       onClick={onClose}
     >
       {/* 모달 컨테이너 */}
@@ -59,7 +62,10 @@ export const ConfirmModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* 제목 */}
-        <h4 className="font-['Pretendard'] text-[20px] leading-[28px] font-bold text-black">
+        <h4
+          id="confirm-modal-title"
+          className="font-['Pretendard'] text-[20px] leading-[28px] font-bold text-black"
+        >
           {title}
         </h4>
 

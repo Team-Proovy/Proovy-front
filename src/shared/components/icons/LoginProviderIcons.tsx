@@ -42,6 +42,10 @@ export const LoginProviderIcon = ({
           className={className}
         />
       );
+    default: {
+      const _exhaustiveCheck: never = provider;
+      throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
+    }
   }
 };
 
