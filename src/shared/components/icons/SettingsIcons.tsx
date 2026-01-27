@@ -88,7 +88,7 @@ export const SubscriptionIcon = ({
  */
 export const CreditIcon = ({
   isActive = false,
-  size = 36,
+  size = 26,
   ...props
 }: SVGProps<SVGSVGElement> & { size?: number; isActive?: boolean }) => {
   const gradId1 = useId();
@@ -103,26 +103,26 @@ export const CreditIcon = ({
     <svg
       width={size}
       height={size}
-      viewBox="0 0 36 36"
+      viewBox="0 0 26 26"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M11.0996 17.086L12.7131 19.0195L16.5667 14.3925H23.7405L17.5134 7.09863L8.97949 17.086H11.0996Z"
+        d="M5.85453 11.8419L7.46797 13.7753L11.3216 9.14834H18.4954L12.2683 1.85449L3.73438 11.8419H5.85453Z"
         fill={`url(#${gradId1})`}
       />
       <path
-        d="M25.354 16.0195H17.5268L12.8731 21.5933L10.4863 18.6997H8.97949L17.6868 28.9004L27.0208 17.9663L25.354 16.0195Z"
+        d="M20.1089 10.7754H12.2816L7.62799 16.3491L5.24115 13.4556H3.73438L12.4417 23.6563L21.7757 12.7222L20.1089 10.7754Z"
         fill={`url(#${gradId2})`}
       />
       <defs>
         <linearGradient
           id={gradId1}
-          x1="16.36"
-          y1="7.09863"
-          x2="16.36"
-          y2="19.0195"
+          x1="11.1149"
+          y1="1.85449"
+          x2="11.1149"
+          y2="13.7753"
           gradientUnits="userSpaceOnUse"
         >
           <stop stopColor="white" />
@@ -134,16 +134,86 @@ export const CreditIcon = ({
         </linearGradient>
         <linearGradient
           id={gradId2}
-          x1="18.0001"
-          y1="16.0195"
-          x2="18.0001"
-          y2="28.9004"
+          x1="12.755"
+          y1="10.7754"
+          x2="12.755"
+          y2="23.6563"
           gradientUnits="userSpaceOnUse"
         >
           <stop
             stopColor={color}
             stopOpacity="0.5"
           />
+          <stop
+            offset="1"
+            stopColor={color}
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
+
+/**
+ * 캘린더 아이콘
+ * - 활성화: 파란색 (#2A6AFF)
+ * - 비활성화: 회색 (#6B7280)
+ */
+export const CalendarIcon = ({
+  isActive = false,
+  size = 26,
+  ...props
+}: SVGProps<SVGSVGElement> & { size?: number; isActive?: boolean }) => {
+  const gradId = useId();
+
+  // 활성화: 파란색, 비활성화: 회색
+  const activeColor = "#2A6AFF";
+  const inactiveColor = "#6B7280";
+  const color = isActive ? activeColor : inactiveColor;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 26 26"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M22.1355 12.0285H2.84082V5.70801H8.48122H22.1355V12.0285Z"
+        fill={`url(#${gradId})`}
+      />
+      <path
+        d="M8.268 3.48047H6.93457V5.69396H8.268V3.48047Z"
+        fill={color}
+      />
+      <path
+        d="M18.0551 3.48047H16.7217V5.69396H18.0551V3.48047Z"
+        fill={color}
+      />
+      <path
+        d="M15.8151 22.029H2.84082V12.0283H4.17425V20.6956H15.8151V22.029Z"
+        fill={color}
+      />
+      <path
+        d="M22.6689 17.8418H15.6284V19.1752H22.6689V17.8418Z"
+        fill={color}
+      />
+      <path
+        d="M19.8285 14.9883H18.4951V22.0288H19.8285V14.9883Z"
+        fill={color}
+      />
+      <defs>
+        <linearGradient
+          id={gradId}
+          x1="12.4882"
+          y1="12.0285"
+          x2="12.4882"
+          y2="5.70801"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
           <stop
             offset="1"
             stopColor={color}

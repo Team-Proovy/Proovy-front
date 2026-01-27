@@ -2,8 +2,9 @@ import { useState } from "react";
 import {
   LoginProviderIcon,
   type LoginProvider,
-} from "../../../shared/components/icons/LoginProviderIcons";
-import { ConfirmModal } from "./ConfirmModal";
+} from "../../../../shared/components/icons/LoginProviderIcons";
+import { ConfirmModal } from "../ConfirmModal";
+import { ProfileField } from "./ProfileField";
 
 /**
  * ProfileTabContent - 내 프로필 탭
@@ -42,7 +43,7 @@ export const ProfileTabContent = () => {
           />
           {/* 로그아웃 버튼 - 아이콘 아래 24px, 중앙 정렬, 130x32 */}
           <button
-            className="mt-[24px] h-[32px] w-[150px] rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] leading-[24px] text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
+            className="mt-[24px] h-[32px] w-[150px] cursor-pointer rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] leading-[24px] text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
             onClick={() => {
               // TODO: 로그아웃 로직 구현
               console.log("로그아웃");
@@ -104,45 +105,6 @@ export const ProfileTabContent = () => {
         confirmText="회원탈퇴"
         variant="danger"
       />
-    </div>
-  );
-};
-
-/**
- * 프로필 입력 필드
- * - 레이블과 입력 칸 사이: 8px
- * - 필드 간 간격: 20px (부모에서 gap-[20px] 적용)
- */
-const ProfileField = ({
-  label,
-  value,
-  placeholder,
-  readonly = false,
-}: {
-  label: string;
-  value?: string;
-  placeholder?: string;
-  readonly?: boolean;
-}) => {
-  return (
-    <div className="flex flex-col gap-[8px]">
-      {/* 레이블: Pretendard Medium, 14px, line-height 20px */}
-      <label className="font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black">
-        {label}
-      </label>
-      {/* 입력 칸: 배경 #F1F4F8, border-radius 8px */}
-      {readonly ? (
-        <div className="w-full rounded-[8px] bg-[#F1F4F8] px-[16px] py-[12px] font-['Pretendard'] text-[16px] text-[#2F3440]">
-          {value}
-        </div>
-      ) : (
-        <input
-          type="text"
-          defaultValue={value}
-          placeholder={placeholder}
-          className="w-full rounded-[8px] bg-[#F1F4F8] px-[16px] py-[12px] font-['Pretendard'] text-[16px] text-[#2F3440] transition-colors outline-none placeholder:text-[#9CA3AF] focus:ring-1 focus:ring-[#2A6AFF]"
-        />
-      )}
     </div>
   );
 };

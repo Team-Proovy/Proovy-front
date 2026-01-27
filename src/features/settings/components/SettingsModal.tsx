@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { SettingsSidebar } from "./SettingsSidebar";
-import { ProfileTabContent } from "./ProfileTabContent";
-import { SubscriptionTabContent } from "./SubscriptionTabContent";
-import { CreditTabContent } from "./CreditTabContent";
+import { ProfileTabContent } from "./profile";
+import { SubscriptionTabContent } from "./subscription";
+import { CreditTabContent } from "./credit";
 import { CloseIcon } from "../../../shared/components/icons/SettingsIcons";
 import type { SettingsTab } from "../types/settings";
 

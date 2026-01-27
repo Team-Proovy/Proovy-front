@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ConfirmModal } from "./ConfirmModal";
+import { ConfirmModal } from "../ConfirmModal";
 import { PlanInfoCard, PLAN_DETAILS, type PlanInfo } from "./PlanInfoCard";
+import { UpgradeModal } from "../../../subscription/components/UpgradeModal";
 
 /**
  * SubscriptionTabContent - 구독 정보 탭
@@ -14,7 +15,8 @@ export const SubscriptionTabContent = () => {
     endDate: "2026. 2. 9.",
   };
 
-  // 구독 취소 모달 상태
+  // 모달 상태
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const handleCancelSubscription = () => {
@@ -37,7 +39,10 @@ export const SubscriptionTabContent = () => {
       {/* 버튼 영역 */}
       <div className="mt-[28px] flex gap-[16px]">
         {/* 업그레이드 버튼 - hover/active 시 파란색 배경 + 흰색 텍스트 */}
-        <button className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF]/20 hover:text-white active:bg-[#2A6AFF] active:text-white">
+        <button
+          onClick={() => setIsUpgradeModalOpen(true)}
+          className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF]/20 hover:text-white active:bg-[#2A6AFF] active:text-white"
+        >
           업그레이드
         </button>
 
@@ -49,6 +54,12 @@ export const SubscriptionTabContent = () => {
           구독취소
         </button>
       </div>
+
+      {/* 업그레이드 모달 */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
 
       {/* 구독 취소 확인 모달 */}
       <ConfirmModal
