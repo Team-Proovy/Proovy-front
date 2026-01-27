@@ -9,7 +9,6 @@ import {
 interface SettingsSidebarProps {
   activeTab: SettingsTab;
   onTabChange: (tab: SettingsTab) => void;
-  onLogout: () => void;
 }
 
 /**
@@ -22,7 +21,6 @@ interface SettingsSidebarProps {
 export const SettingsSidebar = ({
   activeTab,
   onTabChange,
-  onLogout,
 }: SettingsSidebarProps) => {
   // 탭별 아이콘 매핑
   const getIcon = (tabId: SettingsTab, isActive: boolean) => {
