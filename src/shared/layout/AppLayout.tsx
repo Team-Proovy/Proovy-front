@@ -2,7 +2,7 @@ import { Outlet } from "react-router-dom";
 import { useState } from "react";
 
 // Features
-import { Sidebar } from "../../features/sidebar/components/Sidebar";
+import { Sidebar } from "../../features/sidebar/Sidebar";
 import { SearchModal } from "../../features/search/components/SearchModal";
 import { SettingsModal } from "../../features/settings/components/SettingsModal";
 import { UpgradeModal } from "../../features/subscription/components/UpgradeModal";

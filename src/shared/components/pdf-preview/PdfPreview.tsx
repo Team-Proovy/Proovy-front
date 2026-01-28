@@ -35,7 +35,7 @@ export const PdfPreview = ({ fileUrl, width = 180 }: PdfPreviewProps) => {
           canvas: canvas,
           viewport: viewport,
         });
-        
+
         await renderTask.promise;
       } catch (error) {
         console.error("PDF Preview 렌더링 실패:", error);
@@ -48,7 +48,7 @@ export const PdfPreview = ({ fileUrl, width = 180 }: PdfPreviewProps) => {
   }, [fileUrl, width]); // 파일이나 너비가 바뀌면 다시 렌더링한다.
 
   return (
-    <div className="flex items-center justify-center overflow-hidden rounded-lg bg-gray-100 shadow-sm border border-gray-200">
+    <div className="flex items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100 shadow-sm">
       <canvas ref={canvasRef} />
     </div>
   );
