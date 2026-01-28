@@ -27,16 +27,16 @@ export const Sidebar = ({
 }: SidebarProps) => {
   return (
     <div
-      className={`relative z-10 h-full min-h-[600px] shrink-0 transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[240px]"}`}
+      className={`relative z-10 h-full min-h-[600px] shrink-0 whitespace-nowrap transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[240px]"}`}
     >
       <aside
-        onClick={() => isCollapsed && onToggle(false)}
-        className={`relative flex h-full flex-col transition-all duration-300 ${isCollapsed ? "w-[80px] cursor-pointer" : "w-[252px]"}`}
+        className={`relative flex h-full flex-col transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[252px]"}`}
       >
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px] border-[0.5px] border-[#C6C6C6]" : "w-[240px] shadow-[1px_0_0_0_#C6C6C6]"}`}
+          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#D1D6DE] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[240px] border-l-0"}`}
         />
 
+        {/* 헤어: 로고, 여닫이 아이콘 */}
         <div className="relative z-10 flex h-full flex-col">
           <SidebarHeader
             isCollapsed={isCollapsed}

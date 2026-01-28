@@ -19,7 +19,7 @@ export const SidebarProfile = ({
 }: SidebarProfileProps) => {
   return !isCollapsed ? (
     /* 펼쳐진 상태의 프로필 UI */
-    <div className="w-[240px] shrink-0 space-y-4 border-t border-gray-100 px-[20px] pt-4 pb-[20px]">
+    <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
       <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -33,7 +33,7 @@ export const SidebarProfile = ({
               e.stopPropagation();
               onUpgradeClick();
             }}
-            className="flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-opacity hover:opacity-80"
+            className="flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
           >
             업그레이드
           </button>
@@ -41,7 +41,7 @@ export const SidebarProfile = ({
         <div className="flex items-center justify-between text-gray-500">
           <div className="flex items-center gap-1.5">
             <CreditIcon />
-            <span className="text-[14px] font-medium">200</span>
+            <span className="text-[14px] font-medium text-[#D1D6DE">200</span>
           </div>
           <div className="mr-[24px] flex items-center gap-1.5">
             <PaperIcon />
@@ -72,7 +72,7 @@ export const SidebarProfile = ({
   ) : (
     /* 접힌 상태의 프로필 UI */
     <div className="flex w-[80px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
-      <div className="flex h-[26px] w-[60px] items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#C6C6C6] px-[7px] py-[9px] shadow-sm">
+      <div className="flex h-[26px] w-[60px] items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm">
         <CreditIcon size={22} />
         <span className="text-[10px] font-semibold text-[#2F3440]">200</span>
       </div>

@@ -36,7 +36,7 @@ export const AppLayout = () => {
       />
 
       {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
-      <main className="relative flex flex-1 flex-col overflow-hidden transition-all duration-300">
+      <main className="relative flex flex-1 flex-col overflow-hidden whitespace-nowrap transition-all duration-300">
         <Outlet />
       </main>
 

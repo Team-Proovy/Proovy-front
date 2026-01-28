@@ -19,13 +19,19 @@ export const NavItem = ({
       to={to}
       onClick={(e) => e.stopPropagation()}
       className={({ isActive }) => {
+        {
+          /*사이드바가 접혔을 때*/
+        }
         if (isCollapsed) {
           return `flex w-full cursor-pointer items-center justify-center py-0 transition-all ${
-            isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"
+            isActive ? "text-[#2A6AFF]" : "text-[#6B7280]"
           }`;
         }
+        {
+          /*사이드바가 펼쳐졌을 때*/
+        }
         if (isActive) {
-          return "relative z-10 flex w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-[#FFFFFF] py-2 pr-3 pl-[22px] text-[#000000] drop-shadow-[0_4px_10px_rgba(0,0,0,0.1)] transition-all";
+          return "relative z-10 flex w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-[#FFFFFF] py-2 pr-3 pl-[22px] text-[#2F3440] drop-shadow-[0_4px_10px_rgba(0,0,0,0.1)] transition-all";
         }
         return "mr-[14px] ml-2 flex w-[224px] cursor-pointer items-center gap-3 rounded-r-[12px] px-3 py-3 text-[#333333] transition-all hover:bg-gray-50";
       }}
@@ -35,7 +41,9 @@ export const NavItem = ({
           <div className="flex items-center justify-center">
             <Icon
               size={36}
-              color={isActive ? "#2A6AFF" : "#666666"}
+              color={
+                isCollapsed ? "currentColor" : isActive ? "#2A6AFF" : "#6B7280"
+              }
             />
           </div>
           {!isCollapsed && (

@@ -22,14 +22,14 @@ export const SearchButton = ({
       }}
       className={
         isCollapsed
-          ? "flex w-full cursor-pointer items-center justify-center py-0 text-gray-500 transition-all hover:text-gray-900"
-          : "mr-[14px] ml-2 flex w-[224px] cursor-pointer items-center gap-3 rounded-r-[12px] px-3 py-3 text-[#333333] transition-all hover:bg-gray-50"
+          ? "flex w-full cursor-pointer items-center justify-center py-0 text-[#2F3440] transition-all"
+          : "mr-[14px] ml-2 flex w-[224px] cursor-pointer items-center gap-3 rounded-r-[12px] px-3 py-3 text-[#2F3440] transition-all"
       }
     >
       <div className="flex items-center justify-center">
         <Icon
           size={36}
-          color="#666666"
+          color="#6B7280"
         />
       </div>
       {!isCollapsed && (

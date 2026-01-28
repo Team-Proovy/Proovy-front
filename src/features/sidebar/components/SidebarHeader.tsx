@@ -4,7 +4,7 @@ import {
   BarArrowIcon,
   SlideIcon,
 } from "../../../shared/components/icons/SidebarIcons";
-import { SidebarIconButton } from "./SidebarIconButton";
+
 
 interface SidebarHeaderProps {
   isCollapsed: boolean;
@@ -22,29 +22,30 @@ export const SidebarHeader = ({
       }`}
     >
       {!isCollapsed ? (
-        <div className="mb-6 flex w-[240px] items-center justify-between pr-2 pl-3">
+        <div className="mb-2 flex w-[240px] items-center justify-between pr-2 pl-3">
           <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           <button
             onClick={() => onToggle(true)}
             className="group rounded p-1 transition-colors"
           >
             <BarArrowIcon
-              className="mr-2 text-[#666] transition-colors duration-500 group-hover:text-[#2A6AFF]"
+              className="mr-2 text-[#6B7280] transition-colors duration-500 group-hover:text-[#2A6AFF]"
               size={26}
             />
           </button>
         </div>
       ) : (
-        <SidebarIconButton
-          ariaLabel="sidebar toggle"
-          size="36"
+        <button
+          type="button"
+          aria-label="sidebar toggle"
           onClick={() => onToggle(false)}
+          className="flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[8px] transition select-none focus:outline-none active:scale-[0.98]"
         >
           <SlideIcon
-            color="#666"
+            color="#6B7280"
             size={40}
           />
-        </SidebarIconButton>
+        </button>
       )}
     </div>
   );
