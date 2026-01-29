@@ -8,6 +8,21 @@ interface ChatInputAreaProps {
   className?: string;
 }
 
+/**
+ * 커스텀 스크롤바 스타일 (Figma 디자인 기반)
+ * - 트랙: #F1F4F8 (Gray 1)
+ * - 썸: #9CA4B0 (Gray 4)
+ * - 너비: 8px, 둥근 모서리: 4px
+ */
+const SCROLLBAR_STYLES = `
+  [&::-webkit-scrollbar]:w-2
+  [&::-webkit-scrollbar-track]:rounded-[4px]
+  [&::-webkit-scrollbar-track]:bg-[#F1F4F8]
+  [&::-webkit-scrollbar-thumb]:rounded-[4px]
+  [&::-webkit-scrollbar-thumb]:bg-[#9CA4B0]
+  [&::-webkit-scrollbar-thumb]:shadow-[0px_4px_4px_rgba(0,0,0,0.25)]
+`;
+
 export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
   (
     { onContentClick, onKeyDown, onContentChange, onSubmit, className },
@@ -28,23 +43,36 @@ export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
       }
     };
 
+    /**
+     * 붙여넣기 시 plain text만 붙여넣기 (스타일 제거)
+     */
+    const handlePaste = (e: React.ClipboardEvent) => {
+      e.preventDefault();
+      const text = e.clipboardData.getData("text/plain");
+      document.execCommand("insertText", false, text);
+    };
+
     return (
-      <div
-        ref={ref}
-        contentEditable
-        className={`max-h-[200px] min-h-[50px] w-full cursor-text overflow-y-auto text-[18px] leading-[28px] tracking-[-0.01em] break-all whitespace-pre-wrap text-gray-800 empty:before:text-[#666666] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${className}`}
-        onClick={onContentClick}
-        onInput={(e) => {
-          // 브라우저가 다 지워도 <br>을 남기는 경우 처리 (placeholder 보이게 하기 위함)
-          if (e.currentTarget.innerHTML === "<br>") {
-            e.currentTarget.innerHTML = "";
-          }
-          // 내용 유무 콜백
-          const text = e.currentTarget.textContent?.trim() || "";
-          onContentChange?.(text.length > 0);
-        }}
-        onKeyDown={handleKeyDown}
-      />
+      <div className={`flex w-full min-w-0 gap-2 ${className || ""}`}>
+        {/* 채팅 입력 영역 (위로 확장) */}
+        <div
+          ref={ref}
+          contentEditable
+          className={`max-h-[180px] min-h-[50px] w-full cursor-text overflow-x-hidden overflow-y-auto pr-2 text-[18px] leading-[28px] tracking-[-0.01em] break-words whitespace-pre-wrap text-gray-800 empty:before:text-[#9CA4B0] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${SCROLLBAR_STYLES}`}
+          onClick={onContentClick}
+          onInput={(e) => {
+            // 브라우저가 다 지워도 <br>을 남기는 경우 처리 (placeholder 보이게 하기 위함)
+            if (e.currentTarget.innerHTML === "<br>") {
+              e.currentTarget.innerHTML = "";
+            }
+            // 내용 유무 콜백
+            const text = e.currentTarget.textContent?.trim() || "";
+            onContentChange?.(text.length > 0);
+          }}
+          onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
+        />
+      </div>
     );
   },
 );
