@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarIcon,
   CreditIcon,
 } from "../../../../shared/components/icons/SettingsIcons";
-import { UpgradeModal } from "../../../subscription/components/UpgradeModal";
 
 interface CreditInfoContainerProps {
   plan: string;
@@ -24,7 +23,7 @@ export const CreditInfoContainer = ({
   dailyCredits,
   dailyResetTime,
 }: CreditInfoContainerProps) => {
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -35,7 +34,7 @@ export const CreditInfoContainer = ({
             {plan}
           </span>
           <button
-            onClick={() => setIsUpgradeModalOpen(true)}
+            onClick={() => navigate("/pricing")}
             className="h-[28px] w-[100px] cursor-pointer rounded-[18px] bg-[#2A6AFF] px-[16px] py-[4px] font-['Pretendard'] text-[14px] text-white transition-colors hover:bg-[#1a5ae8]"
           >
             업그레이드
@@ -91,12 +90,6 @@ export const CreditInfoContainer = ({
           </span>
         </div>
       </div>
-
-      {/* 업그레이드 모달 */}
-      <UpgradeModal
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-      />
     </>
   );
 };
