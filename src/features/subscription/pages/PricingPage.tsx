@@ -4,6 +4,8 @@ import { ProovyLogo } from "../../../shared/components/ProovyLogo";
 export const PricingPage = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
+  const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
+
   const plans = [
     {
       name: "Free",
@@ -68,29 +70,58 @@ export const PricingPage = () => {
       <div className="flex justify-center gap-[36px]">
         {plans.map((plan) => {
           const isSelected = selectedPlan === plan.name;
+          const isHovered = hoveredPlan === plan.name;
+
+          // Dynamic Styles
+          const cardStyle = {
+            border: isSelected ? "1px solid #2A6AFF" : "1px solid #D1D6DE",
+            backgroundColor: isSelected ? "#F4F7FF" : "#FFFFFF",
+            boxShadow:
+              isHovered && !isSelected
+                ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                : "none",
+            transform: isHovered ? "scale(1.05)" : "scale(1)",
+          };
+
+          const buttonStyle = {
+            backgroundColor: isSelected
+              ? "#2A6AFF"
+              : isHovered
+                ? "rgba(42, 106, 255, 0.5)"
+                : "#F1F4F8",
+            color: isSelected || isHovered ? "#FFFFFF" : "#000000",
+          };
+
+          const checkColor = isSelected || isHovered ? "#2A6AFF" : "#D1D6DE";
 
           return (
             <div
               key={plan.name}
-              onMouseLeave={() => setSelectedPlan(null)}
-              className="group/card flex h-[500px] w-[320px] flex-col rounded-[20px] border border-[#D1D6DE] bg-white px-[20px] py-[49px] transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              onMouseEnter={() => setHoveredPlan(plan.name)}
+              onMouseLeave={() => {
+                setHoveredPlan(null);
+                setSelectedPlan(null);
+              }}
+              // Removed Tailwind hover/border classes that conflict
+              className="flex h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
+              style={cardStyle}
             >
               {/* Title & Desc */}
               <div className="mb-[24px] flex flex-col gap-[8px]">
                 <h3 className="font-['Pretendard'] text-[24px] leading-[32px] font-bold tracking-[-0.01em] text-black">
                   {plan.name}
                 </h3>
-                <p className="font-['Pretendard'] text-[18px] leading-[28px] font-normal tracking-[-0.01em] text-[#2F3440]">
+                <p className="font-['Pretendard'] text-[18px] leading-[28px] font-medium tracking-[-0.01em] text-[#2F3440]">
                   {plan.description}
                 </p>
               </div>
 
               {/* Price */}
               <div className="mb-[24px] flex items-end gap-[4px]">
-                <span className="font-['Pretendard'] text-[40px] leading-[48px] font-bold tracking-[-0.01em] text-black">
+                <span className="font-['Pretendard'] text-[42px] leading-[48px] font-bold tracking-[-0.01em] text-black">
                   {plan.price}원
                 </span>
-                <span className="mb-[6px] font-['Pretendard'] text-[14px] leading-[20px] font-normal text-[#6B7280]">
+                <span className="mb-[8px] font-['Pretendard'] text-[15px] leading-[20px] font-medium text-[#9CA4B0]">
                   /매월
                 </span>
               </div>
@@ -98,17 +129,8 @@ export const PricingPage = () => {
               {/* CTA Button */}
               <button
                 onClick={() => setSelectedPlan(plan.name)}
-                className={`mb-[32px] flex cursor-pointer items-center justify-center font-['Pretendard'] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${
-                  isSelected
-                    ? "bg-[#2A6AFF] text-white"
-                    : "bg-[#F1F4F8] text-black group-hover/card:bg-[#2A6AFF80] group-hover/card:text-white"
-                } `}
-                style={{
-                  width: "280px",
-                  height: "52px",
-                  padding: "10px",
-                  borderRadius: "12px",
-                }}
+                className="mb-[32px] flex h-[52px] w-[280px] cursor-pointer items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300"
+                style={buttonStyle}
               >
                 {isSelected ? "업그레이드" : "시작하기"}
               </button>
@@ -120,7 +142,10 @@ export const PricingPage = () => {
                     key={idx}
                     className="flex items-center gap-[12px]"
                   >
-                    <CheckIcon className="transition-colors duration-300 group-hover/card:stroke-[#2A6AFF]" />
+                    <CheckIcon
+                      color={checkColor}
+                      className="transition-colors duration-300"
+                    />
                     <span className="font-['Pretendard'] text-[14px] leading-[20px] font-normal text-[#2F3440]">
                       {feature}
                     </span>
@@ -135,18 +160,24 @@ export const PricingPage = () => {
   );
 };
 
-const CheckIcon = ({ className }: { className?: string }) => (
+const CheckIcon = ({
+  className,
+  color,
+}: {
+  className?: string;
+  color?: string;
+}) => (
   <svg
     width="11"
     height="8"
     viewBox="0 0 11 8"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className={className}
   >
     <path
       d="M1 3.5L4 6.5L9.5 1"
-      stroke="#D1D6DE"
-      className={`text-[#D1D6DE] ${className}`}
+      stroke={color || "currentColor"}
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
