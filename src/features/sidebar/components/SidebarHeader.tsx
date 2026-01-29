@@ -5,7 +5,6 @@ import {
   SlideIcon,
 } from "../../../shared/components/icons/SidebarIcons";
 
-
 interface SidebarHeaderProps {
   isCollapsed: boolean;
   onToggle: (collapsed: boolean) => void;

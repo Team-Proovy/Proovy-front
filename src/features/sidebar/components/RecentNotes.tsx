@@ -34,10 +34,12 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
   return (
     <div className="px-5 pb-4">
       {/* 섹션 타이틀 */}
-      <p className="mb-2 px-3 text-[12px] font-medium text-[#454545]">최근 노트</p>
+      <p className="mb-2 px-3 text-[12px] font-medium text-[#454545]">
+        최근 노트
+      </p>
 
       {/* 노트 리스트 */}
-      <ul className="flex flex-col gap-0.5 pr-3  ">
+      <ul className="flex flex-col gap-0.5 pr-3">
         {recentNotes.map((note) => (
           <RecentNoteItem
             key={note.id}
@@ -56,10 +58,8 @@ const RecentNoteItem = ({ note }: { note: RecentNote }) => {
       <NavLink
         to={`/app/chat/${note.id}`}
         className={({ isActive }) =>
-          `block truncate rounded-lg pl-[12px] py-[6px] text-[14px] leading-[160%] tracking-[-0.05em] transition-colors font-bold text-[#454545] ${
-            isActive
-              ? "bg-[#EBEBEB] mr-[-6px]"
-              : "hover:bg-[#F5F5F5]"
+          `block truncate rounded-lg py-[6px] pl-[12px] text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] transition-colors ${
+            isActive ? "mr-[-6px] bg-[#EBEBEB]" : "hover:bg-[#F5F5F5]"
           }`
         }
       >

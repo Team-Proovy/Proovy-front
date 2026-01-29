@@ -41,7 +41,7 @@ export const SidebarProfile = ({
         <div className="flex items-center justify-between text-gray-500">
           <div className="flex items-center gap-1.5">
             <CreditIcon />
-            <span className="text-[14px] font-medium text-[#D1D6DE">200</span>
+            <span className="text-[#D1D6DE text-[14px] font-medium">200</span>
           </div>
           <div className="mr-[24px] flex items-center gap-1.5">
             <PaperIcon />
