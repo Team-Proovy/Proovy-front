@@ -19,6 +19,9 @@ import { NotesPage } from "../../features/notes/pages/NotesPage";
 // Features - Storage
 import { StoragePage } from "../../features/storage/pages/StoragePage";
 
+// Features - Subscription
+import { PricingPage } from "../../features/subscription/pages/PricingPage";
+
 export const router = createBrowserRouter([
   // ========================================
   // 🌐 Public Routes (인증 불필요)
@@ -61,5 +64,11 @@ export const router = createBrowserRouter([
         element: <ChatPage />,
       },
     ],
+  },
+
+  // 요금제 페이지 (Sidebar 없음)
+  {
+    path: "/pricing",
+    element: <PricingPage />,
   },
 ]);
