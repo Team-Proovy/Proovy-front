@@ -81,7 +81,7 @@ export const SEND_BUTTON_STYLE = {
   disabled:
     "bg-[#F1F4F8] border border-[0.5px] border-[#D1D6DE] text-[#6B7280] cursor-default pointer-events-none",
   enabled:
-    "!bg-[#2A6AFF] !border-[#2A6AFF] !text-white cursor-pointer hover:!bg-[#2A6AFF]/80 active:!bg-[#1E5AE8]",
+    "!bg-[#2A6AFF] !border-[#2A6AFF] !text-white cursor-pointer hover:!bg-[#2A6AFF]/50 active:!bg-[#1E5AE8]",
 } as const;
 
 // ============================================================
