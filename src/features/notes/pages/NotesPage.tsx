@@ -13,6 +13,9 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 
 // 아이콘
+import { PdfIcon } from "../../../shared/components/icons/HomepageInputIcons";
+import { DropdownIcon } from "../../../shared/components/icons/ChatInputIcons";
+
 const ArrowLeftIcon = () => (
   <svg
     width="16"
@@ -49,17 +52,6 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-// Figma(966:1944) - 노트 추가하기 아이콘 (7일 만료 URL)
-const noteAddIconImg0 =
-  "https://www.figma.com/api/mcp/asset/4b2799a2-1c06-4777-b67d-780b813275b7";
-const noteAddIconImg1 =
-  "https://www.figma.com/api/mcp/asset/0eced6bd-0cb9-42cd-baa2-dd30b0122692";
-const noteAddIconImg2 =
-  "https://www.figma.com/api/mcp/asset/0f1458f1-906e-44e0-ac34-c7bc56dcb420";
-
-// Figma(242:1105) - 정렬 드롭다운 우측 아이콘 (7일 만료 URL)
-const sortArrowImg =
-  "https://www.figma.com/api/mcp/asset/ca714c94-fc39-4953-9cd5-d38e688d4c1b";
 
 interface Note {
   id: string;
@@ -73,31 +65,31 @@ export const NotesPage = () => {
   const mockNotes: Note[] = [
     {
       id: "1",
-      title: "여기는 노트 제목이 오는 위치",
+      title: "미적분 중간고사 정리",
       createdAt: "2025.12.04",
       lastUsedAt: "2025/12/06 10:18",
     },
     {
       id: "2",
-      title: "여기는 노트 제목이 오는 위치",
+      title: "선형대수 행렬 문제",
       createdAt: "2025.12.04",
       lastUsedAt: "2025/12/06 10:18",
     },
     {
       id: "3",
-      title: "여기는 노트 제목이 오는 위치",
+      title: "확률분포 정리",
       createdAt: "2025.12.04",
       lastUsedAt: "2025/12/06 10:18",
     },
     {
       id: "4",
-      title: "여기는 노트 제목이 오는 위치",
+      title: "물리 실험 리포트 계산",
       createdAt: "2025.12.04",
       lastUsedAt: "2025/12/06 10:18",
     },
     {
       id: "5",
-      title: "가나다라마가나다라마가나다라마가나다라마",
+      title: "공업수학 과제 풀이",
       createdAt: "2025.12.04",
       lastUsedAt: "2025/12/06 10:18",
     },
@@ -131,11 +123,7 @@ export const NotesPage = () => {
                   정렬
                 </span>
                 <span className="h-[16px] w-[16px] shrink-0">
-                  <img
-                    src={sortArrowImg}
-                    alt=""
-                    className="block h-full w-full"
-                  />
+                  <DropdownIcon className="h-full w-full text-[#2F3440]" />
                 </span>
               </button>
 
@@ -166,31 +154,9 @@ export const NotesPage = () => {
                 className="group flex h-[229px] w-[271px] flex-col items-center justify-center rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] px-[97px] py-[70px] transition-colors hover:bg-[#E8ECF1]"
               >
                 <div className="mb-[8px] flex h-[60px] w-[60px] items-center justify-center rounded-[30px] bg-white p-[6px]">
-                  {/* Figma 아이콘 구성(3개 레이어) */}
+                  {/* 노트 추가하기 아이콘 - HomepageInputIcons.tsx에서 가져옴 */}
                   {/* 흰 원(60px) 대비 상하좌우 6px씩 작게 => 48px */}
-                  <div className="relative h-[48px] w-[48px] overflow-hidden">
-                    <div className="absolute inset-[26.5%_18.62%_17.84%_18.66%]">
-                      <img
-                        src={noteAddIconImg0}
-                        alt=""
-                        className="block h-full w-full"
-                      />
-                    </div>
-                    <div className="absolute inset-[17.88%_57.82%_62.52%_22.58%]">
-                      <img
-                        src={noteAddIconImg1}
-                        alt=""
-                        className="block h-full w-full"
-                      />
-                    </div>
-                    <div className="absolute inset-[26.11%_18.62%_40.53%_18.66%]">
-                      <img
-                        src={noteAddIconImg2}
-                        alt=""
-                        className="block h-full w-full"
-                      />
-                    </div>
-                  </div>
+                  <PdfIcon color="#2A6AFF" size={48} />
                 </div>
                 <span className="whitespace-nowrap text-[14px] font-medium leading-[20px] text-black">
                   노트 추가하기
