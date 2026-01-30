@@ -28,6 +28,7 @@ export const AppLayout = () => {
       {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 (선택된 메뉴 튀어나옴 효과) */}
       <Sidebar
         isCollapsed={isCollapsed}
+        isSearchOpen={isSearchOpen}
         onToggle={setIsCollapsed}
         onSearchClick={() => setIsSearchOpen(true)}
         onSettingsClick={() => setIsSettingsOpen(true)}
