@@ -46,10 +46,10 @@ export const PricingPage = () => {
   ];
 
   return (
-    <div className="flex h-full w-full flex-col items-center overflow-y-auto bg-white pt-[155px] pb-[100px]">
+    <div className="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
       {/* Header Area */}
       {/* Group 237 position relative to 1440 width */}
-      <div className="mb-[80px] flex flex-col items-center text-center">
+      <div className="mb-[40px] flex flex-col items-center text-center">
         {/* Logo & Headline Row */}
         <div className="flex items-center justify-center">
           <ProovyLogo className="h-[58px] w-auto" />
