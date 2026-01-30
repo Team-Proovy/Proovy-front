@@ -17,11 +17,11 @@ export const SidebarHeader = ({
   return (
     <div
       className={`relative flex shrink-0 flex-col pt-[41px] ${
-        isCollapsed ? "mb-8 items-center" : ""
+        isCollapsed ? "mb-2 pl-[18px]" : ""
       }`}
     >
       {!isCollapsed ? (
-        <div className="mb-2 flex w-[240px] items-center justify-between pr-2 pl-3">
+        <div className="mb-2 flex w-[240px] items-center justify-between pr-2 pl-[15px]">
           <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           <button
             onClick={() => onToggle(true)}
@@ -38,7 +38,7 @@ export const SidebarHeader = ({
           type="button"
           aria-label="sidebar toggle"
           onClick={() => onToggle(false)}
-          className="flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[8px] transition select-none focus:outline-none active:scale-[0.98]"
+          className="flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[8px] select-none focus:outline-none"
         >
           <SlideIcon
             color="#6B7280"

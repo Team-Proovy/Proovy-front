@@ -1,4 +1,9 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { useState } from "react";
 
 // Features
@@ -14,14 +19,23 @@ import { SettingsModal } from "../../features/settings/components/SettingsModal"
  */
 export const AppLayout = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // URL 쿼리 파라미터로 검색 모달 상태 관리
+  const isSearchOpen = searchParams.get("search") === "true";
 
   // TODO: 인증 체크 로직 추가 예정
   // const { isAuthenticated, isLoading } = useAuth();
   // if (isLoading) return <LoadingSpinner />;
   // if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  const handleCloseSearch = () => {
+    // 쿼리 파라미터 제거하여 모달 닫기
+    navigate(location.pathname);
+  };
 
   return (
     <div className="flex h-screen w-full bg-[#F8F9FA]">
@@ -29,7 +43,7 @@ export const AppLayout = () => {
       <Sidebar
         isCollapsed={isCollapsed}
         onToggle={setIsCollapsed}
-        onSearchClick={() => setIsSearchOpen(true)}
+        onSearchClick={() => {}} // SearchButton 내부에서 처리됨
         onSettingsClick={() => setIsSettingsOpen(true)}
         onUpgradeClick={() => navigate("/pricing")}
       />
@@ -42,7 +56,7 @@ export const AppLayout = () => {
       {/* 모달들 */}
       <SearchModal
         isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
+        onClose={handleCloseSearch}
       />
       <SettingsModal
         isOpen={isSettingsOpen}

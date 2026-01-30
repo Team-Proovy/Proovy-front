@@ -27,13 +27,15 @@ export const Sidebar = ({
 }: SidebarProps) => {
   return (
     <div
-      className={`relative z-10 h-full min-h-[600px] shrink-0 whitespace-nowrap transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[240px]"}`}
+      className={`relative z-10 h-full min-h-[600px] shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+        isCollapsed ? "w-[80px]" : "-mr-[20px] w-[260px]"
+      }`}
     >
-      <aside
-        className={`relative flex h-full flex-col transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[252px]"}`}
-      >
+      <aside className="relative flex h-full flex-col">
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#D1D6DE] bg-white transition-all duration-300 ${isCollapsed ? "w-[80px]" : "w-[240px] border-l-0"}`}
+          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-white transition-all duration-300 ease-in-out ${
+            isCollapsed ? "w-[80px]" : "w-[240px]"
+          }`}
         />
 
         {/* 헤어: 로고, 여닫이 아이콘 */}
@@ -43,43 +45,39 @@ export const Sidebar = ({
             onToggle={onToggle}
           />
 
-          {/* 메인 메뉴 영역 (스크롤 가능) */}
-          <div
-            className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isCollapsed ? "w-[80px]" : "w-[270px]"}`}
+          {/* 메인 메뉴 영역 (고정) */}
+          <nav
+            className={`w-[240px] shrink-0 ${isCollapsed ? "mb-8 flex flex-col gap-[12px] py-3" : "mb-4 flex flex-col gap-[12px] py-3"}`}
           >
-            <nav
-              className={`${isCollapsed ? "mb-8 flex flex-col gap-[24px]" : "mb-4 flex flex-col gap-[2px] py-3"}`}
-            >
-              <NavItem
-                to="/app/home"
-                icon={HomeIcon}
-                label="홈"
-                isCollapsed={isCollapsed}
-              />
-              <SearchButton
-                icon={SearchIcon}
-                label="검색"
-                isCollapsed={isCollapsed}
-                onClick={onSearchClick}
-              />
-              <NavItem
-                to="/app/notes"
-                icon={NoteIcon}
-                label="노트목록"
-                isCollapsed={isCollapsed}
-              />
-              <NavItem
-                to="/app/storage"
-                icon={RepositoryIcon}
-                label="저장소"
-                isCollapsed={isCollapsed}
-              />
-            </nav>
+            <NavItem
+              to="/app/home"
+              icon={HomeIcon}
+              label="홈"
+              isCollapsed={isCollapsed}
+            />
+            <SearchButton
+              icon={SearchIcon}
+              label="검색"
+              isCollapsed={isCollapsed}
+              onClick={onSearchClick}
+            />
+            <NavItem
+              to="/app/notes"
+              icon={NoteIcon}
+              label="노트목록"
+              isCollapsed={isCollapsed}
+            />
+            <NavItem
+              to="/app/storage"
+              icon={RepositoryIcon}
+              label="저장소"
+              isCollapsed={isCollapsed}
+            />
+          </nav>
 
-            {/* 최근 노트 목록 */}
-            <div className={isCollapsed ? "w-[80px]" : "w-[240px]"}>
-              <RecentNotes isCollapsed={isCollapsed} />
-            </div>
+          {/* 최근 노트 목록 (남은 공간 채움) */}
+          <div className="min-h-0 w-[260px] flex-1 overflow-hidden">
+            <RecentNotes isCollapsed={isCollapsed} />
           </div>
 
           {/* 하단 프로필 및 설정 */}
