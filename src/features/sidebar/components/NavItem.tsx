@@ -22,7 +22,7 @@ export const NavItem = ({
         // 사이드바가 펼쳐졌을 때 - active
         if (isActive) {
           if (isCollapsed) {
-            return "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-transparent py-2 pr-3 pl-[20px] text-[#2A6AFF] text-[22px] font-bold transition-all";
+            return "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-transparent py-2 pr-3 pl-[20px] text-[22px] font-bold text-[#2A6AFF] transition-all";
           }
           return "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] border-[#E3E7ED] bg-[#FFFFFF] py-2 pr-3 pl-[20px] text-[22px] font-bold text-[black] drop-shadow-[0_4px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out";
         }
