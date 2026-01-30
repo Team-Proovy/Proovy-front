@@ -31,7 +31,7 @@ export const NavItem = ({
           /*사이드바가 펼쳐졌을 때*/
         }
         if (isActive) {
-          return "relative z-10 flex w-[252px] h-[48px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-[#FFFFFF] py-2 pr-3 pl-[22px] text-[#2F3440] drop-shadow-[0_4px_10px_rgba(0,0,0,0.1)] transition-all";
+          return "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-[#FFFFFF] py-2 pr-3 pl-[22px] text-[#2F3440] drop-shadow-[0_4px_10px_rgba(0,0,0,0.1)] transition-all";
         }
         return "mr-[14px] ml-2 flex h-[48px] cursor-pointer items-center gap-3 rounded-r-[12px] px-3 py-3 text-[#333333] transition-all";
       }}
@@ -47,9 +47,7 @@ export const NavItem = ({
             />
           </div>
           {!isCollapsed && (
-            <span
-              className="text-[18px] leading-[28px] font-semibold tracking-[-0.01%]"
-            >
+            <span className="text-[18px] leading-[28px] font-semibold tracking-[-0.01%]">
               {label}
             </span>
           )}
