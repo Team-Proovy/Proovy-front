@@ -1,9 +1,10 @@
 import React from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 interface SearchButtonProps {
   icon: React.ElementType;
   label: string;
-  isActive?: boolean;
+  isActive?: boolean; // Deprecated but might be passed by parent, ignore or remove from interface if parent doesn't pass it. Sidebar was passing it, but I will clean Sidebar later. For now, keep it optional or remove usage.
   isCollapsed: boolean;
   onClick: () => void;
 }
@@ -11,21 +12,29 @@ interface SearchButtonProps {
 export const SearchButton = ({
   icon: Icon,
   label,
-  isActive,
   isCollapsed,
   onClick,
 }: SearchButtonProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const isActive = searchParams.get("search") === "true";
+
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
+        // 쿼리 파라미터 추가
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set("search", "true");
+        navigate(`${location.pathname}?${newSearchParams.toString()}`);
         onClick();
       }}
       className={`group ${
         isActive
           ? isCollapsed
             ? "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] bg-transparent py-2 pr-3 pl-[20px] text-[22px] font-bold text-[#2A6AFF] transition-all"
-            : "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] border-[#E3E7ED] bg-[#FFFFFF] py-2 pr-3 pl-[20px] text-[22px] font-bold text-[black] drop-shadow-[0_4px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out"
+            : "relative z-10 flex h-[48px] w-[252px] cursor-pointer items-center gap-3 rounded-r-[12px] border-[#E3E7ED] bg-[#FFFFFF] py-2 pr-3 pl-[20px] text-[22px] font-bold text-[black] drop-shadow-[4px_4px_4px_rgba(0,0,0,0.1)] transition-all duration-300 ease-in-out"
           : "mr-[14px] ml-2 flex h-[48px] w-[224px] cursor-pointer items-center gap-3 px-3 text-[18px] font-semibold text-[#2F3440] transition-all duration-300 ease-in-out hover:bg-gray-50"
       }`}
     >

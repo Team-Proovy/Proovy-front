@@ -12,7 +12,6 @@ import { SidebarProfile } from "./components/SidebarProfile";
 
 interface SidebarProps {
   isCollapsed: boolean;
-  isSearchOpen: boolean;
   onToggle: (collapsed: boolean) => void;
   onSearchClick: () => void;
   onSettingsClick: () => void;
@@ -21,7 +20,6 @@ interface SidebarProps {
 
 export const Sidebar = ({
   isCollapsed,
-  isSearchOpen,
   onToggle,
   onSearchClick,
   onSettingsClick,
@@ -60,7 +58,6 @@ export const Sidebar = ({
             <SearchButton
               icon={SearchIcon}
               label="검색"
-              isActive={isSearchOpen}
               isCollapsed={isCollapsed}
               onClick={onSearchClick}
             />
