@@ -47,7 +47,7 @@ export const HomePage = () => {
     // AppLayout의 Outlet에서 렌더링됨 - 정중앙 배치
     <div className="flex h-full w-full flex-col bg-white">
       {/* 메인 컨텐츠 영역 - 정중앙 배치 */}
-      <div className="flex flex-1 flex-col items-center justify-center px-5">
+      <div className="flex flex-1 flex-col items-center justify-center px-5 pt-[100px]">
         {/* 컨텐츠 너비는 내부 요소에 맞게 자동 계산 */}
         <div className="flex w-fit flex-col">
           {/* 상단 타이틀 영역 */}

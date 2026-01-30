@@ -11,11 +11,9 @@ interface RecentNotesProps {
 
 // TODO: 실제 API 연동 시 교체
 const MOCK_RECENT_NOTES: RecentNote[] = [
-  { id: "1", title: "채팅 제목이 테스트1인..." },
-  { id: "2", title: "채팅 제목이 테스트1인..." },
-  { id: "3", title: "채팅 제목이 테스트1인..." },
-  { id: "4", title: "채팅 제목이 테스트1인..." },
-  { id: "5", title: "채팅 제목이 테스트1인..." },
+  { id: "1", title: "이산수학 과제2 3단원" },
+  { id: "2", title: "선형대수 복습" },
+  { id: "3", title: "알고리즘 스터디" },
 ];
 
 /**
@@ -34,12 +32,14 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
   if (recentNotes.length === 0) return null;
 
   return (
-    <div className="px-2 pb-4">
+    <div className="px-5 pb-4">
       {/* 섹션 타이틀 */}
-      <p className="mb-2 px-3 text-[12px] font-medium text-[#999]">최근 노트</p>
+      <p className="mb-2 px-3 text-[12px] font-medium text-[#454545]">
+        최근 노트
+      </p>
 
       {/* 노트 리스트 */}
-      <ul className="flex flex-col gap-0.5">
+      <ul className="flex flex-col gap-0.5 pr-3">
         {recentNotes.map((note) => (
           <RecentNoteItem
             key={note.id}
@@ -58,10 +58,8 @@ const RecentNoteItem = ({ note }: { note: RecentNote }) => {
       <NavLink
         to={`/app/chat/${note.id}`}
         className={({ isActive }) =>
-          `block truncate rounded-lg px-3 py-2 text-[14px] transition-colors ${
-            isActive
-              ? "bg-[#F0F0F0] font-medium text-[#333]"
-              : "text-[#666] hover:bg-[#F5F5F5]"
+          `block truncate rounded-lg py-[6px] pl-[12px] text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] transition-colors ${
+            isActive ? "mr-[-6px] bg-[#EBEBEB]" : "hover:bg-[#F5F5F5]"
           }`
         }
       >
