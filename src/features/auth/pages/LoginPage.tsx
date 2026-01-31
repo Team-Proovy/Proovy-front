@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // unused
 import {
   LogoIcon,
   KakaoIcon,
@@ -7,14 +7,18 @@ import {
 } from "../../../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../components/SocialLoginButton";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
+import { KAKAO_REDIRECT_URI } from "../api/auth_api";
 
 export const LoginPage = () => {
-  const navigate = useNavigate();
-
-  // TODO: 실제 OAuth 로그인 로직으로 교체 예정
-  const handleSocialLogin = () => {
-    // 임시: 바로 홈으로 이동
-    navigate("/app/home");
+  const handleSocialLogin = (provider: string) => {
+    if (provider === "kakao") {
+      // TODO: .env 파일에서 VITE_KAKAO_CLIENT_ID 가져오도록 수정 필요
+      const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+      window.location.href = kakaoAuthUrl;
+    } else {
+      alert("아직 구현되지 않은 로그인 방식입니다.");
+    }
   };
 
   return (
@@ -52,24 +56,24 @@ export const LoginPage = () => {
               </div>
 
               {/* 하단 버튼 영역 */}
-              <div className="flex w-full flex-col gap-[6px]">
+              <div className="flex w-full flex-col gap-[4px]">
                 <SocialLoginButton
                   provider="kakao"
                   icon={<KakaoIcon className="h-[18px] w-[20px]" />}
                   label="카카오 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("kakao")}
                 />
                 <SocialLoginButton
                   provider="naver"
                   icon={<NaverIcon className="h-[16px] w-[16px]" />}
                   label="네이버 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("naver")}
                 />
                 <SocialLoginButton
                   provider="google"
                   icon={<GoogleIcon className="h-[24px] w-[24px]" />}
                   label="구글 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("google")}
                 />
               </div>
             </div>
