@@ -21,12 +21,11 @@ export const LoginPage = () => {
     <div className="relative flex h-screen w-full overflow-hidden bg-white select-none">
       {/* 콘텐츠 레이어 */}
       <div className="relative z-10 flex h-full w-full">
-        {/* 로그인 박스 영역: Figma 기준 좌측 120px 여백 (1440px 기준) */}
+        {/* 로그인 박스 영역: CSS calc를 이용한 끊김 없는 위치 전환 (중앙 <-> 좌측 120px) */}
         <div
-          className="flex h-full flex-1 items-center justify-center transition-all duration-300 ease-out md:justify-start"
+          className="flex h-full flex-1 items-center justify-start"
           style={{
-            paddingLeft:
-              "clamp(0px, (100vw - 600px) * (120 / (1440 - 600)), 120px)",
+            paddingLeft: "max(0px, min(120px, calc((100% - 600px) / 2)))",
           }}
         >
           <div
@@ -34,9 +33,8 @@ export const LoginPage = () => {
             style={{
               width: "min(600px, 100%)",
               padding: "0 40px",
-              height:
-                "clamp(400px, calc(400px + (1400px - 100vw) * 1.5), 100vh)",
-              borderRadius: "clamp(0px, (100vw - 1100px) * 0.2, 20px)",
+              height: "400px",
+              borderRadius: "20px",
             }}
           >
             <div className="flex w-full max-w-[403px] flex-col items-center justify-center gap-[50px]">
