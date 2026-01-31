@@ -29,7 +29,7 @@ export const LoginPage = () => {
           }}
         >
           <div
-            className="flex flex-col items-center justify-center bg-[#F5F5F5] transition-all duration-100 ease-linear"
+            className="flex flex-col items-center justify-center bg-[#F1F4F8] transition-all duration-100 ease-linear"
             style={{
               width: "min(600px, 100%)",
               padding: "0 40px",
