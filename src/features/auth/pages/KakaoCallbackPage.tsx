@@ -10,7 +10,6 @@ export const KakaoCallbackPage = () => {
   const initialized = useRef(false);
 
   useEffect(() => {
-    // Prevent double invocation in Strict Mode
     if (initialized.current) {
       console.log("KaKaoCallback: Already initialized, skipping.");
       return;
@@ -18,8 +17,6 @@ export const KakaoCallbackPage = () => {
     initialized.current = true;
 
     const code = searchParams.get("code");
-
-    // Note: KAKAO_REDIRECT_URI comes from .env and is used in api call
 
     if (!code) {
       alert("로그인 코드가 없습니다.");

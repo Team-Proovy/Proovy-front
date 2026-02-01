@@ -6,7 +6,7 @@ export interface UserInfo {
   name: string;
   nickname: string;
   email: string;
-  profileImageUrl: string | null; // 이미지가 없을 수 있으니 null 허용
+  profileImageUrl: string | null;
 }
 
 export interface TokenInfo {
