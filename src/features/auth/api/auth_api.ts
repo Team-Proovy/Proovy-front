@@ -19,6 +19,5 @@ export const loginWithKakao = async (code: string) => {
   const response = await api.post<LoginResponse>("/api/auth/login/kakao", {
     authorizationCode: code,
   });
-
   return response.data;
 };
