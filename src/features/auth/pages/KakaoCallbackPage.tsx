@@ -10,10 +10,16 @@ export const KakaoCallbackPage = () => {
   const initialized = useRef(false);
 
   useEffect(() => {
-    if (initialized.current) return;
+    // Prevent double invocation in Strict Mode
+    if (initialized.current) {
+      console.log("KaKaoCallback: Already initialized, skipping.");
+      return;
+    }
     initialized.current = true;
 
     const code = searchParams.get("code");
+
+    // Note: KAKAO_REDIRECT_URI comes from .env and is used in api call
 
     if (!code) {
       alert("로그인 코드가 없습니다.");
@@ -34,10 +40,14 @@ export const KakaoCallbackPage = () => {
           alert(`로그인 실패: ${data.message}`);
           navigate("/login");
         }
-      } catch (error) {
-        // 이 부분이 문법적으로 정확히 닫혀 있어야 에러가 안 납니다!
-        console.error("Login Error:", error);
-        alert("로그인 처리 중 오류가 발생했습니다.");
+      } catch (error: any) {
+        if (error.response) {
+          alert(
+            `로그인 실패 (${error.response.status}): ${error.response.data?.message || "서버에서 오류가 발생했습니다."}`,
+          );
+        } else {
+          alert("로그인 처리 중 오류가 발생했습니다.");
+        }
         navigate("/login");
       }
     };
