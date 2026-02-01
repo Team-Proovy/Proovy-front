@@ -6,6 +6,8 @@ import { HomePage } from "../../pages/HomePage";
 
 // Features - Auth
 import { LoginPage } from "../../features/auth/pages/LoginPage";
+import { SignupPage } from "../../features/auth/pages/SignupPage";
+import { KakaoCallbackPage } from "../../features/auth/pages/KakaoCallbackPage";
 
 // Layouts
 import { AppLayout } from "../../shared/layout/AppLayout";
@@ -33,6 +35,14 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/oauth/kakao/callback",
+    element: <KakaoCallbackPage />,
+  },
+  {
+    path: "/signup",
+    element: <SignupPage />,
   },
 
   // ========================================

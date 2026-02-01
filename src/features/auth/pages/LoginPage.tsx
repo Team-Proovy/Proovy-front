@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // unused
 import {
   LogoIcon,
   KakaoIcon,
@@ -7,36 +7,36 @@ import {
 } from "../../../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../components/SocialLoginButton";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
+import { KAKAO_CLIENT_ID, KAKAO_REDIRECT_URI } from "../api/auth_api";
 
 export const LoginPage = () => {
-  const navigate = useNavigate();
-
-  // TODO: 실제 OAuth 로그인 로직으로 교체 예정
-  const handleSocialLogin = () => {
-    // 임시: 바로 홈으로 이동
-    navigate("/app/home");
+  const handleSocialLogin = (provider: string) => {
+    if (provider === "kakao") {
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+      window.location.href = kakaoAuthUrl;
+    } else {
+      alert("아직 구현되지 않은 로그인 방식입니다.");
+    }
   };
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-white select-none">
       {/* 콘텐츠 레이어 */}
       <div className="relative z-10 flex h-full w-full">
-        {/* 로그인 박스 영역: Figma 기준 좌측 120px 여백 (1440px 기준) */}
+        {/* 로그인 박스 영역: CSS calc를 이용한 끊김 없는 위치 전환 (중앙 <-> 좌측 120px) */}
         <div
-          className="flex h-full flex-1 items-center justify-center transition-all duration-300 ease-out md:justify-start"
+          className="flex h-full flex-1 items-center justify-start"
           style={{
-            paddingLeft:
-              "clamp(0px, (100vw - 600px) * (120 / (1440 - 600)), 120px)",
+            paddingLeft: "max(0px, min(120px, calc((100% - 600px) / 2)))",
           }}
         >
           <div
-            className="flex flex-col items-center justify-center bg-[#F5F5F5] transition-all duration-100 ease-linear"
+            className="flex flex-col items-center justify-center bg-[#F1F4F8] transition-all duration-100 ease-linear"
             style={{
               width: "min(600px, 100%)",
               padding: "0 40px",
-              height:
-                "clamp(400px, calc(400px + (1400px - 100vw) * 1.5), 100vh)",
-              borderRadius: "clamp(0px, (100vw - 1100px) * 0.2, 20px)",
+              height: "400px",
+              borderRadius: "20px",
             }}
           >
             <div className="flex w-full max-w-[403px] flex-col items-center justify-center gap-[50px]">
@@ -54,24 +54,24 @@ export const LoginPage = () => {
               </div>
 
               {/* 하단 버튼 영역 */}
-              <div className="flex w-full flex-col gap-[6px]">
+              <div className="flex w-full flex-col gap-[4px]">
                 <SocialLoginButton
                   provider="kakao"
                   icon={<KakaoIcon className="h-[18px] w-[20px]" />}
                   label="카카오 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("kakao")}
                 />
                 <SocialLoginButton
                   provider="naver"
                   icon={<NaverIcon className="h-[16px] w-[16px]" />}
                   label="네이버 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("naver")}
                 />
                 <SocialLoginButton
                   provider="google"
                   icon={<GoogleIcon className="h-[24px] w-[24px]" />}
                   label="구글 로그인"
-                  onClick={handleSocialLogin}
+                  onClick={() => handleSocialLogin("google")}
                 />
               </div>
             </div>
