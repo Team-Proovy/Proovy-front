@@ -2,7 +2,7 @@ name: Deploy Frontend (S3 + CloudFront)
 
 on:
   push:
-    branches: ["dev"]   # dev에 push될 때 자동 배포
+    branches: ["dev"]
 
 permissions:
   contents: read
@@ -19,13 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
