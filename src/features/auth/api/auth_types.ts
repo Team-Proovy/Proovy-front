@@ -26,8 +26,8 @@ export interface SocialInfo {
 // 3. 실제 결과값 데이터 (Result)
 export interface LoginResult {
   loginType: string;
-  user: UserInfo;
-  token: TokenInfo;
+  user?: UserInfo;
+  token?: TokenInfo;
   signupToken?: string; // 회원가입 시에만 올 수 있음
   kakaoInfo?: SocialInfo;
   naverInfo?: SocialInfo;
