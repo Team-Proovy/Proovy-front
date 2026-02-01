@@ -7,8 +7,6 @@ export const KakaoCallbackPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-
-  // React Strict Mode에서 두 번 호출 방지
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -29,17 +27,15 @@ export const KakaoCallbackPage = () => {
 
         if (data.isSuccess) {
           login(data.result);
-          // 회원가입 정보 입력 페이지로 이동 (정보 전달)
           navigate("/signup", {
-            state: {
-              kakaoInfo: data.result.kakaoInfo,
-            },
+            state: { kakaoInfo: data.result.kakaoInfo },
           });
         } else {
           alert(`로그인 실패: ${data.message}`);
           navigate("/login");
         }
       } catch (error) {
+        // 이 부분이 문법적으로 정확히 닫혀 있어야 에러가 안 납니다!
         console.error("Login Error:", error);
         alert("로그인 처리 중 오류가 발생했습니다.");
         navigate("/login");

@@ -7,13 +7,11 @@ import {
 } from "../../../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../components/SocialLoginButton";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
-import { KAKAO_REDIRECT_URI } from "../api/auth_api";
+import { KAKAO_CLIENT_ID, KAKAO_REDIRECT_URI } from "../api/auth_api";
 
 export const LoginPage = () => {
   const handleSocialLogin = (provider: string) => {
     if (provider === "kakao") {
-      // TODO: .env 파일에서 VITE_KAKAO_CLIENT_ID 가져오도록 수정 필요
-      const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
       window.location.href = kakaoAuthUrl;
     } else {
