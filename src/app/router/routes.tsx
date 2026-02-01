@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom";
 // Pages (특정 feature에 속하지 않는 독립 페이지)
 import { LandingPage } from "../../pages/LandingPage";
 import { HomePage } from "../../pages/HomePage";
+import MockTestPage from "../../pages/MockTestPage";
 
 // Features - Auth
 import { LoginPage } from "../../features/auth/pages/LoginPage";
@@ -70,5 +71,11 @@ export const router = createBrowserRouter([
   {
     path: "/pricing",
     element: <PricingPage />,
+  },
+
+  // 🧪 Mock 테스트 페이지 (개발 전용)
+  {
+    path: "/mock-test",
+    element: <MockTestPage />,
   },
 ]);

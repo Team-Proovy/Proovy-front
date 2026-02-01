@@ -7,13 +7,18 @@ import {
 } from "../../../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../components/SocialLoginButton";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
+import { tokenUtils } from "@/shared/api/client";
 
 export const LoginPage = () => {
   const navigate = useNavigate();
 
-  // TODO: 실제 OAuth 로그인 로직으로 교체 예정
+  // 개발용: 가짜 토큰 저장 후 홈으로 이동
   const handleSocialLogin = () => {
-    // 임시: 바로 홈으로 이동
+    // MSW 테스트용 가짜 토큰 저장
+    tokenUtils.setTokens(
+      "mock-access-token-for-development",
+      "mock-refresh-token-for-development",
+    );
     navigate("/app/home");
   };
 

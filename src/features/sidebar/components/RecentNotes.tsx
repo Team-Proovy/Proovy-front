@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useNoteList } from "@/features/notes/hooks/useNotes";
 
 interface RecentNote {
   id: string;
@@ -9,18 +10,6 @@ interface RecentNotesProps {
   isCollapsed: boolean;
 }
 
-// TODO: 실제 API 연동 시 교체
-const MOCK_RECENT_NOTES: RecentNote[] = [
-  { id: "1", title: "이산수학 과제2 3단원" },
-  { id: "2", title: "선형대수 복습" },
-  { id: "3", title: "알고리즘 스터디" },
-  { id: "4", title: "프로젝트 기획서 작성" },
-  { id: "5", title: "리액트 상태관리 패턴" },
-  { id: "6", title: "Next.js 13 마이그레이션" },
-  { id: "7", title: "테일윈드 디자인 시스템" },
-  { id: "8", title: "AWS 배포 파이프라인" },
-];
-
 /**
  * RecentNotes - 최근 노트 목록
  *
@@ -28,11 +17,53 @@ const MOCK_RECENT_NOTES: RecentNote[] = [
  * 사이드바가 접히면 숨김
  */
 export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
-  // 사이드바가 접힌 상태면 표시하지 않음 -> 투명도로 처리
-  // if (isCollapsed) return null;
+  // MSW 목 데이터 연결
+  const { data, isLoading, error } = useNoteList({ size: 8 });
 
-  // TODO: useQuery로 최근 노트 목록 fetch
-  const recentNotes = MOCK_RECENT_NOTES;
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div
+        className={`w-[240px] px-5 pb-4 transition-opacity duration-300 ease-in-out ${
+          isCollapsed ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <p className="mb-2 px-3 text-[12px] font-medium text-[#454545]">
+          최근 노트
+        </p>
+        <div className="flex flex-col gap-2 px-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="h-[24px] animate-pulse rounded bg-gray-200"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div
+        className={`w-[240px] px-5 pb-4 transition-opacity duration-300 ease-in-out ${
+          isCollapsed ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <p className="px-3 text-[12px] text-red-500">
+          노트를 불러올 수 없습니다
+        </p>
+      </div>
+    );
+  }
+
+  // API 응답을 컴포넌트 형식에 맞게 변환
+  const recentNotes: RecentNote[] =
+    data?.notes.map((note) => ({
+      id: String(note.noteId),
+      title: note.title,
+    })) ?? [];
 
   if (recentNotes.length === 0) return null;
 
