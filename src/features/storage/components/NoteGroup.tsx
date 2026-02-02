@@ -30,7 +30,7 @@ export const NoteGroup = ({
         className="flex items-center justify-between transition-colors"
         style={{
           display: "flex",
-          width: "820px",
+          width: "800px",
           maxWidth: "100%",
           height: "40px",
           padding: "8px 20px",
@@ -38,8 +38,8 @@ export const NoteGroup = ({
           alignItems: "center",
           flexShrink: 0,
           borderRadius: "12px",
-          border: "0.5px solid #C6C6C6",
-          background: "#F5F5F5",
+          border: "0.5px solid #D1D6DE",
+          background: "#F1F4F8",
         }}
       >
         <div className="flex items-center">
@@ -97,13 +97,13 @@ export const NoteGroup = ({
               lineHeight: "18px",
             }}
           >
-            240/500MB
+            240/512MB
           </span>
         </div>
       </button>
 
       {isOpen && (
-        <div className="mt-[20px] flex flex-wrap gap-[20px]">
+        <div className="mt-[20px] grid grid-cols-3 gap-[20px]">
           {notes.map((note) => {
             return (
               <NoteCard

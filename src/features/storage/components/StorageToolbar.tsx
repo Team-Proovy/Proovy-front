@@ -35,7 +35,7 @@ export const StorageToolbar = ({
           <input
             type="text"
             placeholder="검색어를 입력해주세요."
-            className="h-full w-full rounded-[70px] border-[0.5px] border-[#C6C6C6] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-[#6B6B6B] outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#6B6B6B]"
+            className="h-full w-full rounded-[70px] border-[0.5px] border-[#D1D6DE] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-[#9CA4B0] outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#9CA4B0]"
           />
           <StorageSearchIcon
             style={{
@@ -49,7 +49,7 @@ export const StorageToolbar = ({
         </div>
         <button
           onClick={handleActionClick}
-          className="flex items-center justify-center rounded-xl border border-gray-200 bg-white font-['Pretendard'] text-[14px] font-medium text-[#6B6B6B] shadow-sm transition-all hover:bg-gray-50"
+          className="flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:bg-gray-50"
           style={{
             width: isSelectMode ? "80px" : "56px",
             height: "32px",
@@ -97,7 +97,7 @@ export const StorageToolbar = ({
                 height="11.5"
                 rx="5.75"
                 fill="white"
-                stroke="#C6C6C6"
+                stroke="#D1D6DE"
                 strokeWidth="0.5"
               />
               <g filter="url(#filter0_i_781_1618)">
@@ -165,7 +165,7 @@ export const StorageToolbar = ({
                   lineHeight: "18px",
                 }}
               >
-                2.7
+                2.74
               </span>
               <span
                 style={{
