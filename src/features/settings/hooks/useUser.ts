@@ -21,7 +21,8 @@ export const useMyProfile = () => {
       const response = await getMyProfile();
       return response.result;
     },
-    enabled: !!tokenUtils.getAccessToken(), // 토큰이 있을 때만 실행
+    // 개발 환경에서는 항상 실행, 프로덕션에서는 토큰 필요
+    enabled: import.meta.env.DEV || !!tokenUtils.getAccessToken(),
     staleTime: 1000 * 60 * 5, // 5분
   });
 };
@@ -34,7 +35,7 @@ export const useMySubscription = () => {
       const response = await getMySubscription();
       return response.result;
     },
-    enabled: !!tokenUtils.getAccessToken(),
+    enabled: import.meta.env.DEV || !!tokenUtils.getAccessToken(),
     staleTime: 1000 * 60 * 5,
   });
 };

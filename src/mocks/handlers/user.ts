@@ -16,7 +16,7 @@ const mockMyProfile: MyProfileResponse = {
   userId: 1,
   email: "user@example.com",
   name: "지현구",
-  nickname: "proovy_user",
+  nickname: "두바이쫀득쿠키권위자",
   department: "컴퓨터공학과",
   profileImageUrl: null,
   provider: "KAKAO",
@@ -112,22 +112,8 @@ const mockSubscription: SubscriptionResponse = {
 
 export const userHandlers = [
   // 내 프로필 조회
-  http.get(`${BASE_URL}/api/users/me`, async ({ request }) => {
+  http.get(`${BASE_URL}/api/users/me`, async () => {
     await delay(400);
-
-    // Authorization 헤더 확인
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return HttpResponse.json(
-        {
-          isSuccess: false,
-          code: "AUTH4010",
-          message: "인증 토큰이 필요합니다.",
-          result: null,
-        },
-        { status: 401 },
-      );
-    }
 
     console.log("[MSW] 내 프로필 조회");
 
@@ -140,21 +126,8 @@ export const userHandlers = [
   }),
 
   // 내 구독 정보 조회
-  http.get(`${BASE_URL}/api/users/me/subscription`, async ({ request }) => {
+  http.get(`${BASE_URL}/api/users/me/subscription`, async () => {
     await delay(400);
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      return HttpResponse.json(
-        {
-          isSuccess: false,
-          code: "AUTH4010",
-          message: "인증 토큰이 필요합니다.",
-          result: null,
-        },
-        { status: 401 },
-      );
-    }
 
     console.log("[MSW] 구독 정보 조회");
 
@@ -167,21 +140,8 @@ export const userHandlers = [
   }),
 
   // 회원 탈퇴
-  http.delete(`${BASE_URL}/api/users/me`, async ({ request }) => {
+  http.delete(`${BASE_URL}/api/users/me`, async () => {
     await delay(500);
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      return HttpResponse.json(
-        {
-          isSuccess: false,
-          code: "AUTH4010",
-          message: "인증 토큰이 필요합니다.",
-          result: null,
-        },
-        { status: 401 },
-      );
-    }
 
     console.log("[MSW] 회원 탈퇴");
 

@@ -123,19 +123,6 @@ export const notesHandlers = [
     async ({ request }) => {
       await delay(1000); // AI 응답 시뮬레이션
 
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json<ApiResponse<null>>(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
-
       const body = await request.json();
       console.log("[MSW] 새 노트 생성:", body);
 

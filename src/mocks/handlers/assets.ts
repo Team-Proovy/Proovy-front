@@ -54,19 +54,6 @@ export const assetsHandlers = [
     async ({ request }) => {
       await delay(300);
 
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
-
       const body = await request.json();
       console.log("[MSW] 업로드 URL 발급 요청:", body);
 
@@ -121,62 +108,33 @@ export const assetsHandlers = [
   ),
 
   // S3 업로드 완료 알림
-  http.post(
-    `${BASE_URL}/api/assets/:assetId/confirm`,
-    async ({ params, request }) => {
-      await delay(500);
+  http.post(`${BASE_URL}/api/assets/:assetId/confirm`, async ({ params }) => {
+    await delay(500);
 
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
+    const { assetId } = params;
+    console.log("[MSW] 업로드 완료 확인:", assetId);
 
-      const { assetId } = params;
-      console.log("[MSW] 업로드 완료 확인:", assetId);
+    const response: UploadConfirmResponse = {
+      assetId: Number(assetId),
+      fileName: "uploaded_file.pdf",
+      fileSize: 1048576,
+      mimeType: "application/pdf",
+      source: "upload",
+      ocrStatus: "processing",
+      createdAt: new Date().toISOString(),
+    };
 
-      const response: UploadConfirmResponse = {
-        assetId: Number(assetId),
-        fileName: "uploaded_file.pdf",
-        fileSize: 1048576,
-        mimeType: "application/pdf",
-        source: "upload",
-        ocrStatus: "processing",
-        createdAt: new Date().toISOString(),
-      };
-
-      return HttpResponse.json({
-        isSuccess: true,
-        code: "ASSET2000",
-        message: "업로드 확인 완료, OCR 처리 시작",
-        result: response,
-      });
-    },
-  ),
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "ASSET2000",
+      message: "업로드 확인 완료, OCR 처리 시작",
+      result: response,
+    });
+  }),
 
   // 자산 상세 정보 + OCR 결과 조회
-  http.get(`${BASE_URL}/api/assets/:assetId`, async ({ params, request }) => {
+  http.get(`${BASE_URL}/api/assets/:assetId`, async ({ params }) => {
     await delay(400);
-
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      return HttpResponse.json(
-        {
-          isSuccess: false,
-          code: "AUTH4010",
-          message: "인증 토큰이 필요합니다.",
-          result: null,
-        },
-        { status: 401 },
-      );
-    }
 
     const { assetId } = params;
     console.log("[MSW] 자산 상세 조회:", assetId);
@@ -195,21 +153,8 @@ export const assetsHandlers = [
   // 다운로드용 Presigned URL 발급
   http.get(
     `${BASE_URL}/api/assets/:assetId/download-url`,
-    async ({ params, request }) => {
+    async ({ params }) => {
       await delay(300);
-
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
 
       const { assetId } = params;
       console.log("[MSW] 다운로드 URL 발급:", assetId);
@@ -231,54 +176,25 @@ export const assetsHandlers = [
   ),
 
   // 자산 삭제
-  http.delete(
-    `${BASE_URL}/api/assets/:assetId`,
-    async ({ params, request }) => {
-      await delay(400);
+  http.delete(`${BASE_URL}/api/assets/:assetId`, async ({ params }) => {
+    await delay(400);
 
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
+    const { assetId } = params;
+    console.log("[MSW] 자산 삭제:", assetId);
 
-      const { assetId } = params;
-      console.log("[MSW] 자산 삭제:", assetId);
-
-      return HttpResponse.json({
-        isSuccess: true,
-        code: "ASSET2000",
-        message: "삭제 성공",
-        result: null,
-      });
-    },
-  ),
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "ASSET2000",
+      message: "삭제 성공",
+      result: null,
+    });
+  }),
 
   // 자산 일괄 삭제
   http.delete<never, BulkDeleteRequest>(
     `${BASE_URL}/api/storage/assets`,
     async ({ request }) => {
       await delay(500);
-
-      const authHeader = request.headers.get("Authorization");
-      if (!authHeader) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "AUTH4010",
-            message: "인증 토큰이 필요합니다.",
-            result: null,
-          },
-          { status: 401 },
-        );
-      }
 
       const body = await request.json();
       console.log("[MSW] 자산 일괄 삭제:", body);
