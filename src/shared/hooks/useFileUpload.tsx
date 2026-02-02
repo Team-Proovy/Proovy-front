@@ -2,9 +2,11 @@ import { useRef, useCallback } from "react";
 
 /**
  * 컴포넌트 내부가 아닌 곳에서 파일 업로드 로직을 재사용하기 위한 커스텀 훅
+ * @param onFileSelect 파일 선택 시 호출되는 콜백 함수
+ * @param accept 허용되는 파일 타입
  * @returns { openFileExplorer, fileInputRef, handleFileChange }
  */
-export const useFileUpload = (onFileSelect?: (file: File) => void) => {
+export const useFileUpload = (onFileSelect?: (file: File) => void, accept?: string) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. 파일 탐색기 열기 (input 태그 클릭 유도)
@@ -32,5 +34,6 @@ export const useFileUpload = (onFileSelect?: (file: File) => void) => {
     fileInputRef,
     openFileExplorer,
     handleFileChange,
+    accept,
   };
 };

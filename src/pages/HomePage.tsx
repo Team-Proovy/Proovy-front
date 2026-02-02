@@ -16,28 +16,33 @@ import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
  * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
  */
 export const HomePage = () => {
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [fileType, setFileType] = useState<"pdf" | "image" | null>(null);
 
   // 파일 업로드 훅 사용
-  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
+  const { fileInputRef, openFileExplorer, handleFileChange, accept } = useFileUpload(
     (file) => {
       // 선택된 파일 처리 로직
-      // console.log("HomePage에서 파일 선택됨:", file);
-
-      if (file && file.type === "application/pdf") {
-        setFileName(file.name);
-        const url = URL.createObjectURL(file);
-        setPdfUrl(url);
+      const url = URL.createObjectURL(file);
+      setFileName(file.name);
+      setFileUrl(url);
+      // 파일타입 구분
+      if(file.type === "application/pdf"){
+        setFileType("pdf");
+      }else if(file.type.startsWith("image/")){
+        setFileType("image");
       }
     },
+    ".pdf,.jpg,.jpeg,.png,.gif,.webp" 
   );
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation(); // 버튼 클릭 이벤트 전파 방지
-    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    setPdfUrl(null);
+    if (fileUrl) URL.revokeObjectURL(fileUrl);
+    setFileUrl(null);
     setFileName("");
+    setFileType(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -65,19 +70,19 @@ export const HomePage = () => {
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
-              accept=".pdf"
+              accept={accept}
             />
 
-            {pdfUrl ? (
+            {fileUrl ? (
               /* PDF 업로드 완료 시: 카드 형태 UI */
               <div className="group relative flex h-[160px] w-[220px] flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
                 {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
                 <div className="relative flex h-[160px] w-[140px] items-start justify-center overflow-hidden bg-[#F2F2F2]">
                   <div className="w-full">
-                    <PdfPreview
-                      fileUrl={pdfUrl}
+                    {fileType === "pdf" ? (  <PdfPreview
+                      fileUrl={fileUrl}
                       width={140}
-                    />
+                    />) : fileType === "image" ? (<img src={fileUrl} alt={fileName} className="h-full w-full object-cover" />) : null}
                   </div>
 
                   {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}
