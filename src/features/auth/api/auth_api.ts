@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "@/shared/api/client";
 import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
@@ -14,6 +15,7 @@ import type { TokenDto } from "@/shared/api/shared_types";
 // ============================================================
 export const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
 export const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
   throw new Error(
@@ -24,13 +26,13 @@ if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
 const AUTH_BASE = "/api/auth";
 
 // ============================================================
-// 카카오 로그인 (현재 구현됨)
+// 카카오 로그인 (토큰 없이 호출 - public API)
 // ============================================================
 export const loginWithKakao = async (
   code: string,
 ): Promise<ApiResponse<LoginResult>> => {
-  const response = await apiClient.post<ApiResponse<LoginResult>>(
-    `${AUTH_BASE}/login/kakao`,
+  const response = await axios.post<ApiResponse<LoginResult>>(
+    `${BASE_URL}${AUTH_BASE}/login/kakao`,
     {
       authorizationCode: code,
     },
@@ -38,45 +40,45 @@ export const loginWithKakao = async (
   return response.data;
 };
 
-// 소셜 로그인 (통합) - kakao, naver, google 지원
+// 소셜 로그인 (통합) - kakao, naver, google 지원 (토큰 없이 호출)
 export const socialLogin = async (
   provider: "kakao" | "naver" | "google",
   data: SocialLoginRequest,
 ): Promise<ApiResponse<LoginResult>> => {
-  const response = await apiClient.post<ApiResponse<LoginResult>>(
-    `${AUTH_BASE}/login/${provider}`,
+  const response = await axios.post<ApiResponse<LoginResult>>(
+    `${BASE_URL}${AUTH_BASE}/login/${provider}`,
     data,
   );
   return response.data;
 };
 
 // ============================================================
-// 추가 Auth API (향후 구현)
+// 추가 Auth API
 // ============================================================
 
-// 회원가입 완료 (추가 정보 입력)
+// 회원가입 완료 (추가 정보 입력) - signupToken 사용, 토큰 없이 호출
 export const signupComplete = async (
   data: SignupCompleteRequest,
 ): Promise<ApiResponse<SignupCompleteResponse>> => {
-  const response = await apiClient.post<ApiResponse<SignupCompleteResponse>>(
-    `${AUTH_BASE}/signup/complete`,
+  const response = await axios.post<ApiResponse<SignupCompleteResponse>>(
+    `${BASE_URL}${AUTH_BASE}/signup/complete`,
     data,
   );
   return response.data;
 };
 
-// 토큰 갱신
+// 토큰 갱신 - refreshToken 사용, 토큰 없이 호출
 export const refreshToken = async (
   data: TokenRefreshRequest,
 ): Promise<ApiResponse<TokenDto>> => {
-  const response = await apiClient.post<ApiResponse<TokenDto>>(
-    `${AUTH_BASE}/token/refresh`,
+  const response = await axios.post<ApiResponse<TokenDto>>(
+    `${BASE_URL}${AUTH_BASE}/refresh`,
     data,
   );
   return response.data;
 };
 
-// 로그아웃
+// 로그아웃 - 인증 필요 (apiClient 사용)
 export const logout = async (): Promise<ApiResponse<null>> => {
   const response = await apiClient.post<ApiResponse<null>>(
     `${AUTH_BASE}/logout`,

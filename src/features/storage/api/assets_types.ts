@@ -78,6 +78,7 @@ export interface DownloadUrlResponse {
 /** 일괄 삭제 응답 */
 export interface BulkDeleteResponse {
   deletedCount: number;
+  deletedAssetIds: number[];
 }
 
 // ============================================================
