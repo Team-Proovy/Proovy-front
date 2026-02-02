@@ -21,21 +21,19 @@ export const HomePage = () => {
   const [fileType, setFileType] = useState<"pdf" | "image" | null>(null);
 
   // 파일 업로드 훅 사용
-  const { fileInputRef, openFileExplorer, handleFileChange, accept } = useFileUpload(
-    (file) => {
+  const { fileInputRef, openFileExplorer, handleFileChange, accept } =
+    useFileUpload((file) => {
       // 선택된 파일 처리 로직
       const url = URL.createObjectURL(file);
       setFileName(file.name);
       setFileUrl(url);
       // 파일타입 구분
-      if(file.type === "application/pdf"){
+      if (file.type === "application/pdf") {
         setFileType("pdf");
-      }else if(file.type.startsWith("image/")){
+      } else if (file.type.startsWith("image/")) {
         setFileType("image");
       }
-    },
-    ".pdf,.jpg,.jpeg,.png,.gif,.webp" 
-  );
+    }, ".pdf,.jpg,.jpeg,.png,.gif,.webp");
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation(); // 버튼 클릭 이벤트 전파 방지
@@ -79,10 +77,18 @@ export const HomePage = () => {
                 {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
                 <div className="relative flex h-[160px] w-[140px] items-start justify-center overflow-hidden bg-[#F2F2F2]">
                   <div className="w-full">
-                    {fileType === "pdf" ? (  <PdfPreview
-                      fileUrl={fileUrl}
-                      width={140}
-                    />) : fileType === "image" ? (<img src={fileUrl} alt={fileName} className="h-full w-full object-cover" />) : null}
+                    {fileType === "pdf" ? (
+                      <PdfPreview
+                        fileUrl={fileUrl}
+                        width={140}
+                      />
+                    ) : fileType === "image" ? (
+                      <img
+                        src={fileUrl}
+                        alt={fileName}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
                   </div>
 
                   {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}

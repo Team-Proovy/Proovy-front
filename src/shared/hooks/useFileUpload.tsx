@@ -6,7 +6,10 @@ import { useRef, useCallback } from "react";
  * @param accept 허용되는 파일 타입
  * @returns { openFileExplorer, fileInputRef, handleFileChange }
  */
-export const useFileUpload = (onFileSelect?: (file: File) => void, accept?: string) => {
+export const useFileUpload = (
+  onFileSelect?: (file: File) => void,
+  accept?: string,
+) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. 파일 탐색기 열기 (input 태그 클릭 유도)
