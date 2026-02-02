@@ -5,7 +5,7 @@ import {
 
 interface NoteCardProps {
   label: string;
-  type: "업로드";
+  type: "업로드" | "AI 생성";
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;
@@ -18,21 +18,16 @@ export const NoteCard = ({
   isSelectMode,
   onSelect,
 }: NoteCardProps) => {
-
   return (
     <div
       onClick={() => isSelectMode && onSelect()}
-      className="group relative flex flex-col cursor-pointer transition-transform hover:scale-[1.02]"
+      className="group relative flex cursor-pointer flex-col transition-transform hover:scale-[1.02]"
       style={{
         width: "240px",
         height: "180px",
         borderRadius: "12px",
-        border: isSelected
-          ? "2px solid #2A6AFF"
-          : "0.5px solid #D1D6DE",
-        background: isSelected
-          ? "rgba(42, 106, 255, 0.05)"
-          : "transparent",
+        border: isSelected ? "1.5px solid #2A6AFF" : "0.5px solid #D1D6DE",
+        background: isSelected ? "rgba(42, 106, 255, 0.05)" : "transparent",
         overflow: "hidden",
       }}
     >
@@ -87,7 +82,7 @@ export const NoteCard = ({
             justifyContent: "center",
             alignItems: "center",
             borderRadius: "10px",
-            background: "#003880",
+            background: type === "업로드" ? "#003880" : "#E2A242",
           }}
         >
           <span
@@ -121,7 +116,7 @@ export const NoteCard = ({
         }}
       >
         <p
-          className="font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black truncate"
+          className="truncate font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black"
           style={{
             color: "#000",
           }}
