@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { LoginResult, UserInfo, TokenInfo } from "../api/auth_types";
+import type { LoginResult, UserDto } from "../api/auth_types";
+import type { TokenDto } from "@/shared/api/shared_types";
 
 interface AuthState {
-  user: UserInfo | null;
-  token: TokenInfo | null;
+  user: UserDto | null;
+  token: TokenDto | null;
   isAuthenticated: boolean;
   login: (result: LoginResult) => void;
   logout: () => void;
