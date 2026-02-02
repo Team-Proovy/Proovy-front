@@ -27,7 +27,10 @@ export const useSocialLogin = (provider: "kakao" | "naver" | "google") => {
         result.token?.refreshToken
       ) {
         // 로그인 성공 - 토큰 저장
-        tokenUtils.setTokens(result.token.accessToken, result.token.refreshToken);
+        tokenUtils.setTokens(
+          result.token.accessToken,
+          result.token.refreshToken,
+        );
         queryClient.invalidateQueries({ queryKey: authKeys.user() });
       }
       // SIGNUP_REQUIRED인 경우 signupToken은 컴포넌트에서 처리
