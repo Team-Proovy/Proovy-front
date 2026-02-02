@@ -1,5 +1,5 @@
 // 이 컴포넌트는 사이드바의 최상단 영역인 로고와 접기/펴기 버튼을 담당합니다.
-import { ProovyLogo } from "../../../shared/components/ProovyLogo";
+import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import {
   BarArrowIcon,
   SlideIcon,
