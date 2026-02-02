@@ -49,7 +49,7 @@ export const StorageToolbar = ({
         </div>
         <button
           onClick={handleActionClick}
-          className="flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:bg-gray-50"
+          className="flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:bg-[#2A6AFF] hover:text-white hover:border-[#2A6AFF]"
           style={{
             width: isSelectMode ? "80px" : "56px",
             height: "32px",

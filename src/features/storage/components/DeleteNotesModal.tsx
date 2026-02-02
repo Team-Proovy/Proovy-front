@@ -70,9 +70,32 @@ export const DeleteNotesModal = () => {
 
         {/* Buttons Section */}
         <div
-          className="absolute flex items-center"
-          style={{ left: "22px", bottom: "19px", gap: "36px" }}
+          className="absolute inset-x-0 mx-auto flex items-center justify-center"
+          style={{ bottom: "19px", gap: "12px" }}
         >
+          <button
+            onClick={() => setDeleteModalOpen(false)}
+            style={{
+              display: "flex",
+              width: "240px",
+              height: "56px",
+              padding: "10px",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+              borderRadius: "20px",
+              border: "1px solid #D1D6DE",
+              background: "#F1F4F8",
+              color: "#6B7280",
+              fontFamily: "Pretendard",
+              fontSize: "18px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            취소하기
+          </button>
+
           <button
             onClick={deleteSelectedNotes}
             style={{
@@ -94,29 +117,6 @@ export const DeleteNotesModal = () => {
             }}
           >
             삭제하기
-          </button>
-
-          <button
-            onClick={() => setDeleteModalOpen(false)}
-            style={{
-              display: "flex",
-              width: "240px",
-              height: "56px",
-              padding: "10px",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "10px",
-              borderRadius: "20px",
-              border: "1px solid #C6C6C6",
-              background: "#F5F5F5",
-              color: "#6B6B6B",
-              fontFamily: "Pretendard",
-              fontSize: "18px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            취소하기
           </button>
         </div>
       </div>

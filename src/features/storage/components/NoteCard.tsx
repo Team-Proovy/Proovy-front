@@ -5,7 +5,7 @@ import {
 
 interface NoteCardProps {
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "업로드";
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;
@@ -18,7 +18,6 @@ export const NoteCard = ({
   isSelectMode,
   onSelect,
 }: NoteCardProps) => {
-  const isUpload = type === "업로드";
 
   return (
     <div
@@ -29,7 +28,7 @@ export const NoteCard = ({
         height: "180px",
         borderRadius: "12px",
         border: isSelected
-          ? "1.5px solid #2A6AFF"
+          ? "2px solid #2A6AFF"
           : "0.5px solid #D1D6DE",
         background: isSelected
           ? "rgba(42, 106, 255, 0.05)"
@@ -88,7 +87,7 @@ export const NoteCard = ({
             justifyContent: "center",
             alignItems: "center",
             borderRadius: "10px",
-            background: isUpload ? "#003880" : "#E2A242",
+            background: "#003880",
           }}
         >
           <span
