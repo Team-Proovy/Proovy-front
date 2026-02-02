@@ -48,7 +48,7 @@ export const getDownloadUrl = async (
   assetId: number,
 ): Promise<ApiResponse<DownloadUrlResponse>> => {
   const response = await apiClient.get<ApiResponse<DownloadUrlResponse>>(
-    `${ASSETS_BASE}/${assetId}/download-url`,
+    `${ASSETS_BASE}/${assetId}/download`,
   );
   return response.data;
 };
@@ -68,7 +68,7 @@ export const deleteAssetsBulk = async (
   data: BulkDeleteRequest,
 ): Promise<ApiResponse<BulkDeleteResponse>> => {
   const response = await apiClient.delete<ApiResponse<BulkDeleteResponse>>(
-    `${ASSETS_BASE}/bulk`,
+    `/api/storage/assets`,
     { data },
   );
   return response.data;
