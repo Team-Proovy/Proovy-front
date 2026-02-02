@@ -5,6 +5,7 @@ import type {
   SignupCompleteRequest,
   SignupCompleteResponse,
   TokenRefreshRequest,
+  SocialLoginRequest,
 } from "./auth_types";
 import type { TokenDto } from "@/shared/api/shared_types";
 
@@ -33,6 +34,18 @@ export const loginWithKakao = async (
     {
       authorizationCode: code,
     },
+  );
+  return response.data;
+};
+
+// 소셜 로그인 (통합) - kakao, naver, google 지원
+export const socialLogin = async (
+  provider: "kakao" | "naver" | "google",
+  data: SocialLoginRequest,
+): Promise<ApiResponse<LoginResult>> => {
+  const response = await apiClient.post<ApiResponse<LoginResult>>(
+    `${AUTH_BASE}/login/${provider}`,
+    data,
   );
   return response.data;
 };
