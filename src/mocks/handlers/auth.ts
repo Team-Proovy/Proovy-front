@@ -1,7 +1,7 @@
 import { http, HttpResponse, delay } from "msw";
 import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
-  LoginResponse,
+  LoginResult,
   SignupCompleteResponse,
   NaverAuthUrlResponse,
   KakaoLoginRequest,
@@ -12,14 +12,14 @@ import type {
 } from "../../features/auth/api/auth_types";
 import type { TokenDto } from "../../shared/api/shared_types";
 
-const BASE_URL = "https://api.proovy.ai.kr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================
 // 목 데이터
 // ============================================================
 
 /** 기존 회원 로그인 응답 (목) */
-const mockLoginResponse: LoginResponse = {
+const mockLoginResult: LoginResult = {
   loginType: "LOGIN",
   user: {
     id: 1,
@@ -34,24 +34,16 @@ const mockLoginResponse: LoginResponse = {
     accessTokenExpiresIn: 3600,
     refreshTokenExpiresIn: 604800,
   },
-  signupToken: null,
-  kakaoInfo: null,
-  naverInfo: null,
-  googleInfo: null,
 };
 
 /** 신규 회원 (회원가입 필요) 응답 (목) */
-const mockSignupRequiredResponse: LoginResponse = {
+const mockSignupRequiredResult: LoginResult = {
   loginType: "SIGNUP_REQUIRED",
-  user: null,
-  token: null,
   signupToken: "mock_signup_token_abc123",
   kakaoInfo: {
     id: "kakao_12345",
     email: "newuser@kakao.com",
   },
-  naverInfo: null,
-  googleInfo: null,
 };
 
 /** 회원가입 완료 응답 (목) */
@@ -98,19 +90,19 @@ export const authHandlers = [
 
       // 특정 코드로 신규 회원 시뮬레이션
       if (body.authorizationCode === "NEW_USER") {
-        return HttpResponse.json<ApiResponse<LoginResponse>>({
+        return HttpResponse.json<ApiResponse<LoginResult>>({
           isSuccess: true,
           code: "AUTH2001",
           message: "회원가입이 필요합니다.",
-          result: mockSignupRequiredResponse,
+          result: mockSignupRequiredResult,
         });
       }
 
-      return HttpResponse.json<ApiResponse<LoginResponse>>({
+      return HttpResponse.json<ApiResponse<LoginResult>>({
         isSuccess: true,
         code: "AUTH2000",
         message: "로그인 성공",
-        result: mockLoginResponse,
+        result: mockLoginResult,
       });
     },
   ),
@@ -142,12 +134,12 @@ export const authHandlers = [
       const body = await request.json();
       console.log("[MSW] 네이버 로그인 요청:", body);
 
-      return HttpResponse.json<ApiResponse<LoginResponse>>({
+      return HttpResponse.json<ApiResponse<LoginResult>>({
         isSuccess: true,
         code: "AUTH2000",
         message: "로그인 성공",
         result: {
-          ...mockLoginResponse,
+          ...mockLoginResult,
           naverInfo: {
             id: "naver_12345",
             email: "user@naver.com",
@@ -167,12 +159,12 @@ export const authHandlers = [
       const body = await request.json();
       console.log("[MSW] 구글 로그인 요청:", body);
 
-      return HttpResponse.json<ApiResponse<LoginResponse>>({
+      return HttpResponse.json<ApiResponse<LoginResult>>({
         isSuccess: true,
         code: "AUTH2000",
         message: "로그인 성공",
         result: {
-          ...mockLoginResponse,
+          ...mockLoginResult,
           googleInfo: {
             id: "google_12345",
             email: "user@gmail.com",

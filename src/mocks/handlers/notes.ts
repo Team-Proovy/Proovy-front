@@ -6,7 +6,7 @@ import type {
   NoteDto,
 } from "../../features/notes/api/notes_types";
 
-const BASE_URL = "https://api.proovy.ai.kr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================
 // 목 데이터
@@ -58,18 +58,19 @@ export const notesHandlers = [
   http.get(`${BASE_URL}/api/notes`, async ({ request }) => {
     await delay(500);
 
-    const authHeader = request.headers.get("Authorization");
-    if (!authHeader) {
-      return HttpResponse.json<ApiResponse<null>>(
-        {
-          isSuccess: false,
-          code: "AUTH4010",
-          message: "인증 토큰이 필요합니다.",
-          result: null,
-        },
-        { status: 401 },
-      );
-    }
+    // 개발 환경에서는 인증 체크 스킵
+    // const authHeader = request.headers.get("Authorization");
+    // if (!authHeader) {
+    //   return HttpResponse.json<ApiResponse<null>>(
+    //     {
+    //       isSuccess: false,
+    //       code: "AUTH4010",
+    //       message: "인증 토큰이 필요합니다.",
+    //       result: null,
+    //     },
+    //     { status: 401 },
+    //   );
+    // }
 
     // URL에서 쿼리 파라미터 추출
     const url = new URL(request.url);

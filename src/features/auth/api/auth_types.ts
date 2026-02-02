@@ -110,14 +110,6 @@ export interface LoginResult {
   googleInfo?: SocialInfo;
 }
 
-/** 로그인 API 응답 */
-export interface LoginResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: LoginResult;
-}
-
 /** 회원가입 완료 응답 */
 export interface SignupCompleteResponse {
   user: SignupUserDto;

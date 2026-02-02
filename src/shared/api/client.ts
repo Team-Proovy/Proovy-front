@@ -90,6 +90,11 @@ apiClient.interceptors.response.use(
       const refreshToken = tokenUtils.getRefreshToken();
 
       if (!refreshToken) {
+        // 개발 환경에서는 리다이렉트하지 않음 (MSW 사용)
+        if (import.meta.env.DEV) {
+          console.warn("[Auth] 토큰 없음 - 개발 환경에서는 리다이렉트 스킵");
+          return Promise.reject(error);
+        }
         tokenUtils.clearTokens();
         window.location.href = "/login";
         return Promise.reject(error);
@@ -111,8 +116,11 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null);
-        tokenUtils.clearTokens();
-        window.location.href = "/login";
+        // 개발 환경에서는 리다이렉트하지 않음 (MSW 사용)
+        if (!import.meta.env.DEV) {
+          tokenUtils.clearTokens();
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

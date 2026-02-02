@@ -8,7 +8,7 @@ import type {
   BulkDeleteRequest,
 } from "../../features/storage/api/assets_types";
 
-const BASE_URL = "https://api.proovy.ai.kr";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================
 // 목 데이터
