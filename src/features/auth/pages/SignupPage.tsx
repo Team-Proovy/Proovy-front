@@ -61,7 +61,7 @@ export const SignupPage = () => {
       );
     } finally {
       setIsLoading(false);
-    }
+    } 
   };
 
   return (
