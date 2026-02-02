@@ -3,10 +3,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { LogoIcon } from "../../../shared/components/icons/LoginIcons";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
 import type { SocialInfo } from "../api/auth_types";
+import { signupComplete } from "../api/auth_api";
+import { tokenUtils } from "@/shared/api/client";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // To get passed state from callback
+  const [isLoading, setIsLoading] = useState(false);
+
+  // KakaoCallbackPage에서 전달받은 signupToken
+  const signupToken = location.state?.signupToken as string | undefined;
+
   const [formData, setFormData] = useState({
     name: (location.state?.kakaoInfo as SocialInfo)?.name || "",
     nickname: "",
@@ -19,11 +26,42 @@ export const SignupPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Signup Data:", formData);
-    // TODO: Call signup API
-    navigate("/app/home");
+
+    if (!signupToken) {
+      alert("회원가입 토큰이 없습니다. 다시 로그인해주세요.");
+      navigate("/login");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await signupComplete({
+        signupToken,
+        name: formData.name,
+        nickname: formData.nickname,
+        department: formData.department,
+        referralSource: formData.referralSource,
+      });
+
+      if (response.isSuccess) {
+        // 토큰 저장
+        const { token } = response.result;
+        tokenUtils.setTokens(token.accessToken, token.refreshToken);
+        navigate("/app/home");
+      } else {
+        alert(`회원가입 실패: ${response.message}`);
+      }
+    } catch (error: any) {
+      console.error("회원가입 에러:", error);
+      alert(
+        error.response?.data?.message || "회원가입 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsLoading(false);
+    } 
   };
 
   return (
@@ -130,12 +168,14 @@ export const SignupPage = () => {
               <button
                 type="submit"
                 disabled={
+                  isLoading ||
                   !formData.name ||
                   !formData.nickname ||
                   !formData.department ||
                   !formData.referralSource
                 }
                 className={`mt-[37px] h-[52px] w-[392px] rounded-[10px] text-[16px] font-semibold transition-all duration-200 ${
+                  isLoading ||
                   !formData.name ||
                   !formData.nickname ||
                   !formData.department ||
@@ -144,7 +184,7 @@ export const SignupPage = () => {
                     : "bg-[#2F3440] text-white hover:bg-[#2A6AFF] active:scale-[0.98] active:bg-[#003880]"
                 } `}
               >
-                가입 완료하기
+                {isLoading ? "처리 중..." : "가입 완료하기"}
               </button>
             </form>
           </div>
