@@ -8,7 +8,6 @@ import type {
   SocialLoginRequest,
 } from "./auth_types";
 import type { TokenDto } from "@/shared/api/shared_types";
-import { tokenUtils } from "@/shared/api/client";
 
 // ============================================================
 // 환경변수 (카카오 로그인용)
@@ -32,22 +31,10 @@ export const loginWithKakao = async (
 ): Promise<ApiResponse<LoginResult>> => {
   const response = await apiClient.post<ApiResponse<LoginResult>>(
     `${AUTH_BASE}/login/kakao`,
-    { authorizationCode: code },
+    {
+      authorizationCode: code,
+    },
   );
-
-  const result = response.data.result;
-
-  // 💡 데이터가 오는지 확인하기 위해 잠시 '알림창'을 띄워보세요.
-  if (response.data.isSuccess && result) {
-    // 백엔드 응답 구조에 따라 토큰을 안전하게 추출
-    const accessToken = result.token?.accessToken || result.accessToken;
-    const refreshToken = result.token?.refreshToken || result.refreshToken;
-
-    if (accessToken && refreshToken) {
-      tokenUtils.setTokens(accessToken, refreshToken);
-      console.log("✅ 토큰 저장 성공:", accessToken.substring(0, 10) + "...");
-    }
-  }
   return response.data;
 };
 
