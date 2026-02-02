@@ -1,6 +1,6 @@
 import apiClient from "@/shared/api/client";
-import type { ApiResponse } from "@/shared/api/types";
-import type { MyProfileResponse, SubscriptionResponse } from "./types";
+import type { ApiResponse } from "@/shared/api/shared_types";
+import type { MyProfileResponse, SubscriptionResponse } from "./user_types";
 
 const USER_BASE = "/api/users";
 

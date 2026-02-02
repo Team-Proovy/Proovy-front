@@ -1,4 +1,4 @@
-import { type PageInfo } from "../../../shared/api/types";
+import { type PageInfo } from "../../../shared/api/shared_types";
 
 // ============================================================
 // 요청 (Request) 타입

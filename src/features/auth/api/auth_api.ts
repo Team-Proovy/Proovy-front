@@ -1,13 +1,13 @@
 import apiClient from "@/shared/api/client";
-import type { ApiResponse } from "@/shared/api/types";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   SocialLoginRequest,
   SocialLoginResponse,
   SignupCompleteRequest,
   SignupCompleteResponse,
   TokenRefreshRequest,
-} from "./types";
-import type { TokenDto } from "@/shared/api/types";
+} from "./auth_types";
+import type { TokenDto } from "@/shared/api/shared_types";
 
 const AUTH_BASE = "/api/auth";
 

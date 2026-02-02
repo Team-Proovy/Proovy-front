@@ -5,7 +5,7 @@ import {
   useInfiniteQuery,
 } from "@tanstack/react-query";
 import { getNoteList, createNote } from "../api/notes_api";
-import type { NoteListParams, CreateNoteRequest } from "../api/types";
+import type { NoteListParams, CreateNoteRequest } from "../api/notes_types";
 
 // Query Keys
 export const noteKeys = {

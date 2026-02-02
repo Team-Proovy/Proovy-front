@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from "msw";
-import type { ApiResponse } from "../../shared/api/types";
+import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
   LoginResponse,
   SignupCompleteResponse,
@@ -9,8 +9,8 @@ import type {
   GoogleLoginRequest,
   SignupCompleteRequest,
   TokenRefreshRequest,
-} from "../../features/auth/api/types";
-import type { TokenDto } from "../../shared/api/types";
+} from "../../features/auth/api/auth_types";
+import type { TokenDto } from "../../shared/api/shared_types";
 
 const BASE_URL = "https://api.proovy.ai.kr";
 

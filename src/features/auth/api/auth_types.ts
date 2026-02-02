@@ -1,4 +1,4 @@
-import { type TokenDto } from "../../../shared/api/types";
+import { type TokenDto } from "../../../shared/api/shared_types";
 
 // ============================================================
 // 요청 (Request) 타입

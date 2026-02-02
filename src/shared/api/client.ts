@@ -1,6 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
-import type { ApiResponse, TokenDto } from "./types";
+import type { ApiResponse, TokenDto } from "./shared_types";
 
 const BASE_URL = "https://api.proovy.ai.kr";
 

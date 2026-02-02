@@ -1,10 +1,10 @@
 import { http, HttpResponse, delay } from "msw";
-import type { ApiResponse } from "../../shared/api/types";
+import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
   CreateNoteResponse,
   CreateNoteRequest,
   NoteDto,
-} from "../../features/notes/api/types";
+} from "../../features/notes/api/notes_types";
 
 const BASE_URL = "https://api.proovy.ai.kr";
 

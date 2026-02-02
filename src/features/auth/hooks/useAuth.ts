@@ -1,7 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { socialLogin, signupComplete, logout } from "../api/auth_api";
 import { tokenUtils } from "@/shared/api/client";
-import type { SocialLoginRequest, SignupCompleteRequest } from "../api/types";
+import type {
+  SocialLoginRequest,
+  SignupCompleteRequest,
+} from "../api/auth_types";
 
 // Query Keys
 export const authKeys = {

@@ -1,5 +1,5 @@
 import apiClient from "@/shared/api/client";
-import type { ApiResponse } from "@/shared/api/types";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   UploadUrlRequest,
   UploadUrlResponse,
@@ -8,7 +8,7 @@ import type {
   DownloadUrlResponse,
   BulkDeleteRequest,
   BulkDeleteResponse,
-} from "./types";
+} from "./assets_types";
 
 const ASSETS_BASE = "/api/assets";
 

@@ -1,11 +1,11 @@
 import apiClient from "@/shared/api/client";
-import type { ApiResponse } from "@/shared/api/types";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   NoteListParams,
   NoteListResponse,
   CreateNoteRequest,
   CreateNoteResponse,
-} from "./types";
+} from "./notes_types";
 
 const NOTES_BASE = "/api/notes";
 

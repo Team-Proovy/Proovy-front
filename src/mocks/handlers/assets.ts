@@ -6,7 +6,7 @@ import type {
   DownloadUrlResponse,
   UploadUrlRequest,
   BulkDeleteRequest,
-} from "../../features/storage/api/types";
+} from "../../features/storage/api/assets_types";
 
 const BASE_URL = "https://api.proovy.ai.kr";
 

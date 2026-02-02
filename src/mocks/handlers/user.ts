@@ -3,7 +3,7 @@ import type {
   MyProfileResponse,
   SubscriptionResponse,
   DeleteUserResponse,
-} from "../../features/settings/api/types";
+} from "../../features/settings/api/user_types";
 
 const BASE_URL = "https://api.proovy.ai.kr";
 

@@ -7,7 +7,7 @@ import {
   deleteAsset,
   deleteAssetsBulk,
 } from "../api/assets_api";
-import type { BulkDeleteRequest } from "../api/types";
+import type { BulkDeleteRequest } from "../api/assets_types";
 
 // Query Keys
 export const assetKeys = {
