@@ -16,13 +16,18 @@ export const noteKeys = {
 };
 
 // 노트 목록 조회 Hook (일반 페이지네이션)
-export const useNoteList = (params?: NoteListParams) => {
+export const useNoteList = (
+  params?: NoteListParams & { enabled?: boolean },
+) => {
+  const { enabled = true, ...queryParams } = params ?? {};
+
   return useQuery({
-    queryKey: noteKeys.list(params),
+    queryKey: noteKeys.list(queryParams),
     queryFn: async () => {
-      const response = await getNoteList(params);
+      const response = await getNoteList(queryParams);
       return response.result; // { notes, pageInfo }
     },
+    enabled,
     staleTime: 1000 * 60 * 2, // 2분
   });
 };
