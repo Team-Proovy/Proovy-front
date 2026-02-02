@@ -1,13 +1,68 @@
 import { type TokenDto } from "../../../shared/api/shared_types";
 
 // ============================================================
+// 사용자 정보 타입
+// ============================================================
+
+/** 사용자 정보 (로그인 응답용) */
+export interface UserDto {
+  id: number;
+  name: string;
+  nickname: string;
+  email: string;
+  profileImageUrl: string | null;
+}
+
+/** 회원가입용 사용자 정보 */
+export interface SignupUserDto {
+  userId: number;
+  email: string;
+  name: string;
+  nickname: string;
+  department: string;
+  profileImageUrl: string | null;
+  createdAt: string;
+}
+
+// ============================================================
+// 소셜 로그인 정보 타입
+// ============================================================
+
+/** 소셜 로그인 정보 (공통) */
+export interface SocialInfo {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+/** 카카오 사용자 정보 */
+export interface KakaoUserInfo {
+  id: string;
+  email: string;
+}
+
+/** 네이버 사용자 정보 */
+export interface NaverUserInfo {
+  id: string;
+  email: string;
+  name: string;
+}
+
+/** 구글 사용자 정보 */
+export interface GoogleUserInfo {
+  id: string;
+  email: string;
+  name: string;
+}
+
+// ============================================================
 // 요청 (Request) 타입
 // ============================================================
 
 /** 카카오 로그인 요청 */
 export interface KakaoLoginRequest {
   authorizationCode: string;
-  redirectUri: string;
+  redirectUri?: string;
 }
 
 /** 네이버 로그인 요청 */
@@ -44,60 +99,23 @@ export interface LogoutRequest {
 // 응답 (Response) 타입
 // ============================================================
 
-/** 사용자 정보 */
-export interface UserDto {
-  id: number;
-  name: string;
-  nickname: string;
-  email: string;
-  profileImageUrl: string | null;
-}
-
-/** 회원가입용 사용자 정보 */
-export interface SignupUserDto {
-  userId: number;
-  email: string;
-  name: string;
-  nickname: string;
-  department: string;
-  profileImageUrl: string | null;
-  createdAt: string;
-}
-
-/** 카카오 사용자 정보 */
-export interface KakaoUserInfo {
-  id: string;
-  email: string;
-}
-
-/** 네이버 사용자 정보 */
-export interface NaverUserInfo {
-  id: string;
-  email: string;
-  name: string;
-}
-
-/** 구글 사용자 정보 */
-export interface GoogleUserInfo {
-  id: string;
-  email: string;
-  name: string;
-}
-
-/** 로그인 응답 (기존 회원 / 신규 회원 분기) */
-export interface LoginResponse {
-  /** "LOGIN" | "SIGNUP_REQUIRED" */
+/** 로그인 결과 데이터 */
+export interface LoginResult {
   loginType: "LOGIN" | "SIGNUP_REQUIRED";
-  /** 기존 회원인 경우 유저 정보 */
-  user: UserDto | null;
-  /** 기존 회원인 경우 토큰 */
-  token: TokenDto | null;
-  /** 신규 회원인 경우 회원가입 토큰 */
-  signupToken: string | null;
-  /** 소셜 로그인 정보 (신규 회원용) */
-  kakaoInfo: KakaoUserInfo | null;
-  naverInfo: NaverUserInfo | null;
-  googleInfo: GoogleUserInfo | null;
+  user?: UserDto;
+  token?: TokenDto;
+  signupToken?: string;
+  kakaoInfo?: SocialInfo;
+  naverInfo?: SocialInfo;
+  googleInfo?: SocialInfo;
+}
+
+/** 로그인 API 응답 */
+export interface LoginResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: LoginResult;
 }
 
 /** 회원가입 완료 응답 */
@@ -122,13 +140,3 @@ export type SocialLoginRequest =
   | KakaoLoginRequest
   | NaverLoginRequest
   | GoogleLoginRequest;
-
-/** 소셜 로그인 응답 (통합) */
-export interface SocialLoginResponse {
-  status: "LOGIN" | "SIGNUP_REQUIRED";
-  accessToken?: string;
-  refreshToken?: string;
-  tempToken?: string;
-  email?: string;
-  name?: string;
-}
