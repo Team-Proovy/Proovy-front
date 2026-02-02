@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loginWithKakao } from "../api/auth_api";
-import { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth_store";
 
 export const KakaoCallbackPage = () => {
@@ -29,32 +28,19 @@ export const KakaoCallbackPage = () => {
       try {
         const data = await loginWithKakao(code);
 
-        if (data.isSuccess && data.result) {
+        if (data.isSuccess) {
           login(data.result);
-
-          if (data.result.loginType === "SIGNUP_REQUIRED") {
-            navigate("/signup", {
-              state: {
-                kakaoInfo: data.result.kakaoInfo,
-                signupToken: data.result.signupToken,
-              },
-            });
-          } else {
-            navigate("/");
-          }
+          navigate("/signup", {
+            state: { kakaoInfo: data.result.kakaoInfo },
+          });
         } else {
           alert(`로그인 실패: ${data.message}`);
           navigate("/login");
         }
-      } catch (error) {
-        const axiosError = error as AxiosError<{ message?: string }>;
-
-        if (axiosError.response) {
+      } catch (error: any) {
+        if (error.response) {
           alert(
-            `로그인 실패 (${axiosError.response.status}): ${
-              axiosError.response.data?.message ||
-              "서버에서 오류가 발생했습니다."
-            }`,
+            `로그인 실패 (${error.response.status}): ${error.response.data?.message || "서버에서 오류가 발생했습니다."}`,
           );
         } else {
           alert("로그인 처리 중 오류가 발생했습니다.");

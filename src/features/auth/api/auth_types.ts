@@ -101,8 +101,6 @@ export interface LogoutRequest {
 
 /** 로그인 결과 데이터 */
 export interface LoginResult {
-  accessToken: string;
-  refreshToken: string;
   loginType: "LOGIN" | "SIGNUP_REQUIRED";
   user?: UserDto;
   token?: TokenDto;
