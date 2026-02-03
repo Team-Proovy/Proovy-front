@@ -27,10 +27,10 @@ export const KakaoCallbackPage = () => {
 
     const processLogin = async () => {
       console.log("[KakaoCallback] 로그인 시도 - code:", code);
-      
+
       // 기존 토큰 클리어 (새 로그인 시도이므로)
       tokenUtils.clearTokens();
-      
+
       try {
         const data = await loginWithKakao(code);
         console.log("[KakaoCallback] 응답:", data);
@@ -41,13 +41,16 @@ export const KakaoCallbackPage = () => {
 
           // 기존 회원 (LOGIN) - 토큰 저장 후 홈으로 이동
           if (result.loginType === "LOGIN" && result.token) {
-            tokenUtils.setTokens(result.token.accessToken, result.token.refreshToken);
+            tokenUtils.setTokens(
+              result.token.accessToken,
+              result.token.refreshToken,
+            );
             navigate("/app/home");
-          } 
+          }
           // 신규 회원 (SIGNUP_REQUIRED) - 회원가입 페이지로 이동
           else if (result.loginType === "SIGNUP_REQUIRED") {
             navigate("/signup", {
-              state: { 
+              state: {
                 kakaoInfo: result.kakaoInfo,
                 signupToken: result.signupToken,
               },
@@ -60,7 +63,7 @@ export const KakaoCallbackPage = () => {
       } catch (error: any) {
         console.error("[KakaoCallback] 에러 발생:", error);
         console.error("[KakaoCallback] 에러 응답:", error.response?.data);
-        
+
         if (error.response) {
           const errorData = error.response.data;
           alert(
