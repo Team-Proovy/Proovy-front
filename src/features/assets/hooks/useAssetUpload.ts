@@ -1,68 +1,73 @@
+import axios from "axios";
 import { useState } from "react";
-import { getUploadUrl, uploadToS3, confirmUpload } from "../api/assetApi";
-import { validateFile } from "../utils/fileValidation";
-import type { ConfirmUploadResponseData } from "../types/asset";
+import apiClient from "@/shared/api/client";
+import type {
+  UploadUrlRequest,
+  UploadUrlResponse,
+  ConfirmUploadResponse,
+} from "../types/asset";
 
 export const useAssetUpload = () => {
-  // 업로드 진행 상태 관리
-  const [isUploading, setIsUploading] = useState(false);
-  // S3 업로드 퍼센트(0~100) 관리
-  const [progress, setProgress] = useState(0);
-  // 업로드 성공 후 받은 자산 정보 저장 
-  const [uploadedAsset, setUploadedAsset] = useState<ConfirmUploadResponseData | null>(null);
+  const [isUploading, setIsUploading] = useState(false); // 업로드 여부
+  const [progress, setProgress] = useState(0); // 업로드 진해률(퍼센트로 나타남)
 
-  /**
-   * 자산 업로드 메인 함수 (3단계 프로세스)
-   * @param noteId 파일이 속할 노트의 ID 
-   * @param file 사용자가 선택한 File 객체
-   */
+  // 파일을 업로드 시키는 함수!
   const uploadAsset = async (noteId: number, file: File) => {
+    setIsUploading(true);
+    setProgress(0);
+    const token = localStorage.getItem("accessToken");
+    console.log("🚀 1단계 시작: URL 발급 요청", { fileName: file.name });
+
     try {
-      setIsUploading(true);
-      setProgress(0);
+      // 1. Url 요청
+      const res1 = await apiClient.post<UploadUrlResponse>(
+        "/api/assets/upload-url",
+        {
+          noteId: noteId,
+          fileName: file.name,
+          mimeType: file.type,
+          fileSize: file.size,
+        } as UploadUrlRequest,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      // [Step 0] 클라이언트 측 파일 검증 (30MB, 확장자 등)
-      validateFile(file);
+      const { uploadUrl, assetId } = res1.data.result;
+      console.log("✅ 1단계 완료: 발급된 ID", res1.data.result.assetId);
+      console.log("🚀 2단계 시작: S3 직접 업로드 중...");
 
-      // [Step 1] Presigned URL 발급 요청
-      // 서버에 파일 메타데이터를 보내고 S3 주소와 assetId를 받아옴
-      const { result: urlConfig } = await getUploadUrl({
-        noteId,
-        fileName: file.name,
-        mimeType: file.type,
-        fileSize: file.size,
+      // 2. S3 업로드 -> 여기서는 일반 axios 사용해야 함! (apiClient는 토큰을 넣어서 보내기 때문에 안됨)
+      await axios.put(uploadUrl, file, {
+        headers: {
+          "Content-Type": file.type,
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / (progressEvent.total || 100),
+          );
+          setProgress(percentCompleted);
+        },
       });
+      console.log("✅ 2단계 완료: S3 업로드 완료");
 
-      // [Step 2] S3 저장소에 직접 파일 전송 (PUT)
-      // 서버를 거치지 않고 S3로 바로 쏘기 때문에 서버 부하가 없음
-      await uploadToS3(urlConfig.uploadUrl, file, (percentage) => {
-        setProgress(percentage); // 실시간 진행률 업데이트
-      });
+      // Step 3: 서버 업로드 완료 알림 (apiClient 사용)
+      const res2 = await apiClient.post<ConfirmUploadResponse>(
+        `/api/assets/${assetId}/confirm`,
+      );
 
-      // [Step 3] S3 업로드 완료 알림 (서버에 확인 요청)
-      // 이 호출이 성공해야 서버에서 OCR 분석을 시작함 (ocrStatus: processing)
-      const { result: assetInfo } = await confirmUpload(urlConfig.assetId);
-      
-      setUploadedAsset(assetInfo);
-      alert("파일 업로드 및 검사가 성공적으로 시작되었습니다!");
-      
-      return assetInfo; // 최종 성공 데이터 반환        
-
-    } catch (error: any) {
-      // 명세서에 정의된 에러 메시지 처리 (400, 401, 403, 404, 409 등)
-      const errorMessage = error.response?.data?.message || error.message;
-      alert(`업로드 실패: ${errorMessage}`);
-      console.error("Upload Error Details:", error);
+      console.log("업로드 최종 성공:", res2.data.result.fileName);
+      return res2.data.result;
+    } catch (error) {
+      console.error("업로드 중 오류 발생:", error);
       throw error;
     } finally {
       setIsUploading(false);
     }
   };
 
-  return { 
-    uploadAsset, 
-    isUploading, 
-    progress, 
-    uploadedAsset 
-  };
+  return { uploadAsset, isUploading, progress };
 };

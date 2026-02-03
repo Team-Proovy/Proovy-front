@@ -19,15 +19,15 @@ export interface UploadUrlResponseData {
   expiresAt: string; // URL 만료 시각
 }
 
-// 3. S3 업로드 완료 알림 응답 데이터 
+// 3. S3 업로드 완료 알림 응답 데이터
 export interface ConfirmUploadResponseData {
-  assetId: number;      // 자산 고유 ID 
-  fileName: string;    // 파일명 
-  fileSize: number;    // 파일 크기 (bytes) 
-  mimeType: string;    // MIME 타입 
-  source: string;      // 파일 출처 (upload 등) 
-  ocrStatus: "pending" | "processing" | "completed" | "failed"; // OCR 처리 상태 
-  createdAt: string;   // 자산 생성 시각 
+  assetId: number; // 자산 고유 ID
+  fileName: string; // 파일명
+  fileSize: number; // 파일 크기 (bytes)
+  mimeType: string; // MIME 타입
+  source: string; // 파일 출처 (upload 등)
+  ocrStatus: "pending" | "processing" | "completed" | "failed"; // OCR 처리 상태
+  createdAt: string; // 자산 생성 시각
 }
 
 export type UploadUrlResponse = ApiResponse<UploadUrlResponseData>;

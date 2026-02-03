@@ -24,6 +24,7 @@ interface StorageState {
 
   setDeleteModalOpen: (isOpen: boolean) => void;
   setSuccessModalOpen: (isOpen: boolean) => void;
+  addNote: (note: Note) => void;
   deleteSelectedNotes: () => void;
 }
 
@@ -76,6 +77,8 @@ export const useStorageStore = create<StorageState>((set) => ({
 
   setDeleteModalOpen: (isDeleteModalOpen) => set({ isDeleteModalOpen }),
   setSuccessModalOpen: (isSuccessModalOpen) => set({ isSuccessModalOpen }),
+  addNote: (note) =>
+    set((state) => ({ noteCards: [note, ...state.noteCards] })),
   deleteSelectedNotes: () =>
     set((state) => ({
       noteCards: state.noteCards.filter(

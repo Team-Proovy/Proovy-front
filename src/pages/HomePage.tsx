@@ -5,6 +5,8 @@ import { ChatInput } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
+import { useStorageStore } from "../features/storage/store/useStorageStore";
+
 /**
  * HomePage - 새 노트 시작점
  *
@@ -35,13 +37,20 @@ export const HomePage = () => {
         setFileType("image");
       }
 
-      try{
-       // TODO: noteID
-      const dummyNoteId = 1;
-      const assetInfo = await uploadAsset(dummyNoteId, file);
-      console.log("File uploaded successfully:", assetInfo);
-      }catch(error){
-        handleRemove(new MouseEvent('click') as any);
+      try {
+        const currentNodeId = 1;
+        const assetInfo = await uploadAsset(currentNodeId, file);
+        console.log("File uploaded successfully:", assetInfo);
+
+        // 스토리지에 새 노트 추가
+        useStorageStore.getState().addNote({
+          id: assetInfo.assetId,
+          label: assetInfo.fileName,
+          type: "업로드",
+        });
+      } catch (error) {
+        alert("파일 업로드에 실패했습니다. 파일 형식 및 크기를 확인해주세요.");
+        handleRemove(new MouseEvent("click") as any);
       }
     }, ".pdf,.jpg,.jpeg,.png,.gif,.webp");
 
@@ -104,10 +113,10 @@ export const HomePage = () => {
                   {isUploading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white">
                       <span className="text-[12px] font-bold">{progress}%</span>
-                      <div className="mt-1 h-1 w-20 bg-gray-300 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all duration-300" 
-                          style={{ width: `${progress}%` }} 
+                      <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-gray-300">
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${progress}%` }}
                         />
                       </div>
                     </div>
