@@ -8,7 +8,7 @@ import { useState } from "react";
 
 // Features
 import { Sidebar } from "../../features/sidebar/Sidebar";
-import { SearchModal } from "../../features/search/components/SearchModal";
+import SearchModal from "@/features/search/components/SearchModal";
 import { SettingsModal } from "../../features/settings/components/SettingsModal";
 
 /**
