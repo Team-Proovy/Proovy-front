@@ -18,7 +18,10 @@ interface RecentNotesProps {
  */
 export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
   // MSW 목 데이터 연결
-  const { data, isLoading, error } = useNoteList({ size: 8, enabled: !isCollapsed });
+  const { data, isLoading, error } = useNoteList({
+    size: 8,
+    enabled: !isCollapsed,
+  });
 
   // 로딩 상태
   if (isLoading) {

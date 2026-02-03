@@ -1,162 +1,225 @@
-/**
- * SearchModal - 검색 모달 컴포넌트
- *
- * GPT 스타일의 검색 모달
- * 사이드바 "검색" 버튼 클릭 시 현재 페이지 위에 오버레이로 표시
- *
- * 기능:
- * - 모든 노트의 대화 내용 검색
- * - 검색 결과 클릭 → 해당 노트로 이동 + 모달 닫기
- * - ESC 또는 배경 클릭 시 모달 닫기
- */
-
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
-
+import {
+  ChattingIcon,
+  NewChattingIcon,
+} from "@/shared/components/icons/ChattingPageIcons";
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
-  const [query, setQuery] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // TODO: useSearchChats(query) 훅으로 검색
-  const mockResults = [
-    {
-      id: "r1",
-      noteId: "1",
-      noteTitle: "이산수학 과제2 3단원",
-      preview: "크레이머 공식(Cramer's rule)은 변수와 방정식의 수가 같은...",
-      date: "2025년",
-    },
-    {
-      id: "r2",
-      noteId: "1",
-      noteTitle: "이산수학 과제2 3단원",
-      preview: "5.9-5.11 내용 확인해줘",
-      date: "2025년",
-    },
-    {
-      id: "r3",
-      noteId: "2",
-      noteTitle: "선형대수 복습",
-      preview: "소거 벡터 계산 방법 알려줘",
-      date: "2025년",
-    },
-  ];
-
-  // 모달 열릴 때 input에 포커스
+  // ESC 키 누르면 모달 닫기
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
-  // ESC 키로 모달 닫기
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  // 모달 닫힐 때 검색어 초기화
-  useEffect(() => {
-    if (!isOpen) {
-      setQuery("");
-    }
-  }, [isOpen]);
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [onClose]);
 
   if (!isOpen) return null;
 
-  const filteredResults = mockResults.filter((r) =>
-    query ? r.preview.toLowerCase().includes(query.toLowerCase()) : true,
-  );
+  // 배경 클릭 시 닫기 핸들러
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
   return (
-    // 오버레이
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-[10vh]"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={handleBackdropClick}
     >
-      {/* 모달 컨테이너 */}
-      <div
-        className="w-full max-w-[600px] overflow-hidden rounded-xl bg-[#212121] shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 검색 입력 */}
-        <div className="flex items-center border-b border-gray-700 px-4 py-3">
+      <div className="relative flex h-[495px] w-[836px] flex-col overflow-hidden rounded-2xl bg-[#FFFFFF] shadow-[0px_4px_40px_0px_rgba(0,0,0,0.25)]">
+        {/* 상단 검색 영역 */}
+        {/* 상단 검색 영역 */}
+        <div className="flex w-full items-center bg-transparent pt-6 pr-[36px] pb-4 pl-9">
           <input
-            ref={inputRef}
+            autoFocus
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
             placeholder="채팅 검색..."
-            className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="font-regular flex-1 bg-transparent text-[20px] placeholder-[#000000] outline-none placeholder:text-[20px]"
           />
           <button
             onClick={onClose}
-            className="ml-2 rounded p-1 text-gray-400 hover:bg-gray-700 hover:text-white"
+            className="ml-4 rounded-full p-1 transition-colors"
           >
-            <X size={20} />
+            <X className="size-[24px] text-[#000000] hover:text-[#2A6AFF]" />
           </button>
         </div>
 
-        {/* 검색 결과 */}
-        <div className="max-h-[60vh] overflow-auto p-2">
-          {/* 빠른 액션 */}
-          <Link
-            to="/app/home"
-            onClick={onClose}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 hover:bg-gray-700"
-          >
-            <span>✨</span>
-            <span>새 채팅</span>
-          </Link>
+        {/* 구분선 추가 */}
+        <div className="mx-6 h-px bg-gray-200"></div>
 
-          {/* 최근/검색 결과 */}
-          <div className="mt-2">
-            <h3 className="mb-1 px-3 text-xs font-medium text-gray-500">
-              {query ? "검색 결과" : "최근 대화"}
-            </h3>
-
-            {filteredResults.length > 0 ? (
-              filteredResults.map((result) => (
-                <Link
-                  key={result.id}
-                  to={`/app/chat/${result.noteId}`}
-                  onClick={onClose}
-                  className="flex flex-col rounded-lg px-3 py-2 hover:bg-gray-700"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">○</span>
-                    <span className="text-sm text-white">{result.preview}</span>
-                  </div>
-                  <div className="mt-0.5 ml-5 text-xs text-gray-500">
-                    {result.noteTitle} • {result.date}
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="px-3 py-4 text-center text-sm text-gray-500">
-                검색 결과가 없습니다
+        {/* 검색 결과 영역 */}
+        <div className="custom-scrollbar flex-1 gap-[12px] overflow-y-auto p-4 pr-4">
+          {/* 새 채팅 버튼 */}
+          <div className="h-[60px] w-full">
+            <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+              <div className="pl-2">
+                <NewChattingIcon
+                  className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                  color="currentColor"
+                />
               </div>
-            )}
+              <span className="text-[18px] font-semibold text-[#2F3440]">
+                새 채팅
+              </span>
+            </button>
+          </div>
+
+          {/* 섹션: 오늘 */}
+          <div className="mt-4">
+            <h3 className="mb-2 px-3 text-[14px] font-semibold text-[#6B7280]">
+              오늘
+            </h3>
+            <div className="flex flex-col gap-[16px]">
+              {/* 임시 검색 결과 아이템 */}
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+            </div>
+          </div>
+          {/* 섹션: 오늘 (Duplicate 1) */}
+          <div className="mt-4">
+            <h3 className="mb-2 px-3 pl-3 text-[14px] font-semibold text-[#6B7280]">
+              오늘
+            </h3>
+            <div className="flex flex-col gap-[16px]">
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 섹션: 오늘 (Duplicate 2) */}
+          <div className="mt-4">
+            <h3 className="mb-2 px-3 pl-3 text-[14px] font-semibold text-[#6B7280]">
+              오늘
+            </h3>
+            <div className="flex flex-col gap-[16px]">
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 섹션: 오늘 (Duplicate 3) */}
+          <div className="mt-4">
+            <h3 className="mb-2 px-3 pl-3 text-[14px] font-semibold text-[#6B7280]">
+              오늘
+            </h3>
+            <div className="flex flex-col gap-[16px]">
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* 섹션: 어제 */}
+          <div className="mt-4">
+            <h3 className="mb-2 px-3 pl-3 text-[14px] font-semibold text-[#6B7280]">
+              어제
+            </h3>
+            <div className="flex flex-col gap-[16px]">
+              <button className="group flex h-[60px] w-full items-center gap-4 rounded-[12px] transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]">
+                <div className="pl-2">
+                  <ChattingIcon
+                    className="size-[40px] text-[#6B7280] group-hover:text-[#2A6AFF]"
+                    color="currentColor"
+                  />
+                </div>
+                <span className="text-[18px] font-semibold text-[#2F3440]">
+                  분석해줘
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+export default SearchModal;
