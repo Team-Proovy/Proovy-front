@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
       // 대화방
       // ?panel=viewer|storage, ?file=fileId
       {
-        path: "chat/:chatId",
+        path: "chat/:noteId",
         element: <ChatPage />,
       },
     ],
