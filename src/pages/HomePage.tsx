@@ -4,7 +4,7 @@ import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
-
+import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
 /**
  * HomePage - 새 노트 시작점
  *
@@ -19,10 +19,11 @@ export const HomePage = () => {
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [fileType, setFileType] = useState<"pdf" | "image" | null>(null);
+  const { uploadAsset, isUploading, progress } = useAssetUpload();
 
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange, accept } =
-    useFileUpload((file) => {
+    useFileUpload(async (file) => {
       // 선택된 파일 처리 로직
       const url = URL.createObjectURL(file);
       setFileName(file.name);
@@ -32,6 +33,15 @@ export const HomePage = () => {
         setFileType("pdf");
       } else if (file.type.startsWith("image/")) {
         setFileType("image");
+      }
+
+      try{
+       // TODO: noteID
+      const dummyNoteId = 1;
+      const assetInfo = await uploadAsset(dummyNoteId, file);
+      console.log("File uploaded successfully:", assetInfo);
+      }catch(error){
+        handleRemove(new MouseEvent('click') as any);
       }
     }, ".pdf,.jpg,.jpeg,.png,.gif,.webp");
 
@@ -90,7 +100,18 @@ export const HomePage = () => {
                       />
                     ) : null}
                   </div>
-
+                  {/* ✅ 업로드 중일 때 프로그레스 오버레이 추가 */}
+                  {isUploading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white">
+                      <span className="text-[12px] font-bold">{progress}%</span>
+                      <div className="mt-1 h-1 w-20 bg-gray-300 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 transition-all duration-300" 
+                          style={{ width: `${progress}%` }} 
+                        />
+                      </div>
+                    </div>
+                  )}
                   {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}
                   <div className="absolute inset-0 flex items-start justify-end bg-black/20 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     <button
