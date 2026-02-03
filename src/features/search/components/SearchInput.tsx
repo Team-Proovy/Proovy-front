@@ -15,7 +15,7 @@ const SearchInput = ({ value, onChange, onClose }: SearchInputProps) => (
       placeholder="채팅 검색..."
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="font-regular flex-1 bg-transparent text-[20px] placeholder-[#000000] outline-none placeholder:text-[20px]"
+      className="flex-1 bg-transparent text-[20px] font-normal placeholder-[#000000] outline-none placeholder:text-[20px]"
     />
     <button
       onClick={onClose}
