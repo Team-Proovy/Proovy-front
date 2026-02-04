@@ -1,14 +1,44 @@
+import { useFileUpload } from "@/shared/hooks/useFileUpload";
+import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
+
 interface ViewerContentProps {
   noteId: string;
   fileId?: string;
 }
 
 export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
+  // 파일 업로드 훅 사용
+  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
+    (file) => {
+      // TODO: 파일 업로드 후 처리 로직
+      console.log("ViewerContent에서 파일 선택됨:", file);
+    },
+  );
+
   if (!fileId) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 text-gray-400">
-        <span>파일을 선택하세요</span>
-        <span className="text-sm">Storage 탭에서 파일을 선택해주세요</span>
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        {/* hidden input for file upload */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileChange}
+          accept=".pdf"
+        />
+
+        {/* 파일 업로드 버튼 - HomePage와 동일 */}
+        <button
+          onClick={openFileExplorer}
+          className="group flex h-[160px] w-[220px] cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[36px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
+        >
+          <div>
+            <PdfIcon size={56} />
+          </div>
+          <p className="text-[18px] font-normal text-[#666666] transition-colors duration-700 group-hover:text-[#2542F0]">
+            뷰어로 파일 업로드
+          </p>
+        </button>
       </div>
     );
   }

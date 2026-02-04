@@ -44,6 +44,7 @@ export const ChatPage = () => {
     initialWidth: 50,
     minWidth: 25,
     maxWidth: 75,
+    minWidthPx: 382, // 버튼 350px + 좌우 패딩 16px * 2
   });
 
   // TODO: 실제 노트 제목 가져오기
@@ -55,13 +56,37 @@ export const ChatPage = () => {
       id: "1",
       role: "user" as const,
       content:
-        "안녕! 1번 문제를 풀어줘. 풀이과정을 단계별로 자세하게 설명하고 변형 문제를 생성해줘.",
+        "안녕! 1번 문제를 풀어줘. 풀이과정을 단계별로 자세하게 설명하고 변형 문제를 생성해줘.dddddddddddddddddddddddddddddddddddddddddㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
     },
     {
       id: "2",
       role: "assistant" as const,
       content:
-        "안녕하세요! 1번 문제에 나오는 개념을 설명하고, 상세하게 풀이를 작성해볼게요!",
+        "안녕하세요! 1번 문제에 나오는 개념을 설명하고, 상세하게 풀이를 작성해볼게요! ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
+    },
+    {
+      id: "1",
+      role: "user" as const,
+      content:
+        "안녕! 1번 문제를 풀어줘. 풀이과정을 단계별로 자세하게 설명하고 변형 문제를 생성해줘.dddddddddddddddddddddddddddddddddddddddddㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
+    },
+    {
+      id: "2",
+      role: "assistant" as const,
+      content:
+        "안녕하세요! 1번 문제에 나오는 개념을 설명하고, 상세하게 풀이를 작성해볼게요! ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
+    },
+    {
+      id: "1",
+      role: "user" as const,
+      content:
+        "안녕! 1번 문제를 풀어줘. 풀이과정을 단계별로 자세하게 설명하고 변형 문제를 생성해줘.dddddddddddddddddddddddddddddddddddddddddㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
+    },
+    {
+      id: "2",
+      role: "assistant" as const,
+      content:
+        "안녕하세요! 1번 문제에 나오는 개념을 설명하고, 상세하게 풀이를 작성해볼게요! ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
     },
   ];
 

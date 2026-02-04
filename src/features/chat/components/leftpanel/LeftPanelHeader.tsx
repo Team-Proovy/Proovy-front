@@ -14,7 +14,7 @@ export const LeftPanelHeader = ({
   onClose,
 }: LeftPanelHeaderProps) => {
   return (
-    <div className="relative flex h-[50px] w-full max-w-[720px] min-w-[270px] shrink-0 items-center justify-center border-[0.5px] border-[#D1D6DE] bg-white px-4">
+    <div className="relative flex h-[40px] w-full shrink-0 items-center justify-center border-[0.5px] border-[#D1D6DE] bg-white px-4">
       {/* 탭 버튼들 - 가운데 정렬 */}
       <div className="flex items-center gap-0">
         {/* Viewer 탭 */}
