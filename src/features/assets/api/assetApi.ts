@@ -27,11 +27,9 @@ export const uploadToS3 = async (
     headers: {
       "Content-Type": file.type,
     },
-    onUploadProgress: (progressEvent) => {
-      if (progressEvent.total) {
-        const percentage = Math.round(
-          (progressEvent.loaded / progressEvent.total) * 100,
-        );
+    onUploadProgress: (e) => {
+      if (e.total) {
+        const percentage = Math.round((e.loaded / e.total) * 100);
         onProgress?.(percentage);
       }
     },
