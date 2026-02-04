@@ -5,8 +5,6 @@ import { ChatInput } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
-import { useStorageStore } from "../features/storage/store/useStorageStore";
-
 /**
  * HomePage - 새 노트 시작점
  *
@@ -18,48 +16,33 @@ import { useStorageStore } from "../features/storage/store/useStorageStore";
  * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
  */
 export const HomePage = () => {
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
-  const [fileType, setFileType] = useState<"pdf" | "image" | null>(null);
   const { uploadAsset, isUploading, progress } = useAssetUpload();
-
   // 파일 업로드 훅 사용
-  const { fileInputRef, openFileExplorer, handleFileChange, accept } =
-    useFileUpload(async (file) => {
-      // 선택된 파일 처리 로직
-      const url = URL.createObjectURL(file);
-      setFileName(file.name);
-      setFileUrl(url);
-      // 파일타입 구분
-      if (file.type === "application/pdf") {
-        setFileType("pdf");
-      } else if (file.type.startsWith("image/")) {
-        setFileType("image");
+  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
+    async (file) => {
+      if (file && file.type === "application/pdf") {
+        setFileName(file.name);
+        const url = URL.createObjectURL(file);
+        setPdfUrl(url);
+        try {
+          // 이 부분이 진짜 파일 업로드 시작 부분 --> 유효한 noteId 를 넣어야 500 에러 안 남
+          const VALID_NOTE_ID = 1;
+          await uploadAsset(VALID_NOTE_ID, file);
+          console.log("파일 업로드 성공!");
+        } catch (error) {
+          console.error("파일 업로드 실패:", error);
+        }
       }
-
-      try {
-        const currentNodeId = 1;
-        const assetInfo = await uploadAsset(currentNodeId, file);
-        console.log("File uploaded successfully:", assetInfo);
-
-        // 스토리지에 새 노트 추가
-        useStorageStore.getState().addNote({
-          id: assetInfo.assetId,
-          label: assetInfo.fileName,
-          type: "업로드",
-        });
-      } catch (error) {
-        alert("파일 업로드에 실패했습니다. 파일 형식 및 크기를 확인해주세요.");
-        handleRemove(new MouseEvent("click") as any);
-      }
-    }, ".pdf,.jpg,.jpeg,.png,.gif,.webp");
+    },
+  );
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation(); // 버튼 클릭 이벤트 전파 방지
-    if (fileUrl) URL.revokeObjectURL(fileUrl);
-    setFileUrl(null);
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    setPdfUrl(null);
     setFileName("");
-    setFileType(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -87,40 +70,22 @@ export const HomePage = () => {
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
-              accept={accept}
+              accept=".pdf"
             />
 
-            {fileUrl ? (
+            {pdfUrl ? (
               /* PDF 업로드 완료 시: 카드 형태 UI */
               <div className="group relative flex h-[160px] w-[220px] flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
                 {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
                 <div className="relative flex h-[160px] w-[140px] items-start justify-center overflow-hidden bg-[#F2F2F2]">
                   <div className="w-full">
-                    {fileType === "pdf" ? (
-                      <PdfPreview
-                        fileUrl={fileUrl}
-                        width={140}
-                      />
-                    ) : fileType === "image" ? (
-                      <img
-                        src={fileUrl}
-                        alt={fileName}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : null}
+                    <PdfPreview
+                      key={pdfUrl}
+                      fileUrl={pdfUrl}
+                      width={140}
+                    />
                   </div>
-                  {/* ✅ 업로드 중일 때 프로그레스 오버레이 추가 */}
-                  {isUploading && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-white">
-                      <span className="text-[12px] font-bold">{progress}%</span>
-                      <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-gray-300">
-                        <div
-                          className="h-full bg-blue-500 transition-all duration-300"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
+
                   {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}
                   <div className="absolute inset-0 flex items-start justify-end bg-black/20 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                     <button
