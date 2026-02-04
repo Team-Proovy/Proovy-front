@@ -13,7 +13,22 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
     { id: 1, label: "discrete_math_HW2.pdf", type: "업로드" as const },
     {
       id: 2,
-      label: "[solution] exercise of RREF.pdf",
+      label: "더미 파일 1",
+      type: "AI 생성" as const,
+    },
+    {
+      id: 2,
+      label: "더미 파일 2",
+      type: "AI 생성" as const,
+    },
+    {
+      id: 2,
+      label: "더미 파일 3",
+      type: "AI 생성" as const,
+    },
+    {
+      id: 2,
+      label: "더미 파일 4",
       type: "AI 생성" as const,
     },
   ];
@@ -46,7 +61,7 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
       {/* 콘텐츠 영역 (flex-1, min-w-0, overflow-hidden) */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* 스크롤 가능한 콘텐츠 */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto p-4">
           <button
             onClick={() => setIsBoxOpen(!isBoxOpen)}
             className="mb-3 flex w-full items-center gap-2"
@@ -57,7 +72,7 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
 
           {/* 저장소 NoteCard 재사용 */}
           {isBoxOpen && (
-            <div className="mb-6 flex flex-wrap gap-[20px]">
+            <div className="mb-6 grid grid-cols-[repeat(auto-fill,148px)] gap-[20px]">
               {mockFiles.map((file) => (
                 <NoteCard
                   key={file.id}
@@ -81,7 +96,7 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
           </button>
 
           {isThreadOpen && (
-            <div className="flex flex-wrap gap-[20px]">
+            <div className="grid grid-cols-[repeat(auto-fill,148px)] gap-[20px]">
               <NoteCard
                 label="THREAD 1번"
                 type="AI 생성"
@@ -91,6 +106,9 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
               />
             </div>
           )}
+
+          {/* 스크롤 여유 공간 */}
+          <div className="h-[40px] shrink-0" />
         </div>
 
         {/* 하단 버튼 (shrink-0) */}

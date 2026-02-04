@@ -19,7 +19,13 @@
 
 import { useParams, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { LeftPanel, RightPanel, Divider, type PanelTab } from "../components";
+import {
+  LeftPanel,
+  RightPanel,
+  Divider,
+  ChatHeader,
+  type PanelTab,
+} from "../components";
 import { useResizable } from "../hooks/useResizable";
 
 export const ChatPage = () => {
@@ -42,9 +48,8 @@ export const ChatPage = () => {
     handleMouseDown,
   } = useResizable({
     initialWidth: 50,
-    minWidth: 25,
-    maxWidth: 75,
-    minWidthPx: 382, // 버튼 350px + 좌우 패딩 16px * 2
+    leftMinPx: 382, // 왼쪽 패널: 버튼 350px + 좌우 패딩 16px * 2
+    rightMinPx: 302, // 오른쪽 패널: 입력창 270px + 좌우 패딩 16px * 2
   });
 
   // TODO: 실제 노트 제목 가져오기
@@ -113,43 +118,47 @@ export const ChatPage = () => {
   return (
     <div
       id="chat-container"
-      className="relative flex h-full w-full"
+      className="flex h-full w-full flex-col"
     >
-      {/* Left Panel - Viewer/Storage */}
-      {isViewerOpen && (
-        <>
-          <div
-            className="h-full border-r border-gray-200"
-            style={{ width: `${leftPanelWidth}%` }}
-          >
-            <LeftPanel
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              onClose={() => setIsViewerOpen(false)}
-              noteId={noteId || ""}
-              selectedFileId={fileId || undefined}
+      {/* 상단 헤더 - 전체 너비 */}
+      <ChatHeader
+        title={noteTitle}
+        isViewerOpen={isViewerOpen}
+        onToggleViewer={handleToggleViewer}
+      />
+
+      {/* 하단 패널 영역 */}
+      <div className="relative flex min-h-0 flex-1">
+        {/* Left Panel - Viewer/Storage */}
+        {isViewerOpen && (
+          <>
+            <div
+              className="h-full border-r border-[#D1D6DE]"
+              style={{ width: `${leftPanelWidth}%` }}
+            >
+              <LeftPanel
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                noteId={noteId || ""}
+                selectedFileId={fileId || undefined}
+              />
+            </div>
+
+            {/* Divider */}
+            <Divider
+              onMouseDown={handleMouseDown}
+              isDragging={isDragging}
             />
-          </div>
+          </>
+        )}
 
-          {/* Divider */}
-          <Divider
-            onMouseDown={handleMouseDown}
-            isDragging={isDragging}
-          />
-        </>
-      )}
-
-      {/* Right Panel - Chat */}
-      <div
-        className="h-full min-w-0 overflow-hidden"
-        style={{ width: isViewerOpen ? `${100 - leftPanelWidth}%` : "100%" }}
-      >
-        <RightPanel
-          title={noteTitle}
-          messages={messages}
-          isViewerOpen={isViewerOpen}
-          onToggleViewer={handleToggleViewer}
-        />
+        {/* Right Panel - Chat */}
+        <div
+          className="h-full min-w-0 overflow-hidden"
+          style={{ width: isViewerOpen ? `${100 - leftPanelWidth}%` : "100%" }}
+        >
+          <RightPanel messages={messages} />
+        </div>
       </div>
     </div>
   );

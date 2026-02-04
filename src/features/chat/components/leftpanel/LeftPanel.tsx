@@ -5,7 +5,6 @@ import { StorageContent } from "./StorageContent";
 interface LeftPanelProps {
   activeTab: PanelTab;
   onTabChange: (tab: PanelTab) => void;
-  onClose: () => void;
   noteId: string;
   selectedFileId?: string;
 }
@@ -13,7 +12,6 @@ interface LeftPanelProps {
 export const LeftPanel = ({
   activeTab,
   onTabChange,
-  onClose,
   noteId,
   selectedFileId,
 }: LeftPanelProps) => {
@@ -23,7 +21,6 @@ export const LeftPanel = ({
       <LeftPanelHeader
         activeTab={activeTab}
         onTabChange={onTabChange}
-        onClose={onClose}
       />
 
       {/* 탭 콘텐츠 */}

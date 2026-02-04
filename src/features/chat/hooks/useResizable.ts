@@ -2,10 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react";
 
 interface UseResizableOptions {
   initialWidth: number; // 초기 너비 (%)
-  minWidth?: number; // 최소 너비 (%)
-  maxWidth?: number; // 최대 너비 (%)
-  minWidthPx?: number; // 최소 너비 (px) - 이 값이 있으면 % 보다 우선
-  maxWidthPx?: number; // 최대 너비 (px) - 이 값이 있으면 % 보다 우선
+  minWidth?: number; // 최소 너비 (%) - 기본값
+  maxWidth?: number; // 최대 너비 (%) - 기본값
+  leftMinPx?: number; // 왼쪽 패널 최소 너비 (px)
+  rightMinPx?: number; // 오른쪽 패널 최소 너비 (px)
 }
 
 interface UseResizableReturn {
@@ -16,10 +16,10 @@ interface UseResizableReturn {
 
 export const useResizable = ({
   initialWidth,
-  minWidth = 20,
-  maxWidth = 80,
-  minWidthPx,
-  maxWidthPx,
+  minWidth = 0, // px 기반 사용 시 0%
+  maxWidth = 100, // px 기반 사용 시 100%
+  leftMinPx,
+  rightMinPx,
 }: UseResizableOptions): UseResizableReturn => {
   const [width, setWidth] = useState(initialWidth);
   const [isDragging, setIsDragging] = useState(false);
@@ -29,6 +29,26 @@ export const useResizable = ({
   useEffect(() => {
     widthRef.current = width;
   }, [width]);
+
+  // 유효한 min/max 계산 함수
+  const getEffectiveBounds = useCallback(
+    (containerWidth: number) => {
+      // 왼쪽 패널 최소 너비 (%)
+      const leftMinPercent = leftMinPx
+        ? Math.max(minWidth, (leftMinPx / containerWidth) * 100)
+        : minWidth;
+
+      // 오른쪽 패널 최소 너비를 고려한 왼쪽 패널 최대 너비 (%)
+      const rightMinPercent = rightMinPx
+        ? (rightMinPx / containerWidth) * 100
+        : 0;
+      const maxFromRight = 100 - rightMinPercent;
+      const leftMaxPercent = Math.min(maxWidth, maxFromRight);
+
+      return { min: leftMinPercent, max: leftMaxPercent };
+    },
+    [minWidth, maxWidth, leftMinPx, rightMinPx],
+  );
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,22 +67,13 @@ export const useResizable = ({
       const newWidth =
         ((e.clientX - containerRect.left) / containerWidth) * 100;
 
-      // 픽셀 기반 최소/최대 너비를 % 로 변환
-      const effectiveMinWidth = minWidthPx
-        ? Math.max(minWidth, (minWidthPx / containerWidth) * 100)
-        : minWidth;
-      const effectiveMaxWidth = maxWidthPx
-        ? Math.min(maxWidth, (maxWidthPx / containerWidth) * 100)
-        : maxWidth;
+      const { min, max } = getEffectiveBounds(containerWidth);
 
       // 최소/최대 범위 제한
-      const clampedWidth = Math.min(
-        Math.max(newWidth, effectiveMinWidth),
-        effectiveMaxWidth,
-      );
+      const clampedWidth = Math.min(Math.max(newWidth, min), max);
       setWidth(clampedWidth);
     },
-    [isDragging, minWidth, maxWidth, minWidthPx, maxWidthPx],
+    [isDragging, getEffectiveBounds],
   );
 
   const handleMouseUp = useCallback(() => {
@@ -95,11 +106,14 @@ export const useResizable = ({
         const containerWidth = entry.contentRect.width;
         if (containerWidth === 0) return;
 
-        // 현재 width(%)가 minWidthPx보다 작으면 자동 조정
-        const currentWidthPx = (widthRef.current / 100) * containerWidth;
-        if (minWidthPx && currentWidthPx < minWidthPx) {
-          const newWidth = (minWidthPx / containerWidth) * 100;
-          setWidth(Math.min(newWidth, maxWidth));
+        const { min, max } = getEffectiveBounds(containerWidth);
+        const currentWidth = widthRef.current;
+
+        // 현재 width가 범위를 벗어나면 자동 조정
+        if (currentWidth < min) {
+          setWidth(min);
+        } else if (currentWidth > max) {
+          setWidth(max);
         }
       }
     });
@@ -109,7 +123,7 @@ export const useResizable = ({
     return () => {
       resizeObserver.disconnect();
     };
-  }, [minWidthPx, maxWidth]);
+  }, [getEffectiveBounds]);
 
   return { width, isDragging, handleMouseDown };
 };
