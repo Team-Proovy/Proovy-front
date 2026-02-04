@@ -38,33 +38,35 @@ export const StoragePage = () => {
     <>
       <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
         <div className="mx-auto w-full max-w-[1680px]">
-          {/* Header Section */}
-          <div className={`${responsivePaddingL} mb-[23px]`}>
-            <h1
-              className="font-['Pretendard']"
-              style={{
-                color: "#000",
-                fontSize: "40px",
-                fontStyle: "normal",
-                fontWeight: 600,
-                lineHeight: "52px",
-                letterSpacing: "-0.008px",
-              }}
-            >
-              저장소
-            </h1>
+          {/* Header Section - 노트 상단바(800px)를 기준으로 가운데 정렬 */}
+          <div className="mb-[23px] flex justify-center">
+            <div className="w-[800px] max-w-full">
+              <h1
+                className="font-['Pretendard']"
+                style={{
+                  color: "#000",
+                  fontSize: "40px",
+                  fontStyle: "normal",
+                  fontWeight: 600,
+                  lineHeight: "52px",
+                  letterSpacing: "-0.008px",
+                }}
+              >
+                저장소
+              </h1>
+            </div>
           </div>
 
-          {/* Toolbar Row */}
-          <StorageToolbar
-            responsivePaddingL={responsivePaddingL}
-            responsivePaddingR={responsivePaddingR}
-          />
+          {/* Toolbar Row - 제목/노트 상단바와 같은 기준선(800px) 유지 */}
+          <div className="flex justify-center">
+            <StorageToolbar
+              responsivePaddingL={responsivePaddingL}
+              responsivePaddingR={responsivePaddingR}
+            />
+          </div>
 
-          {/* Note Groups Section */}
-          <div
-            className={`flex flex-col gap-[20px] ${responsivePaddingL} ${responsivePaddingR}`}
-          >
+          {/* Note Groups Section - 사이드바를 제외한 영역에서 가운데 정렬 */}
+          <div className="mt-[24px] flex flex-col items-center gap-[20px] px-6 md:px-10">
             <NoteGroup
               title="여기는 노트 제목이 오는 위치"
               notes={group1Notes}

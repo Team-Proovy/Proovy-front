@@ -7,8 +7,8 @@ interface StorageToolbarProps {
 }
 
 export const StorageToolbar = ({
-  responsivePaddingL,
-  responsivePaddingR,
+  responsivePaddingL: _responsivePaddingL,
+  responsivePaddingR: _responsivePaddingR,
 }: StorageToolbarProps) => {
   const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
     useStorageStore();
@@ -24,9 +24,7 @@ export const StorageToolbar = ({
   };
 
   return (
-    <div
-      className={`mb-[60px] flex items-center justify-between ${responsivePaddingL} ${responsivePaddingR}`}
-    >
+    <div className="mb-[8px] flex w-[800px] max-w-full items-center justify-between">
       <div className="flex flex-1 items-center gap-[20px]">
         <div
           className="relative"

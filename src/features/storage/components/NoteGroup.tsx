@@ -103,7 +103,14 @@ export const NoteGroup = ({
       </button>
 
       {isOpen && (
-        <div className="mt-[20px] grid grid-cols-3 gap-[20px]">
+        <div
+          className="mt-[20px] grid justify-center gap-x-[40px] gap-y-[20px]"
+          style={{
+            width: "800px",
+            maxWidth: "100%",
+            gridTemplateColumns: "repeat(3, 240px)",
+          }}
+        >
           {notes.map((note) => {
             return (
               <NoteCard
