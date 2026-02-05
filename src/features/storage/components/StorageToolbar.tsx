@@ -33,17 +33,19 @@ export const StorageToolbar = ({
           <input
             type="text"
             placeholder="검색어를 입력해주세요."
-            className="h-full w-full rounded-[70px] border-[0.5px] border-[#D1D6DE] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-[#9CA4B0] outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#9CA4B0]"
+            className="h-full w-full rounded-[70px] border-[0.5px] border-[#D1D6DE] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#9CA4B0]"
           />
-          <StorageSearchIcon
-            style={{
-              position: "absolute",
-              top: "6px",
-              right: "13px",
-              width: "20px",
-              height: "20px",
-            }}
-          />
+          <button
+            type="button"
+            className="absolute top-[6px] right-[13px] flex h-[20px] w-[20px] cursor-pointer items-center justify-center transition-opacity hover:opacity-70"
+          >
+            <StorageSearchIcon
+              style={{
+                width: "20px",
+                height: "20px",
+              }}
+            />
+          </button>
         </div>
         <button
           onClick={handleActionClick}
