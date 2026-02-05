@@ -8,6 +8,7 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
+import { logout as logoutApi } from "../../../auth/api/auth_api";
 
 /**
  * ProfileTabContent - 내 프로필 탭
@@ -31,7 +32,14 @@ export const ProfileTabContent = () => {
     setIsWithdrawModalOpen(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // 서버 로그아웃 요청 (토큰 만료 처리 등)
+      await logoutApi();
+    } catch (error) {
+      console.error("로그아웃 API 호출 실패:", error);
+      // 서버 로그아웃 실패하더라도 클라이언트 로그아웃은 진행
+    }
     logout();
     navigate("/login", { replace: true });
   };
