@@ -66,9 +66,23 @@ export const SignupPage = () => {
       });
 
       if (response.isSuccess) {
-        // 토큰 저장
-        const { token } = response.result;
+        // 토큰 저장 (Client Storage)
+        const { token, user: signupUser } = response.result;
         tokenUtils.setTokens(token.accessToken, token.refreshToken);
+
+        // Auth Store 상태 업데이트 (강제 로그인 처리)
+        useAuthStore.getState().login({
+          loginType: "LOGIN",
+          token: token,
+          user: {
+            id: signupUser.userId,
+            name: signupUser.name,
+            nickname: signupUser.nickname,
+            email: signupUser.email,
+            profileImageUrl: signupUser.profileImageUrl,
+          },
+        });
+
         navigate("/app/home");
       } else {
         alert(`회원가입 실패: ${response.message}`);
