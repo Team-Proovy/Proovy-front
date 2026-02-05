@@ -5,6 +5,7 @@ import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
 import type { SocialInfo } from "../api/auth_types";
 import { signupComplete } from "../api/auth_api";
 import { tokenUtils } from "@/shared/api/client";
+import { AxiosError } from "axios";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -15,7 +16,11 @@ export const SignupPage = () => {
   const signupToken = location.state?.signupToken as string | undefined;
 
   const [formData, setFormData] = useState({
-    name: (location.state?.kakaoInfo as SocialInfo)?.name || "",
+    name:
+      (location.state?.kakaoInfo as SocialInfo)?.name ||
+      (location.state?.naverInfo as SocialInfo)?.name ||
+      (location.state?.googleInfo as SocialInfo)?.name ||
+      "",
     nickname: "",
     department: "",
     referralSource: "",
@@ -54,10 +59,12 @@ export const SignupPage = () => {
       } else {
         alert(`회원가입 실패: ${response.message}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("회원가입 에러:", error);
+      const axiosError = error as AxiosError<{ message?: string }>;
       alert(
-        error.response?.data?.message || "회원가입 중 오류가 발생했습니다.",
+        axiosError.response?.data?.message ||
+          "회원가입 중 오류가 발생했습니다.",
       );
     } finally {
       setIsLoading(false);
