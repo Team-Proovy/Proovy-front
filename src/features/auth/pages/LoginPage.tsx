@@ -22,8 +22,12 @@ export const LoginPage = () => {
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
       window.location.href = kakaoAuthUrl;
     } else if (provider === "naver") {
-      // 네이버는 state 값이 필수 (CSRF 방지용 랜덤 문자열)
-      const state = Math.random().toString(36).substring(2, 15);
+      // 네이버는 state 값이 필수 (CSRF 방지용 - 암호학적으로 안전한 난수 생성)
+      const state =
+        crypto.randomUUID?.() ??
+        Array.from(crypto.getRandomValues(new Uint8Array(16)))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
       // state를 sessionStorage에 저장하여 콜백에서 검증
       sessionStorage.setItem("naver_oauth_state", state);
       const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${NAVER_REDIRECT_URI}&state=${state}`;
