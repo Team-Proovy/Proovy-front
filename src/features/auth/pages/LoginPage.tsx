@@ -24,6 +24,8 @@ export const LoginPage = () => {
     } else if (provider === "naver") {
       // 네이버는 state 값이 필수 (CSRF 방지용 랜덤 문자열)
       const state = Math.random().toString(36).substring(2, 15);
+      // state를 sessionStorage에 저장하여 콜백에서 검증
+      sessionStorage.setItem("naver_oauth_state", state);
       const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${NAVER_REDIRECT_URI}&state=${state}`;
       window.location.href = naverAuthUrl;
     } else if (provider === "google") {
