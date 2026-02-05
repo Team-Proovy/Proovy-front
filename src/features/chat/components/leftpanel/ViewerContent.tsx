@@ -30,6 +30,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         {/* 파일 업로드 버튼 - HomePage와 동일 */}
         <button
           onClick={openFileExplorer}
+          type="button"
           className="group flex h-[160px] w-[220px] cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[36px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
         >
           <div>

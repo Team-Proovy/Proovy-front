@@ -34,7 +34,7 @@ export const useResizable = ({
   const getEffectiveBounds = useCallback(
     (containerWidth: number) => {
       // 왼쪽 패널 최소 너비 (%)
-      const leftMinPercent = leftMinPx
+      let leftMinPercent = leftMinPx
         ? Math.max(minWidth, (leftMinPx / containerWidth) * 100)
         : minWidth;
 
@@ -44,6 +44,12 @@ export const useResizable = ({
         : 0;
       const maxFromRight = 100 - rightMinPercent;
       const leftMaxPercent = Math.min(maxWidth, maxFromRight);
+
+      // 충돌 해결: leftMinPercent > leftMaxPercent인 경우
+      // 오른쪽 패널 최소 너비를 우선시하여 왼쪽 최소 너비를 줄임
+      if (leftMinPercent > leftMaxPercent) {
+        leftMinPercent = leftMaxPercent;
+      }
 
       return { min: leftMinPercent, max: leftMaxPercent };
     },
@@ -64,6 +70,10 @@ export const useResizable = ({
 
       const containerRect = container.getBoundingClientRect();
       const containerWidth = containerRect.width;
+
+      // division by zero 방지
+      if (containerWidth === 0) return;
+
       const newWidth =
         ((e.clientX - containerRect.left) / containerWidth) * 100;
 
@@ -102,19 +112,20 @@ export const useResizable = ({
     if (!container) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const containerWidth = entry.contentRect.width;
-        if (containerWidth === 0) return;
+      const entry = entries[0];
+      if (!entry) return;
 
-        const { min, max } = getEffectiveBounds(containerWidth);
-        const currentWidth = widthRef.current;
+      const containerWidth = entry.contentRect.width;
+      if (containerWidth === 0) return;
 
-        // 현재 width가 범위를 벗어나면 자동 조정
-        if (currentWidth < min) {
-          setWidth(min);
-        } else if (currentWidth > max) {
-          setWidth(max);
-        }
+      const { min, max } = getEffectiveBounds(containerWidth);
+      const currentWidth = widthRef.current;
+
+      // 현재 width가 범위를 벗어나면 자동 조정
+      if (currentWidth < min) {
+        setWidth(min);
+      } else if (currentWidth > max) {
+        setWidth(max);
       }
     });
 

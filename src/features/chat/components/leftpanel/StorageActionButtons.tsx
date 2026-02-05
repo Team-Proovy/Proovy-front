@@ -17,6 +17,7 @@ export const StorageActionButtons = ({
       {/* 뷰어에서 열기 버튼 */}
       <button
         onClick={onOpenViewer}
+        type="button"
         className="flex h-[28px] w-[140px] shrink-0 items-center justify-center gap-1 rounded-lg bg-[#2A6AFF] text-base leading-6 text-white transition-colors hover:bg-[#2259DB]"
       >
         <ViewerOpenIcon size={24} />
@@ -26,6 +27,7 @@ export const StorageActionButtons = ({
       {/* 삭제하기 버튼 */}
       <button
         onClick={onDelete}
+        type="button"
         className="flex h-[28px] w-[108px] shrink-0 items-center justify-center gap-1 rounded-lg border border-[#D1D6DE] text-base leading-6 text-black transition-colors hover:bg-gray-50"
       >
         <TrashIcon size={20} />

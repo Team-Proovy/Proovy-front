@@ -1,4 +1,5 @@
-import { LeftPanelHeader, type PanelTab } from "./LeftPanelHeader";
+import type { PanelTab } from "./types";
+import { LeftPanelHeader } from "./LeftPanelHeader";
 import { ViewerContent } from "./ViewerContent";
 import { StorageContent } from "./StorageContent";
 
@@ -36,5 +37,3 @@ export const LeftPanel = ({
     </div>
   );
 };
-
-export type { PanelTab };

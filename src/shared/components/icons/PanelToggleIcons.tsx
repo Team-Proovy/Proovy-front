@@ -44,7 +44,7 @@ export const PanelOpenIcon = ({ size = 32, className }: PanelIconProps) => (
   </svg>
 );
 
-// 패널 닫기 아이콘 (뷰어가 열려있을 때)
+// 패널 닫기 아이콘 (뷰어가 열려있을 때 표시)
 export const PanelCloseIcon = ({ size = 32, className }: PanelIconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

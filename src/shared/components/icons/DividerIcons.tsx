@@ -4,7 +4,7 @@ interface IconProps extends SVGProps<SVGSVGElement> {
   size?: number;
 }
 
-// 왼쪽 화살표 아이콘
+// 왼쪽으로 이동 화살표 아이콘
 export const ArrowLeftIcon = ({ size = 16, ...props }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -23,7 +23,7 @@ export const ArrowLeftIcon = ({ size = 16, ...props }: IconProps) => (
   </svg>
 );
 
-// 오른쪽 화살표 아이콘
+// 오른쪽으로 이동 화살표 아이콘
 export const ArrowRightIcon = ({ size = 16, ...props }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

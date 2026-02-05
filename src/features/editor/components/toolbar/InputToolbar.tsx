@@ -61,19 +61,19 @@ export const InputToolbar = ({
     if (!container) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.contentRect.width;
-        // Level 0: 모두 일반 (502px 이상)
-        // Level 1: 도구만 compact (410px ~ 502px)
-        // Level 2: 도구+캔버스 compact (338px ~ 410px)
-        // Level 3: 도구+캔버스+수식 compact (242px ~ 338px)
-        // Level 4: 모두 compact (242px 미만)
-        if (width >= 502) setCompactLevel(0);
-        else if (width >= 410) setCompactLevel(1);
-        else if (width >= 338) setCompactLevel(2);
-        else if (width >= 242) setCompactLevel(3);
-        else setCompactLevel(4);
-      }
+      const entry = entries[0];
+      if (!entry) return;
+      const width = entry.contentRect.width;
+      // Level 0: 모두 일반 (502px 이상)
+      // Level 1: 도구만 compact (410px ~ 502px)
+      // Level 2: 도구+캔버스 compact (338px ~ 410px)
+      // Level 3: 도구+캔버스+수식 compact (242px ~ 338px)
+      // Level 4: 모두 compact (242px 미만)
+      if (width >= 502) setCompactLevel(0);
+      else if (width >= 410) setCompactLevel(1);
+      else if (width >= 338) setCompactLevel(2);
+      else if (width >= 242) setCompactLevel(3);
+      else setCompactLevel(4);
     });
 
     resizeObserver.observe(container);

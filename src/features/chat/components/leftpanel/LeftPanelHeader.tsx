@@ -1,4 +1,4 @@
-type PanelTab = "viewer" | "storage";
+import type { PanelTab } from "./types";
 
 interface LeftPanelHeaderProps {
   activeTab: PanelTab;
@@ -48,5 +48,3 @@ export const LeftPanelHeader = ({
     </div>
   );
 };
-
-export type { PanelTab };

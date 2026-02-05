@@ -17,17 +17,17 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
       type: "AI 생성" as const,
     },
     {
-      id: 2,
+      id: 3,
       label: "더미 파일 2",
       type: "AI 생성" as const,
     },
     {
-      id: 2,
+      id: 4,
       label: "더미 파일 3",
       type: "AI 생성" as const,
     },
     {
-      id: 2,
+      id: 5,
       label: "더미 파일 4",
       type: "AI 생성" as const,
     },

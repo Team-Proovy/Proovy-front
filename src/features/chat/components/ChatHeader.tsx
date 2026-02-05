@@ -21,6 +21,8 @@ export const ChatHeader = ({
         onClick={onToggleViewer}
         className="absolute left-4 flex h-8 w-8 items-center justify-center rounded-md text-[#6B7280] transition-colors hover:text-[#2A6AFF]"
         title={isViewerOpen ? "뷰어 닫기" : "뷰어 열기"}
+        aria-label={isViewerOpen ? "뷰어 닫기" : "뷰어 열기"}
+        aria-pressed={isViewerOpen}
       >
         {isViewerOpen ? (
           <PanelCloseIcon size={32} />
@@ -30,7 +32,7 @@ export const ChatHeader = ({
       </button>
 
       {/* 채팅 제목 - 가운데 정렬 */}
-      <h1 className="text-[18px] leading-[28px] font-semibold tracking-[-0.018%] text-black">
+      <h1 className="text-[18px] leading-[28px] font-semibold text-black">
         {title}
       </h1>
     </div>
