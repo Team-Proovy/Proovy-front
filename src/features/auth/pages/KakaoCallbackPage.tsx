@@ -3,7 +3,8 @@ import { loginWithKakao } from "../api/auth_api";
 import { useAuthStore } from "../store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
 
 export const KakaoCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -11,9 +12,13 @@ export const KakaoCallbackPage = () => {
   const login = useAuthStore((state) => state.login);
   const initialized = useRef(false);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    const code = searchParams.get("code");
+    return code ? null : "로그인 코드가 없습니다.";
+  });
+
   useEffect(() => {
     if (initialized.current) {
-      console.log("KaKaoCallback: Already initialized, skipping.");
       return;
     }
     initialized.current = true;
@@ -21,8 +26,6 @@ export const KakaoCallbackPage = () => {
     const code = searchParams.get("code");
 
     if (!code) {
-      alert("로그인 코드가 없습니다.");
-      navigate("/login");
       return;
     }
 
@@ -52,8 +55,7 @@ export const KakaoCallbackPage = () => {
             });
           }
         } else {
-          alert(`로그인 실패: ${data.message}`);
-          navigate("/login");
+          setErrorMsg(`로그인 실패: ${data.message}`);
         }
       } catch (error) {
         // Safe typing for error handling
@@ -65,26 +67,19 @@ export const KakaoCallbackPage = () => {
 
         if (axiosError.response) {
           const errorData = axiosError.response.data;
-          alert(
-            `로그인 실패 (${axiosError.response.status}): ${
-              errorData?.message ||
-              errorData?.code ||
-              "서버에서 오류가 발생했습니다."
-            }`,
-          );
+          const msg =
+            errorData?.message ||
+            errorData?.code ||
+            "서버에서 오류가 발생했습니다.";
+          setErrorMsg(`로그인 실패 (${axiosError.response.status}): ${msg}`);
         } else {
-          alert("로그인 처리 중 오류가 발생했습니다.");
+          setErrorMsg("로그인 처리 중 오류가 발생했습니다.");
         }
-        navigate("/login");
       }
     };
 
     processLogin();
   }, [searchParams, navigate, login]);
 
-  return (
-    <div className="flex h-screen items-center justify-center">
-      <p>로그인 처리 중...</p>
-    </div>
-  );
+  return <SocialCallbackLayout errorMsg={errorMsg} />;
 };
