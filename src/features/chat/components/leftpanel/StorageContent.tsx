@@ -72,7 +72,7 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
 
           {/* 저장소 NoteCard 재사용 */}
           {isBoxOpen && (
-            <div className="mb-6 grid grid-cols-[repeat(auto-fill,148px)] gap-[20px]">
+            <div className="mb-6 grid grid-cols-[repeat(auto-fill,240px)] gap-5">
               {mockFiles.map((file) => (
                 <NoteCard
                   key={file.id}
@@ -96,7 +96,7 @@ export const StorageContent = ({ noteId: _noteId }: StorageContentProps) => {
           </button>
 
           {isThreadOpen && (
-            <div className="grid grid-cols-[repeat(auto-fill,148px)] gap-[20px]">
+            <div className="grid grid-cols-[repeat(auto-fill,240px)] gap-5">
               <NoteCard
                 label="THREAD 1번"
                 type="AI 생성"
