@@ -48,7 +48,6 @@ const mockAssetDetail: AssetDetailResponse = {
 // ============================================================
 
 export const assetsHandlers = [
-  // 🔽 이 부분을 추가해라! (S3 PUT 요청 가로채기)
   http.put(
     "https://proovy-bucket.s3.ap-northeast-2.amazonaws.com/*",
     async () => {

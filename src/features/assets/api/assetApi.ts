@@ -14,7 +14,7 @@ export const getUploadUrl = async (
   params: UploadUrlRequest,
 ): Promise<UploadUrlResponse> => {
   const response = await apiClient.post<UploadUrlResponse>(
-    "/assets/upload-url",
+    "/api/assets/upload-url",
     params,
   );
   return response.data;
@@ -48,7 +48,7 @@ export const confirmUpload = async (
 ): Promise<ConfirmUploadResponse> => {
   // Path Parameter 형식에 맞춰 URL 구성
   const response = await apiClient.post<ConfirmUploadResponse>(
-    `/assets/${assetId}/confirm`,
+    `/api/assets/${assetId}/confirm`,
   );
   return response.data;
 };

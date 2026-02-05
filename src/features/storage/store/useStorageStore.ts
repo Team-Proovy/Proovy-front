@@ -4,6 +4,8 @@ interface Note {
   id: number;
   label: string;
   type: "업로드" | "AI 생성";
+  fileUrl?: string;
+  mimeType?: string;
 }
 
 interface StorageState {
@@ -30,7 +32,12 @@ interface StorageState {
 
 const TEMPLATE_NOTES = [
   { label: "file_name.py", type: "업로드" as const },
-  { label: "파일 가능.pdf", type: "업로드" as const },
+  {
+    label: "파일 가능.pdf",
+    type: "업로드" as const,
+    // fileUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf", // 테스트용 URL 제거
+    mimeType: "application/pdf",
+  },
   { label: "file_name.py", type: "업로드" as const },
   { label: "LLM 생성 파일", type: "AI 생성" as const },
   { label: "file_name.py", type: "업로드" as const },
