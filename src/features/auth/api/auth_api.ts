@@ -85,11 +85,10 @@ export const loginWithKakao = async (
 
 export const loginWithNaver = async (
   code: string,
-  state: string,
 ): Promise<ApiResponse<LoginResult>> => {
   const response = await axios.post<ApiResponse<LoginResult>>(
     `${BASE_URL}${AUTH_BASE}/login/naver`,
-    { code, state },
+    { code },
   );
 
   const result = response.data.result;
