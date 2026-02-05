@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LogoIcon } from "../../../shared/components/icons/LoginIcons";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
@@ -6,21 +6,39 @@ import type { SocialInfo } from "../api/auth_types";
 import { signupComplete } from "../api/auth_api";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
+import { useAuthStore } from "../store/auth_store";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // To get passed state from callback
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isLoading, setIsLoading] = useState(false);
 
   // KakaoCallbackPage에서 전달받은 signupToken
   const signupToken = location.state?.signupToken as string | undefined;
 
+  useEffect(() => {
+    // 1. 이미 로그인된 사용자는 홈으로 리다이렉트
+    if (isAuthenticated) {
+      navigate("/app/home", { replace: true });
+      return;
+    }
+
+    // 2. 회원가입 토큰이 없으면 (잘못된 접근) 로그인 페이지로 리다이렉트
+    if (!signupToken) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, signupToken, navigate]);
+
+  // 소셜 로그인 정보에서 이름 가져오기
+  const initialName =
+    (location.state?.kakaoInfo as SocialInfo)?.name ||
+    (location.state?.naverInfo as SocialInfo)?.name ||
+    (location.state?.googleInfo as SocialInfo)?.name ||
+    "";
+
   const [formData, setFormData] = useState({
-    name:
-      (location.state?.kakaoInfo as SocialInfo)?.name ||
-      (location.state?.naverInfo as SocialInfo)?.name ||
-      (location.state?.googleInfo as SocialInfo)?.name ||
-      "",
+    name: initialName,
     nickname: "",
     department: "",
     referralSource: "",
@@ -34,11 +52,8 @@ export const SignupPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!signupToken) {
-      alert("회원가입 토큰이 없습니다. 다시 로그인해주세요.");
-      navigate("/login");
-      return;
-    }
+    // signupToken check handled in useEffect, but for TS safety:
+    if (!signupToken) return;
 
     setIsLoading(true);
 
@@ -122,7 +137,10 @@ export const SignupPage = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="이름을 입력해주세요"
-                  className="flex h-[50px] w-full items-center rounded-[10px] border border-[#D1D6DE] bg-white px-[24px] py-[8px] text-[16px] outline-none placeholder:text-[#9CA4B0] focus:border-[#2A6AFF]"
+                  disabled={!!initialName}
+                  className={`flex h-[50px] w-full items-center rounded-[10px] border border-[#D1D6DE] px-[24px] py-[8px] text-[16px] outline-none placeholder:text-[#9CA4B0] focus:border-[#2A6AFF] ${
+                    initialName ? "bg-[#F1F4F8] text-[#9CA4B0]" : "bg-white"
+                  }`}
                 />
               </div>
 
