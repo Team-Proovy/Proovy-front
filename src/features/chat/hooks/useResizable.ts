@@ -111,11 +111,8 @@ export const useResizable = ({
     const container = document.getElementById("chat-container");
     if (!container) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-
-      const containerWidth = entry.contentRect.width;
+    // 너비에 따른 width 조정 함수
+    const adjustWidth = (containerWidth: number) => {
       if (containerWidth === 0) return;
 
       const { min, max } = getEffectiveBounds(containerWidth);
@@ -127,13 +124,34 @@ export const useResizable = ({
       } else if (currentWidth > max) {
         setWidth(max);
       }
-    });
-
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
     };
+
+    // ResizeObserver 지원 여부 확인
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        adjustWidth(entry.contentRect.width);
+      });
+
+      resizeObserver.observe(container);
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    } else {
+      // ResizeObserver 미지원 환경: window resize 폴백
+      const handleResize = () => {
+        const width = container.getBoundingClientRect().width;
+        adjustWidth(width);
+      };
+
+      // 초기 측정
+      handleResize();
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
   }, [getEffectiveBounds]);
 
   return { width, isDragging, handleMouseDown };

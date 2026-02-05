@@ -28,15 +28,24 @@ import {
 } from "../components";
 import { useResizable } from "../hooks/useResizable";
 
+// 유효한 PanelTab 값 목록
+const VALID_PANEL_TABS: PanelTab[] = ["viewer", "storage"];
+
+const isValidPanelTab = (value: string | null): value is PanelTab => {
+  return value !== null && VALID_PANEL_TABS.includes(value as PanelTab);
+};
+
 export const ChatPage = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const panelParam = searchParams.get("panel") as PanelTab | null;
+  const panelParam = searchParams.get("panel");
   const fileId = searchParams.get("file");
 
-  // 패널 탭 상태
-  const [activeTab, setActiveTab] = useState<PanelTab>(panelParam || "viewer");
+  // 패널 탭 상태 - 유효한 값만 허용, 그 외는 기본값 "viewer"
+  const [activeTab, setActiveTab] = useState<PanelTab>(
+    isValidPanelTab(panelParam) ? panelParam : "viewer",
+  );
 
   // 뷰어 열림 상태: 파일이 있으면 기본 열림, 없으면 닫힘
   const [isViewerOpen, setIsViewerOpen] = useState(!!fileId);

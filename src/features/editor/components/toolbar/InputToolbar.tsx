@@ -60,10 +60,8 @@ export const InputToolbar = ({
     const container = containerRef.current;
     if (!container) return;
 
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      const width = entry.contentRect.width;
+    // 너비에 따른 compactLevel 계산 함수
+    const updateCompactLevel = (width: number) => {
       // Level 0: 모두 일반 (502px 이상)
       // Level 1: 도구만 compact (410px ~ 502px)
       // Level 2: 도구+캔버스 compact (338px ~ 410px)
@@ -74,10 +72,31 @@ export const InputToolbar = ({
       else if (width >= 338) setCompactLevel(2);
       else if (width >= 242) setCompactLevel(3);
       else setCompactLevel(4);
-    });
+    };
 
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
+    // ResizeObserver 지원 여부 확인
+    if (typeof ResizeObserver !== "undefined") {
+      const resizeObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        updateCompactLevel(entry.contentRect.width);
+      });
+
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
+    } else {
+      // ResizeObserver 미지원 환경: window resize 폴백
+      const handleResize = () => {
+        const width = container.getBoundingClientRect().width;
+        updateCompactLevel(width);
+      };
+
+      // 초기 측정
+      handleResize();
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
   }, []);
 
   // 메뉴 열기/닫기 핸들러
