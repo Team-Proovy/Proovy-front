@@ -24,22 +24,14 @@ export const NoteGroup = ({
   const { isSelectMode, selectedIds, toggleIdSelection } = useStorageStore();
 
   return (
-    <div className="flex flex-col">
+    <div className="3xl:max-w-[1360px] mx-auto flex w-full max-w-[520px] flex-col lg:max-w-[800px] 2xl:max-w-[1080px]">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between transition-colors"
+        className="mx-auto flex w-full items-center justify-between rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] px-[20px] py-[8px] transition-colors"
         style={{
           display: "flex",
-          width: "800px",
-          maxWidth: "100%",
           height: "40px",
-          padding: "8px 20px",
-          justifyContent: "space-between",
-          alignItems: "center",
           flexShrink: 0,
-          borderRadius: "12px",
-          border: "0.5px solid #D1D6DE",
-          background: "#F1F4F8",
         }}
       >
         <div className="flex items-center">
@@ -103,7 +95,7 @@ export const NoteGroup = ({
       </button>
 
       {isOpen && (
-        <div className="mt-[20px] grid w-[800px] max-w-full grid-cols-3 justify-center gap-x-[40px] gap-y-[20px]">
+        <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
           {notes.map((note) => {
             return (
               <NoteCard

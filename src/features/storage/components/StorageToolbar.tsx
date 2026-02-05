@@ -24,11 +24,11 @@ export const StorageToolbar = ({
   };
 
   return (
-    <div className="mb-[8px] flex w-[800px] max-w-full items-center justify-between">
+    <div className="3xl:max-w-[1360px] relative mx-auto mb-[8px] flex w-full max-w-[520px] items-center lg:max-w-[800px] 2xl:max-w-[1080px]">
       <div className="flex flex-1 items-center gap-[20px]">
         <div
-          className="relative"
-          style={{ width: "440px", height: "32px" }}
+          className="relative w-[220px] lg:w-[440px]"
+          style={{ height: "32px" }}
         >
           <input
             type="text"
@@ -59,7 +59,7 @@ export const StorageToolbar = ({
         </button>
       </div>
 
-      <div className="flex items-center">
+      <div className="absolute right-[20px] flex items-center">
         <div
           style={{
             display: "flex",

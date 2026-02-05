@@ -40,7 +40,7 @@ export const StoragePage = () => {
         <div className="mx-auto w-full max-w-[1680px]">
           {/* Header Section - 노트 상단바(800px)를 기준으로 가운데 정렬 */}
           <div className="mb-[23px] flex justify-center">
-            <div className="w-[800px] max-w-full">
+            <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
               <h1
                 className="font-['Pretendard']"
                 style={{
@@ -66,7 +66,7 @@ export const StoragePage = () => {
           </div>
 
           {/* Note Groups Section - 사이드바를 제외한 영역에서 가운데 정렬 */}
-          <div className="mt-[24px] flex flex-col items-center gap-[20px] px-6 md:px-10">
+          <div className="mt-[24px] flex flex-col items-center justify-center gap-[20px]">
             <NoteGroup
               title="여기는 노트 제목이 오는 위치"
               notes={group1Notes}
