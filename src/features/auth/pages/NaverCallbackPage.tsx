@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loginWithNaver } from "../api/auth_api";
 import { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth_store";
+import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
 
 export const NaverCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -10,29 +11,33 @@ export const NaverCallbackPage = () => {
   const login = useAuthStore((state) => state.login);
   const initialized = useRef(false);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    if (!code || !state) return "네이버 로그인 정보가 올바르지 않습니다.";
+
+    // state 검증
+    const savedState = sessionStorage.getItem("naver_oauth_state");
+    if (!savedState || savedState !== state) {
+      sessionStorage.removeItem("naver_oauth_state");
+      return "로그인 실패: state 값이 일치하지 않습니다. (CSRF 공격 방지)";
+    }
+    return null;
+  });
+
   useEffect(() => {
     if (initialized.current) return;
-    initialized.current = true;
 
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
-    if (!code || !state) {
-      alert("네이버 로그인 정보가 올바르지 않습니다.");
-      navigate("/login");
-      return;
-    }
+    if (!code || !state) return;
 
-    // state 검증: 저장된 state와 비교
     const savedState = sessionStorage.getItem("naver_oauth_state");
-    if (!savedState || savedState !== state) {
-      alert("로그인 실패: state 값이 일치하지 않습니다. (CSRF 공격 방지)");
-      sessionStorage.removeItem("naver_oauth_state");
-      navigate("/login");
-      return;
-    }
+    if (!savedState || savedState !== state) return;
 
-    // 검증 완료 후 state 제거
+    // 검증 통과 시 처리 시작
+    initialized.current = true;
     sessionStorage.removeItem("naver_oauth_state");
 
     const processLogin = async () => {
@@ -53,37 +58,20 @@ export const NaverCallbackPage = () => {
             navigate("/app/home");
           }
         } else {
-          alert(`로그인 실패: ${data.message}`);
-          navigate("/login");
+          setErrorMsg(`로그인 실패: ${data.message}`);
         }
       } catch (error) {
         const axiosError = error as AxiosError<{ message?: string }>;
-
-        if (axiosError.response) {
-          alert(
-            `로그인 실패 (${axiosError.response.status}): ${
-              axiosError.response.data?.message ||
-              "서버에서 오류가 발생했습니다."
-            }`,
-          );
-        } else {
-          alert("로그인 처리 중 오류가 발생했습니다.");
-        }
-        navigate("/login");
+        const msg =
+          axiosError.response?.data?.message ||
+          axiosError.message ||
+          "서버에서 오류가 발생했습니다.";
+        setErrorMsg(`로그인 실패 (${axiosError.response?.status}): ${msg}`);
       }
     };
 
     processLogin();
   }, [searchParams, navigate, login]);
 
-  return (
-    <div className="flex h-screen items-center justify-center bg-white">
-      <div className="text-center">
-        <h2 className="mb-4 text-xl font-bold text-gray-800">
-          네이버 로그인 처리 중...
-        </h2>
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-green-500"></div>
-      </div>
-    </div>
-  );
+  return <SocialCallbackLayout errorMsg={errorMsg} />;
 };

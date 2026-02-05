@@ -4,6 +4,7 @@ import { loginWithGoogle } from "../api/auth_api";
 import { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
+import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
 
 export const GoogleCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -73,29 +74,5 @@ export const GoogleCallbackPage = () => {
     processLogin();
   }, [searchParams, navigate, login]);
 
-  return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white">
-      <div className="text-center">
-        <h2 className="mb-4 text-xl font-bold text-gray-800">
-          {errorMsg ? "로그인 오류" : "구글 로그인 처리 중..."}
-        </h2>
-        {!errorMsg && (
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
-        )}
-      </div>
-      {errorMsg && (
-        <div className="max-w-md rounded-lg bg-red-50 p-4 text-center text-red-600">
-          {errorMsg}
-          <div className="mt-4">
-            <button
-              onClick={() => navigate("/login")}
-              className="rounded bg-gray-800 px-4 py-2 text-white hover:bg-gray-700"
-            >
-              로그인 페이지로 돌아가기
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <SocialCallbackLayout errorMsg={errorMsg} />;
 };
