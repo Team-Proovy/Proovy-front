@@ -23,6 +23,18 @@ export const NaverCallbackPage = () => {
       return;
     }
 
+    // state 검증: 저장된 state와 비교
+    const savedState = sessionStorage.getItem("naver_oauth_state");
+    if (!savedState || savedState !== state) {
+      alert("로그인 실패: state 값이 일치하지 않습니다. (CSRF 공격 방지)");
+      sessionStorage.removeItem("naver_oauth_state");
+      navigate("/login");
+      return;
+    }
+
+    // 검증 완료 후 state 제거
+    sessionStorage.removeItem("naver_oauth_state");
+
     const processLogin = async () => {
       try {
         const data = await loginWithNaver(code, state);
