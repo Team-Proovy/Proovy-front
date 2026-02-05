@@ -151,3 +151,11 @@ export const logout = async (): Promise<ApiResponse<null>> => {
   );
   return response.data;
 };
+
+// 회원 탈퇴 - 인증 필요 (apiClient 사용)
+export const withdraw = async (): Promise<ApiResponse<null>> => {
+  const response = await apiClient.delete<ApiResponse<null>>(
+    `${AUTH_BASE}/withdraw`,
+  );
+  return response.data;
+};

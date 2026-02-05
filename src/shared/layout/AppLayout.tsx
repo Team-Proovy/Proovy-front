@@ -29,7 +29,7 @@ export const AppLayout = () => {
   // URL 쿼리 파라미터로 검색 모달 상태 관리
   const isSearchOpen = searchParams.get("search") === "true";
 
-  // TODO: 인증 체크 로직 추가 예정 -> 완료
+  // 인증 체크
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트

@@ -8,7 +8,7 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
-import { logout as logoutApi } from "../../../auth/api/auth_api";
+import { logout as logoutApi, withdraw } from "../../../auth/api/auth_api";
 
 /**
  * ProfileTabContent - 내 프로필 탭
@@ -26,10 +26,21 @@ export const ProfileTabContent = () => {
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-  const handleWithdraw = () => {
-    // TODO: 회원 탈퇴 API 호출
-    console.log("회원 탈퇴 처리");
-    setIsWithdrawModalOpen(false);
+  const handleWithdraw = async () => {
+    try {
+      const response = await withdraw();
+      if (response.isSuccess) {
+        logout();
+        navigate("/login", { replace: true });
+      } else {
+        alert(response.message || "회원 탈퇴에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("회원 탈퇴 에러:", error);
+      alert("회원 탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setIsWithdrawModalOpen(false);
+    }
   };
 
   const handleLogout = async () => {
