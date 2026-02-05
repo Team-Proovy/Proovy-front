@@ -3,7 +3,6 @@ import {
   StorageCheckboxCheckedIcon,
 } from "../../../shared/components/icons/StorageIcons";
 
-
 interface NoteCardProps {
   label: string;
   type: "업로드";

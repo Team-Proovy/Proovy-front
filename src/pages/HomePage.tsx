@@ -45,8 +45,8 @@ export const HomePage = () => {
             id: result?.assetId ?? Date.now(), // assetId가 없으면 임시 ID 사용
             label: file.name,
             type: "업로드",
-            fileUrl: url, // 로컬 미리보기 URL 사용
-            mimeType: file.type,
+            // fileUrl: url, // 로컬 미리보기 URL 사용
+            // mimeType: file.type,
           });
         } catch (error) {
           console.error("파일 업로드 실패:", error);

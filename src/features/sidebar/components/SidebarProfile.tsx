@@ -21,7 +21,13 @@ export const SidebarProfile = ({
   onUpgradeClick,
   onSettingsClick,
 }: SidebarProfileProps) => {
-  const user = useAuthStore((state) => state.user);
+  const authUser = useAuthStore((state) => state.user);
+
+  // TODO: 테스트용 더미 데이터 (테스트 후 삭제 예정)
+  const user = {
+    ...authUser,
+    nickname: "가나다라마바사", // 4자 이상 닉네임 테스트
+  };
 
   return !isCollapsed ? (
     /* 펼쳐진 상태의 프로필 UI */
@@ -64,7 +70,11 @@ export const SidebarProfile = ({
       >
         <div className="flex items-center gap-2">
           <UserIcon size={40} />
-          <span className="pt-[2px] text-[20px] font-semibold">{user?.nickname}</span>
+          <span className="pt-[2px] text-[20px] font-semibold">
+            {user?.nickname && user.nickname.length >= 5
+              ? `${user.nickname.slice(0, 4)}...`
+              : user?.nickname}
+          </span>
         </div>
         <button
           onClick={(e) => {
