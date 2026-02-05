@@ -3,7 +3,7 @@ import { create } from "zustand";
 interface Note {
   id: number;
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "업로드";
 }
 
 interface StorageState {
@@ -31,12 +31,12 @@ const TEMPLATE_NOTES = [
   { label: "file_name.py", type: "업로드" as const },
   { label: "파일 가능.pdf", type: "업로드" as const },
   { label: "file_name.py", type: "업로드" as const },
-  { label: "LLM 생성 파일", type: "AI 생성" as const },
+  { label: "LLM 생성 파일", type: "업로드" as const },
   { label: "file_name.py", type: "업로드" as const },
   { label: "file_name.py", type: "업로드" as const },
   { label: "파일 가능.pdf", type: "업로드" as const },
   { label: "file_name.py", type: "업로드" as const },
-  { label: "LLM 생성 파일", type: "AI 생성" as const },
+  { label: "LLM 생성 파일", type: "업로드" as const },
   { label: "file_name.py", type: "업로드" as const },
 ];
 

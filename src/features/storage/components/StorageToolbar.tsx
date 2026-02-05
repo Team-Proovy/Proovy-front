@@ -7,8 +7,8 @@ interface StorageToolbarProps {
 }
 
 export const StorageToolbar = ({
-  responsivePaddingL,
-  responsivePaddingR,
+  responsivePaddingL: _responsivePaddingL,
+  responsivePaddingR: _responsivePaddingR,
 }: StorageToolbarProps) => {
   const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
     useStorageStore();
@@ -24,32 +24,32 @@ export const StorageToolbar = ({
   };
 
   return (
-    <div
-      className={`mb-[60px] flex items-center justify-between ${responsivePaddingL} ${responsivePaddingR}`}
-    >
+    <div className="3xl:max-w-[1360px] relative mx-auto mb-[8px] flex w-full max-w-[520px] items-center lg:max-w-[800px] 2xl:max-w-[1080px]">
       <div className="flex flex-1 items-center gap-[20px]">
         <div
-          className="relative"
-          style={{ width: "440px", height: "32px" }}
+          className="relative w-[220px] lg:w-[440px]"
+          style={{ height: "32px" }}
         >
           <input
             type="text"
             placeholder="검색어를 입력해주세요."
-            className="h-full w-full rounded-[70px] border-[0.5px] border-[#C6C6C6] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-[#6B6B6B] outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#6B6B6B]"
+            className="h-full w-full rounded-[70px] border-[0.5px] border-[#D1D6DE] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#9CA4B0]"
           />
-          <StorageSearchIcon
-            style={{
-              position: "absolute",
-              top: "6px",
-              right: "13px",
-              width: "20px",
-              height: "20px",
-            }}
-          />
+          <button
+            type="button"
+            className="absolute top-[6px] right-[13px] flex h-[20px] w-[20px] cursor-pointer items-center justify-center transition-opacity hover:opacity-70"
+          >
+            <StorageSearchIcon
+              style={{
+                width: "20px",
+                height: "20px",
+              }}
+            />
+          </button>
         </div>
         <button
           onClick={handleActionClick}
-          className="flex items-center justify-center rounded-xl border border-gray-200 bg-white font-['Pretendard'] text-[14px] font-medium text-[#6B6B6B] shadow-sm transition-all hover:bg-gray-50"
+          className="flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white"
           style={{
             width: isSelectMode ? "80px" : "56px",
             height: "32px",
@@ -59,7 +59,7 @@ export const StorageToolbar = ({
         </button>
       </div>
 
-      <div className="flex items-center">
+      <div className="absolute right-[20px] flex items-center">
         <div
           style={{
             display: "flex",
@@ -97,7 +97,7 @@ export const StorageToolbar = ({
                 height="11.5"
                 rx="5.75"
                 fill="white"
-                stroke="#C6C6C6"
+                stroke="#D1D6DE"
                 strokeWidth="0.5"
               />
               <g filter="url(#filter0_i_781_1618)">
@@ -165,7 +165,7 @@ export const StorageToolbar = ({
                   lineHeight: "18px",
                 }}
               >
-                2.7
+                2.74
               </span>
               <span
                 style={{
