@@ -59,6 +59,13 @@ interface Note {
   lastUsedAt: string;
 }
 
+type SortOrder =
+  | "recentUsed" // 최근 사용 순 (기본값)
+  | "createdDesc" // 최신 생성 순
+  | "createdAsc" // 오래된 생성 순
+  | "nameAsc" // 이름 순
+  | "nameDesc"; // 이름 역순
+
 export const NotesPage = () => {
   // TODO: useNotes() 훅으로 노트 목록 fetch
   const mockNotes: Note[] = [
@@ -99,6 +106,55 @@ export const NotesPage = () => {
   const totalNotes = 5;
   const currentNotes = 3;
 
+  const [sortOrder, setSortOrder] = useState<SortOrder>("recentUsed");
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+
+  const sortOptions: { value: SortOrder; label: string }[] = [
+    { value: "recentUsed", label: "최근 사용 순" },
+    { value: "createdDesc", label: "최신 생성 순" },
+    { value: "createdAsc", label: "오래된 생성 순" },
+    { value: "nameAsc", label: "이름 순" },
+    { value: "nameDesc", label: "이름 역순" },
+  ];
+
+  const sortedNotes = [...mockNotes].sort((a, b) => {
+    switch (sortOrder) {
+      case "recentUsed": {
+        // 최근 사용 순: lastUsedAt 내림차순
+        return (
+          new Date(b.lastUsedAt).getTime() - new Date(a.lastUsedAt).getTime()
+        );
+      }
+      case "createdDesc": {
+        // 최신 생성 순: createdAt 내림차순
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      case "createdAsc": {
+        // 오래된 생성 순: createdAt 오름차순
+        return (
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      }
+      case "nameAsc": {
+        // 이름 순: 가나다순
+        return a.title.localeCompare(b.title, "ko");
+      }
+      case "nameDesc": {
+        // 이름 역순
+        return b.title.localeCompare(a.title, "ko");
+      }
+      default:
+        return 0;
+    }
+  });
+
+  const handleSelectSort = (value: SortOrder) => {
+    setSortOrder(value);
+    setIsSortDropdownOpen(false);
+  };
+
   return (
     <div className="flex h-full w-full flex-col overflow-auto bg-white">
       {/* 사이드바를 제외한 나머지 영역에서 가운데 정렬을 위한 컨테이너 */}
@@ -117,14 +173,46 @@ export const NotesPage = () => {
             {/* 정렬 버튼 + 노트 개수(같은 가로선) */}
             <div className="w-full">
               <div className="flex items-center justify-between">
-                <button className="flex h-[28px] w-[120px] items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50">
-                  <span className="font-['Noto_Sans_KR',sans-serif] text-[14px] leading-[15px] font-normal whitespace-nowrap text-[#2F3440]">
-                    정렬
-                  </span>
-                  <span className="h-[16px] w-[16px] shrink-0">
-                    <DropdownIcon className="h-full w-full text-[#2F3440]" />
-                  </span>
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsSortDropdownOpen((prevIsOpen) => !prevIsOpen)
+                    }
+                    className="flex h-[28px] w-[140px] items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
+                  >
+                    <span className="font-['Noto_Sans_KR',sans-serif] text-[14px] leading-[15px] font-normal whitespace-nowrap text-[#2F3440]">
+                      {sortOptions.find((option) => option.value === sortOrder)
+                        ?.label ?? "정렬"}
+                    </span>
+                    <span className="h-[16px] w-[16px] shrink-0">
+                      <DropdownIcon
+                        className={`h-full w-full text-[#2F3440] transition-transform ${
+                          isSortDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </span>
+                  </button>
+
+                  {isSortDropdownOpen && (
+                    <div className="absolute right-0 z-10 mt-[4px] w-[192px] rounded-[8px] border border-[#D1D6DE] bg-white py-[4px] shadow-[0_8px_20px_rgba(0,0,0,0.08)]">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleSelectSort(option.value)}
+                          className={`mx-[4px] flex w-[calc(100%-8px)] items-center rounded-[8px] px-[12px] py-[8px] text-left text-[13px] leading-[18px] transition-shadow ${
+                            sortOrder === option.value
+                              ? "border border-[#2A6AFF] font-medium text-[#003880]"
+                              : "text-[#2F3440] hover:shadow-[0_0_0_3px_rgba(42,106,255,0.15)]"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-[8px]">
                   <span className="text-[16px] leading-[20px] font-medium text-black">
@@ -168,7 +256,7 @@ export const NotesPage = () => {
                 </Link>
 
                 {/* 노트 카드들 */}
-                {mockNotes.map((note) => (
+                {sortedNotes.map((note) => (
                   <Link
                     key={note.id}
                     to={`/app/chat/${note.id}`}
