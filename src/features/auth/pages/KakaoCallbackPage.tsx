@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loginWithKakao } from "../api/auth_api";
 import { useAuthStore } from "../store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
+import { AxiosError } from "axios";
+import { useEffect, useRef } from "react";
 
 export const KakaoCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -26,29 +27,23 @@ export const KakaoCallbackPage = () => {
     }
 
     const processLogin = async () => {
-      console.log("[KakaoCallback] 로그인 시도 - code:", code);
-
-      // 기존 토큰 클리어 (새 로그인 시도이므로)
+      // code logging removed for security
       tokenUtils.clearTokens();
 
       try {
         const data = await loginWithKakao(code);
-        console.log("[KakaoCallback] 응답:", data);
 
         if (data.isSuccess) {
           const result = data.result;
           login(result);
 
-          // 기존 회원 (LOGIN) - 토큰 저장 후 홈으로 이동
           if (result.loginType === "LOGIN" && result.token) {
             tokenUtils.setTokens(
               result.token.accessToken,
               result.token.refreshToken,
             );
             navigate("/app/home");
-          }
-          // 신규 회원 (SIGNUP_REQUIRED) - 회원가입 페이지로 이동
-          else if (result.loginType === "SIGNUP_REQUIRED") {
+          } else if (result.loginType === "SIGNUP_REQUIRED") {
             navigate("/signup", {
               state: {
                 kakaoInfo: result.kakaoInfo,
@@ -60,14 +55,22 @@ export const KakaoCallbackPage = () => {
           alert(`로그인 실패: ${data.message}`);
           navigate("/login");
         }
-      } catch (error: any) {
-        console.error("[KakaoCallback] 에러 발생:", error);
-        console.error("[KakaoCallback] 에러 응답:", error.response?.data);
+      } catch (error) {
+        // Safe typing for error handling
+        const axiosError = error as AxiosError<{
+          message?: string;
+          code?: string;
+        }>;
+        console.error("[KakaoCallback] 로그인 에러:", axiosError.message);
 
-        if (error.response) {
-          const errorData = error.response.data;
+        if (axiosError.response) {
+          const errorData = axiosError.response.data;
           alert(
-            `로그인 실패 (${error.response.status}): ${errorData?.message || errorData?.code || "서버에서 오류가 발생했습니다."}`,
+            `로그인 실패 (${axiosError.response.status}): ${
+              errorData?.message ||
+              errorData?.code ||
+              "서버에서 오류가 발생했습니다."
+            }`,
           );
         } else {
           alert("로그인 처리 중 오류가 발생했습니다.");

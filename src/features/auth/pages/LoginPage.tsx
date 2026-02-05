@@ -7,15 +7,28 @@ import {
 } from "../../../shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "../components/SocialLoginButton";
 import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
-import { KAKAO_CLIENT_ID, KAKAO_REDIRECT_URI } from "../api/auth_api";
+import {
+  KAKAO_CLIENT_ID,
+  KAKAO_REDIRECT_URI,
+  NAVER_CLIENT_ID,
+  NAVER_REDIRECT_URI,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_REDIRECT_URI,
+} from "../api/auth_api";
 
 export const LoginPage = () => {
   const handleSocialLogin = (provider: string) => {
     if (provider === "kakao") {
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
       window.location.href = kakaoAuthUrl;
-    } else {
-      alert("아직 구현되지 않은 로그인 방식입니다.");
+    } else if (provider === "naver") {
+      // 네이버는 state 값이 필수 (CSRF 방지용 랜덤 문자열)
+      const state = Math.random().toString(36).substring(2, 15);
+      const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${NAVER_REDIRECT_URI}&state=${state}`;
+      window.location.href = naverAuthUrl;
+    } else if (provider === "google") {
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&response_type=code&scope=email profile`;
+      window.location.href = googleAuthUrl;
     }
   };
 
