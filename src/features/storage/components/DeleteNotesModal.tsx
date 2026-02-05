@@ -41,7 +41,7 @@ export const DeleteNotesModal = () => {
               letterSpacing: "-0.006px",
             }}
           >
-            선택하신 노트{" "}
+            선택하신 파일{" "}
             <span style={{ color: "#2542F0", fontWeight: 700 }}>
               {selectedIds.length}개
             </span>
@@ -64,7 +64,7 @@ export const DeleteNotesModal = () => {
               marginTop: "16px",
             }}
           >
-            삭제된 노트는 복구가 불가능합니다.
+            삭제된 파일은 복구가 불가능합니다.
           </p>
         </div>
 
