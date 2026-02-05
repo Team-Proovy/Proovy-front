@@ -83,6 +83,7 @@ export const Sidebar = ({
           {/* 하단 프로필 및 설정 */}
           <SidebarProfile
             isCollapsed={isCollapsed}
+            onToggle={onToggle}
             onUpgradeClick={onUpgradeClick}
             onSettingsClick={onSettingsClick}
           />

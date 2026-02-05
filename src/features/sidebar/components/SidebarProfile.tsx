@@ -8,12 +8,14 @@ import {
 
 interface SidebarProfileProps {
   isCollapsed: boolean;
+  onToggle: (collapsed: boolean) => void;
   onUpgradeClick: () => void;
   onSettingsClick: () => void;
 }
 
 export const SidebarProfile = ({
   isCollapsed,
+  onToggle,
   onUpgradeClick,
   onSettingsClick,
 }: SidebarProfileProps) => {
@@ -51,7 +53,7 @@ export const SidebarProfile = ({
       </div>
 
       <div
-        className="flex cursor-pointer items-center justify-between transition-colors hover:bg-gray-50"
+        className="flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] px-2 py-1 transition-colors hover:bg-gray-100"
         onClick={() => {
           onSettingsClick();
         }}
@@ -65,7 +67,7 @@ export const SidebarProfile = ({
             e.stopPropagation();
             onSettingsClick();
           }}
-          className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100"
+          className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors"
         >
           <SettingIcon
             size={20}
@@ -77,11 +79,21 @@ export const SidebarProfile = ({
   ) : (
     /* 접힌 상태의 프로필 UI */
     <div className="flex w-[80px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
-      <div className="flex h-[26px] w-[60px] items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm">
+      <div
+        onClick={() => onToggle(false)}
+        className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
+      >
         <CreditIcon size={22} />
         <span className="text-[10px] font-semibold text-[#2F3440]">200</span>
       </div>
-      <UserIcon size={40} />
+      <UserIcon
+        onClick={(e) => {
+          e.stopPropagation();
+          onSettingsClick();
+        }}
+        size={40}
+        className="cursor-pointer"
+      />
     </div>
   );
 };
