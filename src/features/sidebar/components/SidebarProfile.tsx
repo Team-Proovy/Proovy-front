@@ -6,6 +6,8 @@ import {
   PaperIcon,
 } from "../../../shared/components/icons/SidebarIcons";
 
+import { useAuthStore } from "../../auth/store/auth_store";
+
 interface SidebarProfileProps {
   isCollapsed: boolean;
   onUpgradeClick: () => void;
@@ -17,6 +19,8 @@ export const SidebarProfile = ({
   onUpgradeClick,
   onSettingsClick,
 }: SidebarProfileProps) => {
+  const user = useAuthStore((state) => state.user);
+
   return !isCollapsed ? (
     /* 펼쳐진 상태의 프로필 UI */
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
@@ -53,7 +57,7 @@ export const SidebarProfile = ({
       <div className="flex items-center justify-between px-2">
         <div className="flex items-center gap-2">
           <UserIcon size={38} />
-          <span className="text-[20px] font-semibold">닉네임</span>
+          <span className="text-[20px] font-semibold">{user?.nickname}</span>
         </div>
         <button
           onClick={(e) => {

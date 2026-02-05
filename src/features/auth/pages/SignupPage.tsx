@@ -23,7 +23,6 @@ export const SignupPage = () => {
       navigate("/app/home", { replace: true });
       return;
     }
-
     // 2. 회원가입 토큰이 없으면 (잘못된 접근) 로그인 페이지로 리다이렉트
     if (!signupToken) {
       navigate("/login", { replace: true });
