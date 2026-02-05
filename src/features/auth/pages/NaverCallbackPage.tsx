@@ -50,7 +50,7 @@ export const NaverCallbackPage = () => {
               },
             });
           } else {
-            navigate("/");
+            navigate("/app/home");
           }
         } else {
           alert(`로그인 실패: ${data.message}`);
