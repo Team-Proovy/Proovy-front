@@ -157,10 +157,18 @@ export const NotesPage = () => {
 
   return (
     <div className="flex h-full w-full flex-col overflow-auto bg-white">
-      {/* 사이드바를 제외한 나머지 영역에서 가운데 정렬을 위한 컨테이너 */}
-      <div className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col px-8">
-        {/* 본문(정렬/그리드/페이지네이션) 묶음: 세로/가로 모두 가운데 정렬 */}
-        <div className="mx-auto my-auto w-full max-w-[893px]">
+      {/* 사이드바를 제외한 나머지 영역에서 가운데 정렬을 위한 컨테이너
+          - 좌우 패딩 80px(px-20)을 기준으로 전체 레이아웃을 잡고,
+          - 실제 노트 영역(제목/정렬바/그리드/페이지네이션)은
+            카드 열 개수(2열/3열)에 맞는 고정 너비 컨테이너 안에서만 움직이도록 설정 */}
+      <div className="mx-auto flex w-full flex-1 flex-col px-20">
+        {/* 본문(정렬/그리드/페이지네이션) 묶음
+            - 노트 카드가 2개일 때 기준 너비: 2 * 271 + 1 * 40 = 582px
+            - 노트 카드가 3개일 때 기준 너비: 3 * 271 + 2 * 40 = 893px
+            - 이 컨테이너 너비 안에서만 제목/정렬바/노트 개수/카드 그리드가 움직이도록 고정
+            - "디자인 기준 화면 크기"보다 작아지는 순간 바로 2열로 떨어지도록,
+              3열 전환 시점을 더 보수적으로(min-[1340px]) 설정 */}
+        <div className="mx-auto my-auto w-[582px] min-[1340px]:w-[893px]">
           {/* 헤더 영역 */}
           <div>
             {/* 제목 */}
@@ -233,9 +241,15 @@ export const NotesPage = () => {
           <div>
             {/* 정렬 버튼과 노트 추가하기 카드 사이 간격 21px */}
             <div className="mt-[21px] w-full">
+              {/* 노트 블록 크기(271x229)와 블록 간 간격(40px)은 고정
+                  - 이 컨테이너의 너비와 정확히 맞도록 열 개수(2→3)를 변경
+                  - min-[1340px] 이상에서만 3열을 사용하고,
+                    그보다 작아지는 순간 바로 2열로 떨어지게 해서
+                    카드가 좌우 여백(80px)까지 닿지 않도록 함 */}
               <div
-                className="grid gap-[40px]"
-                style={{ gridTemplateColumns: "271px 271px 271px" }}
+                className="grid gap-[40px]
+                  [grid-template-columns:repeat(2,271px)]
+                  min-[1340px]:[grid-template-columns:repeat(3,271px)]"
               >
                 {/* 노트 추가하기 카드 */}
                 <Link
