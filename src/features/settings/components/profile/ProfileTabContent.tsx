@@ -6,10 +6,19 @@ import {
 import { ConfirmModal } from "../ConfirmModal";
 import { ProfileField } from "./ProfileField";
 
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../../auth/store/auth_store";
+import { deleteAccount } from "../../api/user_api";
+import { logout as logoutApi } from "../../../auth/api/auth_api";
+
 /**
  * ProfileTabContent - 내 프로필 탭
  */
 export const ProfileTabContent = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
   // TODO: API 연결 후 실제 로그인 제공자 정보 가져오기
   // 예: const { user } = useAuth();
   // const loginProvider = user?.provider || "kakao";
@@ -18,10 +27,33 @@ export const ProfileTabContent = () => {
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-  const handleWithdraw = () => {
-    // TODO: 회원 탈퇴 API 호출
-    console.log("회원 탈퇴 처리");
-    setIsWithdrawModalOpen(false);
+  const handleWithdraw = async () => {
+    try {
+      const response = await deleteAccount();
+      if (response.isSuccess) {
+        logout();
+        navigate("/login", { replace: true });
+      } else {
+        alert(response.message || "회원 탈퇴에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("회원 탈퇴 에러:", error);
+      alert("회원 탈퇴 중 오류가 발생했습니다.");
+    } finally {
+      setIsWithdrawModalOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      // 서버 로그아웃 요청 (토큰 만료 처리 등)
+      await logoutApi();
+    } catch (error) {
+      console.error("로그아웃 API 호출 실패:", error);
+      // 서버 로그아웃 실패하더라도 클라이언트 로그아웃은 진행
+    }
+    logout();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -44,10 +76,7 @@ export const ProfileTabContent = () => {
           {/* 로그아웃 버튼 - 아이콘 아래 24px, 중앙 정렬, 130x32 */}
           <button
             className="mt-[24px] h-[32px] w-[150px] cursor-pointer rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] leading-[24px] text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
-            onClick={() => {
-              // TODO: 로그아웃 로직 구현
-              console.log("로그아웃");
-            }}
+            onClick={handleLogout}
           >
             로그아웃
           </button>
@@ -57,17 +86,17 @@ export const ProfileTabContent = () => {
         <div className="flex flex-1 flex-col gap-[20px]">
           <ProfileField
             label="이메일"
-            value="9hyung@gmail.com"
+            value={user?.email || ""}
             readonly
           />
           <ProfileField
             label="이름"
-            value="안녕하세요 구현지입니다."
+            value={user?.name || ""}
             placeholder="이름을 입력하세요"
           />
           <ProfileField
             label="닉네임"
-            value="두바이쫀득치킨"
+            value={user?.nickname || ""}
             placeholder="닉네임을 입력하세요"
           />
         </div>

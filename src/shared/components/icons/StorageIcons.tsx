@@ -93,12 +93,14 @@ export const StorageCheckboxCheckedIcon = (props: SVGProps<SVGSVGElement>) => (
       height="19"
       rx="3.5"
       stroke="#2542F0"
+      strokeWidth="2"
     />
     <path
       d="M5 9.5L9 14.5L15.5 6"
       stroke="#2542F0"
-      strokeWidth="1.5"
+      strokeWidth="2.5"
       strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 );
