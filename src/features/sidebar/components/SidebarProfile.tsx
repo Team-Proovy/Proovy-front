@@ -50,10 +50,15 @@ export const SidebarProfile = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-2">
+      <div
+        className="flex cursor-pointer items-center justify-between transition-colors hover:bg-gray-50"
+        onClick={() => {
+          onSettingsClick();
+        }}
+      >
         <div className="flex items-center gap-2">
-          <UserIcon size={38} />
-          <span className="text-[20px] font-semibold">닉네임</span>
+          <UserIcon size={40} />
+          <span className="pt-[2px] text-[20px] font-semibold">닉네임</span>
         </div>
         <button
           onClick={(e) => {
