@@ -57,6 +57,7 @@ export const AppLayout = () => {
         onSearchClick={() => {}} // SearchButton 내부에서 처리됨
         onSettingsClick={() => setIsSettingsOpen(true)}
         onUpgradeClick={() => navigate("/pricing")}
+        onLogoClick={() => navigate("/app/home")}
       />
 
       {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}

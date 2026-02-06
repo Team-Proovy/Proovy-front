@@ -16,6 +16,7 @@ interface SidebarProps {
   onSearchClick: () => void;
   onSettingsClick: () => void;
   onUpgradeClick: () => void;
+  onLogoClick: () => void;
 }
 
 export const Sidebar = ({
@@ -24,6 +25,7 @@ export const Sidebar = ({
   onSearchClick,
   onSettingsClick,
   onUpgradeClick,
+  onLogoClick,
 }: SidebarProps) => {
   return (
     <div
@@ -43,6 +45,7 @@ export const Sidebar = ({
           <SidebarHeader
             isCollapsed={isCollapsed}
             onToggle={onToggle}
+            onLogoClick={onLogoClick}
           />
 
           {/* 메인 메뉴 영역 (고정) */}

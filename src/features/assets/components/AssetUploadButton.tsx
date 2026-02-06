@@ -32,7 +32,7 @@ export const AssetUploadButton = ({
         onSuccess?.(assetInfo.assetId);
       }
     } catch (error) {
-      // 에러는 훅 내부에서 alert으로 띄우도록 설계했으므로 추가 로직 생략 가능 [cite: 2026-02-02]
+      // 에러는 훅 내부에서 alert으로 띄우도록 설계했으므로 추가 로직 생략 가능
     } finally {
       // 다음 업로드를 위해 input 값 초기화
       event.target.value = "";
