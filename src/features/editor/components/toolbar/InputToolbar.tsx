@@ -180,7 +180,7 @@ export const InputToolbar = ({
       className="flex w-full items-end gap-[12px]"
     >
       {/* 왼쪽 버튼 그룹 - 각 버튼 사이 간격은 개별 margin으로 처리 */}
-      <div className="flex flex-1 items-center overflow-x-auto [&::-webkit-scrollbar]:hidden">
+      <div className="flex flex-1 items-center overflow-x-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
         {/* 클립 버튼 */}
         <ToolButton
           className={
