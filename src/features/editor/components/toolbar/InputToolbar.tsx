@@ -14,6 +14,7 @@ import {
   BUTTON_LAYOUT,
   CLIP_BUTTON_STYLE,
   PILL_BUTTON_STYLE,
+  TOOL_BUTTON_STYLE,
   getButtonClass,
   getSendButtonClass,
   getToolButtonClass,
@@ -53,26 +54,49 @@ export const InputToolbar = ({
   const toolTriggerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 활성 도구명 기반 도구 버튼 예상 너비 계산
+  // 고정 부분: pl(12) + icon(26) + gap(8) + gap(8) + dropdown(15) + pr(17) = 86px
+  // 텍스트: 한글 ~14px/자, 공백 ~4px
+  const estimateToolButtonWidth = (
+    toolName: string | null | undefined,
+  ): number => {
+    if (!toolName) return 120; // "도구" 기본 min-width
+    const textWidth = [...toolName].reduce(
+      (w, ch) => w + (ch === " " ? 4 : 14),
+      0,
+    );
+    return Math.max(120, 86 + textWidth);
+  };
+
   // 컨테이너 너비 감지하여 단계별 compact 모드 전환
-  // 각 버튼 너비: 클립(56), 수식(124), 캔버스(100), 도구(120), 전송(30), compact(40)
+  // 각 버튼 너비: 클립(56), 수식(124), 캔버스(100), 도구(가변), 전송(30), compact(40)
   // 일반 gap: 20px, compact gap: 8px, 전송과의 gap: 12px
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    // 도구 버튼 너비에 따라 Level 0 threshold 동적 계산
+    // Level 0 전체 = clip(56) + gap(20) + math(124) + gap(20) + canvas(100) + gap(20) + tool + gap(12) + send(30)
+    //             = 382 + toolWidth
+    const toolWidth = estimateToolButtonWidth(activeToolName);
+    const level0Threshold = 382 + toolWidth;
+
     // 너비에 따른 compactLevel 계산 함수
     const updateCompactLevel = (width: number) => {
-      // Level 0: 모두 일반 (502px 이상)
-      // Level 1: 도구만 compact (410px ~ 502px)
+      // Level 0: 모두 일반 (level0Threshold 이상)
+      // Level 1: 도구만 compact (410px ~ level0Threshold)
       // Level 2: 도구+캔버스 compact (338px ~ 410px)
       // Level 3: 도구+캔버스+수식 compact (242px ~ 338px)
       // Level 4: 모두 compact (242px 미만)
-      if (width >= 502) setCompactLevel(0);
+      if (width >= level0Threshold) setCompactLevel(0);
       else if (width >= 410) setCompactLevel(1);
       else if (width >= 338) setCompactLevel(2);
       else if (width >= 242) setCompactLevel(3);
       else setCompactLevel(4);
     };
+
+    // 초기 측정
+    updateCompactLevel(container.getBoundingClientRect().width);
 
     // ResizeObserver 지원 여부 확인
     if (typeof ResizeObserver !== "undefined") {
@@ -91,13 +115,10 @@ export const InputToolbar = ({
         updateCompactLevel(width);
       };
 
-      // 초기 측정
-      handleResize();
-
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
     }
-  }, []);
+  }, [activeToolName]);
 
   // 메뉴 열기/닫기 핸들러
   const openMenu = () => {
@@ -220,7 +241,9 @@ export const InputToolbar = ({
           as="div"
           className={`${isToolCompact ? "ml-[8px]" : "ml-[20px]"} ${
             isToolCompact
-              ? `${getCompactButtonClass(isActiveTool)} relative overflow-visible`
+              ? isActiveTool
+                ? `${BUTTON_LAYOUT.compact} flex items-center justify-center ${TOOL_BUTTON_STYLE.selected} relative overflow-visible transition-colors duration-200`
+                : `${getCompactButtonClass(false)} relative overflow-visible`
               : `${getToolButtonClass(isActiveTool)} group relative overflow-visible`
           }`}
           onMouseLeave={closeMenu}

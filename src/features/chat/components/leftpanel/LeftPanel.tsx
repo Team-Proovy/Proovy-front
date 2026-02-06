@@ -32,7 +32,12 @@ export const LeftPanel = ({
             fileId={selectedFileId}
           />
         )}
-        {activeTab === "storage" && <StorageContent noteId={noteId} />}
+        {activeTab === "storage" && (
+          <StorageContent
+            noteId={noteId}
+            onTabChange={onTabChange}
+          />
+        )}
       </div>
     </div>
   );
