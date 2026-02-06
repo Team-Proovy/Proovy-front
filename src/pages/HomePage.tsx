@@ -1,10 +1,11 @@
 import { ChevronDown, X } from "lucide-react";
 import { useFileUpload } from "../shared/hooks/useFileUpload";
+import { useStorageStore } from "../features/storage/store/useStorageStore";
 import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
-
+import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
 /**
  * HomePage - 새 노트 시작점
  *
@@ -18,17 +19,38 @@ import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 export const HomePage = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
-
+  const { uploadAsset } = useAssetUpload();
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
-    (file) => {
-      // 선택된 파일 처리 로직
-      // console.log("HomePage에서 파일 선택됨:", file);
-
-      if (file && file.type === "application/pdf") {
+    async (file) => {
+      if (
+        file &&
+        (file.type === "application/pdf" ||
+          file.type === "image/jpeg" ||
+          file.type === "image/png" ||
+          file.type === "image/jpg")
+      ) {
         setFileName(file.name);
         const url = URL.createObjectURL(file);
-        setPdfUrl(url);
+        setPdfUrl(url); // 변수명은 pdfUrl이지만 이제 이미지 url도 담길 수 있음
+        try {
+          // 이 부분이 진짜 파일 업로드 시작 부분 --> 유효한 noteId 를 넣어야 500 에러 안 남
+          const VALID_NOTE_ID = 1;
+          const result = await uploadAsset(VALID_NOTE_ID, file);
+          console.log("파일 업로드 성공!");
+
+          // 성공 시 StorageStore에 추가
+          const { addNote } = useStorageStore.getState();
+          addNote({
+            id: result?.assetId ?? Date.now(), // assetId가 없으면 임시 ID 사용
+            label: file.name,
+            type: "업로드",
+            // fileUrl: url, // 로컬 미리보기 URL 사용
+            // mimeType: file.type,
+          });
+        } catch (error) {
+          console.error("파일 업로드 실패:", error);
+        }
       }
     },
   );
@@ -65,32 +87,40 @@ export const HomePage = () => {
               ref={fileInputRef}
               className="hidden"
               onChange={handleFileChange}
-              accept=".pdf"
+              accept=".pdf .jpg .jpeg .png"
             />
 
             {pdfUrl ? (
               /* PDF 업로드 완료 시: 카드 형태 UI */
               <div className="group relative flex h-[160px] w-[220px] flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
-                {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
-                <div className="relative flex h-[160px] w-[140px] items-start justify-center overflow-hidden bg-[#F2F2F2]">
-                  <div className="w-full">
-                    <PdfPreview
-                      fileUrl={pdfUrl}
-                      width={140}
-                    />
-                  </div>
+                {/* 닫기 버튼: 우상단 고정 */}
+                <button
+                  onClick={handleRemove}
+                  className="absolute top-[12px] right-[12px] z-10 flex cursor-pointer items-center justify-center"
+                >
+                  <X
+                    size={20}
+                    color="#000000"
+                  />
+                </button>
 
-                  {/* Hover 오버레이: 어두워지면서 X 아이콘 등장 */}
-                  <div className="absolute inset-0 flex items-start justify-end bg-black/20 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <button
-                      onClick={handleRemove}
-                      className="cursor-pointer rounded-full bg-white/10 p-1 transition-colors hover:bg-white/30"
-                    >
-                      <X
-                        size={20}
-                        color="black"
+                {/* 상단: PDF 썸네일 영역 (세로 고정, 위아래 잘림 처리) */}
+                <div className="relative flex h-[140px] w-[160px] items-start justify-center overflow-hidden">
+                  <div className="flex h-full w-full items-center justify-center">
+                    {/* 이미지 파일이면 img 태그, PDF면 PdfPreview */}
+                    {fileName.toLowerCase().endsWith(".pdf") ? (
+                      <PdfPreview
+                        key={pdfUrl}
+                        fileUrl={pdfUrl}
+                        width={160}
                       />
-                    </button>
+                    ) : (
+                      <img
+                        src={pdfUrl}
+                        alt="preview"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -100,6 +130,9 @@ export const HomePage = () => {
                     {fileName}
                   </p>
                 </div>
+
+                {/* Hover Overlay: 전체 영역 어둡게 처리 */}
+                <div className="pointer-events-none absolute inset-0 z-0 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               </div>
             ) : (
               /* 기본 상태: 업로드 버튼 */

@@ -48,6 +48,14 @@ const mockAssetDetail: AssetDetailResponse = {
 // ============================================================
 
 export const assetsHandlers = [
+  http.put(
+    "https://proovy-bucket.s3.ap-northeast-2.amazonaws.com/*",
+    async () => {
+      await delay(500); // 실제 업로드 느낌을 주기 위한 지연
+      console.log("[MSW] S3로의 가짜 업로드 완료");
+      return new HttpResponse(null, { status: 200 });
+    },
+  ),
   // 업로드용 Presigned URL 발급
   http.post<never, UploadUrlRequest>(
     `${BASE_URL}/api/assets/upload-url`,

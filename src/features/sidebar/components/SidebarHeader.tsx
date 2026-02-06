@@ -1,5 +1,5 @@
 // 이 컴포넌트는 사이드바의 최상단 영역인 로고와 접기/펴기 버튼을 담당합니다.
-import { ProovyLogo } from "../../../shared/components/ProovyLogo";
+import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import {
   BarArrowIcon,
   SlideIcon,
@@ -8,11 +8,13 @@ import {
 interface SidebarHeaderProps {
   isCollapsed: boolean;
   onToggle: (collapsed: boolean) => void;
+  onLogoClick: () => void;
 }
 
 export const SidebarHeader = ({
   isCollapsed,
   onToggle,
+  onLogoClick,
 }: SidebarHeaderProps) => {
   return (
     <div
@@ -21,7 +23,10 @@ export const SidebarHeader = ({
       }`}
     >
       {!isCollapsed ? (
-        <div className="mb-2 flex w-[240px] items-center justify-between pr-2 pl-[15px]">
+        <div
+          onClick={onLogoClick}
+          className="mb-2 flex w-[240px] cursor-pointer items-center justify-between pr-2 pl-[15px]"
+        >
           <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           <button
             onClick={() => onToggle(true)}

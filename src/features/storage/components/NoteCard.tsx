@@ -5,7 +5,7 @@ import {
 
 interface NoteCardProps {
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "업로드";
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;

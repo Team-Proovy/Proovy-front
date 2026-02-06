@@ -43,7 +43,7 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative flex h-[495px] w-[836px] flex-col overflow-hidden rounded-2xl bg-[#FFFFFF] shadow-[0px_4px_40px_0px_rgba(0,0,0,0.25)]">

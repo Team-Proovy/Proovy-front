@@ -6,6 +6,8 @@ interface Note {
   id: number;
   label: string;
   type: "업로드" | "AI 생성";
+  fileUrl?: string; // 추가
+  mimeType?: string; // 추가
 }
 
 interface NoteGroupProps {
@@ -102,6 +104,8 @@ export const NoteGroup = ({
                 key={note.id}
                 label={note.label}
                 type={note.type}
+                fileUrl={note.fileUrl}
+                mimeType={note.mimeType}
                 isSelected={selectedIds.includes(note.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(note.id)}
