@@ -138,3 +138,95 @@ export const SendIcon = (props: IconProps) => {
     </svg>
   );
 };
+
+/**
+ * 5. 수식 입력기 아이콘 (MathIcon)
+ * 26x26, 수식 기호 -> Size controlled by className
+ */
+export const MathIcon = (props: IconProps) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 26 26"
+      fill="none"
+      {...props}
+    >
+      <path
+        d="M9.64014 6.04004H8.14014V12.16H9.64014V6.04004Z"
+        fill="currentColor"
+      />
+      <path
+        d="M11.9501 8.34961H5.83008V9.84961H11.9501V8.34961Z"
+        fill="currentColor"
+      />
+      <path
+        d="M7.26281 13.3895L6.20215 14.4502L10.5296 18.7777L11.5903 17.717L7.26281 13.3895Z"
+        fill="currentColor"
+      />
+      <path
+        d="M10.5296 13.3903L6.20215 17.7178L7.26281 18.7784L11.5903 14.4509L10.5296 13.3903Z"
+        fill="currentColor"
+      />
+      <path
+        d="M19.6801 8.34961H13.5601V9.84961H19.6801V8.34961Z"
+        fill="currentColor"
+      />
+      <path
+        d="M19.6801 15.3203H13.5601V16.8203H19.6801V15.3203Z"
+        fill="currentColor"
+      />
+      <path
+        d="M17.6099 13.6804C17.6099 13.1337 17.1666 12.6904 16.6199 12.6904C16.0731 12.6904 15.6299 13.1337 15.6299 13.6804C15.6299 14.2272 16.0731 14.6704 16.6199 14.6704C17.1666 14.6704 17.6099 14.2272 17.6099 13.6804Z"
+        fill="currentColor"
+      />
+      <path
+        d="M17.6099 18.4802C17.6099 17.9335 17.1666 17.4902 16.6199 17.4902C16.0731 17.4902 15.6299 17.9335 15.6299 18.4802C15.6299 19.027 16.0731 19.4702 16.6199 19.4702C17.1666 19.4702 17.6099 19.027 17.6099 18.4802Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};
+
+/**
+ * 6. 캔버스 아이콘 (CanvasIcon)
+ * 26x26, 펜 모양 -> Size controlled by className
+ */
+export const CanvasIcon = (props: IconProps) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 26 26"
+      fill="none"
+      {...props}
+    >
+      <path
+        d="M6.55018 20.5399H3.18018V19.5399H6.13018L9.20018 16.3799L11.6902 18.4699L11.0502 19.2399L9.27018 17.7399L6.55018 20.5399Z"
+        fill="currentColor"
+      />
+      <path
+        d="M11.75 18.4308L15.75 16.6408L12.41 14.0908"
+        fill="currentColor"
+      />
+      <path
+        d="M19.0304 5.47333L12.854 13.5781L16.1548 16.0936L22.3312 7.98876L19.0304 5.47333Z"
+        fill="url(#paint0_linear_canvas)"
+      />
+      <defs>
+        <linearGradient
+          id="paint0_linear_canvas"
+          x1="20.6808"
+          y1="6.73104"
+          x2="14.5044"
+          y2="14.8358"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="currentColor" />
+          <stop
+            offset="1"
+            stopColor="white"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};

@@ -28,15 +28,26 @@ export const useMathKeyboard = ({
     if (!containerRef.current || !keyboardContainerRef.current) return;
 
     const rect = containerRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - rect.bottom;
     const keyboardHeight = 220;
+    const keyboardWidth = 660;
+    const margin = 16; // 화면 가장자리 여백
 
     const kbdContainer = keyboardContainerRef.current;
 
-    // Position horizontally aligned with input
-    kbdContainer.style.left = `${rect.left}px`;
-    kbdContainer.style.width = "660px";
+    // 수평 위치 계산 - 화면을 넘어가지 않도록 조정
+    let left = rect.left;
+    if (left + keyboardWidth > viewportWidth - margin) {
+      left = viewportWidth - keyboardWidth - margin;
+    }
+    if (left < margin) {
+      left = margin;
+    }
+
+    kbdContainer.style.left = `${left}px`;
+    kbdContainer.style.width = `${keyboardWidth}px`;
 
     if (spaceBelow >= keyboardHeight + 16) {
       // Show below input
@@ -119,6 +130,25 @@ export const useMathKeyboard = ({
       }
     };
 
+    // 바깥 영역 클릭 시 키보드 닫기
+    const handleClickOutside = (e: MouseEvent) => {
+      const kbdContainer = keyboardContainerRef.current;
+      if (!kbdContainer) return;
+
+      // 키보드가 열려있고, 클릭한 위치가 키보드 컨테이너 외부인 경우
+      if (
+        window.mathVirtualKeyboard?.visible &&
+        !kbdContainer.contains(e.target as Node)
+      ) {
+        // 수식 입력기 토글 버튼 클릭은 제외 (handleMathToggle에서 처리)
+        const target = e.target as HTMLElement;
+        if (target.closest('[title="수식 입력기"]')) {
+          return;
+        }
+        window.mathVirtualKeyboard.hide();
+      }
+    };
+
     if (window.mathVirtualKeyboard) {
       window.mathVirtualKeyboard.addEventListener(
         "geometrychange",
@@ -139,6 +169,7 @@ export const useMathKeyboard = ({
 
     window.addEventListener("scroll", handleScrollOrResize, true);
     window.addEventListener("resize", handleScrollOrResize);
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       if (window.mathVirtualKeyboard) {
@@ -153,6 +184,7 @@ export const useMathKeyboard = ({
       }
       window.removeEventListener("scroll", handleScrollOrResize, true);
       window.removeEventListener("resize", handleScrollOrResize);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [positionKeyboardContainer]);
 
