@@ -9,6 +9,8 @@ MathfieldElement.soundsDirectory = null;
 import { ChatInputArea } from "./input/ChatInputArea";
 import { InputToolbar } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
+import { FileDropdownMenu } from "./input/FileDropdownMenu";
+import { AttachmentPreview } from "./input/AttachmentPreview";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
 import "./math_keyboard.css";
 
@@ -19,6 +21,7 @@ import {
   useCanvasOverlay,
   useChatContent,
 } from "../hooks";
+import { useAttachments } from "../hooks/useAttachments";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
@@ -33,6 +36,8 @@ interface ChatInputProps {
   style?: React.CSSProperties; // Inline style overrides (Optional fallback)
   /** 뷰어 영역의 ref (뷰어가 있는 페이지에서 전달) */
   viewerRef?: React.RefObject<HTMLElement | null>;
+  /** 현재 노트 ID (#파일 멘션에 사용) */
+  noteId?: number | null;
 }
 
 /**
@@ -48,11 +53,21 @@ export const ChatInput = ({
   className = "",
   style,
   viewerRef,
+  noteId,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Custom Hooks
+  const {
+    attachments,
+    addFiles,
+    addCanvasImage,
+    removeAttachment,
+    openFilePicker,
+    fileInputRef,
+  } = useAttachments();
+
   const { isMathOpen, handleMathToggle } = useMathKeyboard({
     containerRef,
   });
@@ -64,17 +79,23 @@ export const ChatInput = ({
     focusedToolIndex,
     setFocusedToolIndex,
     selectedTool,
+    filteredTools,
     handleToolSelect,
     handleAtMenuKeyDown,
-  } = useAtMenu({ inputRef });
 
-  const {
-    isCanvasOpen,
-    viewerRect,
-    handleCanvasToggle,
-    insertCanvasImage,
-    closeCanvas,
-  } = useCanvasOverlay({ viewerRef, inputRef });
+    // # 파일 멘션 메뉴
+    isFileMenuOpen,
+    setIsFileMenuOpen,
+    fileMenuPos,
+    focusedFileIndex,
+    setFocusedFileIndex,
+    filteredAssets,
+    handleFileSelect,
+    isAssetsLoading,
+  } = useAtMenu({ inputRef, containerRef, noteId });
+
+  const { isCanvasOpen, viewerRect, handleCanvasToggle, closeCanvas } =
+    useCanvasOverlay({ viewerRef, inputRef });
 
   const {
     hasContent,
@@ -97,10 +118,20 @@ export const ChatInput = ({
 
   // 전송 핸들러
   const handleSend = () => {
-    if (hasContent) {
+    if (hasContent || attachments.length > 0) {
       console.log("Send clicked");
       // TODO: 실제 전송 로직 구현
     }
+  };
+
+  // 파일 선택 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      addFiles(files);
+    }
+    // input value 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = "";
   };
 
   return (
@@ -109,34 +140,72 @@ export const ChatInput = ({
       className={`${CHAT_INPUT_CLASSES} ${className}`}
       style={style}
     >
-      {/* @ 메뉴 드롭다운 */}
+      {/* 숨겨진 파일 입력 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,image/png,image/jpeg"
+        multiple
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* @ 도구 메뉴 드롭다운 */}
       {isAtMenuOpen && (
         <div
           style={{
             position: "absolute",
-            top: menuPos.top,
+            bottom: menuPos.bottom,
             left: menuPos.left,
             zIndex: 50,
           }}
         >
           <ToolDropdownMenu
+            tools={filteredTools}
             className="!static"
             onSelect={(tool) => {
               handleToolSelect(tool, true);
               setIsAtMenuOpen(false);
             }}
             onClose={() => setIsAtMenuOpen(false)}
-            onMouseEnter={() => {}}
             focusedIndex={focusedToolIndex}
             onFocusChange={setFocusedToolIndex}
           />
         </div>
       )}
 
-      {/* 입력 영역 */}
+      {/* # 파일 멘션 메뉴 드롭다운 */}
+      {isFileMenuOpen && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: fileMenuPos.bottom,
+            left: fileMenuPos.left,
+            zIndex: 50,
+          }}
+        >
+          <FileDropdownMenu
+            assets={filteredAssets}
+            className="!static"
+            onSelect={handleFileSelect}
+            onClose={() => setIsFileMenuOpen(false)}
+            focusedIndex={focusedFileIndex}
+            onFocusChange={setFocusedFileIndex}
+            isLoading={isAssetsLoading}
+          />
+        </div>
+      )}
+
+      {/* 첨부 파일 프리뷰 영역 */}
+      <AttachmentPreview
+        attachments={attachments}
+        onRemove={removeAttachment}
+      />
+
+      {/* 입력 영역 (남은 공간을 채우며 내부 스크롤) */}
       <ChatInputArea
         ref={inputRef}
-        className="flex-1"
+        className="min-h-0 flex-1"
         onContentClick={() => {}}
         onContentChange={setHasContent}
         onSubmit={handleSend}
@@ -155,7 +224,8 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={hasContent}
+        hasContent={hasContent || attachments.length > 0}
+        onClipClick={openFilePicker}
       />
 
       {/* Canvas Overlay - Lazy loaded */}
@@ -171,7 +241,7 @@ export const ChatInput = ({
             isOpen={isCanvasOpen}
             viewerRect={viewerRect}
             onClose={closeCanvas}
-            onAdd={insertCanvasImage}
+            onAdd={addCanvasImage}
           />
         </Suspense>
       )}

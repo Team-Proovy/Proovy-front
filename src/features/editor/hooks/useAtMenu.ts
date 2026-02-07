@@ -1,136 +1,394 @@
-import { useState, useCallback } from "react";
-import { TOOLS } from "../components/input/ToolDropdownMenu";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { ToolDto, ChatAssetDto } from "../types/editor_types";
+import { useTools, useNoteAssets } from "./useEditorQueries";
 
 interface UseAtMenuOptions {
   inputRef: React.RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  noteId?: number | null;
 }
 
 interface UseAtMenuReturn {
+  // @ 도구 메뉴
   isAtMenuOpen: boolean;
   setIsAtMenuOpen: (open: boolean) => void;
-  menuPos: { top: number; left: number };
+  menuPos: { bottom: number; left: number };
   focusedToolIndex: number;
   setFocusedToolIndex: (index: number) => void;
   selectedTool: string | null;
+  filteredTools: ToolDto[];
+  toolQuery: string;
   updateMenuPosition: () => void;
   handleToolSelect: (toolName: string, isFromMenu?: boolean) => void;
   handleAtMenuKeyDown: (e: React.KeyboardEvent) => boolean;
+
+  // # 파일 멘션 메뉴
+  isFileMenuOpen: boolean;
+  setIsFileMenuOpen: (open: boolean) => void;
+  fileMenuPos: { bottom: number; left: number };
+  focusedFileIndex: number;
+  setFocusedFileIndex: (index: number) => void;
+  filteredAssets: ChatAssetDto[];
+  fileQuery: string;
+  mentionedAssets: ChatAssetDto[];
+  handleFileSelect: (asset: ChatAssetDto) => void;
+  isAssetsLoading: boolean;
 }
 
 /**
- * @ 메뉴 상태 관리 훅
- * - 메뉴 열기/닫기
- * - 위치 계산
+ * @ 도구 + # 파일 멘션 메뉴 통합 훅
+ * - @ 입력: 도구 메뉴 열기 + 타이핑 필터링
+ * - # 입력: 파일 메뉴 열기 + 타이핑 필터링
  * - 키보드 네비게이션 (Arrow Up/Down, Enter, Escape)
+ * - 선택 시 입력창에 태그 삽입
  */
-export const useAtMenu = ({ inputRef }: UseAtMenuOptions): UseAtMenuReturn => {
+export const useAtMenu = ({
+  inputRef,
+  containerRef,
+  noteId,
+}: UseAtMenuOptions): UseAtMenuReturn => {
+  // @ 도구 메뉴 상태
   const [isAtMenuOpen, setIsAtMenuOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [menuPos, setMenuPos] = useState({ bottom: 0, left: 0 });
   const [focusedToolIndex, setFocusedToolIndex] = useState<number>(0);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [toolQuery, setToolQuery] = useState("");
+  const atStartOffsetRef = useRef<number | null>(null);
 
-  const updateMenuPosition = useCallback(() => {
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
+  // # 파일 메뉴 상태
+  const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
+  const [fileMenuPos, setFileMenuPos] = useState({ bottom: 0, left: 0 });
+  const [focusedFileIndex, setFocusedFileIndex] = useState<number>(0);
+  const [fileQuery, setFileQuery] = useState("");
+  const hashStartOffsetRef = useRef<number | null>(null);
+  const [mentionedAssets, setMentionedAssets] = useState<ChatAssetDto[]>([]);
+
+  // API 쿼리
+  const { data: tools = [] } = useTools();
+  const { data: assets = [], isLoading: isAssetsLoading } = useNoteAssets(
+    noteId ?? null,
+  );
+
+  // 필터링된 목록
+  const filteredTools = toolQuery
+    ? tools.filter((t) =>
+        t.name.toLowerCase().includes(toolQuery.toLowerCase()),
+      )
+    : tools;
+
+  const filteredAssets = fileQuery
+    ? assets.filter((a) =>
+        a.fileName.toLowerCase().includes(fileQuery.toLowerCase()),
+      )
+    : assets;
+
+  // 캐럿 위치에서 @ 또는 # 이후 입력된 텍스트를 추출
+  const getQueryAfterTrigger = useCallback(
+    (startOffset: number | null): string => {
+      if (startOffset === null) return "";
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return "";
       const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const container = inputRef.current?.parentElement;
-
-      if (container) {
-        const containerRect = container.getBoundingClientRect();
-        const top = rect.top === 0 ? containerRect.top + 20 : rect.top;
-        const left = rect.left === 0 ? containerRect.left + 20 : rect.left;
-
-        setMenuPos({
-          top: top - containerRect.top - 160,
-          left: left - containerRect.left,
-        });
-      }
-    }
-  }, [inputRef]);
-
-  const handleToolSelect = useCallback(
-    (toolName: string, isFromMenu: boolean = false) => {
-      setSelectedTool(toolName);
-      if (isFromMenu) {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          if (range.startContainer.nodeType === Node.TEXT_NODE) {
-            const textNode = range.startContainer;
-            const text = textNode.textContent || "";
-            const offset = range.startOffset;
-            if (offset > 0 && text[offset - 1] === "@") {
-              range.setStart(textNode, offset - 1);
-              range.setEnd(textNode, offset);
-              range.deleteContents();
-            }
-          }
-        }
-      }
+      if (range.startContainer.nodeType !== Node.TEXT_NODE) return "";
+      const text = range.startContainer.textContent || "";
+      const currentOffset = range.startOffset;
+      if (currentOffset <= startOffset) return "";
+      return text.slice(startOffset, currentOffset);
     },
     [],
   );
 
-  /**
-   * @ 메뉴 관련 키보드 이벤트 처리
-   * @returns true if event was handled, false otherwise
-   */
+  // 메뉴 위치 계산 - 커서 위에 표시, 하단 고정 (IDE 자동완성 스타일)
+  // containerRef 기준으로 계산 (position: absolute의 기준 = position: relative인 containerRef)
+  const calcMenuPos = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const container = containerRef.current;
+
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        // 캐럿의 실제 위치 (rect가 0이면 컨테이너 기준 fallback)
+        const caretTop = rect.top === 0 ? containerRect.top + 20 : rect.top;
+        const caretLeft = rect.left === 0 ? containerRect.left + 20 : rect.left;
+
+        return {
+          // bottom: 컨테이너 하단에서 캐럿까지의 거리 + 간격
+          bottom: containerRect.bottom - caretTop + 4,
+          left: caretLeft - containerRect.left,
+        };
+      }
+    }
+    return { bottom: 0, left: 0 };
+  }, [containerRef]);
+
+  const updateMenuPosition = useCallback(() => {
+    setMenuPos(calcMenuPos());
+  }, [calcMenuPos]);
+
+  // 트리거(@, #) + 이후 입력된 텍스트 삭제 후 태그 삽입
+  const deleteTriggerAndQuery = useCallback(
+    (startOffset: number | null, triggerChar: string) => {
+      if (startOffset === null) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.startContainer.nodeType !== Node.TEXT_NODE) return;
+      const textNode = range.startContainer;
+      const text = textNode.textContent || "";
+      const currentOffset = range.startOffset;
+
+      // triggerChar를 포함해서 삭제 (@query 또는 #query 전체)
+      const triggerIdx = text.lastIndexOf(triggerChar, startOffset);
+      if (triggerIdx === -1) return;
+      range.setStart(textNode, triggerIdx);
+      range.setEnd(textNode, currentOffset);
+      range.deleteContents();
+    },
+    [],
+  );
+
+  // 도구 선택 핸들러
+  const handleToolSelect = useCallback(
+    (toolName: string, isFromMenu: boolean = false) => {
+      if (!toolName) {
+        setSelectedTool(null);
+        return;
+      }
+      setSelectedTool(toolName);
+      if (isFromMenu) {
+        deleteTriggerAndQuery(atStartOffsetRef.current, "@");
+      }
+      setToolQuery("");
+      atStartOffsetRef.current = null;
+    },
+    [deleteTriggerAndQuery],
+  );
+
+  // 파일 선택 핸들러 - 입력창에 #파일명 태그 삽입
+  const handleFileSelect = useCallback(
+    (asset: ChatAssetDto) => {
+      deleteTriggerAndQuery(hashStartOffsetRef.current, "#");
+
+      // 입력창에 태그 스팬 삽입
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+
+        const tag = document.createElement("span");
+        tag.contentEditable = "false";
+        tag.className =
+          "inline-flex items-center rounded bg-[#E8EDFB] px-2 py-0.5 mx-0.5 text-[14px] font-medium text-[#3B5998] select-none";
+        tag.dataset.assetId = String(asset.assetId);
+        tag.textContent = `#${asset.fileName}`;
+
+        range.insertNode(tag);
+
+        // 태그 뒤에 커서 이동
+        const space = document.createTextNode("\u00A0");
+        tag.after(space);
+        range.setStartAfter(space);
+        range.setEndAfter(space);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+
+      setMentionedAssets((prev) => {
+        if (prev.some((a) => a.assetId === asset.assetId)) return prev;
+        return [...prev, asset];
+      });
+
+      setFileQuery("");
+      hashStartOffsetRef.current = null;
+      setIsFileMenuOpen(false);
+    },
+    [deleteTriggerAndQuery],
+  );
+
+  // input 이벤트 감지: 타이핑 시 필터 업데이트
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const handleInput = () => {
+      if (isAtMenuOpen && atStartOffsetRef.current !== null) {
+        const q = getQueryAfterTrigger(atStartOffsetRef.current);
+        setToolQuery(q);
+        setFocusedToolIndex(0);
+      }
+      if (isFileMenuOpen && hashStartOffsetRef.current !== null) {
+        const q = getQueryAfterTrigger(hashStartOffsetRef.current);
+        setFileQuery(q);
+        setFocusedFileIndex(0);
+      }
+    };
+
+    input.addEventListener("input", handleInput);
+    return () => input.removeEventListener("input", handleInput);
+  }, [inputRef, isAtMenuOpen, isFileMenuOpen, getQueryAfterTrigger]);
+
+  // 키보드 이벤트 통합 핸들러
   const handleAtMenuKeyDown = useCallback(
     (e: React.KeyboardEvent): boolean => {
-      if (!isAtMenuOpen) {
-        // @ 키 입력 시 메뉴 열기
-        if (e.key === "@") {
-          setTimeout(() => {
-            updateMenuPosition();
-            setIsAtMenuOpen(true);
-            setFocusedToolIndex(0);
-          }, 0);
-          return false; // 문자 입력은 허용
+      // ─── # 파일 메뉴 ───
+      if (isFileMenuOpen) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setFocusedFileIndex((prev) =>
+            filteredAssets.length > 0 ? (prev + 1) % filteredAssets.length : 0,
+          );
+          return true;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setFocusedFileIndex((prev) =>
+            filteredAssets.length > 0
+              ? (prev - 1 + filteredAssets.length) % filteredAssets.length
+              : 0,
+          );
+          return true;
+        }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (filteredAssets[focusedFileIndex]) {
+            handleFileSelect(filteredAssets[focusedFileIndex]);
+          }
+          return true;
+        }
+        if (e.key === "Escape") {
+          setIsFileMenuOpen(false);
+          setFileQuery("");
+          hashStartOffsetRef.current = null;
+          return true;
+        }
+        if (e.key === "Backspace") {
+          // 쿼리가 비어있으면 메뉴 닫기
+          const q = getQueryAfterTrigger(hashStartOffsetRef.current);
+          if (q.length === 0) {
+            setIsFileMenuOpen(false);
+            setFileQuery("");
+            hashStartOffsetRef.current = null;
+          }
+          return false;
+        }
+        // 다른 키는 타이핑으로 간주 → input 이벤트에서 필터링
+        return false;
+      }
+
+      // ─── @ 도구 메뉴 ───
+      if (isAtMenuOpen) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setFocusedToolIndex((prev) =>
+            filteredTools.length > 0 ? (prev + 1) % filteredTools.length : 0,
+          );
+          return true;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setFocusedToolIndex((prev) =>
+            filteredTools.length > 0
+              ? (prev - 1 + filteredTools.length) % filteredTools.length
+              : 0,
+          );
+          return true;
+        }
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (filteredTools[focusedToolIndex]) {
+            handleToolSelect(filteredTools[focusedToolIndex].name, true);
+            setIsAtMenuOpen(false);
+          }
+          return true;
+        }
+        if (e.key === "Escape") {
+          setIsAtMenuOpen(false);
+          setToolQuery("");
+          atStartOffsetRef.current = null;
+          return true;
+        }
+        if (e.key === "Backspace") {
+          const q = getQueryAfterTrigger(atStartOffsetRef.current);
+          if (q.length === 0) {
+            setIsAtMenuOpen(false);
+            setToolQuery("");
+            atStartOffsetRef.current = null;
+          }
+          return false;
         }
         return false;
       }
 
-      // 메뉴가 열려있을 때
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setFocusedToolIndex((prev) => (prev + 1) % TOOLS.length);
-        return true;
+      // ─── 트리거 감지 ───
+      if (e.key === "@") {
+        setTimeout(() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            atStartOffsetRef.current = sel.getRangeAt(0).startOffset;
+          }
+          setMenuPos(calcMenuPos());
+          setIsAtMenuOpen(true);
+          setFocusedToolIndex(0);
+          setToolQuery("");
+        }, 0);
+        return false;
       }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setFocusedToolIndex((prev) => (prev - 1 + TOOLS.length) % TOOLS.length);
-        return true;
-      }
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleToolSelect(TOOLS[focusedToolIndex], true);
-        setIsAtMenuOpen(false);
-        return true;
-      }
-      if (e.key === "Escape") {
-        setIsAtMenuOpen(false);
-        return true;
-      }
-      if (e.key === "Backspace") {
-        setIsAtMenuOpen(false);
-        return false; // Backspace는 계속 처리되어야 함
+
+      if (e.key === "#") {
+        setTimeout(() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            hashStartOffsetRef.current = sel.getRangeAt(0).startOffset;
+          }
+          setFileMenuPos(calcMenuPos());
+          setIsFileMenuOpen(true);
+          setFocusedFileIndex(0);
+          setFileQuery("");
+        }, 0);
+        return false;
       }
 
       return false;
     },
-    [isAtMenuOpen, focusedToolIndex, handleToolSelect, updateMenuPosition],
+    [
+      isAtMenuOpen,
+      isFileMenuOpen,
+      focusedToolIndex,
+      focusedFileIndex,
+      filteredTools,
+      filteredAssets,
+      handleToolSelect,
+      handleFileSelect,
+      calcMenuPos,
+      getQueryAfterTrigger,
+    ],
   );
 
   return {
+    // @ 도구 메뉴
     isAtMenuOpen,
     setIsAtMenuOpen,
     menuPos,
     focusedToolIndex,
     setFocusedToolIndex,
     selectedTool,
+    filteredTools,
+    toolQuery,
     updateMenuPosition,
     handleToolSelect,
     handleAtMenuKeyDown,
+
+    // # 파일 메뉴
+    isFileMenuOpen,
+    setIsFileMenuOpen,
+    fileMenuPos,
+    focusedFileIndex,
+    setFocusedFileIndex,
+    filteredAssets,
+    fileQuery,
+    mentionedAssets,
+    handleFileSelect,
+    isAssetsLoading,
   };
 };

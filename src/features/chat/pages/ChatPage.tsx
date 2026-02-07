@@ -166,7 +166,10 @@ export const ChatPage = () => {
           className="h-full min-w-0 overflow-hidden"
           style={{ width: isViewerOpen ? `${100 - leftPanelWidth}%` : "100%" }}
         >
-          <RightPanel messages={messages} />
+          <RightPanel
+            messages={messages}
+            noteId={noteId ? Number(noteId) : null}
+          />
         </div>
       </div>
     </div>

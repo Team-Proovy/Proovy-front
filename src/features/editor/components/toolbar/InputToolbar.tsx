@@ -10,6 +10,7 @@ import {
 } from "../../../../shared/components/icons/ChatInputIcons";
 import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
+import { useTools } from "../../hooks/useEditorQueries";
 import {
   BUTTON_LAYOUT,
   CLIP_BUTTON_STYLE,
@@ -30,6 +31,7 @@ interface InputToolbarProps {
   onToolSelect?: (toolName: string) => void;
   activeToolName?: string | null;
   hasContent?: boolean;
+  onClipClick?: () => void;
 }
 
 export const InputToolbar = ({
@@ -41,8 +43,10 @@ export const InputToolbar = ({
   onToolSelect,
   activeToolName,
   hasContent = false,
+  onClipClick,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
+  const { data: toolList = [] } = useTools();
   // compactLevel: 0=모두 일반, 1=도구만, 2=도구+캔버스, 3=도구+캔버스+수식, 4=모두
   const [compactLevel, setCompactLevel] = useState(0);
   const [menuPos, setMenuPos] = useState<{
@@ -200,6 +204,7 @@ export const InputToolbar = ({
       <div className="flex flex-1 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* 클립 버튼 */}
         <ToolButton
+          onClick={onClipClick}
           className={
             isClipCompact
               ? getCompactButtonClass(false)
@@ -291,6 +296,7 @@ export const InputToolbar = ({
             createPortal(
               <div ref={menuRef}>
                 <ToolDropdownMenu
+                  tools={toolList}
                   className={`!fixed !z-[9999] ${menuPos.bottom !== undefined ? "animate-in slide-in-from-bottom-2 origin-bottom" : ""}`}
                   style={{
                     top: menuPos.top,
