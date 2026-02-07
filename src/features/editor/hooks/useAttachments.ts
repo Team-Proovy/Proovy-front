@@ -52,6 +52,14 @@ interface UseAttachmentsReturn {
   clearAttachments: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   openFilePicker: () => void;
+  /** 드래그앤드롭 */
+  isDragOver: boolean;
+  dragHandlers: {
+    onDragEnter: (e: React.DragEvent) => void;
+    onDragOver: (e: React.DragEvent) => void;
+    onDragLeave: (e: React.DragEvent) => void;
+    onDrop: (e: React.DragEvent) => void;
+  };
 }
 
 let attachmentIdCounter = 0;
@@ -65,7 +73,9 @@ const generateId = () => `att_${Date.now()}_${++attachmentIdCounter}`;
  */
 export const useAttachments = (): UseAttachmentsReturn => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounterRef = useRef(0);
 
   /** 파일 탐색기 열기 */
   const openFilePicker = useCallback(() => {
@@ -125,6 +135,52 @@ export const useAttachments = (): UseAttachmentsReturn => {
     });
   }, []);
 
+  /** 드래그앤드롭 핸들러 */
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounterRef.current = 0;
+      setIsDragOver(false);
+
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        addFiles(files);
+      }
+    },
+    [addFiles],
+  );
+
+  const dragHandlers = {
+    onDragEnter: handleDragEnter,
+    onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
+    onDrop: handleDrop,
+  };
+
   return {
     attachments,
     addFiles,
@@ -133,5 +189,7 @@ export const useAttachments = (): UseAttachmentsReturn => {
     clearAttachments,
     fileInputRef,
     openFilePicker,
+    isDragOver,
+    dragHandlers,
   };
 };
