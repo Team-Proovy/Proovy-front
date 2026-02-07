@@ -10,6 +10,8 @@ import { ChatInputArea } from "./input/ChatInputArea";
 import { InputToolbar } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
+import { extractMessageContent } from "../utils/extractMessageContent";
+import { getToolCode } from "../constants/tool_codes";
 import "./math_keyboard.css";
 
 // Hooks
@@ -28,11 +30,22 @@ const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
 
+/** 노트 생성 시 전송할 페이로드 (첫 메시지) */
+export interface CreateNotePayload {
+  firstMessage: string;
+  mentionedAssetIds?: number[];
+  mentionedToolCodes?: string[];
+}
+
 interface ChatInputProps {
   className?: string; // Additional classes
   style?: React.CSSProperties; // Inline style overrides (Optional fallback)
   /** 뷰어 영역의 ref (뷰어가 있는 페이지에서 전달) */
   viewerRef?: React.RefObject<HTMLElement | null>;
+  /** 홈화면에서 첫 메시지 전송 시 호출 (노트 생성 API용) */
+  onSendWithPayload?: (payload: CreateNotePayload) => void;
+  /** 전송 중 여부 (버튼 비활성화용) */
+  isSendPending?: boolean;
 }
 
 /**
@@ -48,6 +61,8 @@ export const ChatInput = ({
   className = "",
   style,
   viewerRef,
+  onSendWithPayload,
+  isSendPending = false,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,10 +112,25 @@ export const ChatInput = ({
 
   // 전송 핸들러
   const handleSend = () => {
-    if (hasContent) {
-      console.log("Send clicked");
-      // TODO: 실제 전송 로직 구현
+    if (!hasContent || isSendPending) return;
+
+    const firstMessage = extractMessageContent(inputRef.current).trim();
+    if (!firstMessage) return;
+
+    // 홈화면 노트 생성 모드
+    if (onSendWithPayload) {
+      const toolCode = getToolCode(selectedTool);
+      const mentionedToolCodes = toolCode ? [toolCode] : [];
+      onSendWithPayload({
+        firstMessage,
+        mentionedAssetIds: [],
+        mentionedToolCodes,
+      });
+      return;
     }
+
+    // 채팅방 등 기타 모드 (추후 구현)
+    console.log("Send clicked", { firstMessage });
   };
 
   return (
@@ -156,6 +186,7 @@ export const ChatInput = ({
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
         hasContent={hasContent}
+        isSendPending={isSendPending}
       />
 
       {/* Canvas Overlay - Lazy loaded */}

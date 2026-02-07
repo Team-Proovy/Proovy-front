@@ -26,6 +26,8 @@ interface InputToolbarProps {
   onToolSelect?: (toolName: string) => void;
   activeToolName?: string | null;
   hasContent?: boolean;
+  /** 전송 중 여부 (버튼 비활성화) */
+  isSendPending?: boolean;
 }
 
 export const InputToolbar = ({
@@ -37,6 +39,7 @@ export const InputToolbar = ({
   onToolSelect,
   activeToolName,
   hasContent = false,
+  isSendPending = false,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{
@@ -174,10 +177,14 @@ export const InputToolbar = ({
 
       {/* 전송 버튼 */}
       <ToolButton
-        onClick={hasContent ? onSend : undefined}
+        onClick={hasContent && !isSendPending ? onSend : undefined}
         className={getSendButtonClass(hasContent)}
       >
-        <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        {isSendPending ? (
+          <span className="h-[14px] w-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        )}
       </ToolButton>
     </div>
   );

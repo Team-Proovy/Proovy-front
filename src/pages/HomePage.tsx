@@ -1,9 +1,12 @@
 import { ChevronDown, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useFileUpload } from "../shared/hooks/useFileUpload";
 import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
+import { useCreateNote } from "../features/notes/hooks/useNotes";
+import type { CreateNoteRequest } from "../features/notes/api/notes_types";
 
 /**
  * HomePage - 새 노트 시작점
@@ -16,8 +19,22 @@ import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
  * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
  */
 export const HomePage = () => {
+  const navigate = useNavigate();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
+
+  const createNoteMutation = useCreateNote();
+
+  const handleSendWithPayload = (payload: CreateNoteRequest) => {
+    createNoteMutation.mutate(payload, {
+      onSuccess: (res) => {
+        const noteId = res.result?.noteId;
+        if (noteId != null) {
+          navigate(`/app/chat/${noteId}`);
+        }
+      },
+    });
+  };
 
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
@@ -117,7 +134,10 @@ export const HomePage = () => {
             )}
 
             {/* 오른쪽: 텍스트 입력 섹션 */}
-            <ChatInput />
+            <ChatInput
+              onSendWithPayload={handleSendWithPayload}
+              isSendPending={createNoteMutation.isPending}
+            />
           </div>
 
           {/* 하단 예시 섹션 */}
