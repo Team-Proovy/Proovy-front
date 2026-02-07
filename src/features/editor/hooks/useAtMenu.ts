@@ -113,10 +113,16 @@ export const useAtMenu = ({
         const caretTop = rect.top === 0 ? containerRect.top + 20 : rect.top;
         const caretLeft = rect.left === 0 ? containerRect.left + 20 : rect.left;
 
+        // left: 메뉴가 컨테이너 오른쪽을 넘지 않도록 클램핑
+        const MENU_WIDTH = 180;
+        const rawLeft = caretLeft - containerRect.left;
+        const maxLeft = containerRect.width - MENU_WIDTH;
+        const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
+
         return {
           // bottom: 컨테이너 하단에서 캐럿까지의 거리 + 간격
           bottom: containerRect.bottom - caretTop + 4,
-          left: caretLeft - containerRect.left,
+          left: clampedLeft,
         };
       }
     }
