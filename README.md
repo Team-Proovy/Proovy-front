@@ -148,7 +148,41 @@ src/
 
 ---
 
-## 5️⃣ Git Workflow & Convention
+## 5️⃣ 환경 설정 가이드
+
+### MSW(Mock Service Worker) 설정
+
+프로젝트 루트의 `.env` 파일에 아래를 추가합니다:
+
+```bash
+VITE_MSW_ENABLED=true
+```
+
+#### 설정 배경
+
+본 프로젝트는 개발 시 **API 응답을 목킹**하기 위해 MSW를 사용합니다.
+
+#### MSW 활성화 조건
+
+- **개발 환경(DEV)** 이면서 **`VITE_MSW_ENABLED=true`** 일 때 활성화
+
+#### MSW 설정 규칙
+
+| 환경     | `VITE_MSW_ENABLED` 설정 | MSW 상태    | 용도                           |
+| -------- | ----------------------- | ----------- | ------------------------------ |
+| **DEV**  | 미설정/빈값             | ✅ 활성화   | 개발 시 API 목킹 (기본값)      |
+| **DEV**  | `true`                  | ✅ 활성화   | 개발 시 API 목킹               |
+| **DEV**  | `false`                 | ❌ 비활성화 | 실제 서버 호출 (테스트용)      |
+| **PROD** | 어떤 값이든             | ❌ 비활성화 | 프로덕션은 항상 실제 서버 호출 |
+
+#### 주의사항
+
+- `/mock-test` 같은 **개발 전용 라우트**는 MSW가 활성화되어야 정상 작동합니다.
+- 새로운 팀원이 처음 프로젝트를 셋업할 때는 **`VITE_MSW_ENABLED=true`로 설정**하여 개발을 시작하세요.
+
+---
+
+## 6️⃣ Git Workflow & Convention
 
 ### Branch Strategy
 
@@ -195,7 +229,7 @@ src/
 
 ---
 
-## 6️⃣ Code Convention
+## 7️⃣ Code Convention
 
 ### File Naming
 
@@ -216,7 +250,7 @@ src/
 
 ---
 
-## 7️⃣ 개발 전 필수 체크리스트
+## 8️⃣ 개발 전 필수 체크리스트
 
 - [ ] Issue 생성 및 Assignee/Label 설정
 - [ ] `dev` 최신화 후 브랜치 생성
