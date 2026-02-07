@@ -1,20 +1,13 @@
-<<<<<<< HEAD
-import { ChevronDown } from "lucide-react";
-=======
 import { ChevronDown, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
->>>>>>> origin/feat/106-editor-feature
 import { useFileUpload } from "../shared/hooks/useFileUpload";
 import { useStorageStore } from "../features/storage/store/useStorageStore";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import type { ChatSendData } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
-<<<<<<< HEAD
 import { FileUploadCard } from "@/shared/components/pdf-preview/FileUploadCard";
-=======
 import { useCreateNote } from "@/features/notes/hooks/useNotes";
->>>>>>> origin/feat/106-editor-feature
 /**
  * HomePage - 새 노트 시작점
  *

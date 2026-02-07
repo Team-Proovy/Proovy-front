@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { StorageActionButtons } from "./StorageActionButtons";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { DeleteSuccessModal } from "./DeleteSuccessModal";
 import { NoteCard } from "@/features/storage/components/NoteCard";
+import { deleteAssets } from "@/features/assets/api/assetApi";
 import type { PanelTab } from "./types";
 
 interface MockFile {
@@ -68,21 +70,64 @@ export const StorageContent = ({
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: 삭제 API 연결
-    setBoxFiles((prev) => prev.filter((f) => !selectedIds.includes(f.id)));
-    setThreadFiles((prev) => prev.filter((f) => !selectedIds.includes(f.id)));
-    setIsDeleteModalOpen(false);
-    setSelectedIds([]);
-    setIsSelectMode(false);
-    setIsSuccessModalOpen(true);
+  const handleConfirmDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      // 서버에서 실제 삭제 요청
+      const response = await deleteAssets(selectedIds);
+      
+      if (response.isSuccess) {
+        // 성공 시 로컬 상태 업데이트 (삭제된 항목 제거)
+        setBoxFiles((prev) => prev.filter((file) => !selectedIds.includes(file.id)));
+        setThreadFiles((prev) => prev.filter((file) => !selectedIds.includes(file.id)));
+
+        // 선택 초기화 및 모달 상태 변경
+        setSelectedIds([]);
+        setIsDeleteModalOpen(false);
+        setIsSelectMode(false);
+        setIsSuccessModalOpen(true);
+      } else {
+        console.error("파일 삭제 실패:", response.message);
+        alert("파일 삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("파일 삭제 중 오류 발생:", error);
+      alert("파일 삭제 중 오류가 발생했습니다.");
+    }
   };
 
+  const [, setSearchParams] = useSearchParams();
+
   const handleOpenViewer = () => {
-    onTabChange("viewer");
-    // TODO: 선택된 파일을 뷰어에서 열기
+    // 선택된 파일이 없으면 뷰어 탭으로만 이동
+    if (selectedIds.length === 0) {
+      onTabChange("viewer");
+      return;
+    }
+
+    // 첫 번째 선택된 파일로 이동 (단일 선택)
+    const targetFileId = selectedIds[0];
+    
+    // URL 업데이트: panel=viewer&file={fileId}
+    setSearchParams((prev) => {
+      prev.set("panel", "viewer");
+      prev.set("file", targetFileId.toString());
+      return prev;
+    });
+
+    // 상태 초기화
     setSelectedIds([]);
     setIsSelectMode(false);
+  };
+
+  const handleFileClick = (fileId: number) => {
+    if (isSelectMode) return;
+    setSearchParams((prev) => {
+      prev.set("panel", "viewer");
+      prev.set("file", fileId.toString());
+      return prev;
+    });
   };
 
   return (
@@ -140,6 +185,7 @@ export const StorageContent = ({
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}
+                onClick={() => handleFileClick(file.id)}
               />
             ))}
           </div>
@@ -160,6 +206,7 @@ export const StorageContent = ({
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}
+                onClick={() => handleFileClick(file.id)}
               />
             ))}
           </div>

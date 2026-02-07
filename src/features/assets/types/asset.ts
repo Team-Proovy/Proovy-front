@@ -66,3 +66,13 @@ export type ConfirmUploadResponse = ApiResponse<AssetDetailResponseData>;
 export type AssetDetailResponse = ApiResponse<AssetDetailResponseData>;
 export type DownloadUrlResponse = ApiResponse<DownloadUrlResponseData>;
 export type DeleteAssetResponse = ApiResponse<null>;
+
+export interface BulkDeleteRequest {
+  assetIds: number[];
+}
+
+export interface BulkDeleteResponseData {
+  deletedCount: number;
+}
+
+export type BulkDeleteResponse = ApiResponse<BulkDeleteResponseData>;

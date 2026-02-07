@@ -16,6 +16,7 @@ interface NoteCardProps {
   fileUrl?: string;
   mimeType?: string;
   ocrStatus?: OcrStatus; // 서버에서 준 OCR 상태 추가
+  onClick?: () => void;
 }
 
 export const NoteCard = ({
@@ -27,13 +28,14 @@ export const NoteCard = ({
   fileUrl,
   mimeType,
   ocrStatus = "completed",
+  onClick,
 }: NoteCardProps) => {
   // 소스에 따른 배지 텍스트 결정
   const badgeText = type === "upload" ? "업로드" : "AI 생성";
 
   return (
     <div
-      onClick={() => isSelectMode && onSelect()}
+      onClick={() => (isSelectMode ? onSelect() : onClick?.())}
       className="group relative flex cursor-pointer flex-col transition-transform hover:scale-[1.02]"
       style={{
         width: "240px",

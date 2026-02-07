@@ -7,6 +7,8 @@ import type {
   AssetDetailResponse,
   DownloadUrlResponse,
   DeleteAssetResponse,
+  BulkDeleteRequest,
+  BulkDeleteResponse,
 } from "../types/asset";
 
 // Presigned URL 발급 API
@@ -91,6 +93,23 @@ export const deleteAsset = async (
   // DELETE /api/assets/{assetId}
   const response = await apiClient.delete<DeleteAssetResponse>(
     `/api/assets/${assetId}`,
+  );
+  return response.data;
+};
+
+/**
+ * 7. 자산 일괄 삭제 (DELETE)
+ * @description 다수의 자산을 한 번에 삭제함
+ */
+export const deleteAssets = async (
+  assetIds: number[],
+): Promise<BulkDeleteResponse> => {
+  // DELETE /api/storage/assets with body
+  const response = await apiClient.delete<BulkDeleteResponse>(
+    "/api/storage/assets",
+    {
+      data: { assetIds } as BulkDeleteRequest,
+    },
   );
   return response.data;
 };

@@ -159,11 +159,26 @@ export const ChatPage = () => {
     );
   };
 
-  // URL 파라미터 동기화
+  // URL 파라미터 변경 시 상태 동기화 (URL -> State)
+  useEffect(() => {
+    if (isValidPanelTab(panelParam) && panelParam !== activeTab) {
+      setActiveTab(panelParam);
+    }
+    // 파일 ID가 있고 뷰어가 닫혀있으면 엶
+    if (fileId && !isViewerOpen) {
+      setIsViewerOpen(true);
+    }
+  }, [panelParam, fileId]);
+
+  // 상태 변경 시 URL 동기화 (State -> URL)
   useEffect(() => {
     if (isViewerOpen) {
       setSearchParams((prev) => {
-        prev.set("panel", activeTab);
+        // 값이 다를 때만 업데이트하여 불필요한 히스토리 변경 방지
+        if (prev.get("panel") !== activeTab) {
+          prev.set("panel", activeTab);
+          return prev;
+        }
         return prev;
       });
     }
