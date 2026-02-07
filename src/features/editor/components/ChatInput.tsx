@@ -10,7 +10,7 @@ import { ChatInputArea } from "./input/ChatInputArea";
 import { InputToolbar } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
-import { extractMessageContent } from "../utils/extractMessageContent";
+import { extractMessageContent } from "../utils/extract_message_content";
 import { getToolCode } from "../constants/tool_codes";
 import "./math_keyboard.css";
 
