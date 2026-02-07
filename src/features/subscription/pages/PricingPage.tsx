@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ProovyLogo } from "../../../shared/components/ProovyLogo";
+import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 
 export const PricingPage = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);

@@ -246,11 +246,7 @@ export const NotesPage = () => {
                   - min-[1340px] 이상에서만 3열을 사용하고,
                     그보다 작아지는 순간 바로 2열로 떨어지게 해서
                     카드가 좌우 여백(80px)까지 닿지 않도록 함 */}
-              <div
-                className="grid gap-[40px]
-                  [grid-template-columns:repeat(2,271px)]
-                  min-[1340px]:[grid-template-columns:repeat(3,271px)]"
-              >
+              <div className="grid [grid-template-columns:repeat(2,271px)] gap-[40px] min-[1340px]:[grid-template-columns:repeat(3,271px)]">
                 {/* 노트 추가하기 카드 */}
                 <Link
                   to="/app/home"

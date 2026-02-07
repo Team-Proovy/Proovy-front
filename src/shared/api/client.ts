@@ -43,13 +43,15 @@ apiClient.interceptors.request.use(
 );
 
 // Response Interceptor - 토큰 만료 시 자동 갱신
-let isRefreshing = false;
+let isRefreshing = false; // 현재 토큰 갱신 여부 체크
 let failedQueue: Array<{
+  // 갱신하는 동안 실패한 요청들을 모아두는 대기큐
   resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
 }> = [];
 
 const processQueue = (
+  // 대기큐를 처리하는 함수
   error: AxiosError | null,
   token: string | null = null,
 ) => {

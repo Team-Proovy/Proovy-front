@@ -26,6 +26,9 @@ export const BUTTON_LAYOUT = {
 
   /** 전송 버튼: 30x32 사각형 */
   send: "w-[30px] h-[32px] rounded-[8px] px-[8px] py-[7px] shrink-0",
+
+  /** Compact 버튼: 40x32 원형 (반응형 모드) */
+  compact: "w-[40px] h-[32px] rounded-[20px] shrink-0",
 } as const;
 
 // ============================================================
@@ -39,6 +42,19 @@ export const BUTTON_LAYOUT = {
  * - active (클릭 중): 진파란 배경, 테두리 없음, 흰색 아이콘
  */
 export const CLIP_BUTTON_STYLE = {
+  base: "bg-[#F1F4F8] border border-[0.5px] border-[#D1D6DE] text-[#6B7280]",
+  hover: "hover:bg-[#2A6AFF]/50 hover:border-transparent hover:text-white",
+  active: "active:bg-[#2A6AFF] active:border-transparent active:text-white",
+} as const;
+
+/**
+ * Compact 버튼 스타일 (반응형 모드)
+ * - 기본: 회색 배경
+ * - hover: 연회색 배경
+ * - active: 진회색 배경
+ * - selected: 파란 배경
+ */
+export const COMPACT_BUTTON_STYLE = {
   base: "bg-[#F1F4F8] border border-[0.5px] border-[#D1D6DE] text-[#6B7280]",
   hover: "hover:bg-[#2A6AFF]/50 hover:border-transparent hover:text-white",
   active: "active:bg-[#2A6AFF] active:border-transparent active:text-white",
@@ -135,4 +151,18 @@ export const getSendButtonClass = (hasContent: boolean): string => {
     return `${layout} ${SEND_BUTTON_STYLE.enabled} ${transition}`;
   }
   return `${layout} ${SEND_BUTTON_STYLE.disabled} ${transition}`;
+};
+
+/**
+ * Compact 버튼 스타일 조합 (반응형 모드)
+ * @param isActive 활성 상태 여부
+ */
+export const getCompactButtonClass = (isActive: boolean = false): string => {
+  const layout = BUTTON_LAYOUT.compact;
+  const transition = "transition-colors duration-200";
+
+  if (isActive) {
+    return `${layout} flex items-center justify-center bg-[#2A6AFF] text-white ${transition}`;
+  }
+  return `${layout} flex items-center justify-center ${COMPACT_BUTTON_STYLE.base} ${COMPACT_BUTTON_STYLE.hover} ${COMPACT_BUTTON_STYLE.active} ${transition}`;
 };
