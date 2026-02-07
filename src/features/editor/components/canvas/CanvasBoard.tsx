@@ -15,6 +15,7 @@ export const CanvasBoard = ({
   return (
     <div className={`relative ${className}`}>
       <Tldraw
+        licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY}
         hideUi={hideUi}
         onMount={onMount}
       />

@@ -9,6 +9,8 @@ MathfieldElement.soundsDirectory = null;
 import { ChatInputArea } from "./input/ChatInputArea";
 import { InputToolbar } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
+import { FileDropdownMenu } from "./input/FileDropdownMenu";
+import { AttachmentPreview } from "./input/AttachmentPreview";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
 import "./math_keyboard.css";
 
@@ -19,19 +21,23 @@ import {
   useCanvasOverlay,
   useChatContent,
 } from "../hooks";
+import { useAttachments } from "../hooks/useAttachments";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
 
-// Assets API
-import { useAssetUpload } from "../../assets/hooks/useAssetUpload";
-import { createNote } from "../../notes/api/notes_api";
-import { useNavigate } from "react-router-dom";
 
 // Lazy load CanvasOverlay (tldraw is heavy - ~2MB)
 const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
+
+/** onSend 콜백으로 전달되는 메시지 데이터 */
+export interface ChatSendData {
+  message: string;
+  mentionedAssetIds: number[];
+  mentionedToolCodes: string[];
+}
 
 interface ChatInputProps {
   className?: string; // Additional classes
@@ -40,6 +46,12 @@ interface ChatInputProps {
   viewerRef?: React.RefObject<HTMLElement | null>;
   selectedFile?: File | null; // 선택된 파일
   onUploadSuccess?: () => void; // 파일 업로드 성공 시 호출
+  /** 현재 노트 ID (#파일 멘션에 사용) */
+  noteId?: number | null;
+  /** 메시지 전송 콜백 */
+  onSend?: (data: ChatSendData) => void;
+  /** 전송 중 여부 (true이면 전송 버튼 비활성화) */
+  isSending?: boolean;
 }
 
 /**
@@ -54,16 +66,26 @@ interface ChatInputProps {
 export const ChatInput = ({
   className = "",
   style,
-  viewerRef,
-  selectedFile,
-  onUploadSuccess,
+  noteId,
+  onSend,
+  isSending = false,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { uploadAsset, isUploading } = useAssetUpload();
+
 
   // Custom Hooks
+  const {
+    attachments,
+    addFiles,
+    addCanvasImage,
+    removeAttachment,
+    openFilePicker,
+    fileInputRef,
+    isDragOver,
+    dragHandlers,
+  } = useAttachments();
+
   const { isMathOpen, handleMathToggle } = useMathKeyboard({
     containerRef,
   });
@@ -75,17 +97,25 @@ export const ChatInput = ({
     focusedToolIndex,
     setFocusedToolIndex,
     selectedTool,
+    selectedToolCode,
+    filteredTools,
     handleToolSelect,
     handleAtMenuKeyDown,
-  } = useAtMenu({ inputRef });
 
-  const {
-    isCanvasOpen,
-    viewerRect,
-    handleCanvasToggle,
-    insertCanvasImage,
-    closeCanvas,
-  } = useCanvasOverlay({ viewerRef, inputRef });
+    // # 파일 멘션 메뉴
+    isFileMenuOpen,
+    setIsFileMenuOpen,
+    fileMenuPos,
+    focusedFileIndex,
+    setFocusedFileIndex,
+    filteredAssets,
+    mentionedAssets,
+    handleFileSelect,
+    clearMentionedAssets,
+    isAssetsLoading,
+  } = useAtMenu({ inputRef, containerRef, noteId });
+
+  const { isCanvasOpen, handleCanvasToggle, closeCanvas } = useCanvasOverlay();
 
   const {
     hasContent,
@@ -107,41 +137,38 @@ export const ChatInput = ({
   };
 
   // 전송 핸들러
-  const handleSend = async () => {
-    // text 내용 추출
-    const content = inputRef.current?.textContent?.trim() || "";
-    if (!content && !selectedFile) return;
+  const handleSend = () => {
+    if (isSending) return;
+    if (!hasContent && attachments.length === 0) return;
 
-    try {
-      let assetId: number | undefined;
+    // 입력 내용 추출
+    const message = inputRef.current?.textContent?.trim() || "";
+    if (!message && attachments.length === 0) return;
 
-      // 1. 파일이 있으면 먼저 업로드
-      // 기존 HomePage 로직 참고: Note ID가 필요하므로 임시 ID(0) 사용
-      // 백엔드에서 0을 허용하거나, 추후 createNote에서 연결되는 구조로 가정
-      const TEMP_NOTE_ID = 0;
+    // 멘션된 에셋 ID 및 도구 코드 수집
+    const mentionedAssetIds = mentionedAssets.map((a) => a.assetId);
+    const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
 
-      if (selectedFile) {
-        const assetInfo = await uploadAsset(TEMP_NOTE_ID, selectedFile);
-        assetId = assetInfo.assetId;
-      }
+    // 부모 콜백 호출
+    onSend?.({ message, mentionedAssetIds, mentionedToolCodes });
 
-      // 2. 노트 생성 api 호출
-      // firstMessage는 필수, mentionedAssetIds에 업로드된 자산 ID 포함
-      const response = await createNote({
-        firstMessage: content,
-        mentionedAssetIds: assetId ? [assetId] : [],
-      });
-
-      if (response.isSuccess) {
-        // 3. 노트 생성 성공 시 채팅 페이지로 이동
-        // /app/chat/:noteId 경로로 이동
-        navigate(`/app/chat/${response.result.noteId}`);
-      } else {
-        console.error("노트 생성 실패:", response.message);
-      }
-    } catch (error) {
-      console.error("전송 중 오류 발생:", error);
+    // 입력 상태 초기화
+    if (inputRef.current) {
+      inputRef.current.innerHTML = "";
     }
+    setHasContent(false);
+    clearMentionedAssets();
+    handleToolSelect(""); // 선택된 도구 초기화
+  };
+
+  // 파일 선택 핸들러
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      addFiles(files);
+    }
+    // input value 초기화 (같은 파일 재선택 가능하도록)
+    e.target.value = "";
   };
 
   return (
@@ -149,35 +176,103 @@ export const ChatInput = ({
       ref={containerRef}
       className={`${CHAT_INPUT_CLASSES} ${className}`}
       style={style}
+      {...dragHandlers}
     >
-      {/* @ 메뉴 드롭다운 */}
+      {/* 드래그 앤 드롭 오버레이 */}
+      {isDragOver && (
+        <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-[12px] border-2 border-dashed border-[#2A6AFF] bg-[#2A6AFF]/10 backdrop-blur-[2px]">
+          <div className="flex flex-col items-center gap-2">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#2A6AFF"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line
+                x1="12"
+                y1="3"
+                x2="12"
+                y2="15"
+              />
+            </svg>
+            <span className="text-[14px] font-medium text-[#2A6AFF]">
+              파일을 여기에 놓으세요
+            </span>
+          </div>
+        </div>
+      )}
+      {/* 숨겨진 파일 입력 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,image/png,image/jpeg"
+        multiple
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
+      {/* @ 도구 메뉴 드롭다운 */}
       {isAtMenuOpen && (
         <div
           style={{
             position: "absolute",
-            top: menuPos.top,
+            bottom: menuPos.bottom,
             left: menuPos.left,
             zIndex: 50,
           }}
         >
           <ToolDropdownMenu
+            tools={filteredTools}
             className="!static"
             onSelect={(tool) => {
               handleToolSelect(tool, true);
               setIsAtMenuOpen(false);
             }}
             onClose={() => setIsAtMenuOpen(false)}
-            onMouseEnter={() => {}}
             focusedIndex={focusedToolIndex}
             onFocusChange={setFocusedToolIndex}
           />
         </div>
       )}
 
-      {/* 입력 영역 */}
+      {/* # 파일 멘션 메뉴 드롭다운 */}
+      {isFileMenuOpen && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: fileMenuPos.bottom,
+            left: fileMenuPos.left,
+            zIndex: 50,
+          }}
+        >
+          <FileDropdownMenu
+            assets={filteredAssets}
+            className="!static"
+            onSelect={handleFileSelect}
+            onClose={() => setIsFileMenuOpen(false)}
+            focusedIndex={focusedFileIndex}
+            onFocusChange={setFocusedFileIndex}
+            isLoading={isAssetsLoading}
+          />
+        </div>
+      )}
+
+      {/* 첨부 파일 프리뷰 영역 */}
+      <AttachmentPreview
+        attachments={attachments}
+        onRemove={removeAttachment}
+      />
+
+      {/* 입력 영역 (남은 공간을 채우며 내부 스크롤) */}
       <ChatInputArea
         ref={inputRef}
-        className="flex-1"
+        className="min-h-0 flex-1"
         onContentClick={() => {}}
         onContentChange={setHasContent}
         onSubmit={handleSend}
@@ -196,7 +291,8 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={hasContent}
+        hasContent={!isSending && (hasContent || attachments.length > 0)}
+        onClipClick={openFilePicker}
       />
 
       {/* Canvas Overlay - Lazy loaded */}
@@ -210,9 +306,8 @@ export const ChatInput = ({
         >
           <CanvasOverlay
             isOpen={isCanvasOpen}
-            viewerRect={viewerRect}
             onClose={closeCanvas}
-            onAdd={insertCanvasImage}
+            onAdd={addCanvasImage}
           />
         </Suspense>
       )}

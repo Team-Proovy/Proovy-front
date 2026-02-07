@@ -1,4 +1,5 @@
 import { ChatInput } from "@/features/editor/components/ChatInput";
+import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import { ChatMessages } from "./ChatMessages";
 
 interface Message {
@@ -9,9 +10,17 @@ interface Message {
 
 interface RightPanelProps {
   messages: Message[];
+  noteId?: number | null;
+  onSend?: (data: ChatSendData) => void;
+  isSending?: boolean;
 }
 
-export const RightPanel = ({ messages }: RightPanelProps) => {
+export const RightPanel = ({
+  messages,
+  noteId,
+  onSend,
+  isSending,
+}: RightPanelProps) => {
   return (
     <div className="flex h-full flex-col bg-[#F1F4F8]">
       {/* 메시지 + 입력창 컨테이너 (가운데 정렬) */}
@@ -21,7 +30,11 @@ export const RightPanel = ({ messages }: RightPanelProps) => {
 
         {/* 입력창 - 가운데 정렬 */}
         <div className="flex shrink-0 justify-center px-[16px] pb-[20px]">
-          <ChatInput />
+          <ChatInput
+            noteId={noteId}
+            onSend={onSend}
+            isSending={isSending}
+          />
         </div>
       </div>
     </div>
