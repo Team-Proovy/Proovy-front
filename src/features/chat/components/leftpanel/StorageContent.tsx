@@ -8,7 +8,10 @@ import type { PanelTab } from "./types";
 interface MockFile {
   id: number;
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "upload" | "ai";
+  fileUrl?: string; // 추가
+  mimeType?: string; // 추가
+  ocrStatus?: "pending" | "processing" | "completed" | "failed";
 }
 
 interface StorageContentProps {
@@ -22,15 +25,23 @@ export const StorageContent = ({
 }: StorageContentProps) => {
   // TODO: 실제 파일 목록 API 연결 (noteId 사용 예정)
   const [boxFiles, setBoxFiles] = useState<MockFile[]>([
-    { id: 1, label: "discrete_math_HW2.pdf", type: "업로드" },
-    { id: 2, label: "더미 파일 1", type: "AI 생성" },
-    { id: 3, label: "더미 파일 2", type: "AI 생성" },
-    { id: 4, label: "더미 파일 3", type: "AI 생성" },
-    { id: 5, label: "더미 파일 4", type: "AI 생성" },
+    {
+      id: 1,
+      label: "discrete_math_HW2.pdf",
+      type: "upload",
+      fileUrl:
+        "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      mimeType: "application/pdf",
+      ocrStatus: "completed",
+    },
+    { id: 2, label: "더미 파일 1", type: "ai", ocrStatus: "completed" },
+    { id: 3, label: "더미 파일 2", type: "ai", ocrStatus: "completed" },
+    { id: 4, label: "더미 파일 3", type: "ai", ocrStatus: "completed" },
+    { id: 5, label: "더미 파일 4", type: "ai", ocrStatus: "completed" },
   ]);
 
   const [threadFiles, setThreadFiles] = useState<MockFile[]>([
-    { id: 100, label: "THREAD 1번", type: "AI 생성" },
+    { id: 100, label: "THREAD 1번", type: "ai", ocrStatus: "completed" },
   ]);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -123,6 +134,9 @@ export const StorageContent = ({
                 key={file.id}
                 label={file.label}
                 type={file.type}
+                fileUrl={file.fileUrl}
+                mimeType={file.mimeType}
+                ocrStatus={file.ocrStatus}
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}
@@ -140,6 +154,9 @@ export const StorageContent = ({
                 key={file.id}
                 label={file.label}
                 type={file.type}
+                fileUrl={file.fileUrl}
+                mimeType={file.mimeType}
+                ocrStatus={file.ocrStatus}
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}

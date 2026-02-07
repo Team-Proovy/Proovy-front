@@ -3,7 +3,10 @@ import { create } from "zustand";
 interface Note {
   id: number;
   label: string;
-  type: "업로드";
+  type: "upload" | "ai";
+  fileUrl?: string;
+  mimeType?: string;
+  ocrStatus?: "pending" | "processing" | "completed" | "failed";
 }
 
 interface StorageState {
@@ -24,26 +27,27 @@ interface StorageState {
 
   setDeleteModalOpen: (isOpen: boolean) => void;
   setSuccessModalOpen: (isOpen: boolean) => void;
+  setNotes: (notes: Note[]) => void;
   addNote: (note: Note) => void;
   deleteSelectedNotes: () => void;
 }
 
 const TEMPLATE_NOTES = [
-  { label: "file_name.py", type: "업로드" as const },
+  { label: "file_name.py", type: "upload" as const },
   {
     label: "파일 가능.pdf",
-    type: "업로드" as const,
-    // fileUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf", // 테스트용 URL 제거
+    type: "upload" as const,
+    fileUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     mimeType: "application/pdf",
   },
-  { label: "file_name.py", type: "업로드" as const },
-  { label: "LLM 생성 파일", type: "업로드" as const },
-  { label: "file_name.py", type: "업로드" as const },
-  { label: "file_name.py", type: "업로드" as const },
-  { label: "파일 가능.pdf", type: "업로드" as const },
-  { label: "file_name.py", type: "업로드" as const },
-  { label: "LLM 생성 파일", type: "업로드" as const },
-  { label: "file_name.py", type: "업로드" as const },
+  { label: "file_name.py", type: "upload" as const },
+  { label: "LLM 생성 파일", type: "upload" as const },
+  { label: "file_name.py", type: "upload" as const },
+  { label: "file_name.py", type: "upload" as const },
+  { label: "파일 가능.pdf", type: "upload" as const },
+  { label: "file_name.py", type: "upload" as const },
+  { label: "LLM 생성 파일", type: "upload" as const },
+  { label: "file_name.py", type: "upload" as const },
 ];
 
 const INITIAL_NOTES: Note[] = [
@@ -82,6 +86,7 @@ export const useStorageStore = create<StorageState>((set) => ({
 
   setDeleteModalOpen: (isDeleteModalOpen) => set({ isDeleteModalOpen }),
   setSuccessModalOpen: (isSuccessModalOpen) => set({ isSuccessModalOpen }),
+  setNotes: (notes) => set({ noteCards: notes }),
   addNote: (note) =>
     set((state) => ({ noteCards: [note, ...state.noteCards] })),
   deleteSelectedNotes: () =>

@@ -73,6 +73,8 @@ export interface NoteDto {
   noteId: number;
   title: string;
   thumbnailUrl: string | null;
+  fileUrl?: string | null;
+  mimeType?: string;
   conversationCount: number;
   conversationLimit: number;
   conversationUsagePercent: number;

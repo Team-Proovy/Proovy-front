@@ -14,6 +14,8 @@ import { StorageToolbar } from "../components/StorageToolbar";
 import { NoteGroup } from "../components/NoteGroup";
 import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
+import { useEffect } from "react";
+import { getNoteList } from "../../notes/api/notes_api";
 
 export const StoragePage = () => {
   const {
@@ -24,6 +26,7 @@ export const StoragePage = () => {
     noteCards,
     isDeleteModalOpen,
     isSuccessModalOpen,
+    setNotes,
   } = useStorageStore();
 
   // 반응형 간격 클래스 정의
@@ -33,6 +36,28 @@ export const StoragePage = () => {
   // NoteGroup에 전달할 데이터를 id 기준으로 나누기 (임시 처리)
   const group1Notes = noteCards.filter((note) => note.id < 10);
   const group2Notes = noteCards.filter((note) => note.id >= 10);
+
+  useEffect(() => {
+    const fetchNotes = async () => {
+      try {
+        const response = await getNoteList({ page: 0, size: 20 });
+        if (response.isSuccess) {
+          // NoteDto -> Store Note 변환
+          const mappedNotes = response.result.notes.map((note) => ({
+            id: note.noteId,
+            label: note.title,
+            type: "upload" as const,
+            fileUrl: note.fileUrl || undefined, // 현재 인터페이스상 "업로드"만 허용됨 (추후 수정 필요)
+            mimeType: note.mimeType || undefined,
+          }));
+          setNotes(mappedNotes);
+        }
+      } catch (error) {
+        console.error("노트 목록 가져오기 실패", error);
+      }
+    };
+    fetchNotes();
+  }, [setNotes]);
 
   return (
     <>

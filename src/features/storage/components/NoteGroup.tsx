@@ -5,9 +5,10 @@ import { useStorageStore } from "../store/useStorageStore";
 interface Note {
   id: number;
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "upload" | "ai";
   fileUrl?: string; // 추가
   mimeType?: string; // 추가
+  ocrStatus?: "pending" | "processing" | "completed" | "failed";
 }
 
 interface NoteGroupProps {
@@ -106,6 +107,7 @@ export const NoteGroup = ({
                 type={note.type}
                 fileUrl={note.fileUrl}
                 mimeType={note.mimeType}
+                ocrStatus={note.ocrStatus}
                 isSelected={selectedIds.includes(note.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(note.id)}

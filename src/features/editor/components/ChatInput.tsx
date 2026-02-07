@@ -23,6 +23,11 @@ import {
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
 
+// Assets API
+import { useAssetUpload } from "../../assets/hooks/useAssetUpload";
+import { createNote } from "../../notes/api/notes_api";
+import { useNavigate } from "react-router-dom";
+
 // Lazy load CanvasOverlay (tldraw is heavy - ~2MB)
 const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
@@ -33,6 +38,8 @@ interface ChatInputProps {
   style?: React.CSSProperties; // Inline style overrides (Optional fallback)
   /** 뷰어 영역의 ref (뷰어가 있는 페이지에서 전달) */
   viewerRef?: React.RefObject<HTMLElement | null>;
+  selectedFile?: File | null; // 선택된 파일
+  onUploadSuccess?: () => void; // 파일 업로드 성공 시 호출
 }
 
 /**
@@ -48,9 +55,13 @@ export const ChatInput = ({
   className = "",
   style,
   viewerRef,
+  selectedFile,
+  onUploadSuccess,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { uploadAsset, isUploading } = useAssetUpload();
 
   // Custom Hooks
   const { isMathOpen, handleMathToggle } = useMathKeyboard({
@@ -96,10 +107,40 @@ export const ChatInput = ({
   };
 
   // 전송 핸들러
-  const handleSend = () => {
-    if (hasContent) {
-      console.log("Send clicked");
-      // TODO: 실제 전송 로직 구현
+  const handleSend = async () => {
+    // text 내용 추출
+    const content = inputRef.current?.textContent?.trim() || "";
+    if (!content && !selectedFile) return;
+
+    try {
+      let assetId: number | undefined;
+
+      // 1. 파일이 있으면 먼저 업로드
+      // 기존 HomePage 로직 참고: Note ID가 필요하므로 임시 ID(0) 사용
+      // 백엔드에서 0을 허용하거나, 추후 createNote에서 연결되는 구조로 가정
+      const TEMP_NOTE_ID = 0;
+
+      if (selectedFile) {
+        const assetInfo = await uploadAsset(TEMP_NOTE_ID, selectedFile);
+        assetId = assetInfo.assetId;
+      }
+
+      // 2. 노트 생성 api 호출
+      // firstMessage는 필수, mentionedAssetIds에 업로드된 자산 ID 포함
+      const response = await createNote({
+        firstMessage: content,
+        mentionedAssetIds: assetId ? [assetId] : [],
+      });
+
+      if (response.isSuccess) {
+        // 3. 노트 생성 성공 시 채팅 페이지로 이동
+        // /app/chat/:noteId 경로로 이동
+        navigate(`/app/chat/${response.result.noteId}`);
+      } else {
+        console.error("노트 생성 실패:", response.message);
+      }
+    } catch (error) {
+      console.error("전송 중 오류 발생:", error);
     }
   };
 
