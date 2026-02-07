@@ -34,11 +34,9 @@ export const HomePage = () => {
         } else {
           console.error("노트 생성 응답에 noteId가 없습니다.", res);
         }
-      }
       },
     });
   };
-
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
     (file) => {
