@@ -3,9 +3,10 @@ import { ToolButton } from "../toolbar/ToolButton";
 interface ToolDropdownMenuProps {
   onSelect: (toolName: string) => void;
   onClose: () => void;
+  onClear?: () => void;
+  activeToolName?: string | null;
   className?: string; // For positioning
   style?: React.CSSProperties; // For dynamic positioning (Portal)
-  onMouseEnter?: () => void;
   focusedIndex?: number | null; // 키보드 네비게이션용 포커스 인덱스
   onFocusChange?: (index: number) => void; // 마우스 호버 시 포커스 변경 업데이트
 }
@@ -20,9 +21,10 @@ export const TOOLS = [
 export const ToolDropdownMenu = ({
   onSelect,
   onClose,
+  onClear,
+  activeToolName,
   className = "",
   style,
-  onMouseEnter,
   focusedIndex = null,
   onFocusChange,
 }: ToolDropdownMenuProps) => {
@@ -30,15 +32,17 @@ export const ToolDropdownMenu = ({
     <div
       className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[180px] flex-col gap-1 rounded-[12px] border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
       style={style}
-      onMouseEnter={onMouseEnter}
       onClick={(e) => e.stopPropagation()}
     >
       {TOOLS.map((item, index) => {
         const isFocused = focusedIndex === index;
+        const isActive = activeToolName === item;
         // 스타일 조건 분기: focused일 때는 파란 배경, 아닐 때는 투명 배경
         const styleClass = isFocused
           ? "!bg-[#2A6AFF] !text-white"
-          : "!bg-transparent text-black hover:!bg-[#2A6AFF]/50 hover:!text-white active:!bg-[#2A6AFF] active:!text-white";
+          : isActive
+            ? "!bg-[#D27B2D]/20 !text-[#D27B2D]"
+            : "!bg-transparent text-black hover:!bg-[#2A6AFF]/50 hover:!text-white active:!bg-[#2A6AFF] active:!text-white";
 
         return (
           <ToolButton
@@ -62,6 +66,23 @@ export const ToolDropdownMenu = ({
           </ToolButton>
         );
       })}
+
+      {/* 취소 버튼 - 도구 선택 시에만 표시 */}
+      {activeToolName && (
+        <>
+          <ToolButton
+            className="!h-[32px] w-full !justify-center !gap-[4px] !rounded-[20px] !border-[0.5px] !border-[#D1D6DE] !bg-[#F1F4F8] !px-[8px] !py-0 text-[14px] font-medium text-black !duration-200 hover:!bg-[#2A6AFF]/50 hover:!text-white active:!bg-[#2A6AFF] active:!text-white"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear?.();
+              onClose();
+            }}
+          >
+            <span>취소</span>
+          </ToolButton>
+        </>
+      )}
     </div>
   );
 };
