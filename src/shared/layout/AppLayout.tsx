@@ -3,10 +3,9 @@ import {
   useNavigate,
   useSearchParams,
   useLocation,
-  Navigate,
 } from "react-router-dom";
 import { useState } from "react";
-import { useAuthStore } from "../../features/auth/store/auth_store";
+// import { useAuthStore } from "../../features/auth/store/auth_store";
 
 // Features
 import { Sidebar } from "../../features/sidebar/Sidebar";
@@ -30,7 +29,7 @@ export const AppLayout = () => {
   const isSearchOpen = searchParams.get("search") === "true";
 
   // 인증 체크
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
   // TODO: 주소 보호 로직 임시 해제 (사용자 요청)
