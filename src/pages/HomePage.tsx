@@ -31,7 +31,10 @@ export const HomePage = () => {
         const noteId = res.result?.noteId;
         if (noteId != null) {
           navigate(`/app/chat/${noteId}`);
+        } else {
+          console.error("노트 생성 응답에 noteId가 없습니다.", res);
         }
+      }
       },
     });
   };

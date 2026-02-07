@@ -30,12 +30,10 @@ const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
 
+import type { CreateNoteRequest } from "../../notes/api/notes_types";
+
 /** 노트 생성 시 전송할 페이로드 (첫 메시지) */
-export interface CreateNotePayload {
-  firstMessage: string;
-  mentionedAssetIds?: number[];
-  mentionedToolCodes?: string[];
-}
+export type CreateNotePayload = CreateNoteRequest;
 
 interface ChatInputProps {
   className?: string; // Additional classes

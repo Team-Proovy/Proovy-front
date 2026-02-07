@@ -178,7 +178,8 @@ export const InputToolbar = ({
       {/* 전송 버튼 */}
       <ToolButton
         onClick={hasContent && !isSendPending ? onSend : undefined}
-        className={getSendButtonClass(hasContent)}
+        className={getSendButtonClass(hasContent && !isSendPending)}
+        disabled={!hasContent || isSendPending}
       >
         {isSendPending ? (
           <span className="h-[14px] w-[14px] shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
