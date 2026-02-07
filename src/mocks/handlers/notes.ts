@@ -134,10 +134,28 @@ export const notesHandlers = [
 
       const newNoteId = mockNotes.length + 1;
       const now = new Date().toISOString();
+      const generatedTitle =
+        body.firstMessage.length > 30
+          ? body.firstMessage.slice(0, 30) + "..."
+          : body.firstMessage;
+
+      // mockNotes 배열에 새 노트 추가 → GET /api/notes에서 반영됨
+      const newNote: NoteDto = {
+        noteId: newNoteId,
+        title: generatedTitle,
+        thumbnailUrl: null,
+        conversationCount: 1,
+        conversationLimit: 20,
+        conversationUsagePercent: 5,
+        assetCount: body.mentionedAssetIds?.length ?? 0,
+        createdAt: now,
+        lastUsedAt: now,
+      };
+      mockNotes.unshift(newNote);
 
       const response: CreateNoteResponse = {
         noteId: newNoteId,
-        title: body.firstMessage.slice(0, 30) + "...", // 임시 제목
+        title: generatedTitle,
         titleGeneratedBy: "USER_MESSAGE",
         conversationLimit: 20,
         firstConversation: {

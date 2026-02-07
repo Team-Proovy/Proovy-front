@@ -16,6 +16,7 @@ interface UseAtMenuReturn {
   focusedToolIndex: number;
   setFocusedToolIndex: (index: number) => void;
   selectedTool: string | null;
+  selectedToolCode: string | null;
   filteredTools: ToolDto[];
   toolQuery: string;
   updateMenuPosition: () => void;
@@ -32,6 +33,7 @@ interface UseAtMenuReturn {
   fileQuery: string;
   mentionedAssets: ChatAssetDto[];
   handleFileSelect: (asset: ChatAssetDto) => void;
+  clearMentionedAssets: () => void;
   isAssetsLoading: boolean;
 }
 
@@ -68,6 +70,16 @@ export const useAtMenu = ({
   const { data: assets = [], isLoading: isAssetsLoading } = useNoteAssets(
     noteId ?? null,
   );
+
+  // 선택된 도구의 toolCode
+  const selectedToolCode = selectedTool
+    ? (tools.find((t) => t.name === selectedTool)?.toolCode ?? null)
+    : null;
+
+  // mentionedAssets 초기화
+  const clearMentionedAssets = useCallback(() => {
+    setMentionedAssets([]);
+  }, []);
 
   // 필터링된 목록
   const filteredTools = toolQuery
@@ -379,6 +391,7 @@ export const useAtMenu = ({
     focusedToolIndex,
     setFocusedToolIndex,
     selectedTool,
+    selectedToolCode,
     filteredTools,
     toolQuery,
     updateMenuPosition,
@@ -395,6 +408,7 @@ export const useAtMenu = ({
     fileQuery,
     mentionedAssets,
     handleFileSelect,
+    clearMentionedAssets,
     isAssetsLoading,
   };
 };

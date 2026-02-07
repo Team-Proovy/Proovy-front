@@ -1,4 +1,5 @@
 import apiClient from "@/shared/api/client";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   ToolListParams,
   ToolListResponse,
@@ -6,6 +7,7 @@ import type {
   ChatAssetListResponse,
   CreateConversationRequest,
   CreateConversationParams,
+  ConversationResponseDto,
 } from "../types/editor_types";
 
 /**
@@ -64,4 +66,21 @@ export const createConversation = async (
   }
 
   return response;
+};
+
+/**
+ * 대화 생성 (비-스트리밍, JSON 응답)
+ * POST /api/conversations?isStream=false
+ */
+export const createConversationJson = async (
+  request: CreateConversationRequest,
+): Promise<ApiResponse<ConversationResponseDto>> => {
+  const response = await apiClient.post<ApiResponse<ConversationResponseDto>>(
+    "/api/conversations",
+    request,
+    {
+      params: { isStream: false },
+    },
+  );
+  return response.data;
 };

@@ -1,6 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import { getTools, getNoteAssets } from "../api/editor_api";
-import type { ToolDto, ChatAssetDto } from "../types/editor_types";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  getTools,
+  getNoteAssets,
+  createConversationJson,
+} from "../api/editor_api";
+import type {
+  ToolDto,
+  ChatAssetDto,
+  CreateConversationRequest,
+} from "../types/editor_types";
 
 /**
  * 도구 목록 조회 훅
@@ -31,4 +39,13 @@ export const useNoteAssets = (noteId: number | null, query?: string) =>
     },
     enabled: !!noteId,
     staleTime: 30 * 1000, // 30초간 캐시
+  });
+
+/**
+ * 대화 생성 (비-스트리밍) 훅
+ */
+export const useCreateConversation = () =>
+  useMutation({
+    mutationFn: (data: CreateConversationRequest) =>
+      createConversationJson(data),
   });

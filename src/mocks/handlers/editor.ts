@@ -3,6 +3,7 @@ import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
   ToolDto,
   ToolListResult,
+  CreateConversationRequest,
 } from "../../features/editor/types/editor_types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -51,6 +52,12 @@ const mockTools: ToolDto[] = [
 ];
 
 // ============================================================
+// 대화 ID 카운터
+// ============================================================
+let conversationIdCounter = 100;
+let messageIdCounter = 200;
+
+// ============================================================
 // 핸들러
 // ============================================================
 
@@ -77,4 +84,68 @@ export const editorHandlers = [
       result: { tools: filteredTools },
     });
   }),
+
+  /** POST /api/conversations - 대화 생성 (Mock: JSON 응답) */
+  http.post<never, CreateConversationRequest>(
+    `${BASE_URL}/api/conversations`,
+    async ({ request }) => {
+      await delay(800);
+
+      const body = await request.json();
+      const now = new Date().toISOString();
+      const convId = ++conversationIdCounter;
+      const userMsgId = ++messageIdCounter;
+      const assistantMsgId = ++messageIdCounter;
+
+      const userText = body.text || "";
+
+      // Mock AI 응답 생성
+      const aiContent = `"${userText.slice(0, 30)}..."에 대해 답변드립니다.\n\n이 문제는 다음과 같은 접근으로 풀 수 있습니다:\n\n1단계: 문제의 조건을 정리합니다.\n2단계: 핵심 개념을 적용합니다.\n3단계: 결과를 도출합니다.\n\n추가 질문이 있으시면 말씀해주세요!`;
+
+      return HttpResponse.json<
+        ApiResponse<{
+          conversationId: number;
+          userMessage: {
+            messageId: number;
+            content: string;
+            mentionedAssets: { assetId: number; fileName: string }[];
+            mentionedTools: string[];
+            createdAt: string;
+          };
+          assistantMessage: {
+            messageId: number;
+            content: string;
+            usedTools: string[];
+            status: string;
+            createdAt: string;
+          };
+        }>
+      >({
+        isSuccess: true,
+        code: "CONV2010",
+        message: "대화 생성 성공",
+        result: {
+          conversationId: convId,
+          userMessage: {
+            messageId: userMsgId,
+            content: userText,
+            mentionedAssets:
+              body.mentionedAssetIds?.map((id: number) => ({
+                assetId: id,
+                fileName: `file_${id}.pdf`,
+              })) || [],
+            mentionedTools: body.chosenFeatures || [],
+            createdAt: now,
+          },
+          assistantMessage: {
+            messageId: assistantMsgId,
+            content: aiContent,
+            usedTools: body.chosenFeatures || [],
+            status: "COMPLETED",
+            createdAt: now,
+          },
+        },
+      });
+    },
+  ),
 ];

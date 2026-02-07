@@ -31,11 +31,22 @@ const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
 
+/** onSend 콜백으로 전달되는 메시지 데이터 */
+export interface ChatSendData {
+  message: string;
+  mentionedAssetIds: number[];
+  mentionedToolCodes: string[];
+}
+
 interface ChatInputProps {
   className?: string; // Additional classes
   style?: React.CSSProperties; // Inline style overrides (Optional fallback)
   /** 현재 노트 ID (#파일 멘션에 사용) */
   noteId?: number | null;
+  /** 메시지 전송 콜백 */
+  onSend?: (data: ChatSendData) => void;
+  /** 전송 중 여부 (true이면 전송 버튼 비활성화) */
+  isSending?: boolean;
 }
 
 /**
@@ -51,6 +62,8 @@ export const ChatInput = ({
   className = "",
   style,
   noteId,
+  onSend,
+  isSending = false,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,6 +91,7 @@ export const ChatInput = ({
     focusedToolIndex,
     setFocusedToolIndex,
     selectedTool,
+    selectedToolCode,
     filteredTools,
     handleToolSelect,
     handleAtMenuKeyDown,
@@ -89,7 +103,9 @@ export const ChatInput = ({
     focusedFileIndex,
     setFocusedFileIndex,
     filteredAssets,
+    mentionedAssets,
     handleFileSelect,
+    clearMentionedAssets,
     isAssetsLoading,
   } = useAtMenu({ inputRef, containerRef, noteId });
 
@@ -116,10 +132,27 @@ export const ChatInput = ({
 
   // 전송 핸들러
   const handleSend = () => {
-    if (hasContent || attachments.length > 0) {
-      console.log("Send clicked");
-      // TODO: 실제 전송 로직 구현
+    if (isSending) return;
+    if (!hasContent && attachments.length === 0) return;
+
+    // 입력 내용 추출
+    const message = inputRef.current?.textContent?.trim() || "";
+    if (!message && attachments.length === 0) return;
+
+    // 멘션된 에셋 ID 및 도구 코드 수집
+    const mentionedAssetIds = mentionedAssets.map((a) => a.assetId);
+    const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
+
+    // 부모 콜백 호출
+    onSend?.({ message, mentionedAssetIds, mentionedToolCodes });
+
+    // 입력 상태 초기화
+    if (inputRef.current) {
+      inputRef.current.innerHTML = "";
     }
+    setHasContent(false);
+    clearMentionedAssets();
+    handleToolSelect(""); // 선택된 도구 초기화
   };
 
   // 파일 선택 핸들러
@@ -252,7 +285,7 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={hasContent || attachments.length > 0}
+        hasContent={!isSending && (hasContent || attachments.length > 0)}
         onClipClick={openFilePicker}
       />
 

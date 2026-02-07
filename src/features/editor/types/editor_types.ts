@@ -84,6 +84,25 @@ export interface CreateConversationParams {
   isStream?: boolean;
 }
 
+/** 대화 생성 응답 (비-스트리밍) */
+export interface ConversationResponseDto {
+  conversationId: number;
+  userMessage: {
+    messageId: number;
+    content: string;
+    mentionedAssets: { assetId: number; fileName: string }[];
+    mentionedTools: string[];
+    createdAt: string;
+  };
+  assistantMessage: {
+    messageId: number;
+    content: string;
+    usedTools: string[];
+    status: string;
+    createdAt: string;
+  };
+}
+
 // ============================================================
 // API 응답 타입 별칭
 // ============================================================

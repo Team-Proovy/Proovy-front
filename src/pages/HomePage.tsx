@@ -1,11 +1,14 @@
 import { ChevronDown, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useFileUpload } from "../shared/hooks/useFileUpload";
 import { useStorageStore } from "../features/storage/store/useStorageStore";
 import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
+import type { ChatSendData } from "../features/editor/components/ChatInput";
 import { useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
+import { useCreateNote } from "@/features/notes/hooks/useNotes";
 /**
  * HomePage - 새 노트 시작점
  *
@@ -17,9 +20,11 @@ import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
  * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
  */
 export const HomePage = () => {
+  const navigate = useNavigate();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const { uploadAsset } = useAssetUpload();
+  const { mutate: createNote, isPending: isCreatingNote } = useCreateNote();
   // 파일 업로드 훅 사용
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
     async (file) => {
@@ -63,6 +68,35 @@ export const HomePage = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  // 첫 메시지 전송 → 노트 생성 → 채팅 페이지 이동
+  const handleSend = (data: ChatSendData) => {
+    createNote(
+      {
+        firstMessage: data.message,
+        mentionedAssetIds:
+          data.mentionedAssetIds.length > 0
+            ? data.mentionedAssetIds
+            : undefined,
+        mentionedToolCodes:
+          data.mentionedToolCodes.length > 0
+            ? data.mentionedToolCodes
+            : undefined,
+      },
+      {
+        onSuccess: (response) => {
+          const noteId = response.result.noteId;
+          // 채팅 페이지로 이동 (첫 대화 데이터를 state로 전달)
+          navigate(`/app/chat/${noteId}`, {
+            state: { createNoteResponse: response.result },
+          });
+        },
+        onError: (error) => {
+          console.error("노트 생성 실패:", error);
+        },
+      },
+    );
   };
 
   return (
@@ -150,7 +184,10 @@ export const HomePage = () => {
             )}
 
             {/* 오른쪽: 텍스트 입력 섹션 */}
-            <ChatInput />
+            <ChatInput
+              onSend={handleSend}
+              isSending={isCreatingNote}
+            />
           </div>
 
           {/* 하단 예시 섹션 */}
