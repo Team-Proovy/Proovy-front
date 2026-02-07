@@ -5,10 +5,12 @@ import {
 
 interface NoteCardProps {
   label: string;
-  type: "업로드";
+  type: "업로드" | "AI 생성";
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;
+  fileUrl?: string;
+  mimeType?: string;
 }
 
 export const NoteCard = ({
@@ -17,6 +19,8 @@ export const NoteCard = ({
   isSelected,
   isSelectMode,
   onSelect,
+  fileUrl: _fileUrl,
+  mimeType: _mimeType,
 }: NoteCardProps) => {
   return (
     <div
