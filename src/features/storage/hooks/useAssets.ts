@@ -7,14 +7,29 @@ import {
   deleteAsset,
   deleteAssets,
   uploadToS3,
+  getStorageInfo,
 } from "@/features/assets/api/assetApi";
 import type { UploadUrlRequest } from "@/features/assets/types/asset";
 
 // Query Keys
 export const assetKeys = {
   all: ["assets"] as const,
+  storage: ["storage"] as const,
   details: () => [...assetKeys.all, "detail"] as const,
   detail: (id: number) => [...assetKeys.details(), id] as const,
+};
+
+// 전체 저장소 사용량 및 현황 조회 Hook
+export const useStorageInfo = (keyword?: string) => {
+  return useQuery({
+    queryKey: keyword ? [...assetKeys.storage, keyword] : assetKeys.storage,
+    queryFn: async () => {
+      const response = await getStorageInfo(keyword);
+      return response.result;
+    },
+    staleTime: 1000 * 60 * 10, // 10분
+    enabled: !keyword || keyword.length >= 2,
+  });
 };
 
 // 에셋 상세 조회 Hook
@@ -23,11 +38,7 @@ export const useAssetDetail = (assetId: number, enabled = true) => {
     queryKey: assetKeys.detail(assetId),
     queryFn: async () => {
       const response = await getAssetDetail(assetId);
-      return response.result; // Checking return type of assetApi, it wraps in ApiResponse?
-      // assetApi.ts functions return `response.data` which IS the `ApiResponse<T>`.
-      // Wait, let's check assetApi.ts return types.
-      // `getAssetDetail` returns `AssetDetailResponse` which is `ApiResponse<AssetDetailResponseData>`.
-      // So `response.result` is correct.
+      return response.result;
     },
     enabled: enabled && !!assetId,
     staleTime: 1000 * 60 * 10, // 10분
@@ -67,6 +78,7 @@ export const useUploadAsset = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.storage });
     },
   });
 };
@@ -109,6 +121,7 @@ export const useDeleteAssetsBulk = () => {
         queryClient.removeQueries({ queryKey: assetKeys.detail(id) });
       });
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.storage });
     },
   });
 };

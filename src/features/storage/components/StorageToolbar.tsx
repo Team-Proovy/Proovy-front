@@ -1,15 +1,33 @@
 import { StorageSearchIcon } from "../../../shared/components/icons/StorageIcons";
 import { useStorageStore } from "../store/useStorageStore";
 
+
+// 수정 후
 interface StorageToolbarProps {
   responsivePaddingL: string;
   responsivePaddingR: string;
+  totalUsedDisplay: string;  // "0.43GB"
+  totalLimitDisplay: string; // "3GB"
+  usagePercent: number;      // 14
+  onSearch: (keyword: string) => void; // 검색 함수
+ 
 }
+
+
 
 export const StorageToolbar = ({
   responsivePaddingL: _responsivePaddingL,
   responsivePaddingR: _responsivePaddingR,
+  totalUsedDisplay,
+  totalLimitDisplay,
+  usagePercent,
+  onSearch,
 }: StorageToolbarProps) => {
+  // Logic moved inside component
+  const isDanger = usagePercent >= 90;
+  const barColor = isDanger ? "#FF4D4D" : "#2A6AFF";
+  const barWidth = Math.min((usagePercent / 100) * 55.5, 55.5); // Ensure it doesn't exceed container
+
   const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
     useStorageStore();
 
@@ -33,6 +51,7 @@ export const StorageToolbar = ({
           <input
             type="text"
             placeholder="검색어를 입력해주세요."
+            onChange={(e) => onSearch(e.target.value)}
             className="h-full w-full rounded-[70px] border-[0.5px] border-[#D1D6DE] bg-white py-[6px] pr-[40px] pl-[16px] font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black outline-none placeholder:font-['Pretendard'] placeholder:text-[14px] placeholder:leading-[20px] placeholder:font-medium placeholder:text-[#9CA4B0]"
           />
           <button
@@ -49,7 +68,9 @@ export const StorageToolbar = ({
         </div>
         <button
           onClick={handleActionClick}
-          className="flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white"
+          className={`flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white ${
+            isSelectMode ? "text-[#2A6AFF] border-[#2A6AFF]" : "text-[#9CA4B0]"
+          }`}
           style={{
             width: isSelectMode ? "80px" : "56px",
             height: "32px",
@@ -102,10 +123,10 @@ export const StorageToolbar = ({
               />
               <g filter="url(#filter0_i_781_1618)">
                 <rect
-                  width="47.0909"
+                  width={barWidth}
                   height="12"
                   rx="6"
-                  fill="#2A6AFF"
+                  fill={barColor}
                 />
               </g>
               <defs>
@@ -113,7 +134,7 @@ export const StorageToolbar = ({
                   id="filter0_i_781_1618"
                   x="0"
                   y="0"
-                  width="47.0909"
+                  width={barWidth}
                   height="13"
                   filterUnits="userSpaceOnUse"
                   colorInterpolationFilters="sRGB"
@@ -157,7 +178,7 @@ export const StorageToolbar = ({
             <div className="flex items-center">
               <span
                 style={{
-                  color: "#2A6AFF",
+                  color: barColor,
                   fontFamily: "Pretendard",
                   fontSize: "13px",
                   fontStyle: "normal",
@@ -165,7 +186,7 @@ export const StorageToolbar = ({
                   lineHeight: "18px",
                 }}
               >
-                2.74
+                {totalUsedDisplay}
               </span>
               <span
                 style={{
@@ -177,7 +198,7 @@ export const StorageToolbar = ({
                   lineHeight: "18px",
                 }}
               >
-                /3GB
+                /{totalLimitDisplay}
               </span>
             </div>
           </div>

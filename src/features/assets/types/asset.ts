@@ -1,78 +1,94 @@
 import type { ApiResponse } from "@/shared/api/shared_types";
 
-/**
- * OCR 추출 텍스트 구조
- * ocrStatus가 'completed'일 때만 포함된다.
- */
+/** * 1. OCR 추출 텍스트 구조 */
 export interface OcrText {
   pages: {
-    page: number; // 페이지 번호
-    text: string; // 해당 페이지의 추출 텍스트
+    page: number;
+    text: string;
   }[];
-  fullText: string; // 전체 텍스트 (페이지 구분 포함)
-  model: string; // 사용된 OCR 모델명 (예: PaddleOCR-VL)
+  fullText: string;
+  model: string;
 }
 
-/**
- * 1. Presigned URL 발급 요청 데이터 (업로드용)
+/** * 2. 업로드/상세 정보 공통 구조 */
+export interface AssetDetailResponseData {
+  assetId: number;
+  noteId?: number;
+  source: "upload" | "ai_generated";
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  fileCategory?: "image" | "document" | "code" | "other"; // 추가
+  thumbnailUrl?: string | null; // 추가
+  totalPages?: number;
+  ocrStatus: "pending" | "processing" | "completed" | "failed";
+  ocrText?: OcrText;
+  ocrProcessedAt?: string;
+  createdAt: string;
+}
+
+/** * 3. 전체 저장소 사용량 및 현황 데이터 */
+export interface StorageResponseData {
+  totalUsed: number;
+  totalLimit: number;
+  totalUsedDisplay: string;
+  totalLimitDisplay: string;
+  usagePercent: number; // 90 이상 시 업그레이드 권장
+  plan: {
+    planType: "free" | "premium";
+    isActive: boolean;
+  };
+  notes: {
+    noteId: number;
+    title: string;
+    storageUsed: number;
+    storageLimit: number;
+    storageUsedDisplay: string;
+    storageLimitDisplay: string;
+    assets: AssetDetailResponseData[];
+  }[];
+}
+
+/** * 4. 요청(Request) 관련 데이터 
  */
 export interface UploadUrlRequest {
-  noteId: number; // 파일이 속할 노트 ID
-  fileName: string; // 파일명 (확장자 포함)
-  mimeType: string; // MIME 타입
-  fileSize: number; // 파일 크기 (1 이상 30MB 이하)
+  noteId: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
 }
-
-/**
- * 2. Presigned URL 발급 응답 데이터 (업로드용)
- */
-export interface UploadUrlResponseData {
-  assetId: number; // 업로드 완료 확인 시 사용될 ID
-  uploadUrl: string; // S3 직접 업로드를 위한 URL
-  expiresAt: string; // URL 만료 시각
-}
-
-/**
- * 3. 자산 상세 정보 응답 데이터 (GET /assets/{assetId})
- * 특정 자산의 상세 정보와 OCR 결과를 포함한다.
- */
-export interface AssetDetailResponseData {
-  assetId: number; // 자산 고유 ID
-  noteId: number; // 소속 노트 ID
-  source: "upload" | "ai_generated"; // 파일 출처
-  fileName: string; // 파일명
-  fileSize: number; // 파일 크기 (bytes)
-  mimeType: string; // MIME 타입
-  totalPages?: number; // 총 페이지 수 (PDF/PPT인 경우 포함)
-  ocrStatus: "pending" | "processing" | "completed" | "failed"; // OCR 처리 상태
-  ocrText?: OcrText; // OCR 추출 텍스트 (completed 상태일 때만 포함)
-  ocrProcessedAt?: string; // OCR 처리 완료 시각
-  createdAt: string; // 자산 생성 시각
-}
-
-/**
- * 4. 자산 다운로드용 Presigned URL 발급 응답 데이터 (GET /assets/{assetId}/download)
- */
-export interface DownloadUrlResponseData {
-  assetId: number; // 자산 고유 ID
-  fileName: string; // 다운로드 시 사용될 파일명
-  downloadUrl: string; // S3 Presigned URL (GET 요청으로 다운로드)
-  expiresAt: string; // 다운로드 URL 만료 시각 (발급 후 15분)
-}
-
-// 공통 API 응답 타입
-export type UploadUrlResponse = ApiResponse<UploadUrlResponseData>;
-export type ConfirmUploadResponse = ApiResponse<AssetDetailResponseData>;
-export type AssetDetailResponse = ApiResponse<AssetDetailResponseData>;
-export type DownloadUrlResponse = ApiResponse<DownloadUrlResponseData>;
-export type DeleteAssetResponse = ApiResponse<null>;
 
 export interface BulkDeleteRequest {
-  assetIds: number[];
+  assetIds: number[]; // 1개 이상 30개 이하
+}
+
+/** * 5. 기타 응답 데이터 
+ */
+export interface UploadUrlResponseData {
+  assetId: number;
+  uploadUrl: string;
+  expiresAt: string;
+}
+
+export interface DownloadUrlResponseData {
+  assetId: number;
+  fileName: string;
+  downloadUrl: string;
+  expiresAt: string;
 }
 
 export interface BulkDeleteResponseData {
   deletedCount: number;
+  deletedAssetIds: number[];
 }
 
+// ============================================================
+// 공통 API 응답 타입 (Wrapper)
+// ============================================================
+export type StorageResponse = ApiResponse<StorageResponseData>;
+export type UploadUrlResponse = ApiResponse<UploadUrlResponseData>;
+export type ConfirmUploadResponse = ApiResponse<AssetDetailResponseData>;
+export type AssetDetailResponse = ApiResponse<AssetDetailResponseData>;
+export type DownloadUrlResponse = ApiResponse<DownloadUrlResponseData>;
 export type BulkDeleteResponse = ApiResponse<BulkDeleteResponseData>;
+export type DeleteAssetResponse = ApiResponse<null>;
