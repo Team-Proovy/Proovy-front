@@ -23,10 +23,17 @@ export const SidebarProfile = ({
 }: SidebarProfileProps) => {
   const authUser = useAuthStore((state) => state.user);
 
-  // TODO: 테스트용 더미 데이터 (테스트 후 삭제 예정)
-  const user = {
-    ...authUser,
-    nickname: "가나다라마바사", // 4자 이상 닉네임 테스트
+  // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
+  const formatNickname = (nickname?: string) => {
+    if (!nickname) return "";
+
+    const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(nickname);
+    const maxLength = hasKorean ? 5 : 8;
+
+    if (nickname.length > maxLength) {
+      return `${nickname.slice(0, maxLength)}...`;
+    }
+    return nickname;
   };
 
   return !isCollapsed ? (
@@ -71,9 +78,7 @@ export const SidebarProfile = ({
         <div className="flex items-center gap-2">
           <UserIcon size={40} />
           <span className="pt-[2px] text-[20px] font-semibold">
-            {user?.nickname && user.nickname.length >= 5
-              ? `${user.nickname.slice(0, 4)}...`
-              : user?.nickname}
+            {formatNickname(authUser?.nickname)}
           </span>
         </div>
         <button
