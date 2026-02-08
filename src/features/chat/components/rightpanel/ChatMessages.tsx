@@ -21,9 +21,9 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
     {/* 텍스트 메시지 */}
     <div className="flex items-start justify-end gap-[12px]">
       <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
-        <p className="text-[14px] leading-[20px] font-medium break-all whitespace-pre-wrap text-black">
+        <div className="text-[14px] leading-[20px] font-medium break-all whitespace-pre-wrap text-black">
           <MessageContent content={message.content} />
-        </p>
+        </div>
       </div>
       <div className="shrink-0">
         <ProfileIcon
@@ -45,9 +45,9 @@ const AssistantMessage = ({ content }: { content: string }) => (
       />
     </div>
     <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
-      <p className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
+      <div className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
         <MessageContent content={content} />
-      </p>
+      </div>
     </div>
   </div>
 );

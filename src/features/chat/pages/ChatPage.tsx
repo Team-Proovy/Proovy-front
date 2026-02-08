@@ -95,8 +95,10 @@ export const ChatPage = () => {
     | undefined;
 
   // HomePage에서 전달된 첨부파일 정보
-  const initialAttachments = (location.state?.attachments ??
-    []) as MessageAttachment[];
+  const initialAttachments = useMemo(
+    () => (location.state?.attachments ?? []) as MessageAttachment[],
+    [location.state?.attachments],
+  );
 
   // HomePage에서 전달된 뷰어 파일 정보
   const viewerFile = location.state?.viewerFile as
@@ -195,6 +197,16 @@ export const ChatPage = () => {
           });
         } catch (error) {
           console.error("[ChatPage] 첨부 파일 업로드 실패:", error);
+          setIsUploading(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `error-${Date.now()}`,
+              role: "assistant",
+              content: "파일 업로드에 실패했습니다. 다시 시도해주세요.",
+            },
+          ]);
+          return;
         } finally {
           setIsUploading(false);
         }

@@ -149,20 +149,20 @@ export const assetsHandlers = [
       if (!mockNoteAssets[noteId]) {
         mockNoteAssets[noteId] = [];
       }
-      // 파일 타입 추론
+      // 파일 타입 추론 (서버 응답과 동일하게 소문자)
       const fileType = mimeType.startsWith("image/")
-        ? "IMAGE"
+        ? "image"
         : mimeType === "application/pdf"
-          ? "PDF"
-          : "DOCX";
+          ? "pdf"
+          : "docx";
       mockNoteAssets[noteId].push({
         assetId: assetIdNum,
         fileName,
         fileSize,
         mimeType,
         fileType,
-        source: "UPLOAD",
-        ocrStatus: "PROCESSING",
+        source: "upload",
+        ocrStatus: "processing",
         thumbnailUrl: null,
         createdAt: new Date().toISOString(),
       });

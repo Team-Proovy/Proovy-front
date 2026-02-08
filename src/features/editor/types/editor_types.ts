@@ -33,13 +33,13 @@ export interface ToolListParams {
 // ============================================================
 
 /** 파일 유형 */
-export type FileType = "PDF" | "DOCX" | "IMAGE" | "CODE" | string;
+export type FileType = "pdf" | "docx" | "image" | "code" | string;
 
 /** 파일 출처 */
-export type AssetSource = "UPLOAD" | "GENERATED";
+export type AssetSource = "upload" | "generated";
 
 /** OCR 상태 */
-export type OcrStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+export type OcrStatus = "pending" | "processing" | "completed" | "failed";
 
 /** 채팅 멘션용 에셋 정보 */
 export interface ChatAssetDto {

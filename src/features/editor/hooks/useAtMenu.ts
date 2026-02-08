@@ -110,12 +110,12 @@ export const useAtMenu = ({
     [],
   );
 
-  // 메뉴 폭 상수 (@ 도구: 180px, # 파일: 560px)
+  // 메뉴 폭 상수 (@ 도구: 180px, # 파일: 400px)
   const TOOL_MENU_WIDTH = 180;
-  const FILE_MENU_WIDTH = 660;
+  const FILE_MENU_WIDTH = 400;
 
-  // 메뉴 위치 계산 - 커서 위에 표시, 하단 고정 (IDE 자동완성 스타일)
-  // containerRef 기준으로 계산 (position: absolute의 기준 = position: relative인 containerRef)
+  // 메뉴 위치 계산 - 커서 위에 표시 (position: fixed 기준, 뷰포트 좌표)
+  // overflow-hidden 부모에 의해 잘리지 않도록 fixed 포지셔닝 사용
   const calcMenuPos = useCallback(
     (menuWidth: number) => {
       const sel = window.getSelection();
@@ -126,19 +126,18 @@ export const useAtMenu = ({
 
         if (container) {
           const containerRect = container.getBoundingClientRect();
-          // 캐럿의 실제 위치 (rect가 0이면 컨테이너 기준 fallback)
-          const caretTop = rect.top === 0 ? containerRect.top + 20 : rect.top;
-          const caretLeft =
-            rect.left === 0 ? containerRect.left + 20 : rect.left;
+          // 캐럿 rect가 빈 경우(collapsed) 컨테이너 기준 fallback
+          const isEmptyRect = rect.width === 0 && rect.height === 0;
+          const caretTop = isEmptyRect ? containerRect.top + 20 : rect.top;
+          const caretLeft = isEmptyRect ? containerRect.left + 20 : rect.left;
 
-          // left: 메뉴가 컨테이너 오른쪽을 넘지 않도록 클램핑
-          const rawLeft = caretLeft - containerRect.left;
-          const maxLeft = containerRect.width - menuWidth;
-          const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
+          // left: 뷰포트 오른쪽 가장자리를 넘지 않도록 클램핑 (16px 여백)
+          const maxLeft = window.innerWidth - menuWidth - 16;
+          const clampedLeft = Math.max(16, Math.min(caretLeft, maxLeft));
 
           return {
-            // bottom: 컨테이너 하단에서 캐럿까지의 거리 + 간격
-            bottom: containerRect.bottom - caretTop + 4,
+            // bottom: 뷰포트 하단에서 캐럿까지의 거리 + 간격
+            bottom: window.innerHeight - caretTop + 4,
             left: clampedLeft,
           };
         }

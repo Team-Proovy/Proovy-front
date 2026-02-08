@@ -31,16 +31,25 @@ export const isFileAllowed = (file: File): boolean => {
  * - 실패 시 Error throw
  */
 export const validateFile = (file: File) => {
-  // 1. 파일 형식 체크
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error(
-      "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
-    );
-  }
-
-  // 2. 파일 크기 체크
+  // 1. 파일 크기 체크
   if (file.size > MAX_FILE_SIZE) {
     throw new Error("파일 크기가 30MB를 초과합니다.");
+  }
+
+  // 2. 파일 형식 체크 (MIME → 확장자 폴백)
+  if (file.type) {
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      throw new Error(
+        "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
+      );
+    }
+  } else {
+    const ext = file.name.toLowerCase().split(".").pop();
+    if (!ext || !ALLOWED_EXTENSIONS.includes(`.${ext}`)) {
+      throw new Error(
+        "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
+      );
+    }
   }
 
   // 3. 파일명 길이 체크
@@ -80,14 +89,14 @@ export const getFileIconColor = (mimeType: string): string => {
 
 /** 서버 fileType → 뱃지 배경색 Tailwind 클래스 (#멘션 메뉴용) */
 export const getFileTypeColor = (fileType: string): string => {
-  switch (fileType) {
-    case "PDF":
+  switch (fileType.toLowerCase()) {
+    case "pdf":
       return "bg-red-400";
-    case "DOCX":
+    case "docx":
       return "bg-blue-400";
-    case "IMAGE":
+    case "image":
       return "bg-green-400";
-    case "CODE":
+    case "code":
       return "bg-purple-400";
     default:
       return "bg-gray-400";

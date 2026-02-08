@@ -31,7 +31,7 @@ export const useTools = (query?: string) =>
  * @param query 검색어 (선택)
  */
 export const useNoteAssets = (noteId: number | null, query?: string) =>
-  useQuery<ChatAssetDto[]>({
+  useQuery<ChatAssetDto[], Error, ChatAssetDto[]>({
     queryKey: ["noteAssets", noteId, query],
     queryFn: async () => {
       if (!noteId) return [];

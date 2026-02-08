@@ -5,7 +5,7 @@ import { PdfIcon } from "../shared/components/icons/HomepageInputIcons";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import type { ChatSendData } from "../features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PdfPreview } from "../shared/components/pdf-preview/PdfPreview";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import {
@@ -35,9 +35,17 @@ export const HomePage = () => {
   const [fileName, setFileName] = useState<string>("");
   const { mutate: createNote, isPending: isCreatingNote } = useCreateNote();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // 뷰어용 파일 참조 (노트 생성 후 업로드하기 위해 File 객체 보관)
   const viewerFileRef = useRef<File | null>(null);
+
+  // Blob URL 메모리 누수 방지: pdfUrl 변경 시 이전 URL revoke + 언마운트 시 cleanup
+  useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
 
   // 파일 업로드 훅 사용 — 로컬 미리보기만 설정, S3 업로드는 하지 않음
   const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
@@ -81,6 +89,9 @@ export const HomePage = () => {
           const newNoteId = response.result.noteId;
           setIsUploading(true);
 
+          let uploadFailed = false;
+          setUploadError(null);
+
           try {
             // ── 1. 뷰어 파일 업로드 (노트 생성 후 noteId 확보) ──
             if (viewerFileRef.current) {
@@ -97,20 +108,30 @@ export const HomePage = () => {
                 console.log("[HomePage] 뷰어 파일 업로드 성공:", file.name);
               } catch (error) {
                 console.error("[HomePage] 뷰어 파일 업로드 실패:", error);
+                setUploadError(
+                  "파일 업로드에 실패했습니다. 다시 시도해주세요.",
+                );
+                uploadFailed = true;
               }
             }
 
             // ── 2. ChatInput 첨부 파일 업로드 ──
-            if (data.attachments.length > 0) {
+            if (!uploadFailed && data.attachments.length > 0) {
               try {
                 await uploadAttachments(newNoteId, data.attachments);
               } catch (error) {
                 console.error("[HomePage] 첨부 파일 업로드 실패:", error);
+                setUploadError(
+                  "첨부 파일 업로드에 실패했습니다. 다시 시도해주세요.",
+                );
+                uploadFailed = true;
               }
             }
           } finally {
             setIsUploading(false);
           }
+
+          if (uploadFailed) return;
 
           // 첨부파일 정보를 ChatPage로 전달 (미리보기용)
           const attachmentInfos: MessageAttachment[] = data.attachments.map(
@@ -142,7 +163,7 @@ export const HomePage = () => {
         },
         onError: (error) => {
           console.error("노트 생성 실패:", error);
-          alert("노트 생성에 실패했습니다. 다시 시도해주세요.");
+          setUploadError("노트 생성에 실패했습니다. 다시 시도해주세요.");
         },
       },
     );
@@ -151,6 +172,18 @@ export const HomePage = () => {
   return (
     // AppLayout의 Outlet에서 렌더링됨 - 정중앙 배치
     <div className="flex h-full w-full flex-col bg-white">
+      {/* 업로드/생성 에러 배너 */}
+      {uploadError && (
+        <div className="flex items-center justify-between bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{uploadError}</span>
+          <button
+            onClick={() => setUploadError(null)}
+            className="ml-4 font-medium text-red-700 underline"
+          >
+            닫기
+          </button>
+        </div>
+      )}
       {/* 메인 컨텐츠 영역 - 정중앙 배치 */}
       <div className="flex flex-1 flex-col items-center justify-center px-5 pt-[100px]">
         {/* 컨텐츠 너비는 내부 요소에 맞게 자동 계산 */}

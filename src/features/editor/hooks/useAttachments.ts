@@ -57,7 +57,9 @@ const generateId = () => `att_${Date.now()}_${++attachmentIdCounter}`;
 export const useAttachments = (): UseAttachmentsReturn => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const attachmentsRef = useRef(attachments);
-  attachmentsRef.current = attachments;
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);

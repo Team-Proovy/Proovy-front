@@ -290,11 +290,11 @@ export const ChatInput = ({
         className="hidden"
       />
 
-      {/* @ 도구 메뉴 드롭다운 */}
+      {/* @ 도구 메뉴 드롭다운 (fixed: overflow-hidden 부모에 잘리지 않도록) */}
       {isAtMenuOpen && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed",
             bottom: menuPos.bottom,
             left: menuPos.left,
             zIndex: 50,
@@ -314,11 +314,11 @@ export const ChatInput = ({
         </div>
       )}
 
-      {/* # 파일 멘션 메뉴 드롭다운 */}
+      {/* # 파일 멘션 메뉴 드롭다운 (fixed: overflow-hidden 부모에 잘리지 않도록) */}
       {isFileMenuOpen && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed",
             bottom: fileMenuPos.bottom,
             left: fileMenuPos.left,
             zIndex: 50,
