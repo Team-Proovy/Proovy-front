@@ -1,4 +1,8 @@
 import type { ChatAssetDto } from "../../types/editor_types";
+import {
+  formatFileSize,
+  getFileTypeColor,
+} from "@/features/assets/utils/fileValidation";
 
 interface FileDropdownMenuProps {
   assets: ChatAssetDto[];
@@ -10,29 +14,6 @@ interface FileDropdownMenuProps {
   onFocusChange?: (index: number) => void;
   isLoading?: boolean;
 }
-
-/** 파일 크기 포맷 */
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-};
-
-/** 파일 타입별 아이콘 색상 */
-const getFileTypeColor = (fileType: string): string => {
-  switch (fileType) {
-    case "PDF":
-      return "bg-red-400";
-    case "DOCX":
-      return "bg-blue-400";
-    case "IMAGE":
-      return "bg-green-400";
-    case "CODE":
-      return "bg-purple-400";
-    default:
-      return "bg-gray-400";
-  }
-};
 
 export const FileDropdownMenu = ({
   assets,
@@ -46,7 +27,7 @@ export const FileDropdownMenu = ({
 }: FileDropdownMenuProps) => {
   return (
     <div
-      className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[240px] flex-col gap-1 rounded-xl border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
+      className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[400px] flex-col gap-1 rounded-xl border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
       style={style}
       onClick={(e) => e.stopPropagation()}
     >

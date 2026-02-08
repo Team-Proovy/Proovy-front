@@ -12,13 +12,14 @@
  * - Divider: 드래그로 패널 크기 조절
  * - 토글 버튼: 왼쪽 패널 열기/닫기
  *
- * 사용자 흐름:
- * 1. 파일 없이 채팅 시작 → 전체 화면 채팅 (토글로 뷰어 열기 가능)
- * 2. 파일 업로드 후 채팅 시작 → 뷰어 + 채팅 분할 화면
+ * 데이터 로드 전략:
+ * 1. HomePage에서 노트 생성 직후 진입 → location.state로 첫 대화 데이터 수신 (API 스킵)
+ * 2. 사이드바/새로고침/직접 URL 접근 → GET /api/notes/{noteId}로 히스토리 로드
  */
 
 import { useParams, useSearchParams, useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LeftPanel,
   RightPanel,
@@ -28,8 +29,12 @@ import {
 } from "../components";
 import { useResizable } from "../hooks/useResizable";
 import { useCreateConversation } from "@/features/editor/hooks/useEditorQueries";
+import { useNoteDetail } from "@/features/notes/hooks/useNotes";
+import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { CreateNoteResponse } from "@/features/notes/api/notes_types";
+import type { ConversationInfo } from "@/features/notes/api/notes_types";
+import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 
 // 유효한 PanelTab 값 목록
 const VALID_PANEL_TABS: PanelTab[] = ["viewer", "storage"];
@@ -37,6 +42,23 @@ const VALID_PANEL_TABS: PanelTab[] = ["viewer", "storage"];
 const isValidPanelTab = (value: string | null): value is PanelTab => {
   return value !== null && VALID_PANEL_TABS.includes(value as PanelTab);
 };
+
+/** 서버 ConversationInfo[] → ChatMessage[] 변환 */
+const convertConversations = (
+  conversations: ConversationInfo[],
+): ChatMessage[] =>
+  conversations.flatMap((conv) => [
+    {
+      id: `msg-${conv.userMessage.messageId}`,
+      role: "user" as const,
+      content: conv.userMessage.content,
+    },
+    {
+      id: `msg-${conv.assistantMessage.messageId}`,
+      role: "assistant" as const,
+      content: conv.assistantMessage.content,
+    },
+  ]);
 
 export const ChatPage = () => {
   const { noteId } = useParams<{ noteId: string }>();
@@ -61,112 +83,197 @@ export const ChatPage = () => {
     handleMouseDown,
   } = useResizable({
     initialWidth: 50,
-    leftMinPx: 382, // 왼쪽 패널: 버튼 350px + 좌우 패딩 16px * 2
-    rightMinPx: 302, // 오른쪽 패널: 입력창 270px + 좌우 패딩 16px * 2
+    leftMinPx: 382,
+    rightMinPx: 302,
   });
 
-  // ─── 대화 상태 관리 ───
-  interface ChatMessage {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-  }
+  // ─── 데이터 로드 전략 ───
 
   // HomePage에서 노트 생성 후 전달된 첫 대화 데이터
   const createNoteResponse = location.state?.createNoteResponse as
     | CreateNoteResponse
     | undefined;
 
+  // HomePage에서 전달된 첨부파일 정보
+  const initialAttachments = (location.state?.attachments ??
+    []) as MessageAttachment[];
+
+  // HomePage에서 전달된 뷰어 파일 정보
+  const viewerFile = location.state?.viewerFile as
+    | { name: string; mimeType: string; size: number }
+    | undefined;
+
+  // location.state가 있으면 이미 첫 대화 데이터를 갖고 있으므로 API 호출 불필요
+  const hasInitialData = !!createNoteResponse?.firstConversation;
+
+  // GET /api/notes/{noteId} — 재진입/새로고침 시 대화 히스토리 로드
+  const { data: noteDetail, isLoading: isNoteLoading } = useNoteDetail(
+    noteId,
+    undefined,
+    { enabled: !hasInitialData },
+  );
+
+  // ─── 대화 상태 관리 ───
+
   // 초기 메시지: location.state에서 첫 대화 데이터가 있으면 사용
-  const buildInitialMessages = (): ChatMessage[] => {
-    if (!createNoteResponse?.firstConversation) return [];
-    const { userMessage, assistantMessage } =
-      createNoteResponse.firstConversation;
-    return [
-      {
-        id: `msg-${userMessage.messageId}`,
-        role: "user",
-        content: userMessage.content,
-      },
-      {
-        id: `msg-${assistantMessage.messageId}`,
-        role: "assistant",
-        content: assistantMessage.content,
-      },
-    ];
-  };
+  const initialMessages = useMemo((): ChatMessage[] => {
+    if (createNoteResponse?.firstConversation) {
+      const { userMessage, assistantMessage } =
+        createNoteResponse.firstConversation;
+      return [
+        {
+          id: `msg-${userMessage.messageId}`,
+          role: "user",
+          content: userMessage.content,
+          attachments:
+            initialAttachments.length > 0 ? initialAttachments : undefined,
+        },
+        {
+          id: `msg-${assistantMessage.messageId}`,
+          role: "assistant",
+          content: assistantMessage.content,
+        },
+      ];
+    }
+    return [];
+  }, [createNoteResponse, initialAttachments]);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(buildInitialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
-  // 노트 제목 (location.state에서 가져오거나 기본값)
-  const noteTitle = createNoteResponse?.title ?? `노트 ${noteId}`;
+  // API에서 대화 히스토리가 로드되면 messages 갱신
+  useEffect(() => {
+    if (noteDetail?.conversations && !hasInitialData) {
+      // 서버 대화 목록은 최신순 → 오래된 순으로 뒤집기
+      const reversed = [...noteDetail.conversations].reverse();
+      setMessages(convertConversations(reversed));
+    }
+  }, [noteDetail, hasInitialData]);
+
+  // 노트 제목 (location.state > API 응답 > 기본값 순)
+  const noteTitle =
+    createNoteResponse?.title ?? noteDetail?.title ?? `노트 ${noteId}`;
+
+  // 뷰어 자동 열기: API에서 에셋이 로드되었거나 뷰어 파일이 있으면
+  useEffect(() => {
+    if ((noteDetail?.assets && noteDetail.assets.length > 0) || viewerFile) {
+      setIsViewerOpen(true);
+    }
+  }, [noteDetail?.assets, viewerFile]);
+
+  // React Query 캐시 관리
+  const queryClient = useQueryClient();
 
   // 대화 생성 mutation
-  const { mutate: createConversation, isPending: isSending } =
+  const { mutate: createConversation, isPending: isMutating } =
     useCreateConversation();
 
-  // 메시지 전송 핸들러
-  const handleSend = (data: ChatSendData) => {
-    // 낙관적 UI: 사용자 메시지 즉시 추가
-    const tempUserMsgId = `temp-${Date.now()}`;
-    const userMsg: ChatMessage = {
-      id: tempUserMsgId,
-      role: "user",
-      content: data.message,
-    };
-    setMessages((prev) => [...prev, userMsg]);
+  // 첨부 파일 업로드 중 상태
+  const [isUploading, setIsUploading] = useState(false);
 
-    // API 호출
-    createConversation(
-      {
-        text: data.message,
-        latex: data.latex,
-        mentionedAssetIds:
-          data.mentionedAssetIds.length > 0
-            ? data.mentionedAssetIds
-            : undefined,
-        chosenFeatures:
-          data.mentionedToolCodes.length > 0
-            ? data.mentionedToolCodes
-            : undefined,
-      },
-      {
-        onSuccess: (response) => {
-          const { userMessage, assistantMessage } = response.result;
-          // 임시 사용자 메시지를 서버 응답으로 교체 + AI 응답 추가
-          setMessages((prev) => [
-            ...prev.map((m) =>
-              m.id === tempUserMsgId
-                ? {
-                    id: `msg-${userMessage.messageId}`,
-                    role: "user" as const,
-                    content: userMessage.content,
-                  }
-                : m,
-            ),
-            {
-              id: `msg-${assistantMessage.messageId}`,
-              role: "assistant",
-              content: assistantMessage.content,
-            },
-          ]);
+  // 전송 버튼 비활성화 조건 통합 (업로드 중 || 뮤테이션 중)
+  const isSending = isMutating || isUploading;
+
+  // 메시지 전송 핸들러
+  const handleSend = useCallback(
+    async (data: ChatSendData) => {
+      const nId = Number(noteId);
+      if (!nId) return;
+
+      // ── 1. 첨부 파일 업로드 (presigned URL → S3 → confirm) ──
+      let uploadedFileAssetIds: number[] = [];
+      let canvasImageIds: number[] = [];
+
+      if (data.attachments.length > 0) {
+        setIsUploading(true);
+        try {
+          const result = await uploadAttachments(nId, data.attachments);
+          uploadedFileAssetIds = result.fileAssetIds;
+          canvasImageIds = result.canvasAssetIds;
+          // 업로드 완료 → # 멘션 에셋 목록 캐시 갱신
+          queryClient.invalidateQueries({
+            queryKey: ["noteAssets", nId],
+          });
+        } catch (error) {
+          console.error("[ChatPage] 첨부 파일 업로드 실패:", error);
+        } finally {
+          setIsUploading(false);
+        }
+      }
+
+      // ── 2. assetId 병합 (멘션 + 업로드된 파일) ──
+      const allAssetIds = [...data.mentionedAssetIds, ...uploadedFileAssetIds];
+
+      // ── 3. 낙관적 UI: 사용자 메시지 즉시 추가 ──
+      const messageAttachments: MessageAttachment[] | undefined =
+        data.attachments.length > 0
+          ? data.attachments.map((a) => ({
+              name: a.name,
+              mimeType: a.mimeType,
+              size: a.size,
+              previewUrl: a.previewUrl,
+            }))
+          : undefined;
+
+      const tempUserMsgId = `temp-${Date.now()}`;
+      const userMsg: ChatMessage = {
+        id: tempUserMsgId,
+        role: "user",
+        content: data.message,
+        attachments: messageAttachments,
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      // ── 4. API 호출 ──
+      createConversation(
+        {
+          text: data.message,
+          latex: data.latex,
+          mentionedAssetIds: allAssetIds.length > 0 ? allAssetIds : undefined,
+          chosenFeatures:
+            data.mentionedToolCodes.length > 0
+              ? data.mentionedToolCodes
+              : undefined,
+          canvasImageIds:
+            canvasImageIds.length > 0 ? canvasImageIds : undefined,
         },
-        onError: (error) => {
-          console.error("대화 생성 실패:", error);
-          // 임시 사용자 메시지 롤백 후 에러 메시지 표시
-          setMessages((prev) => [
-            ...prev.filter((m) => m.id !== tempUserMsgId),
-            {
-              id: `error-${Date.now()}`,
-              role: "assistant",
-              content:
-                "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
-            },
-          ]);
+        {
+          onSuccess: (response) => {
+            const { userMessage, assistantMessage } = response.result;
+            setMessages((prev) => [
+              ...prev.map((m) =>
+                m.id === tempUserMsgId
+                  ? {
+                      id: `msg-${userMessage.messageId}`,
+                      role: "user" as const,
+                      content: userMessage.content,
+                      attachments: messageAttachments,
+                    }
+                  : m,
+              ),
+              {
+                id: `msg-${assistantMessage.messageId}`,
+                role: "assistant",
+                content: assistantMessage.content,
+              },
+            ]);
+          },
+          onError: (error) => {
+            console.error("대화 생성 실패:", error);
+            setMessages((prev) => [
+              ...prev.filter((m) => m.id !== tempUserMsgId),
+              {
+                id: `error-${Date.now()}`,
+                role: "assistant",
+                content:
+                  "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
+              },
+            ]);
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [noteId, createConversation, queryClient],
+  );
 
   // URL 파라미터 동기화
   useEffect(() => {
@@ -235,6 +342,7 @@ export const ChatPage = () => {
             noteId={noteId ? Number(noteId) : null}
             onSend={handleSend}
             isSending={isSending}
+            isLoading={isNoteLoading && !hasInitialData}
           />
         </div>
       </div>

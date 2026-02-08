@@ -7,12 +7,19 @@ import type {
   UploadUrlRequest,
   BulkDeleteRequest,
 } from "../../features/storage/api/assets_types";
+import { mockNoteAssets } from "./editor";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================
 // 목 데이터
 // ============================================================
+
+/** presigned URL 발급 시 정보를 임시 저장 → confirm 시 mockNoteAssets에 반영 */
+const pendingUploads = new Map<
+  number,
+  { noteId: number; fileName: string; mimeType: string; fileSize: number }
+>();
 
 /** 자산 상세 정보 목 데이터 */
 const mockAssetDetail: AssetDetailResponse = {
@@ -100,6 +107,14 @@ export const assetsHandlers = [
       const newAssetId = Math.floor(Math.random() * 1000) + 100;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
+      // confirm 시 mockNoteAssets에 반영하기 위해 정보 저장
+      pendingUploads.set(newAssetId, {
+        noteId: body.noteId,
+        fileName: body.fileName,
+        mimeType: body.mimeType,
+        fileSize: body.fileSize,
+      });
+
       const response: UploadUrlResponse = {
         assetId: newAssetId,
         uploadUrl: `https://proovy-bucket.s3.ap-northeast-2.amazonaws.com/uploads/${newAssetId}/${body.fileName}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MOCK`,
@@ -120,13 +135,48 @@ export const assetsHandlers = [
     await delay(500);
 
     const { assetId } = params;
+    const assetIdNum = Number(assetId);
     console.log("[MSW] 업로드 완료 확인:", assetId);
 
+    // pendingUploads에서 업로드 정보 조회 → mockNoteAssets에 추가
+    const uploadInfo = pendingUploads.get(assetIdNum);
+    const fileName = uploadInfo?.fileName ?? "uploaded_file.pdf";
+    const fileSize = uploadInfo?.fileSize ?? 1048576;
+    const mimeType = uploadInfo?.mimeType ?? "application/pdf";
+
+    if (uploadInfo) {
+      const { noteId } = uploadInfo;
+      if (!mockNoteAssets[noteId]) {
+        mockNoteAssets[noteId] = [];
+      }
+      // 파일 타입 추론
+      const fileType = mimeType.startsWith("image/")
+        ? "IMAGE"
+        : mimeType === "application/pdf"
+          ? "PDF"
+          : "DOCX";
+      mockNoteAssets[noteId].push({
+        assetId: assetIdNum,
+        fileName,
+        fileSize,
+        mimeType,
+        fileType,
+        source: "UPLOAD",
+        ocrStatus: "PROCESSING",
+        thumbnailUrl: null,
+        createdAt: new Date().toISOString(),
+      });
+      pendingUploads.delete(assetIdNum);
+      console.log(
+        `[MSW] 에셋 등록 완료: noteId=${noteId}, assetId=${assetIdNum}, fileName=${fileName}`,
+      );
+    }
+
     const response: UploadConfirmResponse = {
-      assetId: Number(assetId),
-      fileName: "uploaded_file.pdf",
-      fileSize: 1048576,
-      mimeType: "application/pdf",
+      assetId: assetIdNum,
+      fileName,
+      fileSize,
+      mimeType,
       source: "upload",
       ocrStatus: "processing",
       createdAt: new Date().toISOString(),

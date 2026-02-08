@@ -3,6 +3,7 @@ import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
   ToolDto,
   ToolListResult,
+  ChatAssetDto,
   CreateConversationRequest,
 } from "../../features/editor/types/editor_types";
 
@@ -12,11 +13,90 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // 목 데이터
 // ============================================================
 
+/** #멘션용 에셋 목 데이터 — 노트에 업로드된 파일 시뮬레이션 */
+export const mockNoteAssets: Record<number, ChatAssetDto[]> = {
+  // noteId: 1 — 이산수학 과제 관련 파일들
+  1: [
+    {
+      assetId: 101,
+      fileName: "discrete_math_HW2.pdf",
+      fileSize: 1_048_576,
+      mimeType: "application/pdf",
+      fileType: "PDF",
+      source: "UPLOAD",
+      ocrStatus: "COMPLETED",
+      thumbnailUrl: null,
+      createdAt: "2025-01-05T10:00:00",
+    },
+    {
+      assetId: 102,
+      fileName: "midterm_solutions.pdf",
+      fileSize: 2_340_000,
+      mimeType: "application/pdf",
+      fileType: "PDF",
+      source: "UPLOAD",
+      ocrStatus: "COMPLETED",
+      thumbnailUrl: null,
+      createdAt: "2025-01-05T11:30:00",
+    },
+    {
+      assetId: 103,
+      fileName: "graph_theory_notes.png",
+      fileSize: 450_000,
+      mimeType: "image/png",
+      fileType: "IMAGE",
+      source: "UPLOAD",
+      ocrStatus: "COMPLETED",
+      thumbnailUrl: null,
+      createdAt: "2025-01-05T12:00:00",
+    },
+  ],
+  // noteId: 2 — 미적분학 관련 파일들
+  2: [
+    {
+      assetId: 201,
+      fileName: "calculus_chapter3.pdf",
+      fileSize: 3_200_000,
+      mimeType: "application/pdf",
+      fileType: "PDF",
+      source: "UPLOAD",
+      ocrStatus: "COMPLETED",
+      thumbnailUrl: null,
+      createdAt: "2025-01-03T09:30:00",
+    },
+    {
+      assetId: 202,
+      fileName: "integral_formula_sheet.pdf",
+      fileSize: 520_000,
+      mimeType: "application/pdf",
+      fileType: "PDF",
+      source: "UPLOAD",
+      ocrStatus: "COMPLETED",
+      thumbnailUrl: null,
+      createdAt: "2025-01-03T10:00:00",
+    },
+  ],
+  // noteId: 3 — 선형대수학
+  3: [
+    {
+      assetId: 301,
+      fileName: "linear_algebra_exam.pdf",
+      fileSize: 1_800_000,
+      mimeType: "application/pdf",
+      fileType: "PDF",
+      source: "UPLOAD",
+      ocrStatus: "PROCESSING",
+      thumbnailUrl: null,
+      createdAt: "2025-01-01T14:30:00",
+    },
+  ],
+};
+
 const mockTools: ToolDto[] = [
   {
     toolId: 1,
     toolCode: "GRAPH",
-    name: "그래프 그리기",
+    name: "용어",
     description: "수학 함수나 데이터를 시각적으로 그래프로 표현합니다.",
     iconType: "chart_line",
     isActive: true,

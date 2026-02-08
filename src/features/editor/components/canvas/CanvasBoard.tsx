@@ -7,6 +7,10 @@ interface CanvasBoardProps {
   onMount?: (editor: Editor) => void;
 }
 
+const TLDRAW_LICENSE_KEY = import.meta.env.VITE_TLDRAW_LICENSE_KEY as
+  | string
+  | undefined;
+
 export const CanvasBoard = ({
   className = "",
   hideUi = false,
@@ -15,7 +19,7 @@ export const CanvasBoard = ({
   return (
     <div className={`relative ${className}`}>
       <Tldraw
-        licenseKey={import.meta.env.VITE_TLDRAW_LICENSE_KEY}
+        {...(TLDRAW_LICENSE_KEY ? { licenseKey: TLDRAW_LICENSE_KEY } : {})}
         hideUi={hideUi}
         onMount={onMount}
       />

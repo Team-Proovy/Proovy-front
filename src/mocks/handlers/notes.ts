@@ -4,7 +4,9 @@ import type {
   CreateNoteResponse,
   CreateNoteRequest,
   NoteDto,
+  NoteDetailResponse,
 } from "../../features/notes/api/notes_types";
+import { mockNoteAssets } from "./editor";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -190,4 +192,128 @@ export const notesHandlers = [
       });
     },
   ),
+
+  // 노트 상세 정보 + 대화 히스토리 조회 (채팅방 진입 시)
+  http.get(`${BASE_URL}/api/notes/:noteId`, async ({ params, request }) => {
+    await delay(400);
+
+    const noteId = Number(params.noteId);
+    const url = new URL(request.url);
+    const conversationPage = parseInt(
+      url.searchParams.get("conversationPage") || "0",
+    );
+    const conversationSize = parseInt(
+      url.searchParams.get("conversationSize") || "20",
+    );
+
+    console.log("[MSW] 노트 상세 조회:", {
+      noteId,
+      conversationPage,
+      conversationSize,
+    });
+
+    // 해당 noteId의 노트 확인
+    const note = mockNotes.find((n) => n.noteId === noteId);
+
+    if (!note) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "NOTE4041",
+          message: "노트를 찾을 수 없습니다.",
+          result: null,
+        },
+        { status: 404 },
+      );
+    }
+
+    const now = new Date().toISOString();
+
+    // Mock 대화 내역 (해당 노트에 대한 2개 대화 시뮬레이션)
+    const mockConversations = [
+      {
+        conversationId: 101,
+        userMessage: {
+          messageId: 201,
+          content: "이 문제를 풀어줘",
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        assistantMessage: {
+          messageId: 202,
+          content:
+            "네, 이 문제를 단계별로 풀어보겠습니다.\n\n1단계: 문제의 조건을 분석합니다.\n2단계: 풀이 방법을 적용합니다.\n3단계: 결과를 도출합니다.",
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        createdAt: now,
+      },
+      {
+        conversationId: 102,
+        userMessage: {
+          messageId: 203,
+          content: "2번 문제도 풀어줘",
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        assistantMessage: {
+          messageId: 204,
+          content:
+            "2번 문제도 풀어보겠습니다.\n\n이 문제는 이전 문제와 비슷한 접근 방식을 사용하지만, 추가 조건이 있습니다.",
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        createdAt: now,
+      },
+    ];
+
+    const response: NoteDetailResponse = {
+      noteId: note.noteId,
+      title: note.title,
+      usage: {
+        conversationCount: note.conversationCount,
+        conversationLimit: note.conversationLimit,
+        conversationUsagePercent: note.conversationUsagePercent,
+      },
+      assets: (mockNoteAssets[note.noteId] ?? []).map((a) => ({
+        assetId: a.assetId,
+        fileName: a.fileName,
+        fileType: a.fileType,
+        fileSize: a.fileSize,
+        ocrStatus: a.ocrStatus,
+        thumbnailUrl: a.thumbnailUrl,
+        createdAt: a.createdAt,
+      })),
+      conversations: mockConversations,
+      conversationPageInfo: {
+        page: conversationPage,
+        size: conversationSize,
+        totalElements: mockConversations.length,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
+      },
+      createdAt: note.createdAt,
+      lastUsedAt: note.lastUsedAt,
+    };
+
+    return HttpResponse.json<ApiResponse<NoteDetailResponse>>({
+      isSuccess: true,
+      code: "NOTE2000",
+      message: "노트 상세 조회 성공",
+      result: response,
+    });
+  }),
 ];

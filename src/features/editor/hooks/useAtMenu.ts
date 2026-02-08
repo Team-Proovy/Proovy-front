@@ -110,39 +110,46 @@ export const useAtMenu = ({
     [],
   );
 
+  // 메뉴 폭 상수 (@ 도구: 180px, # 파일: 560px)
+  const TOOL_MENU_WIDTH = 180;
+  const FILE_MENU_WIDTH = 660;
+
   // 메뉴 위치 계산 - 커서 위에 표시, 하단 고정 (IDE 자동완성 스타일)
   // containerRef 기준으로 계산 (position: absolute의 기준 = position: relative인 containerRef)
-  const calcMenuPos = useCallback(() => {
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      const container = containerRef.current;
+  const calcMenuPos = useCallback(
+    (menuWidth: number) => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const container = containerRef.current;
 
-      if (container) {
-        const containerRect = container.getBoundingClientRect();
-        // 캐럿의 실제 위치 (rect가 0이면 컨테이너 기준 fallback)
-        const caretTop = rect.top === 0 ? containerRect.top + 20 : rect.top;
-        const caretLeft = rect.left === 0 ? containerRect.left + 20 : rect.left;
+        if (container) {
+          const containerRect = container.getBoundingClientRect();
+          // 캐럿의 실제 위치 (rect가 0이면 컨테이너 기준 fallback)
+          const caretTop = rect.top === 0 ? containerRect.top + 20 : rect.top;
+          const caretLeft =
+            rect.left === 0 ? containerRect.left + 20 : rect.left;
 
-        // left: 메뉴가 컨테이너 오른쪽을 넘지 않도록 클램핑
-        const MENU_WIDTH = 180;
-        const rawLeft = caretLeft - containerRect.left;
-        const maxLeft = containerRect.width - MENU_WIDTH;
-        const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
+          // left: 메뉴가 컨테이너 오른쪽을 넘지 않도록 클램핑
+          const rawLeft = caretLeft - containerRect.left;
+          const maxLeft = containerRect.width - menuWidth;
+          const clampedLeft = Math.max(0, Math.min(rawLeft, maxLeft));
 
-        return {
-          // bottom: 컨테이너 하단에서 캐럿까지의 거리 + 간격
-          bottom: containerRect.bottom - caretTop + 4,
-          left: clampedLeft,
-        };
+          return {
+            // bottom: 컨테이너 하단에서 캐럿까지의 거리 + 간격
+            bottom: containerRect.bottom - caretTop + 4,
+            left: clampedLeft,
+          };
+        }
       }
-    }
-    return { bottom: 0, left: 0 };
-  }, [containerRef]);
+      return { bottom: 0, left: 0 };
+    },
+    [containerRef],
+  );
 
   const updateMenuPosition = useCallback(() => {
-    setMenuPos(calcMenuPos());
+    setMenuPos(calcMenuPos(TOOL_MENU_WIDTH));
   }, [calcMenuPos]);
 
   // 트리거(@, #) + 이후 입력된 텍스트 삭제 후 태그 삽입
@@ -172,6 +179,7 @@ export const useAtMenu = ({
     (toolName: string, isFromMenu: boolean = false) => {
       if (!toolName) {
         setSelectedTool(null);
+        setToolQuery("");
         return;
       }
       setSelectedTool(toolName);
@@ -245,6 +253,32 @@ export const useAtMenu = ({
     input.addEventListener("input", handleInput);
     return () => input.removeEventListener("input", handleInput);
   }, [inputRef, isAtMenuOpen, isFileMenuOpen, getQueryAfterTrigger]);
+
+  // DOM 변경 감지: 멘션 span이 삭제되면 mentionedAssets 동기화
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const syncMentionedAssets = () => {
+      const currentIds = new Set<number>();
+      input
+        .querySelectorAll<HTMLElement>("span[data-asset-id]")
+        .forEach((el) => {
+          const id = Number(el.dataset.assetId);
+          if (!isNaN(id)) currentIds.add(id);
+        });
+
+      setMentionedAssets((prev) => {
+        const filtered = prev.filter((a) => currentIds.has(a.assetId));
+        return filtered.length === prev.length ? prev : filtered;
+      });
+    };
+
+    const observer = new MutationObserver(syncMentionedAssets);
+    observer.observe(input, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, [inputRef]);
 
   // 키보드 이벤트 통합 핸들러
   const handleAtMenuKeyDown = useCallback(
@@ -345,7 +379,7 @@ export const useAtMenu = ({
           if (sel && sel.rangeCount > 0) {
             atStartOffsetRef.current = sel.getRangeAt(0).startOffset;
           }
-          setMenuPos(calcMenuPos());
+          setMenuPos(calcMenuPos(TOOL_MENU_WIDTH));
           setIsAtMenuOpen(true);
           setFocusedToolIndex(0);
           setToolQuery("");
@@ -359,7 +393,7 @@ export const useAtMenu = ({
           if (sel && sel.rangeCount > 0) {
             hashStartOffsetRef.current = sel.getRangeAt(0).startOffset;
           }
-          setFileMenuPos(calcMenuPos());
+          setFileMenuPos(calcMenuPos(FILE_MENU_WIDTH));
           setIsFileMenuOpen(true);
           setFocusedFileIndex(0);
           setFileQuery("");

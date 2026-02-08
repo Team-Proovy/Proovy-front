@@ -3,8 +3,6 @@ import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   ToolListParams,
   ToolListResponse,
-  ChatAssetListParams,
-  ChatAssetListResponse,
   CreateConversationRequest,
   CreateConversationParams,
   ConversationResponseDto,
@@ -20,20 +18,6 @@ export const getTools = async (
   const response = await apiClient.get<ToolListResponse>("/api/notes/tools", {
     params: { query: params?.query },
   });
-  return response.data;
-};
-
-/**
- * 노트 에셋(파일) 목록 조회 - 채팅 # 멘션용
- * GET /api/notes/:noteId/assets
- */
-export const getNoteAssets = async (
-  params: ChatAssetListParams,
-): Promise<ChatAssetListResponse> => {
-  const response = await apiClient.get<ChatAssetListResponse>(
-    `/api/notes/${params.noteId}/assets`,
-    { params: { query: params.query } },
-  );
   return response.data;
 };
 

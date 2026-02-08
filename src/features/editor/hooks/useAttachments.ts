@@ -1,4 +1,13 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  isFileAllowed,
+  formatFileSize,
+  getFileTypeLabel,
+  getFileIconColor,
+} from "@/features/assets/utils/fileValidation";
+
+// 파일 표시 유틸 re-export (기존 import 경로 호환)
+export { formatFileSize, getFileTypeLabel, getFileIconColor };
 
 /** 첨부 파일 타입 */
 export type AttachmentType = "file" | "canvas";
@@ -17,32 +26,6 @@ export interface Attachment {
   /** canvas blob (업로드용) */
   blob?: Blob;
 }
-
-/** 파일 크기 포맷 */
-export const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
-
-/** MIME → 표시 타입 */
-export const getFileTypeLabel = (mimeType: string): string => {
-  if (mimeType === "application/pdf") return "PDF";
-  if (mimeType.includes("word") || mimeType.includes("docx")) return "DOCX";
-  if (mimeType.startsWith("image/")) return "IMG";
-  if (mimeType === "canvas/drawing") return "IMG";
-  return "FILE";
-};
-
-/** MIME → 아이콘 배경색 */
-export const getFileIconColor = (mimeType: string): string => {
-  if (mimeType === "application/pdf") return "bg-red-500";
-  if (mimeType.includes("word") || mimeType.includes("docx"))
-    return "bg-blue-500";
-  if (mimeType.startsWith("image/") || mimeType === "canvas/drawing")
-    return "bg-green-500";
-  return "bg-gray-500";
-};
 
 interface UseAttachmentsReturn {
   attachments: Attachment[];
@@ -73,6 +56,8 @@ const generateId = () => `att_${Date.now()}_${++attachmentIdCounter}`;
  */
 export const useAttachments = (): UseAttachmentsReturn => {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const attachmentsRef = useRef(attachments);
+  attachmentsRef.current = attachments;
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
@@ -167,8 +152,20 @@ export const useAttachments = (): UseAttachmentsReturn => {
       setIsDragOver(false);
 
       const files = e.dataTransfer.files;
-      if (files && files.length > 0) {
-        addFiles(files);
+      if (!files || files.length === 0) return;
+
+      const validFiles = Array.from(files).filter((file) => {
+        if (!isFileAllowed(file)) {
+          console.warn(
+            `[첨부] 거부됨: "${file.name}" (type=${file.type}, size=${file.size})`,
+          );
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles.length > 0) {
+        addFiles(validFiles);
       }
     },
     [addFiles],
@@ -180,6 +177,15 @@ export const useAttachments = (): UseAttachmentsReturn => {
     onDragLeave: handleDragLeave,
     onDrop: handleDrop,
   };
+
+  // Unmount 시 남아있는 previewUrl 해제 (메모리 누수 방지)
+  useEffect(() => {
+    return () => {
+      attachmentsRef.current.forEach((a) => {
+        if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
+      });
+    };
+  }, []);
 
   return {
     attachments,

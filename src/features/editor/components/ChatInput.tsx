@@ -12,6 +12,7 @@ import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
 import { FileDropdownMenu } from "./input/FileDropdownMenu";
 import { AttachmentPreview } from "./input/AttachmentPreview";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
+import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
 import "./math_keyboard.css";
 
 // Hooks
@@ -21,7 +22,7 @@ import {
   useCanvasOverlay,
   useChatContent,
 } from "../hooks";
-import { useAttachments } from "../hooks/useAttachments";
+import { useAttachments, type Attachment } from "../hooks/useAttachments";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
@@ -103,6 +104,8 @@ export interface ChatSendData {
   latex?: string;
   mentionedAssetIds: number[];
   mentionedToolCodes: string[];
+  /** 첨부 파일 목록 (업로드 전 원본) */
+  attachments: Attachment[];
 }
 
 interface ChatInputProps {
@@ -141,6 +144,7 @@ export const ChatInput = ({
     addFiles,
     addCanvasImage,
     removeAttachment,
+    clearAttachments,
     openFilePicker,
     fileInputRef,
     isDragOver,
@@ -170,7 +174,6 @@ export const ChatInput = ({
     focusedFileIndex,
     setFocusedFileIndex,
     filteredAssets,
-    mentionedAssets,
     handleFileSelect,
     clearMentionedAssets,
     isAssetsLoading,
@@ -218,6 +221,7 @@ export const ChatInput = ({
       latex: extracted.latex,
       mentionedAssetIds: extracted.mentionedAssetIds,
       mentionedToolCodes,
+      attachments: [...attachments],
     });
 
     // 입력 상태 초기화
@@ -226,6 +230,7 @@ export const ChatInput = ({
     }
     setHasContent(false);
     clearMentionedAssets();
+    clearAttachments();
     handleToolSelect(""); // 선택된 도구 초기화
   };
 
@@ -279,7 +284,7 @@ export const ChatInput = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf,image/png,image/jpeg"
+        accept={FILE_ACCEPT}
         multiple
         onChange={handleFileChange}
         className="hidden"

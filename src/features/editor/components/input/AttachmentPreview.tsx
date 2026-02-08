@@ -35,7 +35,10 @@ const RemoveButton = ({ onClick }: { onClick: () => void }) => (
     }}
     className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-600 text-white shadow-md transition-colors hover:bg-gray-800"
   >
-    <CloseIcon color="#D1D6DE" />
+    <CloseIcon
+      color="#D1D6DE"
+      size={12}
+    />
   </button>
 );
 

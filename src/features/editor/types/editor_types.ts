@@ -54,18 +54,6 @@ export interface ChatAssetDto {
   createdAt: string;
 }
 
-/** 에셋 목록 응답 */
-export interface ChatAssetListResult {
-  assets: ChatAssetDto[];
-  totalCount: number;
-}
-
-/** 에셋 목록 조회 파라미터 */
-export interface ChatAssetListParams {
-  noteId: number;
-  query?: string;
-}
-
 // ============================================================
 // 대화 (Conversation) 관련 타입
 // ============================================================
@@ -108,4 +96,3 @@ export interface ConversationResponseDto {
 // ============================================================
 
 export type ToolListResponse = ApiResponse<ToolListResult>;
-export type ChatAssetListResponse = ApiResponse<ChatAssetListResult>;
