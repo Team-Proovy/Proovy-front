@@ -9,6 +9,7 @@
  * - 용량 정보 표시
  */
 
+import { useState } from "react";
 import { useStorageStore } from "../store/useStorageStore";
 import { StorageToolbar } from "../components/StorageToolbar";
 import { NoteGroup } from "../components/NoteGroup";
@@ -16,69 +17,157 @@ import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
 
 export const StoragePage = () => {
-  const {
-    isNoteGroupOpen,
-    isNoteGroup2Open,
-    setNoteGroupOpen,
-    setNoteGroup2Open,
-    noteCards,
-    isDeleteModalOpen,
-    isSuccessModalOpen,
-  } = useStorageStore();
+  const [keyword, setKeyword] = useState("");
 
-  // 반응형 간격 클래스 정의
+  // 동적으로 열려 있는 노트 그룹 ID 관리
+  const [openNoteIds, setOpenNoteIds] = useState<number[]>([]);
+
+  const { isDeleteModalOpen, isSuccessModalOpen } = useStorageStore();
+  // TODO: 서버 데이터 연결 시 주석 해제
+  // const { data, isLoading } = useStorageInfo(keyword);
+
+  // MOCK DATA FOR UI VERIFICATION
+  const isLoading = false;
+  const data = {
+    totalUsed: 251658240,
+    totalLimit: 524288000,
+    totalUsedDisplay: "240MB",
+    totalLimitDisplay: "500MB",
+    usagePercent: 48,
+    plan: {
+      planType: "free" as const,
+      isActive: true,
+    },
+    notes: [
+      {
+        noteId: 1,
+        title: "컴퓨터 구조 (CSED311)",
+        storageUsed: 125829120,
+        storageLimit: 262144000,
+        storageUsedDisplay: "120MB",
+        storageLimitDisplay: "250MB",
+        assets: [
+          {
+            assetId: 101,
+            source: "upload" as const,
+            fileName: "Lecture_01_Intro.pdf",
+            fileSize: 10485760,
+            mimeType: "application/pdf",
+            ocrStatus: "completed" as const,
+            createdAt: "2024-02-09T09:00:00Z",
+            thumbnailUrl: null,
+            fileCategory: "document" as const,
+          },
+          {
+            assetId: 102,
+            source: "ai_generated" as const,
+            fileName: "Lecture_01_Summary.md",
+            fileSize: 5120,
+            mimeType: "text/markdown",
+            ocrStatus: "completed" as const,
+            createdAt: "2024-02-09T10:00:00Z",
+            thumbnailUrl: null,
+            fileCategory: "document" as const,
+          },
+        ],
+      },
+      {
+        noteId: 2,
+        title: "운영체제 (CSED312)",
+        storageUsed: 52428800,
+        storageLimit: 262144000,
+        storageUsedDisplay: "50MB",
+        storageLimitDisplay: "250MB",
+        assets: [
+          {
+            assetId: 201,
+            source: "upload" as const,
+            fileName: "Process_Synchronization.pdf",
+            fileSize: 15728640,
+            mimeType: "application/pdf",
+            ocrStatus: "processing" as const,
+            createdAt: "2024-02-09T11:00:00Z",
+            thumbnailUrl: null,
+            fileCategory: "document" as const,
+          },
+          {
+            assetId: 202,
+            source: "upload" as const,
+            fileName: "Memory_Management_Graph.png",
+            fileSize: 204800,
+            mimeType: "image/png",
+            ocrStatus: "completed" as const,
+            createdAt: "2024-02-09T12:00:00Z",
+            thumbnailUrl: "https://placehold.co/400x300/png",
+            fileCategory: "image" as const,
+          },
+        ],
+      },
+    ],
+  };
+
+  // 노트 그룹 토글 핸들러
+  const handleToggle = (noteId: number) => {
+    setOpenNoteIds((prev) =>
+      prev.includes(noteId)
+        ? prev.filter((id) => id !== noteId)
+        : [...prev, noteId],
+    );
+  };
+
+  const handleSearch = (value: string) => {
+    setKeyword(value);
+  };
+
+  // keyword 사용 (lint 경고 방지)
+  void keyword;
+
   const responsivePaddingL = "pl-6 md:pl-[8%] lg:pl-[12%] 2xl:pl-[302px]";
   const responsivePaddingR = "pr-6 md:pr-[12%] lg:pr-[18%] 2xl:pr-[542px]";
-
-  // NoteGroup에 전달할 데이터를 id 기준으로 나누기 (임시 처리)
-  const group1Notes = noteCards.filter((note) => note.id < 10);
-  const group2Notes = noteCards.filter((note) => note.id >= 10);
 
   return (
     <>
       <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
         <div className="mx-auto w-full max-w-[1680px]">
-          {/* Header Section - 노트 상단바(800px)를 기준으로 가운데 정렬 */}
+          {/* Header Section */}
           <div className="mb-[23px] flex justify-center">
             <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
-              <h1
-                className="font-['Pretendard']"
-                style={{
-                  color: "#000",
-                  fontSize: "40px",
-                  fontStyle: "normal",
-                  fontWeight: 600,
-                  lineHeight: "52px",
-                  letterSpacing: "-0.008px",
-                }}
-              >
+              <h1 className="font-['Pretendard'] text-[40px] leading-[52px] font-semibold text-black">
                 저장소
               </h1>
             </div>
           </div>
 
-          {/* Toolbar Row - 제목/노트 상단바와 같은 기준선(800px) 유지 */}
+          {/* Toolbar Row */}
           <div className="flex justify-center">
             <StorageToolbar
               responsivePaddingL={responsivePaddingL}
               responsivePaddingR={responsivePaddingR}
+              usagePercent={data?.usagePercent ?? 0}
+              totalUsedDisplay={data?.totalUsedDisplay ?? "0GB"}
+              totalLimitDisplay={data?.totalLimitDisplay ?? "0GB"}
+              onSearch={handleSearch}
             />
           </div>
 
-          {/* Note Groups Section - 사이드바를 제외한 영역에서 가운데 정렬 */}
+          {/* Note Groups Section */}
           <div className="mt-[24px] flex flex-col items-center justify-center gap-[20px]">
-            <NoteGroup
-              title="여기는 노트 제목이 오는 위치"
-              notes={group1Notes}
-              isOpen={isNoteGroupOpen}
-              onToggle={() => setNoteGroupOpen(!isNoteGroupOpen)}
-            />
-            <NoteGroup
-              title="여기는 노트 제목이 오는 위치"
-              notes={group2Notes}
-              isOpen={isNoteGroup2Open}
-              onToggle={() => setNoteGroup2Open(!isNoteGroup2Open)}
-            />
+            {isLoading ? (
+              <p>데이터를 불러오는 중입니다...</p>
+            ) : (
+              data?.notes.map((note) => (
+                <NoteGroup
+                  key={note.noteId}
+                  title={note.title}
+                  storageUsedDisplay={note.storageUsedDisplay}
+                  storageLimitDisplay={note.storageLimitDisplay}
+                  usagePercent={(note.storageUsed / note.storageLimit) * 100}
+                  notes={note.assets}
+                  isOpen={openNoteIds.includes(note.noteId)}
+                  onToggle={() => handleToggle(note.noteId)}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>

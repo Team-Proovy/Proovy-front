@@ -2,15 +2,21 @@ import {
   StorageCheckboxUncheckedIcon,
   StorageCheckboxCheckedIcon,
 } from "../../../shared/components/icons/StorageIcons";
+import { PdfPreview } from "../../../shared/components/pdf-preview/PdfPreview";
+
+// API 명세서의 ocrStatus 타입을 반영
+type OcrStatus = "pending" | "processing" | "completed" | "failed";
 
 interface NoteCardProps {
-  label: string;
-  type: "업로드" | "AI 생성";
+  label: string; // fileName
+  type: "upload" | "ai"; // source 필드 기반
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;
   fileUrl?: string;
   mimeType?: string;
+  ocrStatus?: OcrStatus;
+  onClick?: () => void;
 }
 
 export const NoteCard = ({
@@ -19,12 +25,17 @@ export const NoteCard = ({
   isSelected,
   isSelectMode,
   onSelect,
-  fileUrl: _fileUrl,
-  mimeType: _mimeType,
+  fileUrl,
+  mimeType,
+  ocrStatus = "completed",
+  onClick,
 }: NoteCardProps) => {
+  // 소스에 따른 배지 텍스트 결정
+  const badgeText = type === "upload" ? "업로드" : "AI 생성";
+
   return (
     <div
-      onClick={() => isSelectMode && onSelect()}
+      onClick={() => (isSelectMode ? onSelect() : onClick?.())}
       className="group relative flex cursor-pointer flex-col transition-transform hover:scale-[1.02]"
       style={{
         width: "240px",
@@ -35,29 +46,19 @@ export const NoteCard = ({
         overflow: "hidden",
       }}
     >
-      {/* 썸네일 영역 */}
+      {/* 1. 썸네일 영역: 파일 형식 및 OCR 상태에 따라 다르게 렌더링 */}
       <div
-        className="relative flex items-center justify-center"
+        className="relative flex items-center justify-center overflow-hidden"
         style={{
           width: "100%",
           height: "140px",
-          background: "#FFF",
+          background: "#F2F2F2",
           boxShadow: "4px 4px 20px 0px rgba(0, 0, 0, 0.05)",
-          padding: "60px 48px",
         }}
       >
+        {/* 체크박스 (선택 모드일 때) */}
         {isSelectMode && (
-          <div
-            style={{
-              position: "absolute",
-              top: "12px",
-              left: "12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 10,
-            }}
-          >
+          <div className="absolute top-[12px] left-[12px] z-10 flex items-center justify-center">
             {isSelected ? (
               <StorageCheckboxCheckedIcon />
             ) : (
@@ -65,48 +66,59 @@ export const NoteCard = ({
             )}
           </div>
         )}
-        <p
-          className="font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black"
-          style={{
-            color: "#000",
-          }}
-        >
-          파일 썸네일
-        </p>
-        {/* 업로드 배지 */}
+
+        {/* 실제 파일 미리보기 로직 */}
+        <div className="flex h-full w-full items-center justify-center p-2">
+          {ocrStatus === "processing" ? (
+            // 분석 중일 때 보여줄 로딩 뷰
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              <p className="text-[12px] font-medium text-blue-600">
+                분석 중...
+              </p>
+            </div>
+          ) : fileUrl ? (
+            // 완료 상태일 때 파일 타입별 렌더링
+            mimeType === "application/pdf" ? (
+              <PdfPreview
+                fileUrl={fileUrl}
+                width={120}
+              />
+            ) : (
+              <img
+                src={fileUrl}
+                alt={label}
+                className="h-full w-full object-cover"
+              />
+            )
+          ) : (
+            <p className="text-[13px] text-gray-400">이미지 없음</p>
+          )}
+        </div>
+
+        {/* 2. 업로드 배지: source 필드값에 따라 색상 변경 */}
         <div
           style={{
             position: "absolute",
             top: "12px",
             right: "12px",
             display: "flex",
-            width: "48px",
             height: "20px",
             padding: "0 8px",
             justifyContent: "center",
             alignItems: "center",
             borderRadius: "10px",
-            background: type === "업로드" ? "#003880" : "#E2A242",
+            background: type === "upload" ? "#003880" : "#E2A242",
+            zIndex: 10,
           }}
         >
-          <span
-            style={{
-              color: "#FFF",
-              textAlign: "center",
-              fontFamily: "Pretendard",
-              fontSize: "10px",
-              fontStyle: "normal",
-              fontWeight: 700,
-              lineHeight: "160%",
-              letterSpacing: "-0.5px",
-            }}
-            className="whitespace-nowrap"
-          >
-            {type}
+          <span className="font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
+            {badgeText}
           </span>
         </div>
       </div>
-      {/* 파일명 영역 */}
+
+      {/* 3. 파일명 영역 */}
       <div
         className="flex items-center"
         style={{
@@ -115,16 +127,9 @@ export const NoteCard = ({
           background: "#FFF",
           borderTop: "0.5px solid #D1D6DE",
           padding: "8px 12px",
-          borderBottomLeftRadius: "12px",
-          borderBottomRightRadius: "12px",
         }}
       >
-        <p
-          className="truncate font-['Pretendard'] text-[14px] leading-[20px] font-medium text-black"
-          style={{
-            color: "#000",
-          }}
-        >
+        <p className="truncate font-['Pretendard'] text-[14px] font-medium text-black">
           {label}
         </p>
       </div>

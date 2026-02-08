@@ -40,8 +40,8 @@ export const HomePage = () => {
       )}
 
       {/* 메인 컨텐츠 - 정중앙 배치 */}
-      <div className="flex flex-1 flex-col items-center justify-center px-5 pt-[100px]">
-        <div className="flex w-fit flex-col">
+      <div className="flex flex-1 flex-col justify-center px-5 pt-[100px]">
+        <div className="mx-auto flex w-full max-w-[920px] flex-col">
           {/* 타이틀 */}
           <div className="mb-8">
             <h1 className="text-[40px] leading-[52px] font-semibold tracking-[-0.008px] text-black">
@@ -50,7 +50,7 @@ export const HomePage = () => {
           </div>
 
           {/* 메인 입력 카드 */}
-          <div className="mb-10 flex gap-6">
+          <div className="mb-10 flex gap-[40px]">
             <ViewerUploadCard
               pdfUrl={pdfUrl}
               fileName={fileName}

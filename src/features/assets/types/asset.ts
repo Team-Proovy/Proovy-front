@@ -38,16 +38,58 @@ export interface UploadUrlResponseData {
  */
 export interface AssetDetailResponseData {
   assetId: number; // 자산 고유 ID
-  noteId: number; // 소속 노트 ID
+  noteId?: number; // 소속 노트 ID
   source: "upload" | "ai_generated"; // 파일 출처
   fileName: string; // 파일명
   fileSize: number; // 파일 크기 (bytes)
   mimeType: string; // MIME 타입
+  fileCategory?: "image" | "document" | "code" | "other"; // 파일 카테고리
+  thumbnailUrl?: string | null; // 썸네일 URL
   totalPages?: number; // 총 페이지 수 (PDF/PPT인 경우 포함)
   ocrStatus: "pending" | "processing" | "completed" | "failed"; // OCR 처리 상태
   ocrText?: OcrText; // OCR 추출 텍스트 (completed 상태일 때만 포함)
   ocrProcessedAt?: string; // OCR 처리 완료 시각
   createdAt: string; // 자산 생성 시각
+}
+
+/**
+ * 전체 저장소 사용량 및 현황 데이터
+ * GET /api/storage 응답
+ */
+export interface StorageResponseData {
+  totalUsed: number;
+  totalLimit: number;
+  totalUsedDisplay: string;
+  totalLimitDisplay: string;
+  usagePercent: number;
+  plan: {
+    planType: "free" | "premium";
+    isActive: boolean;
+  };
+  notes: {
+    noteId: number;
+    title: string;
+    storageUsed: number;
+    storageLimit: number;
+    storageUsedDisplay: string;
+    storageLimitDisplay: string;
+    assets: AssetDetailResponseData[];
+  }[];
+}
+
+/**
+ * 일괄 삭제 요청 (최대 30개)
+ */
+export interface BulkDeleteRequest {
+  assetIds: number[];
+}
+
+/**
+ * 일괄 삭제 응답 데이터
+ */
+export interface BulkDeleteResponseData {
+  deletedCount: number;
+  deletedAssetIds: number[];
 }
 
 /**
@@ -66,3 +108,5 @@ export type ConfirmUploadResponse = ApiResponse<AssetDetailResponseData>;
 export type AssetDetailResponse = ApiResponse<AssetDetailResponseData>;
 export type DownloadUrlResponse = ApiResponse<DownloadUrlResponseData>;
 export type DeleteAssetResponse = ApiResponse<null>;
+export type StorageResponse = ApiResponse<StorageResponseData>;
+export type BulkDeleteResponse = ApiResponse<BulkDeleteResponseData>;
