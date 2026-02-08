@@ -4,8 +4,12 @@ import {
   useQueryClient,
   useInfiniteQuery,
 } from "@tanstack/react-query";
-import { getNoteList, createNote } from "../api/notes_api";
-import type { NoteListParams, CreateNoteRequest } from "../api/notes_types";
+import { getNoteList, createNote, getNoteDetail } from "../api/notes_api";
+import type {
+  NoteListParams,
+  CreateNoteRequest,
+  NoteDetailParams,
+} from "../api/notes_types";
 
 // Query Keys
 export const noteKeys = {
@@ -62,5 +66,29 @@ export const useCreateNote = () => {
       // 노트 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
     },
+  });
+};
+
+/**
+ * 노트 상세 정보 + 대화 히스토리 조회 Hook
+ * 채팅방 진입(재진입) 시 사용
+ *
+ * @param noteId  URL 파라미터에서 가져온 noteId (string | undefined)
+ * @param params  대화 페이지네이션 파라미터 (선택)
+ * @param options.enabled  쿼리 활성화 여부 (location.state가 있으면 false)
+ */
+export const useNoteDetail = (
+  noteId: string | undefined,
+  params?: NoteDetailParams,
+  options?: { enabled?: boolean },
+) => {
+  return useQuery({
+    queryKey: noteKeys.detail(noteId ?? ""),
+    queryFn: async () => {
+      const response = await getNoteDetail(Number(noteId), params);
+      return response.result;
+    },
+    enabled: (options?.enabled ?? true) && !!noteId,
+    staleTime: 1000 * 60 * 1, // 1분
   });
 };

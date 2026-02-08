@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   ClipIcon,
@@ -10,6 +10,7 @@ import {
 } from "../../../../shared/components/icons/ChatInputIcons";
 import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
+import { useTools } from "../../hooks/useEditorQueries";
 import {
   BUTTON_LAYOUT,
   CLIP_BUTTON_STYLE,
@@ -30,6 +31,7 @@ interface InputToolbarProps {
   onToolSelect?: (toolName: string) => void;
   activeToolName?: string | null;
   hasContent?: boolean;
+  onClipClick?: () => void;
 }
 
 export const InputToolbar = ({
@@ -41,8 +43,10 @@ export const InputToolbar = ({
   onToolSelect,
   activeToolName,
   hasContent = false,
+  onClipClick,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
+  const { data: toolList = [] } = useTools();
   // compactLevel: 0=모두 일반, 1=도구만, 2=도구+캔버스, 3=도구+캔버스+수식, 4=모두
   const [compactLevel, setCompactLevel] = useState(0);
   const [menuPos, setMenuPos] = useState<{
@@ -50,8 +54,8 @@ export const InputToolbar = ({
     bottom?: number;
     left: number;
   } | null>(null);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toolTriggerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 활성 도구명 기반 도구 버튼 예상 너비 계산
@@ -120,50 +124,67 @@ export const InputToolbar = ({
     }
   }, [activeToolName]);
 
-  // 메뉴 열기/닫기 핸들러
-  const openMenu = () => {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
+  // 메뉴 위치 계산
+  const updateMenuPos = useCallback(() => {
+    if (!toolTriggerRef.current) return;
+    const rect = toolTriggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const menuHeight = 220;
+    const menuWidth = 180;
+    const margin = 16;
+
+    let left = rect.left;
+    if (left + menuWidth > window.innerWidth - margin) {
+      left = window.innerWidth - menuWidth - margin;
+    }
+    if (left < margin) {
+      left = margin;
     }
 
-    if (toolTriggerRef.current) {
-      const rect = toolTriggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const menuHeight = 180;
-      const menuWidth = 180;
-      const margin = 16; // 화면 가장자리 여백
-
-      // 수평 위치 계산 - 화면을 넘어가지 않도록 조정
-      let left = rect.left;
-      if (left + menuWidth > window.innerWidth - margin) {
-        left = window.innerWidth - menuWidth - margin;
-      }
-      if (left < margin) {
-        left = margin;
-      }
-
-      if (spaceBelow < menuHeight) {
-        setMenuPos({
-          bottom: window.innerHeight - rect.top + 8,
-          left,
-        });
-      } else {
-        setMenuPos({ top: rect.bottom + 8, left });
-      }
+    if (spaceBelow < menuHeight) {
+      setMenuPos({ bottom: window.innerHeight - rect.top + 8, left });
+    } else {
+      setMenuPos({ top: rect.bottom + 8, left });
     }
-    setIsToolMenuOpen(true);
-  };
-
-  const closeMenu = () => {
-    closeTimerRef.current = setTimeout(() => setIsToolMenuOpen(false), 150);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    };
   }, []);
+
+  // 클릭으로 토글
+  const toggleMenu = useCallback(() => {
+    setIsToolMenuOpen((prev) => {
+      if (!prev) updateMenuPos();
+      return !prev;
+    });
+  }, [updateMenuPos]);
+
+  const closeMenu = useCallback(() => {
+    setIsToolMenuOpen(false);
+  }, []);
+
+  // 외부 클릭 + Esc 닫기
+  useEffect(() => {
+    if (!isToolMenuOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        toolTriggerRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      )
+        return;
+      setIsToolMenuOpen(false);
+    };
+
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsToolMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, [isToolMenuOpen]);
 
   // 도구 버튼 활성 상태
   const isActiveTool = !!activeToolName;
@@ -183,6 +204,7 @@ export const InputToolbar = ({
       <div className="flex flex-1 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* 클립 버튼 */}
         <ToolButton
+          onClick={onClipClick}
           className={
             isClipCompact
               ? getCompactButtonClass(false)
@@ -246,8 +268,7 @@ export const InputToolbar = ({
                 : `${getCompactButtonClass(false)} relative overflow-visible`
               : `${getToolButtonClass(isActiveTool)} group relative overflow-visible`
           }`}
-          onMouseLeave={closeMenu}
-          onClick={openMenu}
+          onClick={toggleMenu}
           title="도구"
         >
           {isToolCompact ? (
@@ -263,14 +284,7 @@ export const InputToolbar = ({
               </span>
 
               {/* 오른쪽: 드롭다운 아이콘 */}
-              <div
-                className="flex shrink-0 cursor-pointer items-center"
-                onMouseEnter={openMenu}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openMenu();
-                }}
-              >
+              <div className="flex shrink-0 cursor-pointer items-center">
                 <DropdownIcon className="h-[10px] w-[15px]" />
               </div>
             </>
@@ -280,17 +294,27 @@ export const InputToolbar = ({
           {isToolMenuOpen &&
             menuPos &&
             createPortal(
-              <ToolDropdownMenu
-                className={`!fixed !z-[9999] ${menuPos.bottom !== undefined ? "animate-in slide-in-from-bottom-2 origin-bottom" : ""}`}
-                style={{
-                  top: menuPos.top,
-                  bottom: menuPos.bottom,
-                  left: menuPos.left,
-                }}
-                onSelect={(tool) => onToolSelect?.(tool)}
-                onClose={closeMenu}
-                onMouseEnter={openMenu}
-              />,
+              <div ref={menuRef}>
+                <ToolDropdownMenu
+                  tools={toolList}
+                  className={`!fixed !z-[9999] ${menuPos.bottom !== undefined ? "animate-in slide-in-from-bottom-2 origin-bottom" : ""}`}
+                  style={{
+                    top: menuPos.top,
+                    bottom: menuPos.bottom,
+                    left: menuPos.left,
+                  }}
+                  activeToolName={activeToolName}
+                  onSelect={(tool) => {
+                    onToolSelect?.(tool);
+                    closeMenu();
+                  }}
+                  onClear={() => {
+                    onToolSelect?.("");
+                    closeMenu();
+                  }}
+                  onClose={closeMenu}
+                />
+              </div>,
               document.body,
             )}
         </ToolButton>
