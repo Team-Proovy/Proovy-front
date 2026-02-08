@@ -76,11 +76,15 @@ export const StorageContent = ({
     try {
       // 서버에서 실제 삭제 요청
       const response = await deleteAssets(selectedIds);
-      
+
       if (response.isSuccess) {
         // 성공 시 로컬 상태 업데이트 (삭제된 항목 제거)
-        setBoxFiles((prev) => prev.filter((file) => !selectedIds.includes(file.id)));
-        setThreadFiles((prev) => prev.filter((file) => !selectedIds.includes(file.id)));
+        setBoxFiles((prev) =>
+          prev.filter((file) => !selectedIds.includes(file.id)),
+        );
+        setThreadFiles((prev) =>
+          prev.filter((file) => !selectedIds.includes(file.id)),
+        );
 
         // 선택 초기화 및 모달 상태 변경
         setSelectedIds([]);
@@ -108,7 +112,7 @@ export const StorageContent = ({
 
     // 첫 번째 선택된 파일로 이동 (단일 선택)
     const targetFileId = selectedIds[0];
-    
+
     // URL 업데이트: panel=viewer&file={fileId}
     setSearchParams((prev) => {
       prev.set("panel", "viewer");

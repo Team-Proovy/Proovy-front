@@ -37,7 +37,8 @@ const TEMPLATE_NOTES = [
   {
     label: "파일 가능.pdf",
     type: "upload" as const,
-    fileUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+    fileUrl:
+      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     mimeType: "application/pdf",
   },
   { label: "file_name.py", type: "upload" as const },

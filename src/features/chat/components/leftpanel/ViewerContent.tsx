@@ -37,8 +37,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       if (!file) return;
 
       const isValidType =
-        file.type === "application/pdf" ||
-        file.type.startsWith("image/");
+        file.type === "application/pdf" || file.type.startsWith("image/");
 
       if (!isValidType) {
         alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
@@ -49,17 +48,17 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         setIsLoading(true);
         // noteId를 숫자로 변환 (실패 시 기본값 1 또는 에러 처리)
         // ChatPage에서 noteId는 URL 파라미터이므로 유효하다고 가정
-        const targetNoteId = parseInt(noteId, 10) || 1; 
+        const targetNoteId = parseInt(noteId, 10) || 1;
 
         const result = await uploadAsset(targetNoteId, file);
-        
+
         // 업로드 성공 시 해당 파일로 즉시 이동
         if (result?.assetId) {
-           setSearchParams((prev) => {
-             prev.set("panel", "viewer");
-             prev.set("file", result.assetId.toString());
-             return prev;
-           });
+          setSearchParams((prev) => {
+            prev.set("panel", "viewer");
+            prev.set("file", result.assetId.toString());
+            return prev;
+          });
         }
       } catch (err) {
         console.error("파일 업로드 실패:", err);
@@ -90,7 +89,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
         const response = await getDownloadUrl(numericId);
         const { downloadUrl, fileName: fetchedFileName } = response.result;
-        
+
         setPdfUrl(downloadUrl);
         setFileName(fetchedFileName);
 
@@ -107,9 +106,8 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           setFileType("image");
         } else {
           // 기타 파일은 일단 지원하지 않거나 이미지로 시도
-           setFileType("image"); 
+          setFileType("image");
         }
-
       } catch (err) {
         console.error("파일 URL 가져오기 실패:", err);
         // 테스트용 Fallback logic
@@ -259,7 +257,10 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           />
         ) : (
           <div className="shadow-lg">
-            <canvas ref={canvasRef} className="block bg-white" />
+            <canvas
+              ref={canvasRef}
+              className="block bg-white"
+            />
           </div>
         )}
       </div>

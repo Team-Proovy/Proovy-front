@@ -4,10 +4,10 @@ import { useStorageStore } from "../store/useStorageStore";
 import type { AssetDetailResponseData } from "@/features/assets/types/asset";
 interface NoteGroupProps {
   title: string;
-  storageUsedDisplay: string;  // "240MB" 
-  storageLimitDisplay: string; // "500MB" 
-  usagePercent: number;        // (storageUsed / storageLimit) * 100 계산값
-  notes: AssetDetailResponseData[]; // 서버에서 온 실제 자산 배열 
+  storageUsedDisplay: string; // "240MB"
+  storageLimitDisplay: string; // "500MB"
+  usagePercent: number; // (storageUsed / storageLimit) * 100 계산값
+  notes: AssetDetailResponseData[]; // 서버에서 온 실제 자산 배열
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -36,17 +36,15 @@ export const NoteGroup = ({
       >
         <div className="flex items-center">
           <StorageChevronIcon isOpen={isOpen} />
-          <span
-            className="ml-[28px] font-['Pretendard'] text-[15px] font-medium text-black"
-          >
+          <span className="ml-[28px] font-['Pretendard'] text-[15px] font-medium text-black">
             {title}
           </span>
         </div>
-        
+
         {/* 오른쪽 용량 정보 영역 */}
         <div className="flex items-center gap-[10px] font-['Pretendard']">
           <span className="text-[14px] font-medium text-black">노트 용량</span>
-          
+
           {/* 동적 막대 그래프 */}
           <div
             style={{
@@ -61,13 +59,13 @@ export const NoteGroup = ({
           >
             <div
               className="h-full bg-[#2A6AFF]"
-              style={{ width: `${usagePercent}%` }} // 계산된 퍼센트 적용 
+              style={{ width: `${usagePercent}%` }} // 계산된 퍼센트 적용
             />
           </div>
-          
+
           {/* 서버 데이터 기반 텍스트 (예: 240/500MB)  */}
           <span className="text-[13px] font-normal text-black">
-            {storageUsedDisplay.replace('MB', '')}/{storageLimitDisplay}
+            {storageUsedDisplay.replace("MB", "")}/{storageLimitDisplay}
           </span>
         </div>
       </button>
@@ -77,11 +75,11 @@ export const NoteGroup = ({
           {notes.map((asset) => {
             return (
               <NoteCard
-                key={asset.assetId} // 고유 ID 사용 
-                label={asset.fileName} // 파일명 
-                type={asset.source === "upload" ? "upload" : "ai"} // 출처 매핑 
-                fileUrl={asset.thumbnailUrl || undefined} // 썸네일 URL 
-                mimeType={asset.mimeType} // MIME 타입 
+                key={asset.assetId} // 고유 ID 사용
+                label={asset.fileName} // 파일명
+                type={asset.source === "upload" ? "upload" : "ai"} // 출처 매핑
+                fileUrl={asset.thumbnailUrl || undefined} // 썸네일 URL
+                mimeType={asset.mimeType} // MIME 타입
                 ocrStatus={asset.ocrStatus} // OCR 상태
                 isSelected={selectedIds.includes(asset.assetId)}
                 isSelectMode={isSelectMode}

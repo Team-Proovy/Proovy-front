@@ -49,7 +49,7 @@ export interface StorageResponseData {
   }[];
 }
 
-/** * 4. 요청(Request) 관련 데이터 
+/** * 4. 요청(Request) 관련 데이터
  */
 export interface UploadUrlRequest {
   noteId: number;
@@ -62,7 +62,7 @@ export interface BulkDeleteRequest {
   assetIds: number[]; // 1개 이상 30개 이하
 }
 
-/** * 5. 기타 응답 데이터 
+/** * 5. 기타 응답 데이터
  */
 export interface UploadUrlResponseData {
   assetId: number;

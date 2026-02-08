@@ -18,7 +18,8 @@ const mockNotes: NoteDto[] = [
     noteId: 1,
     title: "이산수학 과제 풀이",
     thumbnailUrl: null,
-    fileUrl: "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+    fileUrl:
+      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     mimeType: "application/pdf",
     conversationCount: 5,
     conversationLimit: 20,

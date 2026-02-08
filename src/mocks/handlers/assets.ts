@@ -1,12 +1,11 @@
 import { http, HttpResponse, delay } from "msw";
 import type {
-  UploadUrlResponse,
-  UploadConfirmResponse,
-  AssetDetailResponse,
-  DownloadUrlResponse,
+  UploadUrlResponseData,
+  AssetDetailResponseData, // Used for both AssetDetailResponse and UploadConfirmResponse
+  DownloadUrlResponseData,
   UploadUrlRequest,
   BulkDeleteRequest,
-} from "../../features/storage/api/assets_types";
+} from "../../features/assets/types/asset";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -15,7 +14,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // ============================================================
 
 /** 자산 상세 정보 목 데이터 */
-const mockAssetDetail: AssetDetailResponse = {
+const mockAssetDetail: AssetDetailResponseData = {
   assetId: 1,
   noteId: 1,
   source: "upload",
@@ -56,7 +55,7 @@ export const assetsHandlers = [
     "https://proovy-bucket.s3.ap-northeast-2.amazonaws.com/uploads/*",
     async ({ request }) => {
       await delay(500);
-      
+
       // URL에서 assetId 추출 로직
       // URL 구조: .../uploads/{assetId}/{fileName}?query...
       const url = new URL(request.url);
@@ -66,13 +65,13 @@ export const assetsHandlers = [
       const assetId = parts[assetIdIndex]; // "123"
 
       if (assetId) {
-         const fileBlob = await request.blob();
-         uploadedFiles.set(Number(assetId), fileBlob);
-         console.log(`[MSW] S3 가짜 업로드 및 저장 완료 (ID: ${assetId})`);
+        const fileBlob = await request.blob();
+        uploadedFiles.set(Number(assetId), fileBlob);
+        console.log(`[MSW] S3 가짜 업로드 및 저장 완료 (ID: ${assetId})`);
       } else {
-         console.warn("[MSW] S3 업로드 중 assetId 추출 실패:", request.url);
+        console.warn("[MSW] S3 업로드 중 assetId 추출 실패:", request.url);
       }
-      
+
       return new HttpResponse(null, { status: 200 });
     },
   ),
@@ -125,7 +124,7 @@ export const assetsHandlers = [
       const newAssetId = Math.floor(Math.random() * 1000) + 100;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-      const response: UploadUrlResponse = {
+      const response: UploadUrlResponseData = {
         assetId: newAssetId,
         // URL 패턴을 PUT 핸들러와 일치시킴
         uploadUrl: `https://proovy-bucket.s3.ap-northeast-2.amazonaws.com/uploads/${newAssetId}/${body.fileName}`,
@@ -141,7 +140,7 @@ export const assetsHandlers = [
     },
   ),
 
-  // ... (confirmUpload 핸들러 - 그대로 유지) ... 
+  // ... (confirmUpload 핸들러 - 그대로 유지) ...
   // 기존 코드의 confirmUpload 부분은 이 범위 밖이면 건드리지 않음.
   // 이 replace 블록은 PUT 핸들러 + POST upload-url 핸들러 커버.
 
@@ -150,16 +149,16 @@ export const assetsHandlers = [
     await delay(500);
 
     const { assetId } = params;
-    
+
     // 저장된 파일이 있으면 그 정보를 사용, 없으면 더미 데이터
     const storedFile = uploadedFiles.get(Number(assetId));
-    
-    // 파일명과 타입은 저장된 Blob에서 완벽히 알 수 없으니(name prop 없음), 
+
+    // 파일명과 타입은 저장된 Blob에서 완벽히 알 수 없으니(name prop 없음),
     // 여기서는 단순히 성공 응답만 줌.
     // 실제 구현에서는 upload-url 요청 시 저장해둔 메타데이터를 쓰거나 해야 함.
     // 일단 간단히 처리.
 
-    const response: UploadConfirmResponse = {
+    const response: AssetDetailResponseData = {
       assetId: Number(assetId),
       fileName: storedFile ? "uploaded_file" : "uploaded_file.pdf", // 단순화
       fileSize: storedFile?.size ?? 1048576,
@@ -199,44 +198,42 @@ export const assetsHandlers = [
   }),
 
   // 다운로드용 Presigned URL 발급
-  http.get(
-    `${BASE_URL}/api/assets/:assetId/download`,
-    async ({ params }) => {
-      await delay(300);
+  http.get(`${BASE_URL}/api/assets/:assetId/download`, async ({ params }) => {
+    await delay(300);
 
-      const { assetId } = params;
-      const id = Number(assetId);
-      console.log("[MSW] 다운로드 URL 발급:", id);
+    const { assetId } = params;
+    const id = Number(assetId);
+    console.log("[MSW] 다운로드 URL 발급:", id);
 
-      // 메모리에 저장된 파일이 있다면 Blob URL 생성하여 반환
-      let downloadUrl = "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-      let fileName = "discrete_math_HW2.pdf";
-      
-      const storedFile = uploadedFiles.get(id);
-      if (storedFile) {
-        // Blob URL 생성 (브라우저 메모리상 URL)
-        downloadUrl = URL.createObjectURL(storedFile);
-        // 파일명 추론 (타입 기반)
-        const ext = storedFile.type.split("/")[1] || "pdf";
-        fileName = `uploaded_file.${ext}`;
-        console.log(`[MSW] 메모리된 파일 반환: ${fileName}, ${downloadUrl}`);
-      }
+    // 메모리에 저장된 파일이 있다면 Blob URL 생성하여 반환
+    let downloadUrl =
+      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
+    let fileName = "discrete_math_HW2.pdf";
 
-      const response: DownloadUrlResponse = {
-        assetId: id,
-        fileName: fileName,
-        downloadUrl: downloadUrl,
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      };
+    const storedFile = uploadedFiles.get(id);
+    if (storedFile) {
+      // Blob URL 생성 (브라우저 메모리상 URL)
+      downloadUrl = URL.createObjectURL(storedFile);
+      // 파일명 추론 (타입 기반)
+      const ext = storedFile.type.split("/")[1] || "pdf";
+      fileName = `uploaded_file.${ext}`;
+      console.log(`[MSW] 메모리된 파일 반환: ${fileName}, ${downloadUrl}`);
+    }
 
-      return HttpResponse.json({
-        isSuccess: true,
-        code: "ASSET2000",
-        message: "다운로드 URL 발급 성공",
-        result: response,
-      });
-    },
-  ),
+    const response: DownloadUrlResponseData = {
+      assetId: id,
+      fileName: fileName,
+      downloadUrl: downloadUrl,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    };
+
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "ASSET2000",
+      message: "다운로드 URL 발급 성공",
+      result: response,
+    });
+  }),
 
   // 자산 삭제
   http.delete(`${BASE_URL}/api/assets/:assetId`, async ({ params }) => {

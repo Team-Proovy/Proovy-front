@@ -1,19 +1,15 @@
 import { StorageSearchIcon } from "../../../shared/components/icons/StorageIcons";
 import { useStorageStore } from "../store/useStorageStore";
 
-
 // 수정 후
 interface StorageToolbarProps {
   responsivePaddingL: string;
   responsivePaddingR: string;
-  totalUsedDisplay: string;  // "0.43GB"
+  totalUsedDisplay: string; // "0.43GB"
   totalLimitDisplay: string; // "3GB"
-  usagePercent: number;      // 14
+  usagePercent: number; // 14
   onSearch: (keyword: string) => void; // 검색 함수
- 
 }
-
-
 
 export const StorageToolbar = ({
   responsivePaddingL: _responsivePaddingL,
@@ -69,7 +65,7 @@ export const StorageToolbar = ({
         <button
           onClick={handleActionClick}
           className={`flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white ${
-            isSelectMode ? "text-[#2A6AFF] border-[#2A6AFF]" : "text-[#9CA4B0]"
+            isSelectMode ? "border-[#2A6AFF] text-[#2A6AFF]" : "text-[#9CA4B0]"
           }`}
           style={{
             width: isSelectMode ? "80px" : "56px",

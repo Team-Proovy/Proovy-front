@@ -21,7 +21,7 @@ export const FileUploadCard = ({
         {/* 닫기 버튼: 우상단 고정 */}
         <button
           onClick={onRemove}
-          className="absolute top-[8px] right-[8px] z-10 flex cursor-pointer items-center justify-center "
+          className="absolute top-[8px] right-[8px] z-10 flex cursor-pointer items-center justify-center"
         >
           <X
             size={24}

@@ -8,7 +8,7 @@ import { useStorageInfo } from "../hooks/useAssets";
 
 export const StoragePage = () => {
   const [keyword, setKeyword] = useState("");
-  
+
   // 1. 현재 열려 있는 노트 그룹들의 ID를 저장하는 상태 추가
   const [openNoteIds, setOpenNoteIds] = useState<number[]>([]);
 
@@ -80,16 +80,16 @@ export const StoragePage = () => {
             fileCategory: "document" as const,
           },
           {
-             assetId: 202,
-             source: "upload" as const,
-             fileName: "Memory_Management_Graph.png",
-             fileSize: 204800, // 200KB
-             mimeType: "image/png",
-             ocrStatus: "completed" as const,
-             createdAt: "2024-02-09T12:00:00Z",
-             thumbnailUrl: "https://placehold.co/400x300/png", // Placeholder image
-             fileCategory: "image" as const,
-          }
+            assetId: 202,
+            source: "upload" as const,
+            fileName: "Memory_Management_Graph.png",
+            fileSize: 204800, // 200KB
+            mimeType: "image/png",
+            ocrStatus: "completed" as const,
+            createdAt: "2024-02-09T12:00:00Z",
+            thumbnailUrl: "https://placehold.co/400x300/png", // Placeholder image
+            fileCategory: "image" as const,
+          },
         ],
       },
     ],
@@ -97,10 +97,11 @@ export const StoragePage = () => {
 
   // 2. 토글 핸들러 함수 정의
   const handleToggle = (noteId: number) => {
-    setOpenNoteIds((prev) =>
-      prev.includes(noteId)
-        ? prev.filter((id) => id !== noteId) // 이미 열려 있으면 닫기
-        : [...prev, noteId] // 닫혀 있으면 열기
+    setOpenNoteIds(
+      (prev) =>
+        prev.includes(noteId)
+          ? prev.filter((id) => id !== noteId) // 이미 열려 있으면 닫기
+          : [...prev, noteId], // 닫혀 있으면 열기
     );
   };
 
@@ -118,7 +119,7 @@ export const StoragePage = () => {
           {/* Header Section */}
           <div className="mb-[23px] flex justify-center">
             <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
-              <h1 className="font-['Pretendard'] text-[40px] font-semibold text-black leading-[52px]">
+              <h1 className="font-['Pretendard'] text-[40px] leading-[52px] font-semibold text-black">
                 저장소
               </h1>
             </div>
@@ -150,7 +151,7 @@ export const StoragePage = () => {
                   usagePercent={(note.storageUsed / note.storageLimit) * 100}
                   notes={note.assets}
                   // 3. 현재 이 노트 ID가 openNoteIds에 들어있는지 확인해서 넘겨줌 [cite: 2025-09-17]
-                  isOpen={openNoteIds.includes(note.noteId)} 
+                  isOpen={openNoteIds.includes(note.noteId)}
                   onToggle={() => handleToggle(note.noteId)}
                 />
               ))

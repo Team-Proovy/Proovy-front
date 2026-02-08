@@ -59,7 +59,11 @@ export const NoteCard = ({
         {/* 체크박스 (선택 모드일 때) */}
         {isSelectMode && (
           <div className="absolute top-[12px] left-[12px] z-10 flex items-center justify-center">
-            {isSelected ? <StorageCheckboxCheckedIcon /> : <StorageCheckboxUncheckedIcon />}
+            {isSelected ? (
+              <StorageCheckboxCheckedIcon />
+            ) : (
+              <StorageCheckboxUncheckedIcon />
+            )}
           </div>
         )}
 
@@ -69,14 +73,23 @@ export const NoteCard = ({
             // 분석 중일 때 보여줄 로딩 뷰
             <div className="flex flex-col items-center gap-2">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-              <p className="text-[12px] font-medium text-blue-600">분석 중...</p>
+              <p className="text-[12px] font-medium text-blue-600">
+                분석 중...
+              </p>
             </div>
           ) : fileUrl ? (
             // 완료 상태일 때 파일 타입별 렌더링
             mimeType === "application/pdf" ? (
-              <PdfPreview fileUrl={fileUrl} width={120} />
+              <PdfPreview
+                fileUrl={fileUrl}
+                width={120}
+              />
             ) : (
-              <img src={fileUrl} alt={label} className="h-full w-full object-cover" />
+              <img
+                src={fileUrl}
+                alt={label}
+                className="h-full w-full object-cover"
+              />
             )
           ) : (
             <p className="text-[13px] text-gray-400">이미지 없음</p>
@@ -99,7 +112,7 @@ export const NoteCard = ({
             zIndex: 10,
           }}
         >
-          <span className="whitespace-nowrap font-['Pretendard'] text-[10px] font-bold text-white">
+          <span className="font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
             {badgeText}
           </span>
         </div>

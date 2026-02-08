@@ -26,7 +26,6 @@ import { useAttachments } from "../hooks/useAttachments";
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
 
-
 // Lazy load CanvasOverlay (tldraw is heavy - ~2MB)
 const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
@@ -72,7 +71,6 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
 
   // Custom Hooks
   const {
