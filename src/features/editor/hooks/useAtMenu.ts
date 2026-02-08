@@ -196,6 +196,8 @@ export const useAtMenu = ({
     (asset: ChatAssetDto) => {
       deleteTriggerAndQuery(hashStartOffsetRef.current, "#");
 
+      inputRef.current?.focus();
+
       // 입력창에 태그 스팬 삽입
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
@@ -278,6 +280,31 @@ export const useAtMenu = ({
 
     return () => observer.disconnect();
   }, [inputRef]);
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    if (!isAtMenuOpen && !isFileMenuOpen) return;
+
+    const handleMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // 메뉴 드롭다운 내부 클릭이면 무시
+      if (target.closest("[data-menu-dropdown]")) return;
+
+      if (isAtMenuOpen) {
+        setIsAtMenuOpen(false);
+        setToolQuery("");
+        atStartOffsetRef.current = null;
+      }
+      if (isFileMenuOpen) {
+        setIsFileMenuOpen(false);
+        setFileQuery("");
+        hashStartOffsetRef.current = null;
+      }
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
+  }, [isAtMenuOpen, isFileMenuOpen]);
 
   // 키보드 이벤트 통합 핸들러
   const handleAtMenuKeyDown = useCallback(

@@ -142,12 +142,19 @@ export const ChatPage = () => {
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
-  // API에서 대화 히스토리가 로드되면 messages 갱신
+  // API에서 대화 히스토리가 로드되면 messages와 머지 (로컬 메시지 보존)
   useEffect(() => {
     if (noteDetail?.conversations && !hasInitialData) {
-      // 서버 대화 목록은 최신순 → 오래된 순으로 뒤집기
       const reversed = [...noteDetail.conversations].reverse();
-      setMessages(convertConversations(reversed));
+      const serverMessages = convertConversations(reversed);
+
+      setMessages((prev) => {
+        // 서버 메시지 id Set
+        const serverIds = new Set(serverMessages.map((m) => m.id));
+        // 로컬에만 존재하는 메시지 (낙관적 UI, 에러 메시지 등)
+        const localOnly = prev.filter((m) => !serverIds.has(m.id));
+        return [...serverMessages, ...localOnly];
+      });
     }
   }, [noteDetail, hasInitialData]);
 

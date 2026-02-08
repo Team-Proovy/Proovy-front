@@ -26,6 +26,7 @@ export const ToolDropdownMenu = ({
 }: ToolDropdownMenuProps) => {
   return (
     <div
+      data-menu-dropdown
       className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[180px] flex-col gap-1 rounded-[12px] border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
       style={style}
       onClick={(e) => e.stopPropagation()}
