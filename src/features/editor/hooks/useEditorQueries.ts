@@ -32,7 +32,7 @@ export const useTools = (query?: string) =>
  */
 export const useNoteAssets = (noteId: number | null, query?: string) =>
   useQuery<ChatAssetDto[], Error, ChatAssetDto[]>({
-    queryKey: ["noteAssets", noteId, query],
+    queryKey: ["noteAssets", noteId],
     queryFn: async () => {
       if (!noteId) return [];
       const response = await getNoteDetail(noteId);

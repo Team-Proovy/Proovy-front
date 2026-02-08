@@ -37,7 +37,8 @@ export const extractInputContent = (inputEl: HTMLDivElement) => {
     // #파일 멘션 span → data-asset-id 수집
     const assetId = node.dataset?.assetId;
     if (assetId) {
-      assetIds.add(Number(assetId));
+      const parsed = Number(assetId);
+      if (!Number.isNaN(parsed)) assetIds.add(parsed);
       parts.push(node.textContent || "");
       return;
     }
