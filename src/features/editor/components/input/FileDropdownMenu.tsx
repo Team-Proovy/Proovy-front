@@ -27,7 +27,7 @@ export const FileDropdownMenu = ({
 }: FileDropdownMenuProps) => {
   return (
     <div
-      data-menu-dropdown
+      data-menu-dropdown="file"
       className={`animate-in fade-in slide-in-from-top-2 absolute z-50 flex w-[400px] flex-col gap-1 rounded-xl border-[0.5px] border-[#DFDFDF] bg-white p-2 shadow-lg duration-200 ${className}`}
       style={style}
       onClick={(e) => e.stopPropagation()}

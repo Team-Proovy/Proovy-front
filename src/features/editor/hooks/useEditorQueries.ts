@@ -43,7 +43,7 @@ export const useNoteAssets = (noteId: number | null, query?: string) =>
         fileSize: a.fileSize,
         mimeType: "",
         fileType: a.fileType as ChatAssetDto["fileType"],
-        source: "UPLOAD" as const,
+        source: "upload" as const,
         ocrStatus: a.ocrStatus as ChatAssetDto["ocrStatus"],
         thumbnailUrl: a.thumbnailUrl,
         createdAt: a.createdAt,

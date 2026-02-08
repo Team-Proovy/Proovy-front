@@ -11,8 +11,10 @@ import { InputToolbar } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
 import { FileDropdownMenu } from "./input/FileDropdownMenu";
 import { AttachmentPreview } from "./input/AttachmentPreview";
+import { DragDropOverlay } from "./input/DragDropOverlay";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
+import { extractInputContent } from "../utils/extract_input_content";
 import "./math_keyboard.css";
 
 // Hooks
@@ -31,72 +33,6 @@ import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
 const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
-
-/**
- * contentEditable DOM에서 텍스트, LaTeX, 멘션된 에셋 ID를 추출
- * - math-field → LaTeX 값 ($...$)
- * - span[data-asset-id] → 에셋 ID 수집
- * - br → 줄바꿈
- */
-const extractInputContent = (inputEl: HTMLDivElement) => {
-  const parts: string[] = [];
-  const latexParts: string[] = [];
-  const assetIds = new Set<number>();
-
-  const walk = (node: Node) => {
-    // 텍스트 노드
-    if (node.nodeType === Node.TEXT_NODE) {
-      parts.push(node.textContent || "");
-      return;
-    }
-
-    if (!(node instanceof HTMLElement)) return;
-
-    const tag = node.tagName.toLowerCase();
-
-    // <style>, <button> 등 무시할 요소
-    if (tag === "style" || tag === "button") return;
-
-    // math-field 요소 → LaTeX 추출
-    if (tag === "math-field") {
-      const latex = (node as any).value || "";
-      if (latex) {
-        parts.push(`$${latex}$`);
-        latexParts.push(latex);
-      }
-      return;
-    }
-
-    // #파일 멘션 span → data-asset-id 수집
-    const assetId = node.dataset?.assetId;
-    if (assetId) {
-      assetIds.add(Number(assetId));
-      parts.push(node.textContent || "");
-      return;
-    }
-
-    // BR → 줄바꿈
-    if (tag === "br") {
-      parts.push("\n");
-      return;
-    }
-
-    // 기타 요소 (math-field-wrapper 등) → 자식 순회
-    for (const child of node.childNodes) {
-      walk(child);
-    }
-  };
-
-  for (const child of inputEl.childNodes) {
-    walk(child);
-  }
-
-  return {
-    text: parts.join("").trim(),
-    latex: latexParts.length > 0 ? latexParts.join("; ") : undefined,
-    mentionedAssetIds: Array.from(assetIds),
-  };
-};
 
 /** onSend 콜백으로 전달되는 메시지 데이터 */
 export interface ChatSendData {
@@ -252,34 +188,7 @@ export const ChatInput = ({
       {...dragHandlers}
     >
       {/* 드래그 앤 드롭 오버레이 */}
-      {isDragOver && (
-        <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-[12px] border-2 border-dashed border-[#2A6AFF] bg-[#2A6AFF]/10 backdrop-blur-[2px]">
-          <div className="flex flex-col items-center gap-2">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#2A6AFF"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line
-                x1="12"
-                y1="3"
-                x2="12"
-                y2="15"
-              />
-            </svg>
-            <span className="text-[14px] font-medium text-[#2A6AFF]">
-              파일을 여기에 놓으세요
-            </span>
-          </div>
-        </div>
-      )}
+      {isDragOver && <DragDropOverlay />}
       {/* 숨겨진 파일 입력 */}
       <input
         ref={fileInputRef}

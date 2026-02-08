@@ -239,21 +239,53 @@ export const useAtMenu = ({
     if (!input) return;
 
     const handleInput = () => {
-      if (isAtMenuOpen && atStartOffsetRef.current !== null) {
+      // @ 도구 메뉴: offset ref가 살아있으면 항상 query 체크
+      if (atStartOffsetRef.current !== null) {
         const q = getQueryAfterTrigger(atStartOffsetRef.current);
-        setToolQuery(q);
-        setFocusedToolIndex(0);
+        if (q.includes(" ")) {
+          // 스페이스 → 메뉴 닫기 (offset은 유지하여 백스페이스 시 복구 가능)
+          if (isAtMenuOpen) {
+            setIsAtMenuOpen(false);
+            setToolQuery("");
+          }
+        } else {
+          // 스페이스 없음 → 메뉴 열기/유지
+          if (!isAtMenuOpen) {
+            setMenuPos(calcMenuPos(TOOL_MENU_WIDTH));
+            setIsAtMenuOpen(true);
+          }
+          setToolQuery(q);
+          setFocusedToolIndex(0);
+        }
       }
-      if (isFileMenuOpen && hashStartOffsetRef.current !== null) {
+      // # 파일 메뉴: 동일 로직
+      if (hashStartOffsetRef.current !== null) {
         const q = getQueryAfterTrigger(hashStartOffsetRef.current);
-        setFileQuery(q);
-        setFocusedFileIndex(0);
+        if (q.includes(" ")) {
+          if (isFileMenuOpen) {
+            setIsFileMenuOpen(false);
+            setFileQuery("");
+          }
+        } else {
+          if (!isFileMenuOpen) {
+            setFileMenuPos(calcMenuPos(FILE_MENU_WIDTH));
+            setIsFileMenuOpen(true);
+          }
+          setFileQuery(q);
+          setFocusedFileIndex(0);
+        }
       }
     };
 
     input.addEventListener("input", handleInput);
     return () => input.removeEventListener("input", handleInput);
-  }, [inputRef, isAtMenuOpen, isFileMenuOpen, getQueryAfterTrigger]);
+  }, [
+    inputRef,
+    isAtMenuOpen,
+    isFileMenuOpen,
+    getQueryAfterTrigger,
+    calcMenuPos,
+  ]);
 
   // DOM 변경 감지: 멘션 span이 삭제되면 mentionedAssets 동기화
   useEffect(() => {
@@ -281,21 +313,21 @@ export const useAtMenu = ({
     return () => observer.disconnect();
   }, [inputRef]);
 
-  // 외부 클릭 시 메뉴 닫기
+  // 외부 클릭 시 메뉴 닫기 (각 메뉴별 독립 처리)
   useEffect(() => {
     if (!isAtMenuOpen && !isFileMenuOpen) return;
 
     const handleMouseDown = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // 메뉴 드롭다운 내부 클릭이면 무시
-      if (target.closest("[data-menu-dropdown]")) return;
+      const closestAt = target.closest("[data-menu-dropdown='at']");
+      const closestFile = target.closest("[data-menu-dropdown='file']");
 
-      if (isAtMenuOpen) {
+      if (isAtMenuOpen && !closestAt) {
         setIsAtMenuOpen(false);
         setToolQuery("");
         atStartOffsetRef.current = null;
       }
-      if (isFileMenuOpen) {
+      if (isFileMenuOpen && !closestFile) {
         setIsFileMenuOpen(false);
         setFileQuery("");
         hashStartOffsetRef.current = null;
