@@ -1,4 +1,4 @@
-import apiClient from "@/shared/api/client";
+import apiClient, { tokenUtils } from "@/shared/api/client";
 import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   ToolListParams,
@@ -47,7 +47,7 @@ export const createConversation = async (
 ): Promise<Response> => {
   const isStream = params?.isStream ?? true;
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  const token = localStorage.getItem("accessToken");
+  const token = tokenUtils.getAccessToken();
 
   const response = await fetch(
     `${baseUrl}/api/conversations?isStream=${isStream}`,

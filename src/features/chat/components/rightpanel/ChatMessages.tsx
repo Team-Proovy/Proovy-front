@@ -2,6 +2,7 @@ import {
   ProfileIcon,
   SubscriptionIcon,
 } from "@/shared/components/icons/SettingsIcons";
+import { MessageContent } from "./MessageContent";
 
 // TODO: 실제 메시지 타입 정의 필요
 interface Message {
@@ -19,7 +20,7 @@ const UserMessage = ({ content }: { content: string }) => (
   <div className="flex items-start justify-end gap-[12px]">
     <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
       <p className="text-[14px] leading-[20px] font-medium break-all whitespace-pre-wrap text-black">
-        {content}
+        <MessageContent content={content} />
       </p>
     </div>
     <div className="shrink-0">
@@ -42,7 +43,7 @@ const AssistantMessage = ({ content }: { content: string }) => (
     </div>
     <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
       <p className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
-        {content}
+        <MessageContent content={content} />
       </p>
     </div>
   </div>

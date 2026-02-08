@@ -120,6 +120,7 @@ export const ChatPage = () => {
     createConversation(
       {
         text: data.message,
+        latex: data.latex,
         mentionedAssetIds:
           data.mentionedAssetIds.length > 0
             ? data.mentionedAssetIds
@@ -131,10 +132,18 @@ export const ChatPage = () => {
       },
       {
         onSuccess: (response) => {
-          const { assistantMessage } = response.result;
-          // AI 응답 메시지 추가
+          const { userMessage, assistantMessage } = response.result;
+          // 임시 사용자 메시지를 서버 응답으로 교체 + AI 응답 추가
           setMessages((prev) => [
-            ...prev,
+            ...prev.map((m) =>
+              m.id === tempUserMsgId
+                ? {
+                    id: `msg-${userMessage.messageId}`,
+                    role: "user" as const,
+                    content: userMessage.content,
+                  }
+                : m,
+            ),
             {
               id: `msg-${assistantMessage.messageId}`,
               role: "assistant",
@@ -144,9 +153,9 @@ export const ChatPage = () => {
         },
         onError: (error) => {
           console.error("대화 생성 실패:", error);
-          // 에러 시 에러 메시지 표시
+          // 임시 사용자 메시지 롤백 후 에러 메시지 표시
           setMessages((prev) => [
-            ...prev,
+            ...prev.filter((m) => m.id !== tempUserMsgId),
             {
               id: `error-${Date.now()}`,
               role: "assistant",
