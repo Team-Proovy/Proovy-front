@@ -16,7 +16,6 @@ export const NaverCallbackPage = () => {
     const state = searchParams.get("state");
     if (!code || !state) return "네이버 로그인 정보가 올바르지 않습니다.";
 
-    // state 검증
     const savedState = sessionStorage.getItem("naver_oauth_state");
     if (!savedState || savedState !== state) {
       sessionStorage.removeItem("naver_oauth_state");
@@ -36,13 +35,12 @@ export const NaverCallbackPage = () => {
     const savedState = sessionStorage.getItem("naver_oauth_state");
     if (!savedState || savedState !== state) return;
 
-    // 검증 통과 시 처리 시작
     initialized.current = true;
     sessionStorage.removeItem("naver_oauth_state");
 
     const processLogin = async () => {
       try {
-        const data = await loginWithNaver(code);
+        const data = await loginWithNaver(code, state);
 
         if (data.isSuccess && data.result) {
           login(data.result);

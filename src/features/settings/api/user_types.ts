@@ -107,6 +107,15 @@ export interface SubscriptionResponse {
   availablePlans: AvailablePlanDto[];
 }
 
+// ============================================================
+// 구독 변경 요청 타입
+// ============================================================
+
+/** 구독 변경 요청 */
+export interface SubscriptionUpdateRequest {
+  plan: "Free" | "Standard" | "Pro";
+}
+
 /** 회원 탈퇴 응답 */
 export interface DeleteUserResponse {
   deletedAt: string;

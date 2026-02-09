@@ -1,7 +1,7 @@
 export { SubscriptionTabContent } from "./SubscriptionTabContent";
+export { PlanInfoCard } from "./PlanInfoCard";
 export {
-  PlanInfoCard,
   PLAN_DETAILS,
   type PlanInfo,
   type PlanType,
-} from "./PlanInfoCard";
+} from "../../../subscription/types/plan_types";
