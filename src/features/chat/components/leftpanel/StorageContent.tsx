@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { StorageActionButtons } from "./StorageActionButtons";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { DeleteSuccessModal } from "./DeleteSuccessModal";
 import { NoteCard } from "@/features/storage/components/NoteCard";
 import { deleteAssets } from "@/features/assets/api/assetApi";
+import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
 
-interface MockFile {
+interface StorageFile {
   id: number;
   label: string;
   type: "upload" | "ai";
@@ -22,29 +24,39 @@ interface StorageContentProps {
 }
 
 export const StorageContent = ({
-  noteId: _noteId,
+  noteId,
   onTabChange,
 }: StorageContentProps) => {
-  // TODO: 실제 파일 목록 API 연결 (noteId 사용 예정)
-  const [boxFiles, setBoxFiles] = useState<MockFile[]>([
-    {
-      id: 1,
-      label: "discrete_math_HW2.pdf",
-      type: "upload",
-      fileUrl:
-        "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
-      mimeType: "application/pdf",
-      ocrStatus: "completed",
-    },
-    { id: 2, label: "더미 파일 1", type: "ai", ocrStatus: "completed" },
-    { id: 3, label: "더미 파일 2", type: "ai", ocrStatus: "completed" },
-    { id: 4, label: "더미 파일 3", type: "ai", ocrStatus: "completed" },
-    { id: 5, label: "더미 파일 4", type: "ai", ocrStatus: "completed" },
-  ]);
+  const queryClient = useQueryClient();
+  const { data: noteDetail } = useNoteDetail(noteId);
 
-  const [threadFiles, setThreadFiles] = useState<MockFile[]>([
-    { id: 100, label: "THREAD 1번", type: "ai", ocrStatus: "completed" },
-  ]);
+  // BOX 파일 목록 (업로드된 자산)
+  const boxFiles = useMemo<StorageFile[]>(() => {
+    if (!noteDetail?.assets) return [];
+    return noteDetail.assets.map((asset) => ({
+      id: asset.assetId,
+      label: asset.fileName,
+      type: "upload",
+      fileUrl: asset.thumbnailUrl ?? undefined,
+      mimeType: asset.fileType, // fileType이 mimeType 형태라고 가정 (e.g. application/pdf)
+      ocrStatus: asset.ocrStatus as StorageFile["ocrStatus"],
+    }));
+  }, [noteDetail?.assets]);
+
+  // THREAD 파일 목록 (AI 생성 파일)
+  const threadFiles = useMemo<StorageFile[]>(() => {
+    if (!noteDetail?.conversations) return [];
+    return noteDetail.conversations.flatMap((conv) =>
+      conv.assistantMessage.generatedFiles.map((file) => ({
+        id: file.fileId,
+        label: file.fileName,
+        type: "ai",
+        fileUrl: file.downloadUrl,
+        mimeType: file.fileType,
+        ocrStatus: "completed", // 생성된 파일은 OCR 완료 상태로 간주
+      })),
+    );
+  }, [noteDetail?.conversations]);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -76,12 +88,8 @@ export const StorageContent = ({
       const response = await deleteAssets(selectedIds);
 
       if (response.isSuccess) {
-        setBoxFiles((prev) =>
-          prev.filter((file) => !selectedIds.includes(file.id)),
-        );
-        setThreadFiles((prev) =>
-          prev.filter((file) => !selectedIds.includes(file.id)),
-        );
+        // 성공 시 쿼리 무효화하여 목록 갱신
+        queryClient.invalidateQueries({ queryKey: noteKeys.detail(noteId) });
 
         setSelectedIds([]);
         setIsDeleteModalOpen(false);
@@ -127,6 +135,21 @@ export const StorageContent = ({
     });
   };
 
+  // 용량 계산 (MB 단위)
+  const totalLimitMB = 500;
+  const usedBytes =
+    boxFiles.reduce(
+      (acc, file) => acc + (file.mimeType === "application/pdf" ? 0 : 0),
+      0,
+    ) +
+    // noteDetail에는 전체 용량 정보가 없으므로 일단 0이나 임의값으로 표시하거나,
+    // noteDetail.usage 등의 필드가 있다면 활용 (현재 타입 정의에는 usageInfo가 있음)
+    // usageInfo: { conversationCount, conversationLimit, conversationUsagePercent }
+    // 파일 용량 정보는 noteDetail에 없음. assetInfo에 fileSize가 있음.
+    (noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0);
+
+  const usedMB = Math.round(usedBytes / 1024 / 1024);
+
   return (
     <div className="flex h-full flex-col">
       {/* 헤더: BOX | 선택 버튼 | 노트 용량 (한 줄) */}
@@ -153,10 +176,14 @@ export const StorageContent = ({
           <div className="flex h-[5px] w-[60px] overflow-hidden rounded-full border-[0.5px] border-[#D1D6DE] bg-white">
             <div
               className="h-full bg-[#2A6AFF]"
-              style={{ width: "48%" }}
+              style={{
+                width: `${Math.min((usedMB / totalLimitMB) * 100, 100)}%`,
+              }}
             />
           </div>
-          <span className="text-[13px] font-normal text-black">240/500MB</span>
+          <span className="text-[13px] font-normal text-black">
+            {usedMB}/{totalLimitMB}MB
+          </span>
         </div>
       </div>
 
@@ -170,43 +197,55 @@ export const StorageContent = ({
           </div>
 
           {/* BOX 파일 목록 */}
-          <div className="mb-[40px] grid grid-cols-[repeat(auto-fill,240px)] gap-5">
-            {boxFiles.map((file) => (
-              <NoteCard
-                key={file.id}
-                label={file.label}
-                type={file.type}
-                fileUrl={file.fileUrl}
-                mimeType={file.mimeType}
-                ocrStatus={file.ocrStatus}
-                isSelected={selectedIds.includes(file.id)}
-                isSelectMode={isSelectMode}
-                onSelect={() => toggleIdSelection(file.id)}
-                onClick={() => handleFileClick(file.id)}
-              />
-            ))}
-          </div>
+          {boxFiles.length > 0 ? (
+            <div className="mb-[40px] grid grid-cols-[repeat(auto-fill,240px)] gap-5">
+              {boxFiles.map((file) => (
+                <NoteCard
+                  key={file.id}
+                  label={file.label}
+                  type={file.type}
+                  fileUrl={file.fileUrl}
+                  mimeType={file.mimeType}
+                  ocrStatus={file.ocrStatus}
+                  isSelected={selectedIds.includes(file.id)}
+                  isSelectMode={isSelectMode}
+                  onSelect={() => toggleIdSelection(file.id)}
+                  onClick={() => handleFileClick(file.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mb-[40px] flex h-[100px] items-center justify-center text-gray-400">
+              업로드된 파일이 없습니다.
+            </div>
+          )}
 
           {/* THREAD 섹션 */}
           <div className="mb-3">
             <span className="text-[18px] font-semibold text-black">THREAD</span>
           </div>
-          <div className="grid grid-cols-[repeat(auto-fill,240px)] gap-5">
-            {threadFiles.map((file) => (
-              <NoteCard
-                key={file.id}
-                label={file.label}
-                type={file.type}
-                fileUrl={file.fileUrl}
-                mimeType={file.mimeType}
-                ocrStatus={file.ocrStatus}
-                isSelected={selectedIds.includes(file.id)}
-                isSelectMode={isSelectMode}
-                onSelect={() => toggleIdSelection(file.id)}
-                onClick={() => handleFileClick(file.id)}
-              />
-            ))}
-          </div>
+          {threadFiles.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,240px)] gap-5">
+              {threadFiles.map((file) => (
+                <NoteCard
+                  key={file.id}
+                  label={file.label}
+                  type={file.type}
+                  fileUrl={file.fileUrl}
+                  mimeType={file.mimeType}
+                  ocrStatus={file.ocrStatus}
+                  isSelected={selectedIds.includes(file.id)}
+                  isSelectMode={isSelectMode}
+                  onSelect={() => toggleIdSelection(file.id)}
+                  onClick={() => handleFileClick(file.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-[100px] items-center justify-center text-gray-400">
+              생성된 파일이 없습니다.
+            </div>
+          )}
 
           {/* 스크롤 여유 공간 */}
           <div className="h-10 shrink-0" />
