@@ -1,3 +1,4 @@
+import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import {
   StorageCheckboxUncheckedIcon,
   StorageCheckboxCheckedIcon,
@@ -72,7 +73,7 @@ export const NoteCard = ({
           {ocrStatus === "processing" ? (
             // 분석 중일 때 보여줄 로딩 뷰
             <div className="flex flex-col items-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+              <LoadingSpinner size={40} />
               <p className="text-[12px] font-medium text-blue-600">
                 분석 중...
               </p>

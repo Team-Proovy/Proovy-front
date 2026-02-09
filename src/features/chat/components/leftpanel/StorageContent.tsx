@@ -115,6 +115,7 @@ export const StorageContent = ({
 
     setSelectedIds([]);
     setIsSelectMode(false);
+    onTabChange("viewer");
   };
 
   const handleFileClick = (fileId: number) => {

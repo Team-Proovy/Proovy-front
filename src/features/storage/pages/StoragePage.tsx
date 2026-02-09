@@ -161,7 +161,11 @@ export const StoragePage = () => {
                   title={note.title}
                   storageUsedDisplay={note.storageUsedDisplay}
                   storageLimitDisplay={note.storageLimitDisplay}
-                  usagePercent={(note.storageUsed / note.storageLimit) * 100}
+                  usagePercent={
+                    note.storageLimit > 0
+                      ? (note.storageUsed / note.storageLimit) * 100
+                      : 0
+                  }
                   notes={note.assets}
                   isOpen={openNoteIds.includes(note.noteId)}
                   onToggle={() => handleToggle(note.noteId)}

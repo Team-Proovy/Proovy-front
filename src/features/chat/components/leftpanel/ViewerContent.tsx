@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist";
+import type { RenderTask, PDFDocumentProxy } from "pdfjs-dist";
+import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
 import { getDownloadUrl } from "@/features/assets/api/assetApi";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
+import { LoadingSpinner } from "@/shared/components/loading-spinner";
+import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
 
-// Worker 설정
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Worker 설정 (로컬 번들 사용)
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
 interface ViewerContentProps {
   noteId: string;
@@ -26,9 +30,8 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   const [, setSearchParams] = useSearchParams();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const renderTaskRef = useRef<ReturnType<
-    ReturnType<typeof pdfjsLib.getDocument>["promise"]["then"]
-  > | null>(null);
+  const renderTaskRef = useRef<RenderTask | null>(null);
+  const pdfRef = useRef<PDFDocumentProxy | null>(null);
 
   const { uploadAsset } = useAssetUpload();
 
@@ -104,16 +107,12 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         ) {
           setFileType("image");
         } else {
-          setFileType("image");
+          setFileType(null);
+          setError("지원하지 않는 파일 형식입니다.");
         }
       } catch (err) {
         console.error("파일 URL 가져오기 실패:", err);
-        // 테스트용 Fallback
-        setPdfUrl(
-          "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
-        );
-        setFileType("pdf");
-        setFileName("sample.pdf");
+        setError("파일을 불러오는 데 실패했습니다. 다시 시도해주세요.");
       } finally {
         setIsLoading(false);
       }
@@ -122,21 +121,55 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     fetchUrlData();
   }, [fileId]);
 
-  // 2. PDF 렌더링
+  // 2. PDF 문서 로드 (pdfUrl 변경 시에만)
   useEffect(() => {
-    if (!pdfUrl || fileType !== "pdf") return;
+    if (!pdfUrl || fileType !== "pdf") {
+      pdfRef.current = null;
+      return;
+    }
+
+    let cancelled = false;
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+
+    loadingTask.promise
+      .then((pdf) => {
+        if (cancelled) {
+          pdf.destroy();
+          return;
+        }
+        pdfRef.current = pdf;
+        setNumPages(pdf.numPages);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("PDF 로드 오류:", err);
+          setError("PDF를 불러오는 중 오류가 발생했습니다.");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      loadingTask.destroy();
+      pdfRef.current = null;
+    };
+  }, [pdfUrl, fileType]);
+
+  // 3. PDF 페이지 렌더링 (페이지/스케일 변경 시)
+  useEffect(() => {
+    const pdf = pdfRef.current;
+    if (!pdf || fileType !== "pdf") return;
+
+    let cancelled = false;
 
     const renderPage = async () => {
       try {
         if (renderTaskRef.current) {
-          (renderTaskRef.current as any).cancel?.();
+          renderTaskRef.current.cancel();
         }
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        const pdf = await loadingTask.promise;
-        setNumPages(pdf.numPages);
-
         const page = await pdf.getPage(pageNumber);
+        if (cancelled) return;
+
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -149,11 +182,12 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           canvasContext: canvas.getContext("2d")!,
           viewport: viewport,
         });
-        renderTaskRef.current = renderTask as any;
+        renderTaskRef.current = renderTask;
 
         await renderTask.promise;
-      } catch (err: any) {
-        if (err.name !== "RenderingCancelledException") {
+      } catch (err: unknown) {
+        const renderErr = err as { name?: string };
+        if (renderErr.name !== "RenderingCancelledException" && !cancelled) {
           console.error("PDF 렌더링 오류:", err);
           setError("PDF를 불러오는 중 오류가 발생했습니다.");
         }
@@ -163,11 +197,12 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     renderPage();
 
     return () => {
+      cancelled = true;
       if (renderTaskRef.current) {
-        (renderTaskRef.current as any).cancel?.();
+        renderTaskRef.current.cancel();
       }
     };
-  }, [pdfUrl, pageNumber, scale, fileType]);
+  }, [pageNumber, scale, fileType, numPages]);
 
   if (!fileId) {
     return (
@@ -178,7 +213,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           ref={fileInputRef}
           className="hidden"
           onChange={handleFileChange}
-          accept=".pdf"
+          accept={FILE_ACCEPT}
         />
 
         {/* 파일 업로드 버튼 */}
@@ -234,7 +269,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       <div className="flex min-h-0 flex-1 items-start justify-center overflow-auto bg-gray-50 p-4 pt-6">
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+            <LoadingSpinner size={40} />
           </div>
         ) : error ? (
           <div className="flex h-full flex-col items-center justify-center text-red-500">
