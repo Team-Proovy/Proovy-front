@@ -14,7 +14,7 @@ import {
  */
 export const SubscriptionTabContent = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
 
   const userPlanName: PlanType = (user?.plan as PlanType) || "Free";
   const planDetail = PLAN_DETAILS[userPlanName] || PLAN_DETAILS["Free"];
@@ -30,8 +30,9 @@ export const SubscriptionTabContent = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   const handleCancelSubscription = () => {
-    // TODO: 구독 취소 API 호출
-    console.log("구독 취소 처리");
+    // TODO: 실제 API 연동 시에는 백엔드에 구독 취소 요청을 보내야 합니다.
+    // 현재는 프론트엔드 상태만 'Free'로 변경합니다.
+    updateUser({ plan: "Free" });
     setIsCancelModalOpen(false);
   };
 
