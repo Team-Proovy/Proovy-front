@@ -1,17 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../../auth/store/auth_store";
 import { ConfirmModal } from "../ConfirmModal";
-import { PlanInfoCard, PLAN_DETAILS, type PlanInfo } from "./PlanInfoCard";
+import {
+  PlanInfoCard,
+  PLAN_DETAILS,
+  type PlanInfo,
+  type PlanType,
+} from "./PlanInfoCard";
 
 /**
  * SubscriptionTabContent - 구독 정보 탭
  */
 export const SubscriptionTabContent = () => {
   const navigate = useNavigate();
-  // TODO: API 연결 후 실제 사용자 요금제 정보 가져오기
-  // 예: const { subscription } = useSubscription();
+  const { user } = useAuthStore();
+
+  const userPlanName: PlanType = (user?.plan as PlanType) || "Free";
+  const planDetail = PLAN_DETAILS[userPlanName] || PLAN_DETAILS["Free"];
+
   const currentPlan: PlanInfo = {
-    ...PLAN_DETAILS.standard,
+    ...planDetail,
+    // TODO: 결제 데이터 연동 시 실제 날짜로 변경
     startDate: "2026. 1. 10.",
     endDate: "2026. 2. 9.",
   };
