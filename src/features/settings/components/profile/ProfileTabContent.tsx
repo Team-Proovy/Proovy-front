@@ -50,8 +50,9 @@ export const ProfileTabContent = () => {
     fetchProfile();
   }, [updateUser]);
 
-  const loginProvider: LoginProvider =
-    (user?.provider?.toLowerCase() as LoginProvider) || "kakao";
+  const loginProvider = user?.provider?.toLowerCase() as
+    | LoginProvider
+    | undefined;
 
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -95,10 +96,14 @@ export const ProfileTabContent = () => {
 
       <div className="flex items-start">
         <div className="mr-[50px] ml-[10px] flex flex-col items-center">
-          <LoginProviderIcon
-            provider={loginProvider}
-            size={100}
-          />
+          {loginProvider ? (
+            <LoginProviderIcon
+              provider={loginProvider}
+              size={100}
+            />
+          ) : (
+            <div className="h-[100px] w-[100px] animate-pulse rounded-full bg-gray-200" />
+          )}
           <button
             className="mt-[24px] h-[32px] w-[150px] cursor-pointer rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] leading-[24px] text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
             onClick={handleLogout}

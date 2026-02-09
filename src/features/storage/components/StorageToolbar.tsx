@@ -2,8 +2,6 @@ import { StorageSearchIcon } from "../../../shared/components/icons/StorageIcons
 import { useStorageStore } from "../store/useStorageStore";
 
 interface StorageToolbarProps {
-  responsivePaddingL: string;
-  responsivePaddingR: string;
   totalUsedDisplay: string;
   totalLimitDisplay: string;
   usagePercent: number;
@@ -11,8 +9,6 @@ interface StorageToolbarProps {
 }
 
 export const StorageToolbar = ({
-  responsivePaddingL: _responsivePaddingL,
-  responsivePaddingR: _responsivePaddingR,
   totalUsedDisplay,
   totalLimitDisplay,
   usagePercent,
