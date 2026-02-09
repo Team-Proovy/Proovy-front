@@ -50,9 +50,14 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
       try {
         setIsLoading(true);
-        const targetNoteId = parseInt(noteId, 10) || 1;
+        const parsed = parseInt(noteId, 10);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+          setError("유효하지 않은 노트입니다. 노트를 다시 열어주세요.");
+          setIsLoading(false);
+          return;
+        }
 
-        const result = await uploadAsset(targetNoteId, file);
+        const result = await uploadAsset(parsed, file);
 
         // 업로드 성공 시 해당 파일로 즉시 이동
         if (result?.assetId) {
