@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LoginProviderIcon,
   type LoginProvider,
@@ -8,7 +8,7 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
-import { deleteAccount } from "../../api/user_api";
+import { deleteAccount, getMyProfile } from "../../api/user_api";
 import { logout as logoutApi } from "../../../auth/api/auth_api";
 
 /**
@@ -16,13 +16,42 @@ import { logout as logoutApi } from "../../../auth/api/auth_api";
  */
 export const ProfileTabContent = () => {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const { user, updateUser, logout } = useAuthStore();
 
-  // TODO: API 연결 후 실제 로그인 제공자 정보 가져오기
-  // 예: const { user } = useAuth();
-  // const loginProvider = user?.provider || "kakao";
-  const loginProvider: LoginProvider = "kakao"; // 기본값: 카카오
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await getMyProfile();
+        if (response.isSuccess && response.result) {
+          const {
+            email,
+            name,
+            nickname,
+            profileImageUrl,
+            provider,
+            subscription,
+          } = response.result;
+
+          // AuthStore 업데이트
+          updateUser({
+            email,
+            name,
+            nickname,
+            profileImageUrl,
+            provider,
+            plan: subscription.plan as "Free" | "Standard" | "Pro",
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [updateUser]);
+
+  const loginProvider: LoginProvider =
+    (user?.provider?.toLowerCase() as LoginProvider) || "kakao";
 
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -62,18 +91,14 @@ export const ProfileTabContent = () => {
         내 프로필
       </h3>
 
-      {/* 구분선 */}
       <div className="mt-[12px] mb-[40px] h-[0.5px] bg-[#D1D6DE]" />
 
-      {/* 프로필 컨텐츠 */}
       <div className="flex items-start">
-        {/* 프로필 이미지 영역 - 로그인 제공자 아이콘 + 로그아웃 버튼 */}
         <div className="mr-[50px] ml-[10px] flex flex-col items-center">
           <LoginProviderIcon
             provider={loginProvider}
             size={100}
           />
-          {/* 로그아웃 버튼 - 아이콘 아래 24px, 중앙 정렬, 130x32 */}
           <button
             className="mt-[24px] h-[32px] w-[150px] cursor-pointer rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] leading-[24px] text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
             onClick={handleLogout}
@@ -82,7 +107,6 @@ export const ProfileTabContent = () => {
           </button>
         </div>
 
-        {/* 프로필 정보 */}
         <div className="flex flex-1 flex-col gap-[20px]">
           <ProfileField
             label="이메일"
@@ -102,10 +126,8 @@ export const ProfileTabContent = () => {
         </div>
       </div>
 
-      {/* 구분선 */}
       <div className="mt-[100px] mb-[24px] h-[0.5px] bg-[#D1D6DE]" />
 
-      {/* 회원 탈퇴 */}
       <div>
         <p className="font-['Pretendard'] text-[14px] font-medium text-black">
           회원 탈퇴
@@ -123,7 +145,6 @@ export const ProfileTabContent = () => {
         </div>
       </div>
 
-      {/* 회원 탈퇴 확인 모달 */}
       <ConfirmModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
 import type { UserDto } from "../../auth/api/auth_types";
+import { updateSubscription } from "../../settings/api/user_api";
 
 type PlanType = NonNullable<UserDto["plan"]>; // "Free" | "Standard" | "Pro"
 
@@ -56,7 +57,6 @@ export const PricingPage = () => {
   const { user, updateUser } = useAuthStore();
   const navigate = useNavigate();
 
-  // 모달 상태
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [showUpgradeSuccessModal, setShowUpgradeSuccessModal] = useState(false);
   const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] =
@@ -64,7 +64,6 @@ export const PricingPage = () => {
   const [showDowngradeSuccessModal, setShowDowngradeSuccessModal] =
     useState(false);
 
-  // 변경 대상 플랜
   const [targetPlanForDowngrade, setTargetPlanForDowngrade] =
     useState<PlanType | null>(null);
   const [targetPlanForUpgrade, setTargetPlanForUpgrade] =
@@ -97,25 +96,50 @@ export const PricingPage = () => {
     }
   };
 
-  const confirmUpgrade = () => {
+  const confirmUpgrade = async () => {
     if (targetPlanForUpgrade) {
-      updateUser({ plan: targetPlanForUpgrade });
-      setShowUpgradeConfirmModal(false);
-      setShowUpgradeSuccessModal(true);
+      try {
+        const response = await updateSubscription({
+          plan: targetPlanForUpgrade,
+        });
+
+        if (response.isSuccess) {
+          updateUser({ plan: targetPlanForUpgrade });
+          setShowUpgradeConfirmModal(false);
+          setShowUpgradeSuccessModal(true);
+        } else {
+          alert(response.message || "업그레이드에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("Upgrade failed:", error);
+        alert("업그레이드 중 오류가 발생했습니다.");
+      }
     }
   };
 
-  const confirmDowngrade = () => {
+  const confirmDowngrade = async () => {
     if (targetPlanForDowngrade) {
-      updateUser({ plan: targetPlanForDowngrade });
-      setShowDowngradeConfirmModal(false);
-      setShowDowngradeSuccessModal(true);
+      try {
+        const response = await updateSubscription({
+          plan: targetPlanForDowngrade,
+        });
+
+        if (response.isSuccess) {
+          updateUser({ plan: targetPlanForDowngrade });
+          setShowDowngradeConfirmModal(false);
+          setShowDowngradeSuccessModal(true);
+        } else {
+          alert(response.message || "다운그레이드에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("Downgrade failed:", error);
+        alert("다운그레이드 중 오류가 발생했습니다.");
+      }
     }
   };
 
   return (
     <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
-      {/* 뒤로가기 버튼 (반응형 위치 조정) */}
       <button
         onClick={() => navigate("/app/home")}
         className="absolute top-4 left-4 font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
@@ -123,16 +147,13 @@ export const PricingPage = () => {
         ← 돌아가기 (홈)
       </button>
 
-      {/* 헤더 영역 */}
       <div className="mb-[40px] flex flex-col items-center text-center">
-        {/* 로고 및 헤드라인 행 */}
         <div className="flex items-center justify-center">
           <ProovyLogo className="h-[40px] w-auto md:h-[58px]" />
           <span className="font-['Pretendard'] text-[30px] leading-[40px] font-bold tracking-[-0.01em] text-black md:text-[40px] md:leading-[58px]">
             의 요금 플랜
           </span>
         </div>
-        {/* 부제목 */}
         <div className="mt-[20px] flex flex-col items-center gap-0">
           <p className="text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal tracking-[-0.01em] whitespace-pre-wrap text-black md:text-[18px] md:leading-[28px]">
             프루비는 무료로 시작할 수 있습니다.{"\n"}당신의 필요에 가장 잘 맞는
@@ -141,7 +162,6 @@ export const PricingPage = () => {
         </div>
       </div>
 
-      {/* 요금제 카드 그리드 */}
       <div className="flex flex-wrap justify-center gap-[20px] md:gap-[36px]">
         {plans.map((plan) => {
           // 플랜 상태 결정 로직
@@ -204,7 +224,6 @@ export const PricingPage = () => {
               className="flex h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
               style={cardStyle}
             >
-              {/* 제목 및 설명 */}
               <div className="mb-[24px] flex flex-col gap-[8px]">
                 <h3 className="font-['Pretendard'] text-[24px] leading-[32px] font-bold tracking-[-0.01em] text-black">
                   {plan.name}
@@ -214,7 +233,6 @@ export const PricingPage = () => {
                 </p>
               </div>
 
-              {/* 가격 */}
               <div className="mb-[24px] flex items-end gap-[4px]">
                 <span className="font-['Pretendard'] text-[42px] leading-[48px] font-bold tracking-[-0.01em] text-black">
                   {plan.price}원
@@ -224,7 +242,6 @@ export const PricingPage = () => {
                 </span>
               </div>
 
-              {/* CTA 버튼 */}
               <button
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={isCurrentPlan}
@@ -235,7 +252,6 @@ export const PricingPage = () => {
                 {buttonText}
               </button>
 
-              {/* 기능 목록 */}
               <div className="flex flex-col gap-[16px]">
                 {plan.features.map((feature, idx) => (
                   <div
@@ -257,9 +273,6 @@ export const PricingPage = () => {
         })}
       </div>
 
-      {/* --- 모달 --- */}
-
-      {/* 1. 업그레이드 확인 모달 */}
       {showUpgradeConfirmModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -289,7 +302,6 @@ export const PricingPage = () => {
         </div>
       )}
 
-      {/* 2. 업그레이드 성공 모달 */}
       {showUpgradeSuccessModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -313,7 +325,6 @@ export const PricingPage = () => {
         </div>
       )}
 
-      {/* 3. 다운그레이드 확인 모달 */}
       {showDowngradeConfirmModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
@@ -344,7 +355,6 @@ export const PricingPage = () => {
         </div>
       )}
 
-      {/* 4. 다운그레이드 성공 모달 */}
       {showDowngradeSuccessModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"

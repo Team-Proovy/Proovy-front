@@ -27,7 +27,7 @@ export const SidebarProfile = ({
   const formatNickname = (nickname?: string) => {
     if (!nickname) return "";
 
-    const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(nickname);
+    const hasKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(nickname);
     const maxLength = hasKorean ? 5 : 8;
 
     if (nickname.length > maxLength) {
@@ -37,7 +37,6 @@ export const SidebarProfile = ({
   };
 
   return !isCollapsed ? (
-    /* 펼쳐진 상태의 프로필 UI */
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
       <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
         <div className="flex items-center justify-between">
@@ -103,7 +102,6 @@ export const SidebarProfile = ({
       </div>
     </div>
   ) : (
-    /* 접힌 상태의 프로필 UI */
     <div className="flex w-[80px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
       <div
         onClick={() => onToggle(false)}

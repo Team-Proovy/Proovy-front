@@ -11,6 +11,7 @@ export interface UserDto {
   nickname: string;
   email: string;
   profileImageUrl: string | null;
+  provider?: string;
   plan?: "Free" | "Standard" | "Pro";
 }
 

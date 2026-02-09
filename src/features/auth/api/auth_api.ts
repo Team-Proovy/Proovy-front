@@ -10,9 +10,6 @@ import type {
 } from "./auth_types";
 import type { TokenDto } from "@/shared/api/shared_types";
 
-// ============================================================
-// 환경변수 (카카오/네이버 로그인용)
-// ============================================================
 export const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
 export const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 export const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID;
@@ -36,7 +33,7 @@ export const loginWithGoogle = async (
     `${BASE_URL}${AUTH_BASE}/login/google`,
     {
       authorizationCode: code,
-      redirectUri: GOOGLE_REDIRECT_URI, // Add redirectUri
+      redirectUri: GOOGLE_REDIRECT_URI,
     },
   );
 
@@ -45,10 +42,6 @@ export const loginWithGoogle = async (
     const { accessToken, refreshToken } = result.token;
     if (accessToken && refreshToken) {
       tokenUtils.setTokens(accessToken, refreshToken);
-      console.log(
-        "✅ 토큰 저장 성공 (Google):",
-        accessToken.substring(0, 10) + "...",
-      );
     }
   }
   return response.data;
@@ -58,9 +51,6 @@ export const loginWithGoogle = async (
 
 const AUTH_BASE = "/api/auth";
 
-// ============================================================
-// 카카오 로그인 (토큰 없이 호출 - public API)
-// ============================================================
 export const loginWithKakao = async (
   code: string,
 ): Promise<ApiResponse<LoginResult>> => {
@@ -68,7 +58,7 @@ export const loginWithKakao = async (
     `${BASE_URL}${AUTH_BASE}/login/kakao`,
     {
       authorizationCode: code,
-      redirectUri: KAKAO_REDIRECT_URI, // Add redirectUri
+      redirectUri: KAKAO_REDIRECT_URI,
     },
   );
   const result = response.data.result;
@@ -76,10 +66,6 @@ export const loginWithKakao = async (
     const { accessToken, refreshToken } = result.token;
     if (accessToken && refreshToken) {
       tokenUtils.setTokens(accessToken, refreshToken);
-      console.log(
-        "✅ 토큰 저장 성공 (Kakao):",
-        accessToken.substring(0, 10) + "...",
-      );
     }
   }
 
@@ -105,10 +91,6 @@ export const loginWithNaver = async (
 
     if (accessToken && refreshToken) {
       tokenUtils.setTokens(accessToken, refreshToken);
-      console.log(
-        "✅ 토큰 저장 성공 (Naver):",
-        accessToken.substring(0, 10) + "...",
-      );
     }
   }
   return response.data;
@@ -125,10 +107,6 @@ export const socialLogin = async (
   );
   return response.data;
 };
-
-// ============================================================
-// 추가 Auth API
-// ============================================================
 
 // 회원가입 완료 (추가 정보 입력) - signupToken 사용, 토큰 없이 호출
 export const signupComplete = async (
