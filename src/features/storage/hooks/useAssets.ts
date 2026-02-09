@@ -5,15 +5,31 @@ import {
   getAssetDetail,
   getDownloadUrl,
   deleteAsset,
-  deleteAssetsBulk,
-} from "../api/assets_api";
-import type { BulkDeleteRequest } from "../api/assets_types";
+  deleteAssets,
+  uploadToS3,
+  getStorageInfo,
+} from "@/features/assets/api/assetApi";
+import type { UploadUrlRequest } from "@/features/assets/types/asset";
 
 // Query Keys
 export const assetKeys = {
   all: ["assets"] as const,
+  storage: ["storage"] as const,
   details: () => [...assetKeys.all, "detail"] as const,
   detail: (id: number) => [...assetKeys.details(), id] as const,
+};
+
+// 전체 저장소 사용량 및 현황 조회 Hook
+export const useStorageInfo = (keyword?: string) => {
+  return useQuery({
+    queryKey: keyword ? [...assetKeys.storage, keyword] : assetKeys.storage,
+    queryFn: async () => {
+      const response = await getStorageInfo(keyword);
+      return response.result;
+    },
+    staleTime: 1000 * 60 * 10,
+    enabled: !keyword || keyword.length >= 2,
+  });
 };
 
 // 에셋 상세 조회 Hook
@@ -44,39 +60,17 @@ export const useUploadAsset = () => {
       onProgress?: (progress: number) => void;
     }) => {
       // 1. presigned URL 발급
-      const urlResponse = await getUploadUrl({
+      const requestParams: UploadUrlRequest = {
         noteId,
         fileName: file.name,
         mimeType: file.type,
         fileSize: file.size,
-      });
+      };
+      const urlResponse = await getUploadUrl(requestParams);
       const { uploadUrl, assetId } = urlResponse.result;
 
-      // 2. S3에 직접 업로드
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.addEventListener("progress", (e) => {
-          if (e.lengthComputable && onProgress) {
-            const progress = Math.round((e.loaded / e.total) * 100);
-            onProgress(progress);
-          }
-        });
-
-        xhr.addEventListener("load", () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error(`Upload failed: ${xhr.status}`));
-          }
-        });
-
-        xhr.addEventListener("error", () => reject(new Error("Upload failed")));
-
-        xhr.open("PUT", uploadUrl);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
-      });
+      // 2. S3에 직접 업로드 (assetApi의 uploadToS3 사용)
+      await uploadToS3(uploadUrl, file, onProgress);
 
       // 3. 업로드 완료 확인
       const confirmResponse = await confirmUpload(assetId);
@@ -84,6 +78,7 @@ export const useUploadAsset = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.storage });
     },
   });
 };
@@ -119,13 +114,13 @@ export const useDeleteAssetsBulk = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: BulkDeleteRequest) => deleteAssetsBulk(data),
-    onSuccess: (_, data) => {
-      // 삭제된 에셋들의 캐시 제거
-      data.assetIds.forEach((id) => {
+    mutationFn: (assetIds: number[]) => deleteAssets(assetIds),
+    onSuccess: (_, assetIds) => {
+      assetIds.forEach((id) => {
         queryClient.removeQueries({ queryKey: assetKeys.detail(id) });
       });
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
+      queryClient.invalidateQueries({ queryKey: assetKeys.storage });
     },
   });
 };

@@ -1,14 +1,19 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { StorageActionButtons } from "./StorageActionButtons";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { DeleteSuccessModal } from "./DeleteSuccessModal";
 import { NoteCard } from "@/features/storage/components/NoteCard";
+import { deleteAssets } from "@/features/assets/api/assetApi";
 import type { PanelTab } from "./types";
 
 interface MockFile {
   id: number;
   label: string;
-  type: "업로드" | "AI 생성";
+  type: "upload" | "ai";
+  fileUrl?: string;
+  mimeType?: string;
+  ocrStatus?: "pending" | "processing" | "completed" | "failed";
 }
 
 interface StorageContentProps {
@@ -22,15 +27,23 @@ export const StorageContent = ({
 }: StorageContentProps) => {
   // TODO: 실제 파일 목록 API 연결 (noteId 사용 예정)
   const [boxFiles, setBoxFiles] = useState<MockFile[]>([
-    { id: 1, label: "discrete_math_HW2.pdf", type: "업로드" },
-    { id: 2, label: "더미 파일 1", type: "AI 생성" },
-    { id: 3, label: "더미 파일 2", type: "AI 생성" },
-    { id: 4, label: "더미 파일 3", type: "AI 생성" },
-    { id: 5, label: "더미 파일 4", type: "AI 생성" },
+    {
+      id: 1,
+      label: "discrete_math_HW2.pdf",
+      type: "upload",
+      fileUrl:
+        "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      mimeType: "application/pdf",
+      ocrStatus: "completed",
+    },
+    { id: 2, label: "더미 파일 1", type: "ai", ocrStatus: "completed" },
+    { id: 3, label: "더미 파일 2", type: "ai", ocrStatus: "completed" },
+    { id: 4, label: "더미 파일 3", type: "ai", ocrStatus: "completed" },
+    { id: 5, label: "더미 파일 4", type: "ai", ocrStatus: "completed" },
   ]);
 
   const [threadFiles, setThreadFiles] = useState<MockFile[]>([
-    { id: 100, label: "THREAD 1번", type: "AI 생성" },
+    { id: 100, label: "THREAD 1번", type: "ai", ocrStatus: "completed" },
   ]);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -46,7 +59,6 @@ export const StorageContent = ({
 
   const handleSelectToggle = () => {
     if (isSelectMode) {
-      // 선택 모드 해제 시 선택 초기화
       setSelectedIds([]);
     }
     setIsSelectMode((prev) => !prev);
@@ -57,21 +69,62 @@ export const StorageContent = ({
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    // TODO: 삭제 API 연결
-    setBoxFiles((prev) => prev.filter((f) => !selectedIds.includes(f.id)));
-    setThreadFiles((prev) => prev.filter((f) => !selectedIds.includes(f.id)));
-    setIsDeleteModalOpen(false);
-    setSelectedIds([]);
-    setIsSelectMode(false);
-    setIsSuccessModalOpen(true);
+  const handleConfirmDelete = async () => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      const response = await deleteAssets(selectedIds);
+
+      if (response.isSuccess) {
+        setBoxFiles((prev) =>
+          prev.filter((file) => !selectedIds.includes(file.id)),
+        );
+        setThreadFiles((prev) =>
+          prev.filter((file) => !selectedIds.includes(file.id)),
+        );
+
+        setSelectedIds([]);
+        setIsDeleteModalOpen(false);
+        setIsSelectMode(false);
+        setIsSuccessModalOpen(true);
+      } else {
+        console.error("파일 삭제 실패:", response.message);
+        alert("파일 삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("파일 삭제 중 오류 발생:", error);
+      alert("파일 삭제 중 오류가 발생했습니다.");
+    }
   };
 
+  const [, setSearchParams] = useSearchParams();
+
   const handleOpenViewer = () => {
-    onTabChange("viewer");
-    // TODO: 선택된 파일을 뷰어에서 열기
+    if (selectedIds.length === 0) {
+      onTabChange("viewer");
+      return;
+    }
+
+    const targetFileId = selectedIds[0];
+
+    setSearchParams((prev) => {
+      prev.set("panel", "viewer");
+      prev.set("file", targetFileId.toString());
+      return prev;
+    });
+
     setSelectedIds([]);
     setIsSelectMode(false);
+    onTabChange("viewer");
+  };
+
+  const handleFileClick = (fileId: number) => {
+    if (isSelectMode) return;
+    setSearchParams((prev) => {
+      prev.set("panel", "viewer");
+      prev.set("file", fileId.toString());
+      return prev;
+    });
   };
 
   return (
@@ -123,9 +176,13 @@ export const StorageContent = ({
                 key={file.id}
                 label={file.label}
                 type={file.type}
+                fileUrl={file.fileUrl}
+                mimeType={file.mimeType}
+                ocrStatus={file.ocrStatus}
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}
+                onClick={() => handleFileClick(file.id)}
               />
             ))}
           </div>
@@ -140,9 +197,13 @@ export const StorageContent = ({
                 key={file.id}
                 label={file.label}
                 type={file.type}
+                fileUrl={file.fileUrl}
+                mimeType={file.mimeType}
+                ocrStatus={file.ocrStatus}
                 isSelected={selectedIds.includes(file.id)}
                 isSelectMode={isSelectMode}
                 onSelect={() => toggleIdSelection(file.id)}
+                onClick={() => handleFileClick(file.id)}
               />
             ))}
           </div>

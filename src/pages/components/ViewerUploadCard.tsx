@@ -36,20 +36,20 @@ export const ViewerUploadCard = ({
     />
 
     {pdfUrl ? (
-      <div className="group relative flex h-[160px] w-[220px] flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
+      <div className="group relative flex h-[160px] w-[220px] shrink-0 flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
         {/* 닫기 버튼 */}
         <button
           onClick={onRemove}
-          className="absolute top-[12px] right-[12px] z-10 flex cursor-pointer items-center justify-center"
+          className="absolute top-[8px] right-[8px] z-10 flex cursor-pointer items-center justify-center"
         >
           <X
-            size={20}
+            size={18}
             color="#000000"
           />
         </button>
 
         {/* PDF/이미지 썸네일 */}
-        <div className="relative flex h-[140px] w-[160px] items-start justify-center overflow-hidden">
+        <div className="relative flex w-[160px] flex-1 items-center justify-center overflow-hidden">
           <div className="flex h-full w-full items-center justify-center">
             {fileName.toLowerCase().endsWith(".pdf") ? (
               <PdfPreview
@@ -68,7 +68,7 @@ export const ViewerUploadCard = ({
         </div>
 
         {/* 파일명 */}
-        <div className="flex h-[50px] w-full items-center justify-center border-t-[0.5px] border-[#C6C6C6] bg-white px-3">
+        <div className="flex h-[32px] w-full shrink-0 items-center justify-center border-t-[0.5px] border-[#C6C6C6] bg-white px-3">
           <p className="truncate text-[13px] font-medium text-[#333333]">
             {fileName}
           </p>
@@ -80,7 +80,7 @@ export const ViewerUploadCard = ({
     ) : (
       <button
         onClick={onOpenExplorer}
-        className="group flex h-[160px] w-[220px] cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[36px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
+        className="group flex h-[160px] w-[220px] shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
       >
         <div>
           <PdfIcon size={56} />
