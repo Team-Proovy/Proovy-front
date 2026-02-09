@@ -53,12 +53,14 @@ export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
     };
 
     return (
-      <div className={`flex w-full min-w-0 gap-2 ${className || ""}`}>
+      <div
+        className={`flex min-h-0 w-full min-w-0 flex-col gap-2 ${className || ""}`}
+      >
         {/* 채팅 입력 영역 (위로 확장) */}
         <div
           ref={ref}
           contentEditable
-          className={`max-h-[180px] min-h-[50px] w-full cursor-text overflow-x-hidden overflow-y-auto pr-2 text-[18px] leading-[28px] tracking-[-0.01em] break-words whitespace-pre-wrap text-gray-800 empty:before:text-[#9CA4B0] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${SCROLLBAR_STYLES}`}
+          className={`min-h-[50px] w-full flex-1 cursor-text overflow-x-hidden overflow-y-auto pr-2 text-[18px] leading-[28px] tracking-[-0.01em] break-words whitespace-pre-wrap text-gray-800 empty:before:text-[#9CA4B0] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${SCROLLBAR_STYLES}`}
           onClick={onContentClick}
           onInput={(e) => {
             // 브라우저가 다 지워도 <br>을 남기는 경우 처리 (placeholder 보이게 하기 위함)

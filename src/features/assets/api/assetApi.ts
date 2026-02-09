@@ -7,7 +7,23 @@ import type {
   AssetDetailResponse,
   DownloadUrlResponse,
   DeleteAssetResponse,
+  BulkDeleteRequest,
+  BulkDeleteResponse,
+  StorageResponse,
 } from "../types/asset";
+
+/**
+ * 1. 전체 저장소 사용량 및 현황 조회 (GET)
+ * @param keyword 검색어 (노트 제목, 파일명) - 최소 2자 이상
+ */
+export const getStorageInfo = async (
+  keyword?: string,
+): Promise<StorageResponse> => {
+  const response = await apiClient.get<StorageResponse>("/api/storage", {
+    params: { keyword },
+  });
+  return response.data;
+};
 
 // Presigned URL 발급 API
 export const getUploadUrl = async (
@@ -91,6 +107,22 @@ export const deleteAsset = async (
   // DELETE /api/assets/{assetId}
   const response = await apiClient.delete<DeleteAssetResponse>(
     `/api/assets/${assetId}`,
+  );
+  return response.data;
+};
+
+/**
+ * 7. 자산 일괄 삭제 (DELETE)
+ * @description 최대 30개까지 일괄 삭제 가능
+ */
+export const deleteAssets = async (
+  assetIds: number[],
+): Promise<BulkDeleteResponse> => {
+  const response = await apiClient.delete<BulkDeleteResponse>(
+    "/api/storage/assets",
+    {
+      data: { assetIds } as BulkDeleteRequest,
+    },
   );
   return response.data;
 };

@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useAssetUpload } from "../hooks/useAssetUpload";
+import { FILE_ACCEPT } from "../utils/fileValidation";
 
 interface AssetUploadButtonProps {
   noteId: number; // 어떤 노트에 파일을 올릴지 결정
@@ -47,7 +48,7 @@ export const AssetUploadButton = ({
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
-        accept=".pdf, image/png, image/jpeg" // 명세서 지원 형식 반영
+        accept={FILE_ACCEPT}
       />
 
       {/* 사용자에게 보이는 업로드 버튼 */}

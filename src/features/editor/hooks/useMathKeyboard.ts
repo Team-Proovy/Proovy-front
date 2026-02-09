@@ -171,6 +171,14 @@ export const useMathKeyboard = ({
     window.addEventListener("resize", handleScrollOrResize);
     document.addEventListener("mousedown", handleClickOutside);
 
+    // Esc 키로 키보드 닫기
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && window.mathVirtualKeyboard?.visible) {
+        window.mathVirtualKeyboard.hide();
+      }
+    };
+    document.addEventListener("keydown", handleEsc);
+
     return () => {
       if (window.mathVirtualKeyboard) {
         window.mathVirtualKeyboard.removeEventListener(
@@ -185,6 +193,7 @@ export const useMathKeyboard = ({
       window.removeEventListener("scroll", handleScrollOrResize, true);
       window.removeEventListener("resize", handleScrollOrResize);
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
     };
   }, [positionKeyboardContainer]);
 

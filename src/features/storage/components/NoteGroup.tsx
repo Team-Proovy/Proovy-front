@@ -1,24 +1,23 @@
 import { StorageChevronIcon } from "../../../shared/components/icons/StorageIcons";
 import { NoteCard } from "./NoteCard";
 import { useStorageStore } from "../store/useStorageStore";
-
-interface Note {
-  id: number;
-  label: string;
-  type: "업로드" | "AI 생성";
-  fileUrl?: string; // 추가
-  mimeType?: string; // 추가
-}
+import type { AssetDetailResponseData } from "@/features/assets/types/asset";
 
 interface NoteGroupProps {
   title: string;
-  notes: Note[];
+  storageUsedDisplay: string;
+  storageLimitDisplay: string;
+  usagePercent: number;
+  notes: AssetDetailResponseData[];
   isOpen: boolean;
   onToggle: () => void;
 }
 
 export const NoteGroup = ({
   title,
+  storageUsedDisplay,
+  storageLimitDisplay,
+  usagePercent,
   notes,
   isOpen,
   onToggle,
@@ -64,13 +63,12 @@ export const NoteGroup = ({
           >
             노트 용량
           </span>
+          {/* 동적 막대 그래프 */}
           <div
             style={{
               display: "flex",
               width: "75px",
               height: "5px",
-              flexDirection: "column",
-              alignItems: "flex-start",
               borderRadius: "10px",
               border: "0.5px solid #C6C6C6",
               background: "#FFF",
@@ -79,36 +77,31 @@ export const NoteGroup = ({
           >
             <div
               className="h-full bg-[#2A6AFF]"
-              style={{ width: "48%" }}
+              style={{ width: `${usagePercent}%` }}
             />
           </div>
-          <span
-            style={{
-              color: "#000",
-              fontSize: "13px",
-              fontStyle: "normal",
-              fontWeight: 400,
-              lineHeight: "18px",
-            }}
-          >
-            240/512MB
+
+          {/* 서버 데이터 기반 텍스트 */}
+          <span className="text-[13px] font-normal text-black">
+            {storageUsedDisplay.replace("MB", "")}/{storageLimitDisplay}
           </span>
         </div>
       </button>
 
       {isOpen && (
         <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
-          {notes.map((note) => {
+          {notes.map((asset) => {
             return (
               <NoteCard
-                key={note.id}
-                label={note.label}
-                type={note.type}
-                fileUrl={note.fileUrl}
-                mimeType={note.mimeType}
-                isSelected={selectedIds.includes(note.id)}
+                key={asset.assetId}
+                label={asset.fileName}
+                type={asset.source === "upload" ? "upload" : "ai"}
+                fileUrl={asset.thumbnailUrl || undefined}
+                mimeType={asset.mimeType}
+                ocrStatus={asset.ocrStatus}
+                isSelected={selectedIds.includes(asset.assetId)}
                 isSelectMode={isSelectMode}
-                onSelect={() => toggleIdSelection(note.id)}
+                onSelect={() => toggleIdSelection(asset.assetId)}
               />
             );
           })}
