@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 import { useCreateConversation } from "@/features/editor/hooks/useEditorQueries";
@@ -38,17 +38,21 @@ export const useChatMessages = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  // ─── location.state에서 초기 데이터 추출 ───
-  const createNoteResponse = location.state?.createNoteResponse as
+  // ─── location.state에서 초기 데이터 추출 (ref로 보존) ───
+  // setSearchParams 호출 시 location.state가 null로 초기화되므로
+  // 최초 진입 시 ref에 저장하여 패널 토글 등에서도 데이터 유지
+  const initialStateRef = useRef(location.state);
+
+  const createNoteResponse = initialStateRef.current?.createNoteResponse as
     | CreateNoteResponse
     | undefined;
 
   const initialAttachments = useMemo(
-    () => (location.state?.attachments ?? []) as MessageAttachment[],
-    [location.state?.attachments],
+    () => (initialStateRef.current?.attachments ?? []) as MessageAttachment[],
+    [],
   );
 
-  const viewerFile = location.state?.viewerFile as
+  const viewerFile = initialStateRef.current?.viewerFile as
     | { name: string; mimeType: string; size: number }
     | undefined;
 

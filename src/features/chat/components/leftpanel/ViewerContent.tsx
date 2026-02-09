@@ -78,6 +78,8 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
   // 1. 파일 URL 가져오기
   useEffect(() => {
+    let cancelled = false;
+
     const fetchUrlData = async () => {
       if (!fileId) return;
 
@@ -87,6 +89,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       setFileType(null);
       setFileName("");
       setPageNumber(1);
+      setNumPages(null);
 
       try {
         const numericId = parseInt(fileId, 10);
@@ -95,6 +98,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         }
 
         const response = await getDownloadUrl(numericId);
+        if (cancelled) return;
         const { downloadUrl, fileName: fetchedFileName } = response.result;
 
         setPdfUrl(downloadUrl);
@@ -116,14 +120,20 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           setError("지원하지 않는 파일 형식입니다.");
         }
       } catch (err) {
+        if (cancelled) return;
         console.error("파일 URL 가져오기 실패:", err);
         setError("파일을 불러오는 데 실패했습니다. 다시 시도해주세요.");
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchUrlData();
+    return () => {
+      cancelled = true;
+    };
   }, [fileId]);
 
   // 2. PDF 문서 로드 (pdfUrl 변경 시에만)
@@ -243,7 +253,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       {/* 파일 정보 및 네비게이션 바 */}
       <div className="flex shrink-0 items-center justify-between border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
         <span className="truncate text-sm font-medium text-gray-700">
-          {fileName || `${fileId}.pdf`}
+          {fileName || `파일 ${fileId}`}
         </span>
         {fileType === "pdf" && (
           <div className="flex items-center gap-2 text-sm text-gray-500">
