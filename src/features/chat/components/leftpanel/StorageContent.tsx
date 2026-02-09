@@ -138,17 +138,9 @@ export const StorageContent = ({
   // 용량 계산 (MB 단위)
   const totalLimitMB = 500;
   const usedBytes =
-    boxFiles.reduce(
-      (acc, file) => acc + (file.mimeType === "application/pdf" ? 0 : 0),
-      0,
-    ) +
-    // noteDetail에는 전체 용량 정보가 없으므로 일단 0이나 임의값으로 표시하거나,
-    // noteDetail.usage 등의 필드가 있다면 활용 (현재 타입 정의에는 usageInfo가 있음)
-    // usageInfo: { conversationCount, conversationLimit, conversationUsagePercent }
-    // 파일 용량 정보는 noteDetail에 없음. assetInfo에 fileSize가 있음.
-    (noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0);
+    noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0;
 
-  const usedMB = Math.round(usedBytes / 1024 / 1024);
+  const usedMB = usedBytes / 1024 / 1024;
 
   return (
     <div className="flex h-full flex-col">
@@ -182,7 +174,7 @@ export const StorageContent = ({
             />
           </div>
           <span className="text-[13px] font-normal text-black">
-            {usedMB}/{totalLimitMB}MB
+            {usedMB.toFixed(2)}/{totalLimitMB}MB
           </span>
         </div>
       </div>
