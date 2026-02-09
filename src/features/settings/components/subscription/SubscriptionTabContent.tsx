@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
 import { ConfirmModal } from "../ConfirmModal";
 import {
-  PlanInfoCard,
-  PLAN_DETAILS,
   type PlanInfo,
   type PlanType,
-} from "./PlanInfoCard";
+  PLAN_DETAILS,
+} from "../../../subscription/types/plan_types";
+import { PlanInfoCard } from "./PlanInfoCard";
 import { getMySubscription } from "../../api/user_api";
 
 /**

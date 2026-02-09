@@ -2,10 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
-import type { UserDto } from "../../auth/api/auth_types";
 import { updateSubscription } from "../../settings/api/user_api";
 
-type PlanType = NonNullable<UserDto["plan"]>; // "Free" | "Standard" | "Pro"
+import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
 
 export const PricingPage = () => {
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
