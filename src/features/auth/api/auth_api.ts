@@ -34,7 +34,10 @@ export const loginWithGoogle = async (
 ): Promise<ApiResponse<LoginResult>> => {
   const response = await axios.post<ApiResponse<LoginResult>>(
     `${BASE_URL}${AUTH_BASE}/login/google`,
-    { authorizationCode: code },
+    {
+      authorizationCode: code,
+      redirectUri: GOOGLE_REDIRECT_URI, // Add redirectUri
+    },
   );
 
   const result = response.data.result;
@@ -51,8 +54,7 @@ export const loginWithGoogle = async (
   return response.data;
 };
 
-// Naver can be optional initially if not fully set up, but ideally check it too
-// if (import.meta.env.PROD && (!NAVER_CLIENT_ID || !NAVER_REDIRECT_URI)) { ... }
+// ... existing code ...
 
 const AUTH_BASE = "/api/auth";
 
@@ -66,6 +68,7 @@ export const loginWithKakao = async (
     `${BASE_URL}${AUTH_BASE}/login/kakao`,
     {
       authorizationCode: code,
+      redirectUri: KAKAO_REDIRECT_URI, // Add redirectUri
     },
   );
   const result = response.data.result;
@@ -85,10 +88,15 @@ export const loginWithKakao = async (
 
 export const loginWithNaver = async (
   code: string,
+  state: string,
 ): Promise<ApiResponse<LoginResult>> => {
   const response = await axios.post<ApiResponse<LoginResult>>(
     `${BASE_URL}${AUTH_BASE}/login/naver`,
-    { code },
+    {
+      code,
+      state,
+      redirectUri: NAVER_REDIRECT_URI,
+    },
   );
 
   const result = response.data.result;

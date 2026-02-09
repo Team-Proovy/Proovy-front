@@ -11,6 +11,7 @@ export interface UserDto {
   nickname: string;
   email: string;
   profileImageUrl: string | null;
+  plan?: "Free" | "Standard" | "Pro";
 }
 
 /** 회원가입용 사용자 정보 */
@@ -69,11 +70,13 @@ export interface KakaoLoginRequest {
 export interface NaverLoginRequest {
   code: string;
   state: string;
+  redirectUri?: string;
 }
 
 /** 구글 로그인 요청 */
 export interface GoogleLoginRequest {
   authorizationCode: string;
+  redirectUri?: string;
 }
 
 /** 회원가입 완료 요청 */

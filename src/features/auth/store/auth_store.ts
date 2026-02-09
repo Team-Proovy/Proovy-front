@@ -8,6 +8,7 @@ interface AuthState {
   token: TokenDto | null;
   isAuthenticated: boolean;
   login: (result: LoginResult) => void;
+  updateUser: (updates: Partial<UserDto>) => void;
   logout: () => void;
 }
 
@@ -23,6 +24,11 @@ export const useAuthStore = create<AuthState>()(
           token: result.token ?? null,
           isAuthenticated: !!result.token,
         });
+      },
+      updateUser: (updates) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...updates } : null,
+        }));
       },
       logout: () => {
         set({

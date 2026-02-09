@@ -42,7 +42,7 @@ export const NaverCallbackPage = () => {
 
     const processLogin = async () => {
       try {
-        const data = await loginWithNaver(code);
+        const data = await loginWithNaver(code, state);
 
         if (data.isSuccess && data.result) {
           login(data.result);
