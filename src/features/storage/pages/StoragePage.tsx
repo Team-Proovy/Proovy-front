@@ -122,9 +122,6 @@ export const StoragePage = () => {
   // keyword 사용 (lint 경고 방지)
   void keyword;
 
-  const responsivePaddingL = "pl-6 md:pl-[8%] lg:pl-[12%] 2xl:pl-[302px]";
-  const responsivePaddingR = "pr-6 md:pr-[12%] lg:pr-[18%] 2xl:pr-[542px]";
-
   return (
     <>
       <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
@@ -141,8 +138,6 @@ export const StoragePage = () => {
           {/* Toolbar Row */}
           <div className="flex justify-center">
             <StorageToolbar
-              responsivePaddingL={responsivePaddingL}
-              responsivePaddingR={responsivePaddingR}
               usagePercent={data?.usagePercent ?? 0}
               totalUsedDisplay={data?.totalUsedDisplay ?? "0GB"}
               totalLimitDisplay={data?.totalLimitDisplay ?? "0GB"}
