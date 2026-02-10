@@ -17,6 +17,9 @@ import { useNoteList } from "../hooks/useNotes";
 import { PdfIcon } from "../../../shared/components/icons/HomepageInputIcons";
 import { DropdownIcon } from "../../../shared/components/icons/ChatInputIcons";
 
+// 컴포넌트
+import { LoadingSpinner } from "../../../shared/components/loading-spinner";
+
 const ArrowLeftIcon = () => (
   <svg
     width="16"
@@ -206,9 +209,7 @@ export const NotesPage = () => {
                 {/* 노트 카드들 */}
                 {isLoading ? (
                   <div className="col-span-full flex items-center justify-center py-[40px]">
-                    <span className="text-[14px] leading-[20px] text-[#6D6D6D]">
-                      불러오는 중...
-                    </span>
+                    <LoadingSpinner size={80} />
                   </div>
                 ) : notes.length > 0 ? (
                   notes.map((note) => (
@@ -223,6 +224,10 @@ export const NotesPage = () => {
                           <img
                             src={note.thumbnailUrl}
                             alt={note.title}
+                            loading="lazy"
+                            decoding="async"
+                            width={271}
+                            height={149}
                             className="h-full w-full object-cover"
                           />
                         ) : (
