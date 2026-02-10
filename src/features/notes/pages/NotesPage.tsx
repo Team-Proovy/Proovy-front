@@ -286,29 +286,75 @@ export const NotesPage = () => {
               </button>
 
               {/* 페이지 번호들 */}
-              {Array.from({ length: pageInfo.totalPages }, (_, i) => i).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border transition-colors ${
-                      currentPage === page
-                        ? "border-[#D1D6DE] bg-[rgba(42,106,255,0.2)]"
-                        : "border-[#D1D6DE] bg-white hover:bg-gray-50"
-                    }`}
-                  >
-                    <span
-                      className={`text-[14px] leading-[22.4px] font-medium tracking-[-0.7px] ${
+              {(() => {
+                const totalPages = pageInfo.totalPages;
+                const current = currentPage;
+                const windowSize = 2; // 현재 페이지 기준 노출 범위 (±2)
+
+                type PaginationItem = number | "ellipsis";
+                const paginationItems: PaginationItem[] = [];
+
+                if (totalPages <= 0) {
+                  return null;
+                }
+
+                let previousPage: number | null = null;
+
+                for (let page = 0; page < totalPages; page += 1) {
+                  const isFirst = page === 0;
+                  const isLast = page === totalPages - 1;
+                  const isInWindow =
+                    page >= current - windowSize &&
+                    page <= current + windowSize;
+
+                  if (!isFirst && !isLast && !isInWindow) {
+                    continue;
+                  }
+
+                  if (previousPage !== null && page - previousPage > 1) {
+                    paginationItems.push("ellipsis");
+                  }
+
+                  paginationItems.push(page);
+                  previousPage = page;
+                }
+
+                return paginationItems.map((item, index) => {
+                  if (item === "ellipsis") {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="flex h-[30px] w-[30px] items-center justify-center text-[14px] leading-[22.4px] font-medium tracking-[-0.7px] text-[#6B7280]"
+                      >
+                        ...
+                      </span>
+                    );
+                  }
+
+                  const page = item;
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border transition-colors ${
                         currentPage === page
-                          ? "text-[#003880]"
-                          : "text-[#6B7280]"
+                          ? "border-[#D1D6DE] bg-[rgba(42,106,255,0.2)]"
+                          : "border-[#D1D6DE] bg-white hover:bg-gray-50"
                       }`}
                     >
-                      {page + 1}
-                    </span>
-                  </button>
-                ),
-              )}
+                      <span
+                        className={`text-[14px] leading-[22.4px] font-medium tracking-[-0.7px] ${
+                          currentPage === page
+                            ? "text-[#003880]"
+                            : "text-[#6B7280]"
+                        }`}
+                      >
+                        {page + 1}
+                      </span>
+                    </button>
+                  );
+                });
+              })()}
 
               {/* 다음 페이지 버튼 */}
               <button
