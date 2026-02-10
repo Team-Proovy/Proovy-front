@@ -151,6 +151,7 @@ export const StorageContent = ({
       prev.set("file", fileId.toString());
       return prev;
     });
+    onTabChange("viewer");
   };
 
   // 용량 계산 (MB 단위) -> 사용자 플랜에 따른 스토리지 한도 계산
