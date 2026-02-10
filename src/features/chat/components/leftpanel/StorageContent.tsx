@@ -102,8 +102,19 @@ export const StorageContent = ({
   const handleConfirmDelete = async () => {
     if (selectedIds.length === 0) return;
 
+    // BOX 파일(upload 타입)만 필터링하여 삭제 대상 설정
+    // THREAD 파일은 삭제 대상에서 제외
+    const targetIds = selectedIds.filter((id) =>
+      boxFiles.some((file) => file.id === id),
+    );
+
+    if (targetIds.length === 0) {
+      setIsDeleteModalOpen(false);
+      return;
+    }
+
     try {
-      const response = await deleteAssets(selectedIds);
+      const response = await deleteAssets(targetIds);
 
       if (response.isSuccess) {
         // 성공 시 쿼리 무효화하여 목록 갱신
