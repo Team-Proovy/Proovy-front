@@ -223,6 +223,10 @@ export const NotesPage = () => {
                           <img
                             src={note.thumbnailUrl}
                             alt={note.title}
+                            loading="lazy"
+                            decoding="async"
+                            width={271}
+                            height={149}
                             className="h-full w-full object-cover"
                           />
                         ) : (
