@@ -9,11 +9,7 @@ export interface NoteListParams {
   page?: number;
   size?: number;
   cursor?: string;
-  sort?:
-    | "createdAt,desc"
-    | "createdAt,asc"
-    | "lastUsedAt,desc"
-    | "lastUsedAt,asc";
+  sort?: "lastUsedAt,desc" | "createdAt,desc" | "title,asc";
 }
 
 /** 새 노트 생성 요청 (노트 리소스만 생성, 대화는 POST /api/conversations로 별도 호출) */
