@@ -11,4 +11,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://api.proovy.ai.kr",
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            proxyReq.setHeader("Origin", "https://proovy.ai.kr");
+            proxyReq.setHeader("Referer", "https://proovy.ai.kr/");
+          });
+        },
+      },
+    },
+  },
 });

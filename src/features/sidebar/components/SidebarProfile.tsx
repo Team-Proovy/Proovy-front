@@ -23,31 +23,44 @@ export const SidebarProfile = ({
 }: SidebarProfileProps) => {
   const authUser = useAuthStore((state) => state.user);
 
-  // TODO: 테스트용 더미 데이터 (테스트 후 삭제 예정)
-  const user = {
-    ...authUser,
-    nickname: "가나다라마바사", // 4자 이상 닉네임 테스트
+  // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
+  const formatNickname = (nickname?: string) => {
+    if (!nickname) return "";
+
+    const hasKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(nickname);
+    const maxLength = hasKorean ? 5 : 8;
+
+    if (nickname.length > maxLength) {
+      return `${nickname.slice(0, maxLength)}...`;
+    }
+    return nickname;
   };
 
   return !isCollapsed ? (
-    /* 펼쳐진 상태의 프로필 UI */
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
       <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-full bg-[#2A6AFF]" />
             <span className="text-[14px] leading-[20px] font-medium text-[#333333]">
-              Free
+              {authUser?.plan || "Free"}
             </span>
           </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onUpgradeClick();
+              if (authUser?.plan !== "Pro") {
+                onUpgradeClick();
+              }
             }}
-            className="flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
+            className={`flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors ${
+              authUser?.plan === "Pro"
+                ? "cursor-default opacity-50"
+                : "hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
+            }`}
+            disabled={authUser?.plan === "Pro"}
           >
-            업그레이드
+            {authUser?.plan === "Pro" ? "최고 플랜" : "업그레이드"}
           </button>
         </div>
         <div className="flex items-center justify-between text-gray-500">
@@ -71,9 +84,7 @@ export const SidebarProfile = ({
         <div className="flex items-center gap-2">
           <UserIcon size={40} />
           <span className="pt-[2px] text-[20px] font-semibold">
-            {user?.nickname && user.nickname.length >= 5
-              ? `${user.nickname.slice(0, 4)}...`
-              : user?.nickname}
+            {formatNickname(authUser?.nickname)}
           </span>
         </div>
         <button
@@ -91,7 +102,6 @@ export const SidebarProfile = ({
       </div>
     </div>
   ) : (
-    /* 접힌 상태의 프로필 UI */
     <div className="flex w-[80px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
       <div
         onClick={() => onToggle(false)}

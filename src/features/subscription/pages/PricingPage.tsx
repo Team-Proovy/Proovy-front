@@ -1,12 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
+import { useAuthStore } from "../../auth/store/auth_store";
+import { updateSubscription } from "../../settings/api/user_api";
+
+import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
 
 export const PricingPage = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
-  const plans = [
+  const plans: {
+    name: PlanType;
+    description: string;
+    price: string;
+    features: string[];
+  }[] = [
     {
       name: "Free",
       description: "무료 사용자용 플랜",
@@ -45,68 +53,176 @@ export const PricingPage = () => {
     },
   ];
 
+  const { user, updateUser } = useAuthStore();
+  const navigate = useNavigate();
+
+  const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
+  const [showUpgradeSuccessModal, setShowUpgradeSuccessModal] = useState(false);
+  const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] =
+    useState(false);
+  const [showDowngradeSuccessModal, setShowDowngradeSuccessModal] =
+    useState(false);
+
+  const [targetPlanForDowngrade, setTargetPlanForDowngrade] =
+    useState<PlanType | null>(null);
+  const [targetPlanForUpgrade, setTargetPlanForUpgrade] =
+    useState<PlanType | null>(null);
+
+  const planLevels: Record<string, number> = {
+    Free: 0,
+    Standard: 1,
+    Pro: 2,
+  };
+
+  const handlePlanClick = (planName: PlanType) => {
+    // 로그인 확인
+    if (!user) {
+      alert("로그인이 필요한 서비스입니다.");
+      return;
+    }
+
+    const currentLevel = planLevels[user?.plan || "Free"] || 0;
+    const targetLevel = planLevels[planName] || 0;
+
+    if (targetLevel > currentLevel) {
+      // 업그레이드 -> 확인 모달 표시
+      setTargetPlanForUpgrade(planName);
+      setShowUpgradeConfirmModal(true);
+    } else if (targetLevel < currentLevel) {
+      // 다운그레이드 -> 확인 모달 표시
+      setTargetPlanForDowngrade(planName);
+      setShowDowngradeConfirmModal(true);
+    }
+  };
+
+  const confirmUpgrade = async () => {
+    if (targetPlanForUpgrade) {
+      try {
+        const response = await updateSubscription({
+          plan: targetPlanForUpgrade,
+        });
+
+        if (response.isSuccess) {
+          updateUser({ plan: targetPlanForUpgrade });
+          setShowUpgradeConfirmModal(false);
+          setShowUpgradeSuccessModal(true);
+        } else {
+          alert(response.message || "업그레이드에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("Upgrade failed:", error);
+        alert("업그레이드 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const confirmDowngrade = async () => {
+    if (targetPlanForDowngrade) {
+      try {
+        const response = await updateSubscription({
+          plan: targetPlanForDowngrade,
+        });
+
+        if (response.isSuccess) {
+          updateUser({ plan: targetPlanForDowngrade });
+          setShowDowngradeConfirmModal(false);
+          setShowDowngradeSuccessModal(true);
+        } else {
+          alert(response.message || "다운그레이드에 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("Downgrade failed:", error);
+        alert("다운그레이드 중 오류가 발생했습니다.");
+      }
+    }
+  };
+
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
-      {/* Header Area */}
-      {/* Group 237 position relative to 1440 width */}
+    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
+      <button
+        onClick={() => navigate("/app/home")}
+        className="absolute top-4 left-4 font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
+      >
+        ← 돌아가기 (홈)
+      </button>
+
       <div className="mb-[40px] flex flex-col items-center text-center">
-        {/* Logo & Headline Row */}
         <div className="flex items-center justify-center">
-          <ProovyLogo className="h-[58px] w-auto" />
-          <span className="font-['Pretendard'] text-[40px] leading-[58px] font-bold tracking-[-0.01em] text-black">
+          <ProovyLogo className="h-[40px] w-auto md:h-[58px]" />
+          <span className="font-['Pretendard'] text-[30px] leading-[40px] font-bold tracking-[-0.01em] text-black md:text-[40px] md:leading-[58px]">
             의 요금 플랜
           </span>
         </div>
-        {/* Subtitle */}
         <div className="mt-[20px] flex flex-col items-center gap-0">
-          <p className="text-center font-['Pretendard'] text-[18px] leading-[28px] font-normal tracking-[-0.01em] whitespace-pre-wrap text-black">
+          <p className="text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal tracking-[-0.01em] whitespace-pre-wrap text-black md:text-[18px] md:leading-[28px]">
             프루비는 무료로 시작할 수 있습니다.{"\n"}당신의 필요에 가장 잘 맞는
             요금제를 선택하세요!
           </p>
         </div>
       </div>
 
-      {/* Pricing Cards Grid */}
-      <div className="flex justify-center gap-[36px]">
+      <div className="flex flex-wrap justify-center gap-[20px] md:gap-[36px]">
         {plans.map((plan) => {
-          const isSelected = selectedPlan === plan.name;
+          // 플랜 상태 결정 로직
+          const currentPlanName = user?.plan || "Free";
+          const isCurrentPlan = !!user && currentPlanName === plan.name; // 비로그인 시 isCurrentPlan은 false
+
+          // 선택 상태 (로컬 호버)
           const isHovered = hoveredPlan === plan.name;
 
-          // Dynamic Styles
+          // 레벨 결정
+          const currentLevel = planLevels[currentPlanName] || 0;
+          const thisLevel = planLevels[plan.name] || 0;
+
+          // 카드 시각적 상태 (현재 플랜 강조 - 로그인 시에만)
+          const isHighlighted = isCurrentPlan;
+
+          // 동적 스타일
           const cardStyle = {
-            border: isSelected ? "1px solid #2A6AFF" : "1px solid #D1D6DE",
-            backgroundColor: isSelected ? "#F4F7FF" : "#FFFFFF",
+            border: isHighlighted ? "1px solid #2A6AFF" : "1px solid #D1D6DE",
+            backgroundColor: isHighlighted ? "#F4F7FF" : "#FFFFFF",
             boxShadow:
-              isHovered && !isSelected
+              isHovered && !isHighlighted
                 ? "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
                 : "none",
             transform: isHovered ? "scale(1.05)" : "scale(1)",
           };
 
           const buttonStyle = {
-            backgroundColor: isSelected
+            backgroundColor: isHighlighted
               ? "#2A6AFF"
               : isHovered
                 ? "rgba(42, 106, 255, 0.5)"
                 : "#F1F4F8",
-            color: isSelected || isHovered ? "#FFFFFF" : "#000000",
+            color: isHighlighted || isHovered ? "#FFFFFF" : "#000000",
           };
 
-          const checkColor = isSelected || isHovered ? "#2A6AFF" : "#D1D6DE";
+          const checkColor = isHighlighted || isHovered ? "#2A6AFF" : "#D1D6DE";
+
+          // 버튼 텍스트 로직
+          let buttonText = "시작하기";
+          if (user) {
+            // 로그인 상태일 때만 텍스트 변경
+            if (isCurrentPlan) {
+              buttonText = "사용 중";
+            } else if (isHovered) {
+              if (thisLevel > currentLevel) {
+                buttonText = "업그레이드";
+              } else {
+                buttonText = "다운그레이드";
+              }
+            }
+          }
+          // 비로그인 상태일 때는 항상 "시작하기"
 
           return (
             <div
               key={plan.name}
               onMouseEnter={() => setHoveredPlan(plan.name)}
-              onMouseLeave={() => {
-                setHoveredPlan(null);
-                setSelectedPlan(null);
-              }}
-              // Removed Tailwind hover/border classes that conflict
+              onMouseLeave={() => setHoveredPlan(null)}
               className="flex h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
               style={cardStyle}
             >
-              {/* Title & Desc */}
               <div className="mb-[24px] flex flex-col gap-[8px]">
                 <h3 className="font-['Pretendard'] text-[24px] leading-[32px] font-bold tracking-[-0.01em] text-black">
                   {plan.name}
@@ -116,7 +232,6 @@ export const PricingPage = () => {
                 </p>
               </div>
 
-              {/* Price */}
               <div className="mb-[24px] flex items-end gap-[4px]">
                 <span className="font-['Pretendard'] text-[42px] leading-[48px] font-bold tracking-[-0.01em] text-black">
                   {plan.price}원
@@ -126,16 +241,16 @@ export const PricingPage = () => {
                 </span>
               </div>
 
-              {/* CTA Button */}
               <button
-                onClick={() => setSelectedPlan(plan.name)}
-                className="mb-[32px] flex h-[52px] w-[280px] cursor-pointer items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300"
+                onClick={() => handlePlanClick(plan.name)}
+                disabled={isCurrentPlan}
+                // 버튼 스타일 통일, 비활성화 시 불투명도 변경
+                className={`mb-[32px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
                 style={buttonStyle}
               >
-                {isSelected ? "업그레이드" : "시작하기"}
+                {buttonText}
               </button>
 
-              {/* Features List */}
               <div className="flex flex-col gap-[16px]">
                 {plan.features.map((feature, idx) => (
                   <div
@@ -156,6 +271,112 @@ export const PricingPage = () => {
           );
         })}
       </div>
+
+      {showUpgradeConfirmModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowUpgradeConfirmModal(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-[20px] font-bold text-black">
+              {targetPlanForUpgrade} 플랜으로 변경하시겠습니까?
+            </h2>
+            <div className="flex w-full gap-[12px]">
+              <button
+                onClick={() => setShowUpgradeConfirmModal(false)}
+                className="h-[48px] flex-1 rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmUpgrade}
+                className="h-[48px] flex-1 rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+              >
+                업그레이드
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUpgradeSuccessModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowUpgradeSuccessModal(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-[20px] font-bold text-black">
+              업그레이드가 완료되었습니다.
+            </h2>
+            <button
+              onClick={() => {
+                setShowUpgradeSuccessModal(false);
+              }}
+              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showDowngradeConfirmModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget)
+              setShowDowngradeConfirmModal(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-[20px] font-bold text-black">
+              정말 다운그레이드 하시겠습니까?
+            </h2>
+            <div className="flex w-full gap-[12px]">
+              <button
+                onClick={() => setShowDowngradeConfirmModal(false)}
+                className="h-[48px] flex-1 rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmDowngrade}
+                className="h-[48px] flex-1 rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+              >
+                예
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDowngradeSuccessModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget)
+              setShowDowngradeSuccessModal(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-[20px] font-bold text-black">
+              {targetPlanForDowngrade}를 선택하셨습니다.
+            </h2>
+            <button
+              onClick={() => {
+                setShowDowngradeSuccessModal(false);
+              }}
+              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
