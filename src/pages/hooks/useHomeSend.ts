@@ -50,10 +50,12 @@ export const useHomeSend = () => {
           setIsUploading(true);
 
           let uploadFailed = false;
+          let uploadedAssetId: number | undefined;
           setUploadError(null);
 
           try {
             // 1. 뷰어 파일 업로드
+
             if (viewerFileRef.current) {
               const file = viewerFileRef.current;
               try {
@@ -65,6 +67,7 @@ export const useHomeSend = () => {
                 });
                 await uploadToS3(result.uploadUrl, file);
                 await confirmUpload(result.assetId);
+                uploadedAssetId = result.assetId;
               } catch (error) {
                 console.error("[HomePage] 뷰어 파일 업로드 실패:", error);
                 setUploadError(
@@ -110,7 +113,14 @@ export const useHomeSend = () => {
               }
             : undefined;
 
-          navigate(`/app/chat/${newNoteId}`, {
+          // 업로드된 파일이 있으면 뷰어 패널 열기 + 파일 ID 전달
+          const queryParams = new URLSearchParams();
+          if (uploadedAssetId) {
+            queryParams.set("panel", "viewer");
+            queryParams.set("file", String(uploadedAssetId));
+          }
+
+          navigate(`/app/chat/${newNoteId}?${queryParams.toString()}`, {
             state: {
               createNoteResponse: response.result,
               attachments: attachmentInfos,
