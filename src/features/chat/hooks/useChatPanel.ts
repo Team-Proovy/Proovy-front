@@ -55,23 +55,35 @@ export const useChatPanel = ({
     }
   }, [assets, hasViewerFile]);
 
-  // URL 파라미터 동기화
+  // URL searchParams 변경 감지 → activeTab 동기화
+  // (StorageContent 등 외부에서 setSearchParams로 panel을 변경했을 때 반영)
   useEffect(() => {
-    if (isViewerOpen) {
-      setSearchParams((prev) => {
-        prev.set("panel", activeTab);
-        return prev;
-      });
+    if (isValidPanelTab(panelParam) && panelParam !== activeTab) {
+      setActiveTab(panelParam);
     }
-  }, [activeTab, isViewerOpen, setSearchParams]);
+  }, [panelParam]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleTabChange = useCallback((tab: PanelTab) => {
     setActiveTab(tab);
+    setIsViewerOpen(true);
   }, []);
 
   const handleToggleViewer = useCallback(() => {
-    setIsViewerOpen((prev) => !prev);
-  }, []);
+    setIsViewerOpen((prev) => {
+      if (prev) {
+        // 패널을 닫을 때 URL에서 panel/file 파라미터 제거
+        setSearchParams(
+          (sp) => {
+            sp.delete("panel");
+            sp.delete("file");
+            return sp;
+          },
+          { replace: true },
+        );
+      }
+      return !prev;
+    });
+  }, [setSearchParams]);
 
   return {
     activeTab,

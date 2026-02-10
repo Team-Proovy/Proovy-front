@@ -153,6 +153,7 @@ export const useChatMessages = () => {
       })
       .catch((error) => {
         console.error("첫 대화 생성 실패:", error);
+        firstMessageSentRef.current = false;
         setMessages((prev) => [
           ...prev.filter((m) => m.id !== tempUserMsgId),
           {
