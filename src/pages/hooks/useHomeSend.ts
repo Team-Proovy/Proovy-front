@@ -62,6 +62,7 @@ export const useHomeSend = () => {
           let uploadFailed = false;
           setUploadError(null);
           let uploadedCanvasImageIds: number[] = [];
+          let uploadedFileAssetIds: number[] = [];
 
           try {
             // 1. 뷰어 파일 업로드
@@ -92,6 +93,7 @@ export const useHomeSend = () => {
                   newNoteId,
                   data.attachments,
                 );
+                uploadedFileAssetIds = uploadResult.fileAssetIds;
                 uploadedCanvasImageIds = uploadResult.canvasAssetIds;
               } catch (error) {
                 console.error("[HomePage] 첨부 파일 업로드 실패:", error);
@@ -129,7 +131,10 @@ export const useHomeSend = () => {
           const firstMessage: FirstMessageState = {
             text: data.message,
             latex: data.latex,
-            mentionedAssetIds: data.mentionedAssetIds,
+            mentionedAssetIds: [
+              ...data.mentionedAssetIds,
+              ...uploadedFileAssetIds,
+            ],
             chosenFeatures: data.mentionedToolCodes,
             canvasImageIds: uploadedCanvasImageIds,
             attachments: attachmentInfos,

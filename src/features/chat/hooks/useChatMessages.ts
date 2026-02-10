@@ -53,12 +53,8 @@ export const useChatMessages = () => {
 
   const hasFirstMessage = !!firstMessageData;
 
-  // ─── API 히스토리 로드 (첫 메시지가 없을 때만 = 재진입) ───
-  const { data: noteDetail, isLoading: isNoteLoading } = useNoteDetail(
-    noteId,
-    undefined,
-    { enabled: !hasFirstMessage },
-  );
+  // ─── 노트 상세 로드 (제목·메타데이터 + 재진입 시 히스토리) ───
+  const { data: noteDetail, isLoading: isNoteLoading } = useNoteDetail(noteId);
 
   // ─── 메시지 상태 ───
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -83,13 +79,16 @@ export const useChatMessages = () => {
 
   const [isUploading, setIsUploading] = useState(false);
   const [isFirstMessageSending, setIsFirstMessageSending] = useState(false);
-  const isSending = isMutating || isUploading;
+  const isSending = isMutating || isUploading || isFirstMessageSending;
 
   // ─── 첫 대화 자동 전송 (HomePage에서 진입 시) ───
   // StrictMode에서 useEffect가 2회 실행되므로,
-  // mutation 콜백 대신 직접 API 호출 + cleanup 패턴 사용
+  // hasRun ref로 API 호출을 1회로 제한 + active cleanup으로 늦은 응답 무시
+  const firstMessageSentRef = useRef(false);
+
   useEffect(() => {
-    if (!firstMessageData) return;
+    if (!firstMessageData || firstMessageSentRef.current) return;
+    firstMessageSentRef.current = true;
 
     let active = true;
 
@@ -149,6 +148,11 @@ export const useChatMessages = () => {
           },
         ]);
         setIsFirstMessageSending(false);
+
+        // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
+        queryClient.invalidateQueries({
+          queryKey: ["notes", "detail", noteId],
+        });
       })
       .catch((error) => {
         if (!active) return;

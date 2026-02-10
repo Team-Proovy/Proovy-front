@@ -235,73 +235,6 @@ export const editorHandlers = [
     },
   ),
 
-  /** GET /api/conversations/{conversationId} - 대화 상세 조회 */
-  http.get(
-    `${BASE_URL}/api/conversations/:conversationId`,
-    async ({ params }) => {
-      await delay(300);
-
-      const conversationId = Number(params.conversationId);
-      const now = new Date().toISOString();
-
-      return HttpResponse.json<ApiResponse<ConversationDetailResponse>>({
-        isSuccess: true,
-        code: "CONV2000",
-        message: "대화 상세 조회 성공",
-        result: {
-          conversationId,
-          note: { noteId: 1, title: "이산수학 과제 풀이" },
-          userMessage: {
-            messageId: 201,
-            text: "이 문제를 풀어줘",
-            latex: null,
-            mentionedFiles: [
-              {
-                assetId: 101,
-                fileName: "discrete_math_HW2.pdf",
-                thumbnailUrl: null,
-              },
-            ],
-            mentionedTools: [],
-            canvasImages: [],
-            createdAt: now,
-          },
-          assistantMessage: {
-            messageId: 202,
-            text: "이 문제는 다음과 같이 풀 수 있습니다.",
-            sections: [
-              {
-                type: "explanation",
-                title: "풀이 과정",
-                content: "1단계: 조건을 분석합니다.\n2단계: 공식을 적용합니다.",
-              },
-            ],
-            codeExecution: null,
-            generatedProblem: null,
-            createdAt: now,
-          },
-          aiRuns: [
-            {
-              aiRunId: 1,
-              runType: "LLM_QUERY",
-              modelName: "gpt-4o",
-              status: "COMPLETED",
-              promptTokens: 150,
-              completionTokens: 300,
-              latencyMs: 2500,
-            },
-          ],
-          creditUsed: {
-            amount: 10,
-            breakdown: [{ reason: "AI 질의", amount: 10 }],
-          },
-          createdAt: now,
-          updatedAt: now,
-        },
-      });
-    },
-  ),
-
   /** GET /api/conversations/search - 대화 검색 */
   http.get(`${BASE_URL}/api/conversations/search`, async ({ request }) => {
     await delay(400);
@@ -404,6 +337,73 @@ export const editorHandlers = [
       },
     });
   }),
+
+  /** GET /api/conversations/{conversationId} - 대화 상세 조회 */
+  http.get(
+    `${BASE_URL}/api/conversations/:conversationId`,
+    async ({ params }) => {
+      await delay(300);
+
+      const conversationId = Number(params.conversationId);
+      const now = new Date().toISOString();
+
+      return HttpResponse.json<ApiResponse<ConversationDetailResponse>>({
+        isSuccess: true,
+        code: "CONV2000",
+        message: "대화 상세 조회 성공",
+        result: {
+          conversationId,
+          note: { noteId: 1, title: "이산수학 과제 풀이" },
+          userMessage: {
+            messageId: 201,
+            text: "이 문제를 풀어줘",
+            latex: null,
+            mentionedFiles: [
+              {
+                assetId: 101,
+                fileName: "discrete_math_HW2.pdf",
+                thumbnailUrl: null,
+              },
+            ],
+            mentionedTools: [],
+            canvasImages: [],
+            createdAt: now,
+          },
+          assistantMessage: {
+            messageId: 202,
+            text: "이 문제는 다음과 같이 풀 수 있습니다.",
+            sections: [
+              {
+                type: "explanation",
+                title: "풀이 과정",
+                content: "1단계: 조건을 분석합니다.\n2단계: 공식을 적용합니다.",
+              },
+            ],
+            codeExecution: null,
+            generatedProblem: null,
+            createdAt: now,
+          },
+          aiRuns: [
+            {
+              aiRunId: 1,
+              runType: "LLM_QUERY",
+              modelName: "gpt-4o",
+              status: "COMPLETED",
+              promptTokens: 150,
+              completionTokens: 300,
+              latencyMs: 2500,
+            },
+          ],
+          creditUsed: {
+            amount: 10,
+            breakdown: [{ reason: "AI 질의", amount: 10 }],
+          },
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    },
+  ),
 
   /** POST /api/conversations/canvas-images - 캔버스 이미지 업로드 */
   http.post<never, CanvasImageUploadRequest>(
