@@ -22,7 +22,6 @@ export const useFileUpload = (
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
       if (file) {
-        console.log("선택된 파일:", file.name);
         if (onFileSelect) {
           onFileSelect(file);
         }

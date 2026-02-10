@@ -60,12 +60,14 @@ export const useHomeSend = () => {
           setIsUploading(true);
 
           let uploadFailed = false;
+          let uploadedAssetId: number | undefined;
           setUploadError(null);
           let uploadedCanvasImageIds: number[] = [];
           let uploadedFileAssetIds: number[] = [];
 
           try {
             // 1. 뷰어 파일 업로드
+
             if (viewerFileRef.current) {
               const file = viewerFileRef.current;
               try {
@@ -77,6 +79,7 @@ export const useHomeSend = () => {
                 });
                 await uploadToS3(result.uploadUrl, file);
                 await confirmUpload(result.assetId);
+                uploadedAssetId = result.assetId;
               } catch (error) {
                 console.error("[HomePage] 뷰어 파일 업로드 실패:", error);
                 setUploadError(
@@ -127,6 +130,13 @@ export const useHomeSend = () => {
               }
             : undefined;
 
+          // 업로드된 파일이 있으면 뷰어 패널 열기 query param 추가
+          const queryParams = new URLSearchParams();
+          if (uploadedAssetId) {
+            queryParams.set("panel", "viewer");
+            queryParams.set("file", String(uploadedAssetId));
+          }
+
           // 첫 메시지 데이터를 state로 전달 → ChatPage에서 conversations API 호출
           const firstMessage: FirstMessageState = {
             text: data.message,
@@ -141,7 +151,12 @@ export const useHomeSend = () => {
             viewerFile: viewerFileInfo,
           };
 
-          navigate(`/app/chat/${newNoteId}`, {
+          const queryString = queryParams.toString();
+          const path = queryString
+            ? `/app/chat/${newNoteId}?${queryString}`
+            : `/app/chat/${newNoteId}`;
+
+          navigate(path, {
             state: { firstMessage },
           });
         },

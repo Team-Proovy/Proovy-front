@@ -457,27 +457,24 @@ export const assetsHandlers = [
       const body = await request.json();
       console.log("[MSW] 자산 일괄 삭제:", body);
 
-      if (body.assetIds.length > 30) {
-        return HttpResponse.json(
-          {
-            isSuccess: false,
-            code: "COMMON400",
-            message: "최대 30개까지 삭제 가능합니다.",
-            result: null,
-          },
-          { status: 400 },
-        );
-      }
+      const { assetIds } = body;
 
-      const response = {
-        deletedCount: body.assetIds.length,
-      };
+      // 실제 Mock 데이터에서 삭제
+      let deletedCount = 0;
+      Object.keys(mockNoteAssets).forEach((nId) => {
+        const noteId = Number(nId);
+        const originalLength = mockNoteAssets[noteId].length;
+        mockNoteAssets[noteId] = mockNoteAssets[noteId].filter(
+          (asset) => !assetIds.includes(asset.assetId),
+        );
+        deletedCount += originalLength - mockNoteAssets[noteId].length;
+      });
 
       return HttpResponse.json({
         isSuccess: true,
         code: "STORAGE2000",
         message: "일괄 삭제 성공",
-        result: response,
+        result: { deletedCount },
       });
     },
   ),

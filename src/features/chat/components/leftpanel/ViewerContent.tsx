@@ -10,8 +10,23 @@ import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
 
+import { useAuthStore } from "@/features/auth/store/auth_store";
+import {
+  PLAN_DETAILS,
+  type PlanType,
+} from "@/features/subscription/types/plan_types";
+
 // Worker 설정 (로컬 번들 사용)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
+
+const parseSize = (sizeStr: string) => {
+  const value = parseInt(sizeStr.replace(/\D/g, ""), 10);
+  const unit = sizeStr.replace(/[^A-Za-z]/g, "").toUpperCase();
+  if (unit.includes("GB")) return value * 1024 * 1024 * 1024;
+  if (unit.includes("MB")) return value * 1024 * 1024;
+  if (unit.includes("KB")) return value * 1024;
+  return value;
+};
 
 interface ViewerContentProps {
   noteId: string;
@@ -28,6 +43,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setSearchParams] = useSearchParams();
+  const { user } = useAuthStore();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<RenderTask | null>(null);
@@ -45,6 +61,17 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
       if (!isValidType) {
         alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+        return;
+      }
+
+      const userPlan = (user?.plan as PlanType) || "Free";
+      const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
+      const maxSizeBytes = parseSize(maxUploadSizeStr);
+
+      if (file.size > maxSizeBytes) {
+        alert(
+          `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
+        );
         return;
       }
 
