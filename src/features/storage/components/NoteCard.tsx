@@ -70,7 +70,7 @@ export const NoteCard = ({
 
         {/* 실제 파일 미리보기 로직 */}
         <div className="flex h-full w-full items-center justify-center p-2">
-          {ocrStatus === "processing" ? (
+          {ocrStatus === "pending" || ocrStatus === "processing" ? (
             // 분석 중일 때 보여줄 로딩 뷰
             <div className="flex flex-col items-center gap-2">
               <LoadingSpinner size={40} />

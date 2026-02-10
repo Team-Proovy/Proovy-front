@@ -313,6 +313,26 @@ export const assetsHandlers = [
       console.log(
         `[MSW] 에셋 등록 완료: noteId=${noteId}, assetId=${assetIdNum}, fileName=${fileName}`,
       );
+
+      // OCR 완료 시뮬레이션: 5초 후 ocrStatus → completed, thumbnailUrl 설정
+      setTimeout(() => {
+        const assets = mockNoteAssets[noteId];
+        const target = assets?.find((a) => a.assetId === assetIdNum);
+        if (target) {
+          target.ocrStatus = "completed";
+          // 업로드된 바이너리가 있으면 mock-files URL로, 없으면 placeholder
+          if (uploadedFiles.has(assetIdNum)) {
+            target.thumbnailUrl = `${BASE_URL}/api/mock-files/${assetIdNum}`;
+          } else {
+            target.thumbnailUrl = mimeType.startsWith("image/")
+              ? `https://placehold.co/240x140/dbeafe/1e40af?text=${encodeURIComponent(fileName)}`
+              : `https://placehold.co/240x140/e2e8f0/475569?text=PDF`;
+          }
+          console.log(
+            `[MSW] OCR 완료 시뮬레이션: assetId=${assetIdNum}, thumbnailUrl=${target.thumbnailUrl}`,
+          );
+        }
+      }, 5000);
     }
 
     const response: UploadConfirmResponse = {

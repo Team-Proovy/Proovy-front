@@ -90,8 +90,6 @@ export const useChatMessages = () => {
     if (!firstMessageData || firstMessageSentRef.current) return;
     firstMessageSentRef.current = true;
 
-    let active = true;
-
     const attachments: MessageAttachment[] | undefined =
       firstMessageData.attachments.length > 0
         ? firstMessageData.attachments
@@ -128,7 +126,6 @@ export const useChatMessages = () => {
           : undefined,
     })
       .then((response) => {
-        if (!active) return;
         const { userMessage, assistantMessage } = response.result;
         setMessages((prev) => [
           ...prev.map((m) =>
@@ -155,7 +152,6 @@ export const useChatMessages = () => {
         });
       })
       .catch((error) => {
-        if (!active) return;
         console.error("첫 대화 생성 실패:", error);
         setMessages((prev) => [
           ...prev.filter((m) => m.id !== tempUserMsgId),
@@ -168,10 +164,6 @@ export const useChatMessages = () => {
         ]);
         setIsFirstMessageSending(false);
       });
-
-    return () => {
-      active = false;
-    };
   }, [firstMessageData]);
 
   // ─── 후속 대화 전송 핸들러 ───
