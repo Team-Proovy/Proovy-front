@@ -179,6 +179,9 @@ export const StorageContent = ({
 
   const usedMB = usedBytes / 1024 / 1024;
 
+  const usageRatio = usedMB / totalLimitMB;
+  const isOverLimit = usageRatio > 0.9;
+
   return (
     <div className="flex h-full flex-col">
       {/* 헤더: BOX | 선택 버튼 | 노트 용량 (한 줄) */}
@@ -204,9 +207,9 @@ export const StorageContent = ({
           <span className="text-[14px] font-medium text-black">노트 용량</span>
           <div className="flex h-[5px] w-[60px] overflow-hidden rounded-full border-[0.5px] border-[#D1D6DE] bg-white">
             <div
-              className="h-full bg-[#2A6AFF]"
+              className={`h-full ${isOverLimit ? "bg-[#FF3B30]" : "bg-[#2A6AFF]"}`}
               style={{
-                width: `${Math.min((usedMB / totalLimitMB) * 100, 100)}%`,
+                width: `${Math.min(usageRatio * 100, 100)}%`,
               }}
             />
           </div>
