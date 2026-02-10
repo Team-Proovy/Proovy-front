@@ -360,4 +360,57 @@ export const notesHandlers = [
       },
     });
   }),
+
+  // 단일 노트 삭제
+  http.delete(`${BASE_URL}/api/notes/:noteId`, async ({ params }) => {
+    await delay(500);
+
+    const noteId = Number(params.noteId);
+
+    console.log("[MSW] 노트 단일 삭제:", noteId);
+
+    // 해당 noteId의 노트 찾기
+    const noteIndex = mockNotes.findIndex((n) => n.noteId === noteId);
+
+    if (noteIndex === -1) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "NOTE4041",
+          message: "노트를 찾을 수 없습니다.",
+          result: null,
+        },
+        { status: 404 },
+      );
+    }
+
+    const note = mockNotes[noteIndex];
+    const assetCount = mockNoteAssets[noteId]?.length ?? 0;
+    const conversationCount = note.conversationCount;
+
+    // Mock 저장소 해제 (자산 크기 기반)
+    const freedStorageBytes = assetCount * 1048576; // 각 자산당 1MB 가정
+
+    // mockNotes에서 해당 노트 삭제
+    mockNotes.splice(noteIndex, 1);
+
+    return HttpResponse.json<
+      ApiResponse<{
+        deletedNoteId: number;
+        deletedConversationCount: number;
+        deletedAssetCount: number;
+        freedStorageBytes: number;
+      }>
+    >({
+      isSuccess: true,
+      code: "NOTE2020",
+      message: "노트 및 관련 대화, 자산 데이터가 모두 삭제되었습니다.",
+      result: {
+        deletedNoteId: noteId,
+        deletedConversationCount: conversationCount,
+        deletedAssetCount: assetCount,
+        freedStorageBytes,
+      },
+    });
+  }),
 ];

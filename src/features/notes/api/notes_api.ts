@@ -61,3 +61,25 @@ export const deleteNotesBulk = async (
   });
   return response.data;
 };
+
+// 단일 노트 삭제
+export const deleteNote = async (
+  noteId: number,
+): Promise<
+  ApiResponse<{
+    deletedNoteId: number;
+    deletedConversationCount: number;
+    deletedAssetCount: number;
+    freedStorageBytes: number;
+  }>
+> => {
+  const response = await apiClient.delete<
+    ApiResponse<{
+      deletedNoteId: number;
+      deletedConversationCount: number;
+      deletedAssetCount: number;
+      freedStorageBytes: number;
+    }>
+  >(`${NOTES_BASE}/${noteId}`);
+  return response.data;
+};

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDeleteNotesBulk } from "../hooks/useNotes";
+import { useDeleteNote } from "../hooks/useNotes";
 
 interface DeleteNotesModalProps {
   selectedIds: number[];
@@ -13,7 +13,7 @@ export const DeleteNotesModal = ({
   onSuccess,
 }: DeleteNotesModalProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const deleteNotesMutation = useDeleteNotesBulk();
+  const deleteNoteMutation = useDeleteNote();
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isDeleting) {
@@ -24,7 +24,11 @@ export const DeleteNotesModal = ({
   const handleDeleteClick = async () => {
     setIsDeleting(true);
     try {
-      await deleteNotesMutation.mutateAsync(selectedIds);
+      // 각 노트를 병렬로 삭제
+      const deletePromises = selectedIds.map((id) =>
+        deleteNoteMutation.mutateAsync(id),
+      );
+      await Promise.all(deletePromises);
       onSuccess();
     } catch (error) {
       console.error("노트 삭제 실패:", error);

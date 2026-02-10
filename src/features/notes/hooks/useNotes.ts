@@ -9,6 +9,7 @@ import {
   createNote,
   getNoteDetail,
   deleteNotesBulk,
+  deleteNote,
 } from "../api/notes_api";
 import type {
   NoteListParams,
@@ -104,6 +105,19 @@ export const useDeleteNotesBulk = () => {
 
   return useMutation({
     mutationFn: (noteIds: number[]) => deleteNotesBulk(noteIds),
+    onSuccess: () => {
+      // 노트 목록 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+    },
+  });
+};
+
+// 단일 노트 삭제 Hook
+export const useDeleteNote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (noteId: number) => deleteNote(noteId),
     onSuccess: () => {
       // 노트 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
