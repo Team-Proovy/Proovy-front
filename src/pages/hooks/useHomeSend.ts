@@ -10,13 +10,32 @@ import {
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
 
+/** ChatPage로 전달하는 첫 대화 데이터 (location.state) */
+export interface FirstMessageState {
+  /** 사용자 질문/지시문 (ConversationRequest.text) */
+  text: string;
+  /** LaTeX 수식 입력 */
+  latex?: string;
+  /** 언급된 자산 ID 목록 */
+  mentionedAssetIds: number[];
+  /** 선택된 기능 목록 (ConversationRequest.chosenFeatures) */
+  chosenFeatures: string[];
+  /** 캔버스 이미지 ID 목록 */
+  canvasImageIds: number[];
+  /** 첨부 파일 정보 (UI 표시용, API 필드 아님) */
+  attachments: MessageAttachment[];
+  /** 뷰어 파일 정보 (좌측 패널 표시용, API 필드 아님) */
+  viewerFile?: { name: string; mimeType: string; size: number };
+}
+
 /**
  * HomePage 전송 로직 훅
  *
- * 1. 노트 생성 (firstMessage)
+ * 1. 노트 생성 (POST /api/notes — 노트 리소스만 생성)
  * 2. 뷰어 파일 업로드 (presigned → S3 → confirm)
  * 3. ChatInput 첨부파일 업로드
- * 4. ChatPage로 네비게이션
+ * 4. ChatPage로 네비게이션 (첫 메시지 데이터를 state로 전달)
+ *    → ChatPage에서 POST /api/conversations 호출하여 AI 응답 수신
  */
 export const useHomeSend = () => {
   const navigate = useNavigate();
@@ -32,18 +51,9 @@ export const useHomeSend = () => {
   const clearError = () => setUploadError(null);
 
   const handleSend = (data: ChatSendData) => {
+    // 노트만 생성 (title은 서버가 자동 생성)
     createNote(
-      {
-        firstMessage: data.message,
-        mentionedAssetIds:
-          data.mentionedAssetIds.length > 0
-            ? data.mentionedAssetIds
-            : undefined,
-        mentionedToolCodes:
-          data.mentionedToolCodes.length > 0
-            ? data.mentionedToolCodes
-            : undefined,
-      },
+      {},
       {
         onSuccess: async (response) => {
           const newNoteId = response.result.noteId;
@@ -52,6 +62,8 @@ export const useHomeSend = () => {
           let uploadFailed = false;
           let uploadedAssetId: number | undefined;
           setUploadError(null);
+          let uploadedCanvasImageIds: number[] = [];
+          let uploadedFileAssetIds: number[] = [];
 
           try {
             // 1. 뷰어 파일 업로드
@@ -80,7 +92,12 @@ export const useHomeSend = () => {
             // 2. ChatInput 첨부 파일 업로드
             if (!uploadFailed && data.attachments.length > 0) {
               try {
-                await uploadAttachments(newNoteId, data.attachments);
+                const uploadResult = await uploadAttachments(
+                  newNoteId,
+                  data.attachments,
+                );
+                uploadedFileAssetIds = uploadResult.fileAssetIds;
+                uploadedCanvasImageIds = uploadResult.canvasAssetIds;
               } catch (error) {
                 console.error("[HomePage] 첨부 파일 업로드 실패:", error);
                 setUploadError(
@@ -113,19 +130,34 @@ export const useHomeSend = () => {
               }
             : undefined;
 
-          // 업로드된 파일이 있으면 뷰어 패널 열기 + 파일 ID 전달
+          // 업로드된 파일이 있으면 뷰어 패널 열기 query param 추가
           const queryParams = new URLSearchParams();
           if (uploadedAssetId) {
             queryParams.set("panel", "viewer");
             queryParams.set("file", String(uploadedAssetId));
           }
 
-          navigate(`/app/chat/${newNoteId}?${queryParams.toString()}`, {
-            state: {
-              createNoteResponse: response.result,
-              attachments: attachmentInfos,
-              viewerFile: viewerFileInfo,
-            },
+          // 첫 메시지 데이터를 state로 전달 → ChatPage에서 conversations API 호출
+          const firstMessage: FirstMessageState = {
+            text: data.message,
+            latex: data.latex,
+            mentionedAssetIds: [
+              ...data.mentionedAssetIds,
+              ...uploadedFileAssetIds,
+            ],
+            chosenFeatures: data.mentionedToolCodes,
+            canvasImageIds: uploadedCanvasImageIds,
+            attachments: attachmentInfos,
+            viewerFile: viewerFileInfo,
+          };
+
+          const queryString = queryParams.toString();
+          const path = queryString
+            ? `/app/chat/${newNoteId}?${queryString}`
+            : `/app/chat/${newNoteId}`;
+
+          navigate(path, {
+            state: { firstMessage },
           });
         },
         onError: (error) => {

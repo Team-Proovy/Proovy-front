@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { StorageActionButtons } from "./StorageActionButtons";
@@ -45,8 +45,21 @@ export const StorageContent = ({
   onTabChange,
 }: StorageContentProps) => {
   const queryClient = useQueryClient();
-  const { data: noteDetail } = useNoteDetail(noteId);
+  const [hasProcessingAssets, setHasProcessingAssets] = useState(false);
+  const { data: noteDetail } = useNoteDetail(noteId, undefined, {
+    refetchInterval: hasProcessingAssets ? 3000 : false,
+  });
   const { user } = useAuthStore();
+
+  // OCR 처리 중인 에셋이 있으면 폴링 활성화
+  useEffect(() => {
+    const isProcessing =
+      noteDetail?.assets?.some(
+        (asset) =>
+          asset.ocrStatus === "pending" || asset.ocrStatus === "processing",
+      ) ?? false;
+    setHasProcessingAssets(isProcessing);
+  }, [noteDetail]);
 
   // BOX 파일 목록 (업로드된 자산)
   const boxFiles = useMemo<StorageFile[]>(() => {

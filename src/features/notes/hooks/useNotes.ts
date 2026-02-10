@@ -80,7 +80,7 @@ export const useCreateNote = () => {
 export const useNoteDetail = (
   noteId: string | undefined,
   params?: NoteDetailParams,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean; refetchInterval?: number | false },
 ) => {
   return useQuery({
     queryKey: noteKeys.detail(noteId ?? ""),
@@ -90,5 +90,6 @@ export const useNoteDetail = (
     },
     enabled: (options?.enabled ?? true) && !!noteId,
     staleTime: 1000 * 60 * 1, // 1분
+    refetchInterval: options?.refetchInterval,
   });
 };

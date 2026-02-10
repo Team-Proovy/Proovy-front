@@ -12,11 +12,9 @@ export interface NoteListParams {
   sort?: "lastUsedAt,desc" | "createdAt,desc" | "title,asc";
 }
 
-/** 새 노트 생성 요청 */
+/** 새 노트 생성 요청 (노트 리소스만 생성, 대화는 POST /api/conversations로 별도 호출) */
 export interface CreateNoteRequest {
-  firstMessage: string;
-  mentionedAssetIds?: number[];
-  mentionedToolCodes?: string[];
+  title?: string;
 }
 
 // ============================================================
@@ -60,7 +58,7 @@ export interface CreateNoteResponse {
   title: string;
   titleGeneratedBy: string;
   conversationLimit: number;
-  firstConversation: FirstConversationDto;
+  firstConversation: FirstConversationDto | null;
   createdAt: string;
 }
 
