@@ -49,3 +49,15 @@ export const getNoteDetail = async (
   );
   return response.data;
 };
+
+// 노트 벌크 삭제
+export const deleteNotesBulk = async (
+  noteIds: number[],
+): Promise<ApiResponse<{ deletedCount: number; deletedNoteIds: number[] }>> => {
+  const response = await apiClient.delete<
+    ApiResponse<{ deletedCount: number; deletedNoteIds: number[] }>
+  >(NOTES_BASE, {
+    data: { noteIds },
+  });
+  return response.data;
+};

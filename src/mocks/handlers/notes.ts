@@ -316,4 +316,48 @@ export const notesHandlers = [
       result: response,
     });
   }),
+
+  // 노트 벌크 삭제
+  http.delete(`${BASE_URL}/api/notes`, async ({ request }) => {
+    await delay(500);
+
+    const body = await request.json();
+    const noteIds = body.noteIds as number[];
+
+    console.log("[MSW] 노트 벌크 삭제:", noteIds);
+
+    if (!Array.isArray(noteIds) || noteIds.length === 0) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "NOTE4000",
+          message: "삭제할 노트 ID가 없습니다.",
+          result: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    // mockNotes에서 해당 ID의 노트 제거
+    const deletedNoteIds = noteIds.filter((id) => {
+      const index = mockNotes.findIndex((n) => n.noteId === id);
+      if (index > -1) {
+        mockNotes.splice(index, 1);
+        return true;
+      }
+      return false;
+    });
+
+    return HttpResponse.json<
+      ApiResponse<{ deletedCount: number; deletedNoteIds: number[] }>
+    >({
+      isSuccess: true,
+      code: "NOTE2020",
+      message: "노트 삭제 성공",
+      result: {
+        deletedCount: deletedNoteIds.length,
+        deletedNoteIds,
+      },
+    });
+  }),
 ];
