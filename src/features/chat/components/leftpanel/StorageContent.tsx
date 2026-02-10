@@ -8,6 +8,11 @@ import { NoteCard } from "@/features/storage/components/NoteCard";
 import { deleteAssets } from "@/features/assets/api/assetApi";
 import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
+import { useAuthStore } from "@/features/auth/store/auth_store";
+import {
+  PLAN_DETAILS,
+  type PlanType,
+} from "@/features/subscription/types/plan_types";
 
 interface StorageFile {
   id: number;
@@ -23,12 +28,25 @@ interface StorageContentProps {
   onTabChange: (tab: PanelTab) => void;
 }
 
+const getMimeType = (fileType: string | undefined | null) => {
+  if (!fileType) return undefined;
+  const type = fileType.toLowerCase();
+
+  if (type === "pdf") return "application/pdf";
+  if (["png", "jpg", "jpeg", "webp"].includes(type))
+    return `image/${type === "jpg" ? "jpeg" : type}`;
+  if (type === "image") return "image/jpeg"; // generic fallback시 그냥 image/jpeg로 매핑
+
+  return fileType;
+};
+
 export const StorageContent = ({
   noteId,
   onTabChange,
 }: StorageContentProps) => {
   const queryClient = useQueryClient();
   const { data: noteDetail } = useNoteDetail(noteId);
+  const { user } = useAuthStore();
 
   // BOX 파일 목록 (업로드된 자산)
   const boxFiles = useMemo<StorageFile[]>(() => {
@@ -38,10 +56,10 @@ export const StorageContent = ({
       label: asset.fileName,
       type: "upload",
       fileUrl: asset.thumbnailUrl ?? undefined,
-      mimeType: asset.fileType, // fileType이 mimeType 형태라고 가정 (e.g. application/pdf)
+      mimeType: getMimeType(asset.fileType), // fileType -> mimeType 변환 적용
       ocrStatus: asset.ocrStatus as StorageFile["ocrStatus"],
     }));
-  }, [noteDetail?.assets]);
+  }, [noteDetail]);
 
   // THREAD 파일 목록 (AI 생성 파일)
   const threadFiles = useMemo<StorageFile[]>(() => {
@@ -52,11 +70,11 @@ export const StorageContent = ({
         label: file.fileName,
         type: "ai",
         fileUrl: file.downloadUrl,
-        mimeType: file.fileType,
+        mimeType: getMimeType(file.fileType), // fileType -> mimeType 변환 적용
         ocrStatus: "completed", // 생성된 파일은 OCR 완료 상태로 간주
       })),
     );
-  }, [noteDetail?.conversations]);
+  }, [noteDetail]);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -135,8 +153,15 @@ export const StorageContent = ({
     });
   };
 
-  // 용량 계산 (MB 단위)
-  const totalLimitMB = 500;
+  // 용량 계산 (MB 단위) -> 사용자 플랜에 따른 스토리지 한도 계산
+  const userPlan = (user?.plan as PlanType) || "Free";
+  const planStorageLimit = PLAN_DETAILS[userPlan]?.storage || "5GB";
+
+  // GB -> MB 변환
+  const totalLimitMB = planStorageLimit.includes("GB")
+    ? parseInt(planStorageLimit.replace("GB", "")) * 1024
+    : parseInt(planStorageLimit.replace("MB", "")) || 500;
+
   const usedBytes =
     noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0;
 
