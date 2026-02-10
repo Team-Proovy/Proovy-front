@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 import { useCreateConversation } from "@/features/editor/hooks/useEditorQueries";
+import { createConversationJson } from "@/features/editor/api/editor_api";
 import { useNoteDetail } from "@/features/notes/hooks/useNotes";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
-import type { CreateNoteResponse } from "@/features/notes/api/notes_types";
 import type { ConversationInfo } from "@/features/notes/api/notes_types";
+import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
@@ -29,7 +30,8 @@ const convertConversations = (
 /**
  * 채팅 메시지 상태 관리 훅
  *
- * - HomePage에서 전달된 첫 대화 데이터 or API 히스토리 로드
+ * - HomePage에서 전달된 첫 메시지 → POST /api/conversations 호출
+ * - 기존 채팅방 재진입 시 API 히스토리 로드
  * - 낙관적 UI 메시지 전송
  * - 첨부 파일 업로드 → API 호출
  */
@@ -43,56 +45,27 @@ export const useChatMessages = () => {
   // 최초 진입 시 ref에 저장하여 패널 토글 등에서도 데이터 유지
   const initialStateRef = useRef(location.state);
 
-  const createNoteResponse = initialStateRef.current?.createNoteResponse as
-    | CreateNoteResponse
+  const firstMessageData = initialStateRef.current?.firstMessage as
+    | FirstMessageState
     | undefined;
 
-  const initialAttachments = useMemo(
-    () => (initialStateRef.current?.attachments ?? []) as MessageAttachment[],
-    [],
-  );
+  const viewerFile = firstMessageData?.viewerFile;
 
-  const viewerFile = initialStateRef.current?.viewerFile as
-    | { name: string; mimeType: string; size: number }
-    | undefined;
+  const hasFirstMessage = !!firstMessageData;
 
-  const hasInitialData = !!createNoteResponse?.firstConversation;
-
-  // ─── API 히스토리 로드 ───
+  // ─── API 히스토리 로드 (첫 메시지가 없을 때만 = 재진입) ───
   const { data: noteDetail, isLoading: isNoteLoading } = useNoteDetail(
     noteId,
     undefined,
-    { enabled: !hasInitialData },
+    { enabled: !hasFirstMessage },
   );
 
   // ─── 메시지 상태 ───
-  const initialMessages = useMemo((): ChatMessage[] => {
-    if (createNoteResponse?.firstConversation) {
-      const { userMessage, assistantMessage } =
-        createNoteResponse.firstConversation;
-      return [
-        {
-          id: `msg-${userMessage.messageId}`,
-          role: "user",
-          content: userMessage.content,
-          attachments:
-            initialAttachments.length > 0 ? initialAttachments : undefined,
-        },
-        {
-          id: `msg-${assistantMessage.messageId}`,
-          role: "assistant",
-          content: assistantMessage.content,
-        },
-      ];
-    }
-    return [];
-  }, [createNoteResponse, initialAttachments]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-
-  // 서버 히스토리 머지 (로컬 메시지 보존)
+  // 서버 히스토리 머지 (재진입 시)
   useEffect(() => {
-    if (noteDetail?.conversations && !hasInitialData) {
+    if (noteDetail?.conversations && !hasFirstMessage) {
       const reversed = [...noteDetail.conversations].reverse();
       const serverMessages = convertConversations(reversed);
 
@@ -102,14 +75,102 @@ export const useChatMessages = () => {
         return [...serverMessages, ...localOnly];
       });
     }
-  }, [noteDetail, hasInitialData]);
+  }, [noteDetail, hasFirstMessage]);
 
-  // ─── 대화 생성 ───
+  // ─── 대화 생성 (후속 대화) ───
   const { mutate: createConversation, isPending: isMutating } =
     useCreateConversation();
+
   const [isUploading, setIsUploading] = useState(false);
+  const [isFirstMessageSending, setIsFirstMessageSending] = useState(false);
   const isSending = isMutating || isUploading;
 
+  // ─── 첫 대화 자동 전송 (HomePage에서 진입 시) ───
+  // StrictMode에서 useEffect가 2회 실행되므로,
+  // mutation 콜백 대신 직접 API 호출 + cleanup 패턴 사용
+  useEffect(() => {
+    if (!firstMessageData) return;
+
+    let active = true;
+
+    const attachments: MessageAttachment[] | undefined =
+      firstMessageData.attachments.length > 0
+        ? firstMessageData.attachments
+        : undefined;
+
+    // 낙관적 UI: 사용자 메시지 먼저 표시
+    const tempUserMsgId = `temp-first-${Date.now()}`;
+    setMessages([
+      {
+        id: tempUserMsgId,
+        role: "user",
+        content: firstMessageData.text,
+        attachments,
+      },
+    ]);
+
+    setIsFirstMessageSending(true);
+
+    // TODO: 백엔드에서 noteId 파라미터 추가 시 여기에 noteId 전달
+    createConversationJson({
+      text: firstMessageData.text,
+      latex: firstMessageData.latex,
+      mentionedAssetIds:
+        firstMessageData.mentionedAssetIds.length > 0
+          ? firstMessageData.mentionedAssetIds
+          : undefined,
+      chosenFeatures:
+        firstMessageData.chosenFeatures.length > 0
+          ? firstMessageData.chosenFeatures
+          : undefined,
+      canvasImageIds:
+        firstMessageData.canvasImageIds.length > 0
+          ? firstMessageData.canvasImageIds
+          : undefined,
+    })
+      .then((response) => {
+        if (!active) return;
+        const { userMessage, assistantMessage } = response.result;
+        setMessages((prev) => [
+          ...prev.map((m) =>
+            m.id === tempUserMsgId
+              ? {
+                  id: `msg-${userMessage.messageId}`,
+                  role: "user" as const,
+                  content: userMessage.content,
+                  attachments,
+                }
+              : m,
+          ),
+          {
+            id: `msg-${assistantMessage.messageId}`,
+            role: "assistant",
+            content: assistantMessage.content,
+          },
+        ]);
+        setIsFirstMessageSending(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        console.error("첫 대화 생성 실패:", error);
+        setMessages((prev) => [
+          ...prev.filter((m) => m.id !== tempUserMsgId),
+          {
+            id: `error-${Date.now()}`,
+            role: "assistant",
+            content:
+              "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
+          },
+        ]);
+        setIsFirstMessageSending(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [firstMessageData]);
+
+  // ─── 후속 대화 전송 핸들러 ───
   const handleSend = useCallback(
     async (data: ChatSendData) => {
       const nId = Number(noteId);
@@ -146,7 +207,7 @@ export const useChatMessages = () => {
       // 2. assetId 병합
       const allAssetIds = [...data.mentionedAssetIds, ...uploadedFileAssetIds];
 
-      // 3. 낙관적 UI
+      // 3. 첨부 정보
       const messageAttachments: MessageAttachment[] | undefined =
         data.attachments.length > 0
           ? data.attachments.map((a) => ({
@@ -157,6 +218,7 @@ export const useChatMessages = () => {
             }))
           : undefined;
 
+      // 4. 낙관적 UI + API 호출
       const tempUserMsgId = `temp-${Date.now()}`;
       setMessages((prev) => [
         ...prev,
@@ -168,7 +230,7 @@ export const useChatMessages = () => {
         },
       ]);
 
-      // 4. API 호출
+      // TODO: 백엔드에서 noteId 파라미터 추가 시 여기에 noteId 전달
       createConversation(
         {
           text: data.message,
@@ -221,18 +283,18 @@ export const useChatMessages = () => {
   );
 
   // ─── 파생 데이터 ───
-  const noteTitle =
-    createNoteResponse?.title ?? noteDetail?.title ?? `노트 ${noteId}`;
+  const noteTitle = noteDetail?.title ?? `노트 ${noteId}`;
 
   return {
     noteId,
     messages,
     handleSend,
     isSending,
-    isNoteLoading: isNoteLoading && !hasInitialData,
+    isFirstMessageSending,
+    isNoteLoading: isNoteLoading && !hasFirstMessage,
     noteTitle,
     noteDetail,
     viewerFile,
-    hasInitialData,
+    hasInitialData: hasFirstMessage,
   };
 };

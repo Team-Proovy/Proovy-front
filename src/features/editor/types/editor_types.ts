@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@/shared/api/shared_types";
+import type { ApiResponse, PageInfo } from "@/shared/api/shared_types";
 
 // ============================================================
 // 도구 (Tool) 관련 타입
@@ -89,6 +89,200 @@ export interface ConversationResponseDto {
     status: string;
     createdAt: string;
   };
+}
+
+// ============================================================
+// 대화 상세 조회 (GET /api/conversations/{conversationId})
+// ============================================================
+
+/** 노트 요약 정보 */
+export interface NoteInfo {
+  noteId: number;
+  title: string;
+}
+
+/** 멘션된 파일 상세 */
+export interface MentionedFileDetail {
+  assetId: number;
+  fileName: string;
+  thumbnailUrl: string | null;
+}
+
+/** 캔버스 이미지 정보 */
+export interface CanvasImageInfo {
+  assetId: number;
+  previewUrl: string;
+}
+
+/** 사용자 메시지 상세 */
+export interface UserMessageDetail {
+  messageId: number;
+  text: string;
+  latex: string | null;
+  mentionedFiles: MentionedFileDetail[];
+  mentionedTools: string[];
+  canvasImages: CanvasImageInfo[];
+  createdAt: string;
+}
+
+/** 섹션 정보 (AI 응답 구조화) */
+export interface SectionInfo {
+  type: string;
+  title: string;
+  content: string;
+}
+
+/** 코드 실행 정보 */
+export interface CodeExecutionInfo {
+  status: string;
+  message: string;
+}
+
+/** 생성된 문제 정보 */
+export interface GeneratedProblemInfo {
+  title: string;
+  content: string;
+  latex: string | null;
+}
+
+/** AI 응답 메시지 상세 */
+export interface AssistantMessageDetail {
+  messageId: number;
+  text: string;
+  sections: SectionInfo[];
+  codeExecution: CodeExecutionInfo | null;
+  generatedProblem: GeneratedProblemInfo | null;
+  createdAt: string;
+}
+
+/** AI 실행 정보 */
+export interface AiRunInfo {
+  aiRunId: number;
+  runType: string;
+  modelName: string;
+  status: string;
+  promptTokens: number;
+  completionTokens: number;
+  latencyMs: number;
+}
+
+/** 크레딧 사용 내역 */
+export interface CreditBreakdown {
+  reason: string;
+  amount: number;
+}
+
+/** 크레딧 사용 정보 */
+export interface CreditUsedInfo {
+  amount: number;
+  breakdown: CreditBreakdown[];
+}
+
+/** 대화 상세 응답 */
+export interface ConversationDetailResponse {
+  conversationId: number;
+  note: NoteInfo;
+  userMessage: UserMessageDetail;
+  assistantMessage: AssistantMessageDetail;
+  aiRuns: AiRunInfo[];
+  creditUsed: CreditUsedInfo;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================
+// 대화 검색 (GET /api/conversations/search)
+// ============================================================
+
+/** 대화 검색 파라미터 */
+export interface ConversationSearchParams {
+  /** 검색 키워드 (최소 2자) */
+  query: string;
+  /** 특정 노트 내에서만 검색 */
+  noteId?: number;
+  /** 사용된 도구로 필터링 (graph, solution, canvas, code_verify) */
+  toolCode?: string;
+  /** 검색 시작일 (ISO 8601, YYYY-MM-DD) */
+  startDate?: string;
+  /** 검색 종료일 (ISO 8601, YYYY-MM-DD) */
+  endDate?: string;
+  /** 페이지 번호 (0부터 시작) */
+  page?: number;
+  /** 페이지 크기 (최대 100) */
+  size?: number;
+}
+
+/** 멘션된 파일 (검색 결과용) */
+export interface MentionedFile {
+  assetId: number;
+  fileName: string;
+}
+
+/** 검색 결과 메시지 정보 (NoteDetail의 MessageInfo와 동일 구조) */
+export interface SearchMessageInfo {
+  messageId: number;
+  content: string;
+  mentionedAssets: { assetId: number; fileName: string }[];
+  mentionedTools: string[];
+  usedTools: string[];
+  generatedFiles: {
+    fileId: number;
+    fileName: string;
+    fileType: string;
+    downloadUrl: string;
+  }[];
+  createdAt: string;
+}
+
+/** 대화 검색 결과 항목 */
+export interface ConversationSearchItem {
+  conversationId: number;
+  noteId: number;
+  noteTitle: string;
+  userMessage: SearchMessageInfo;
+  assistantMessage: SearchMessageInfo;
+  mentionedFiles: MentionedFile[];
+  mentionedTools: string[];
+  relevance: number;
+  createdAt: string;
+}
+
+/** 검색 메타데이터 */
+export interface SearchMetadata {
+  query: string;
+  totalMatches: number;
+  searchTimeMs: number;
+}
+
+/** 대화 검색 응답 */
+export interface ConversationSearchResponse {
+  conversations: ConversationSearchItem[];
+  pageInfo: PageInfo;
+  searchMetadata: SearchMetadata;
+}
+
+// ============================================================
+// 캔버스 이미지 업로드 (POST /api/conversations/canvas-images)
+// ============================================================
+
+/** 캔버스 이미지 업로드 요청 */
+export interface CanvasImageUploadRequest {
+  noteId: number;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+}
+
+/** 캔버스 이미지 업로드 응답 */
+export interface CanvasImageUploadResponse {
+  assetId: number;
+  source: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  storageKey: string;
+  uploadUrl: string;
+  createdAt: string;
 }
 
 // ============================================================

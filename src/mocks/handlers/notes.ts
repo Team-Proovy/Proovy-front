@@ -119,37 +119,29 @@ export const notesHandlers = [
     });
   }),
 
-  // 새 노트 생성
+  // 새 노트 생성 (노트 리소스만 생성, 대화는 POST /api/conversations로 별도 호출)
   http.post<never, CreateNoteRequest>(
     `${BASE_URL}/api/notes`,
     async ({ request }) => {
-      await delay(1000); // AI 응답 시뮬레이션
+      await delay(300);
 
       const body = await request.json();
       console.log("[MSW] 새 노트 생성:", body);
 
-      // 노트 생성 한도 초과 시뮬레이션
-      if (mockNotes.length >= 2) {
-        // Free 플랜 한도
-        // 테스트를 위해 일단 통과시킴
-      }
-
       const newNoteId = mockNotes.length + 1;
       const now = new Date().toISOString();
       const generatedTitle =
-        body.firstMessage.length > 30
-          ? body.firstMessage.slice(0, 30) + "..."
-          : body.firstMessage;
+        body.title ?? `새 노트 ${new Date().toLocaleString("ko-KR")}`;
 
       // mockNotes 배열에 새 노트 추가 → GET /api/notes에서 반영됨
       const newNote: NoteDto = {
         noteId: newNoteId,
         title: generatedTitle,
         thumbnailUrl: null,
-        conversationCount: 1,
+        conversationCount: 0,
         conversationLimit: 20,
-        conversationUsagePercent: 5,
-        assetCount: body.mentionedAssetIds?.length ?? 0,
+        conversationUsagePercent: 0,
+        assetCount: 0,
         createdAt: now,
         lastUsedAt: now,
       };
@@ -158,36 +150,16 @@ export const notesHandlers = [
       const response: CreateNoteResponse = {
         noteId: newNoteId,
         title: generatedTitle,
-        titleGeneratedBy: "USER_MESSAGE",
+        titleGeneratedBy: body.title ? "USER" : "SYSTEM",
         conversationLimit: 20,
-        firstConversation: {
-          conversationId: 1,
-          userMessage: {
-            messageId: 1,
-            content: body.firstMessage,
-            mentionedAssets:
-              body.mentionedAssetIds?.map((id: number) => ({
-                assetId: id,
-                fileName: `file_${id}.pdf`,
-              })) || [],
-            mentionedTools: body.mentionedToolCodes || [],
-            createdAt: now,
-          },
-          assistantMessage: {
-            messageId: 2,
-            content: `안녕하세요! "${body.firstMessage.slice(0, 20)}..."에 대해 도움을 드릴게요.\n\n이 문제를 해결하기 위해 단계별로 접근해보겠습니다.`,
-            usedTools: body.mentionedToolCodes || [],
-            status: "COMPLETED",
-            createdAt: now,
-          },
-        },
+        firstConversation: null,
         createdAt: now,
       };
 
       return HttpResponse.json<ApiResponse<CreateNoteResponse>>({
         isSuccess: true,
-        code: "NOTE2010",
-        message: "노트 생성 성공",
+        code: "COMMON201",
+        message: "노트가 생성되었습니다.",
         result: response,
       });
     },

@@ -5,6 +5,11 @@ import type {
   ToolListResult,
   ChatAssetDto,
   CreateConversationRequest,
+  ConversationDetailResponse,
+  ConversationSearchResponse,
+  ConversationSearchItem,
+  CanvasImageUploadRequest,
+  CanvasImageUploadResponse,
 } from "../../features/editor/types/editor_types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -136,6 +141,7 @@ const mockTools: ToolDto[] = [
 // ============================================================
 let conversationIdCounter = 100;
 let messageIdCounter = 200;
+let canvasAssetIdCounter = 500;
 
 // ============================================================
 // 핸들러
@@ -224,6 +230,204 @@ export const editorHandlers = [
             status: "COMPLETED",
             createdAt: now,
           },
+        },
+      });
+    },
+  ),
+
+  /** GET /api/conversations/{conversationId} - 대화 상세 조회 */
+  http.get(
+    `${BASE_URL}/api/conversations/:conversationId`,
+    async ({ params }) => {
+      await delay(300);
+
+      const conversationId = Number(params.conversationId);
+      const now = new Date().toISOString();
+
+      return HttpResponse.json<ApiResponse<ConversationDetailResponse>>({
+        isSuccess: true,
+        code: "CONV2000",
+        message: "대화 상세 조회 성공",
+        result: {
+          conversationId,
+          note: { noteId: 1, title: "이산수학 과제 풀이" },
+          userMessage: {
+            messageId: 201,
+            text: "이 문제를 풀어줘",
+            latex: null,
+            mentionedFiles: [
+              {
+                assetId: 101,
+                fileName: "discrete_math_HW2.pdf",
+                thumbnailUrl: null,
+              },
+            ],
+            mentionedTools: [],
+            canvasImages: [],
+            createdAt: now,
+          },
+          assistantMessage: {
+            messageId: 202,
+            text: "이 문제는 다음과 같이 풀 수 있습니다.",
+            sections: [
+              {
+                type: "explanation",
+                title: "풀이 과정",
+                content: "1단계: 조건을 분석합니다.\n2단계: 공식을 적용합니다.",
+              },
+            ],
+            codeExecution: null,
+            generatedProblem: null,
+            createdAt: now,
+          },
+          aiRuns: [
+            {
+              aiRunId: 1,
+              runType: "LLM_QUERY",
+              modelName: "gpt-4o",
+              status: "COMPLETED",
+              promptTokens: 150,
+              completionTokens: 300,
+              latencyMs: 2500,
+            },
+          ],
+          creditUsed: {
+            amount: 10,
+            breakdown: [{ reason: "AI 질의", amount: 10 }],
+          },
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    },
+  ),
+
+  /** GET /api/conversations/search - 대화 검색 */
+  http.get(`${BASE_URL}/api/conversations/search`, async ({ request }) => {
+    await delay(400);
+
+    const url = new URL(request.url);
+    const query = url.searchParams.get("query") || "";
+    const page = parseInt(url.searchParams.get("page") || "0", 10);
+    const size = parseInt(url.searchParams.get("size") || "20", 10);
+
+    if (query.length < 2) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "STORAGE4003",
+          message: "검색어는 최소 2자 이상부터 입력 가능합니다.",
+          result: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    const now = new Date().toISOString();
+
+    const mockResults: ConversationSearchItem[] = [
+      {
+        conversationId: 101,
+        noteId: 1,
+        noteTitle: "이산수학 과제 풀이",
+        userMessage: {
+          messageId: 201,
+          content: `${query}에 대한 질문입니다.`,
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        assistantMessage: {
+          messageId: 202,
+          content: `${query}에 대해 답변드립니다. 이 문제는 기본 개념을 적용하면 풀 수 있습니다.`,
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        mentionedFiles: [],
+        mentionedTools: [],
+        relevance: 0.95,
+        createdAt: now,
+      },
+      {
+        conversationId: 102,
+        noteId: 2,
+        noteTitle: "미적분학 중간고사 대비",
+        userMessage: {
+          messageId: 203,
+          content: `${query} 관련 문제를 풀어줘`,
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: [],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        assistantMessage: {
+          messageId: 204,
+          content: `${query} 관련 문제의 풀이 과정을 설명드리겠습니다.`,
+          mentionedAssets: [],
+          mentionedTools: [],
+          usedTools: ["SOLUTION"],
+          generatedFiles: [],
+          createdAt: now,
+        },
+        mentionedFiles: [{ assetId: 201, fileName: "calculus_chapter3.pdf" }],
+        mentionedTools: ["SOLUTION"],
+        relevance: 0.82,
+        createdAt: now,
+      },
+    ];
+
+    return HttpResponse.json<ApiResponse<ConversationSearchResponse>>({
+      isSuccess: true,
+      code: "CONV2000",
+      message: "대화 검색 성공",
+      result: {
+        conversations: mockResults,
+        pageInfo: {
+          page,
+          size,
+          totalElements: mockResults.length,
+          totalPages: 1,
+          hasNext: false,
+          hasPrevious: page > 0,
+        },
+        searchMetadata: {
+          query,
+          totalMatches: mockResults.length,
+          searchTimeMs: 45,
+        },
+      },
+    });
+  }),
+
+  /** POST /api/conversations/canvas-images - 캔버스 이미지 업로드 */
+  http.post<never, CanvasImageUploadRequest>(
+    `${BASE_URL}/api/conversations/canvas-images`,
+    async ({ request }) => {
+      await delay(300);
+
+      const body = await request.json();
+      const now = new Date().toISOString();
+      const assetId = ++canvasAssetIdCounter;
+
+      return HttpResponse.json<ApiResponse<CanvasImageUploadResponse>>({
+        isSuccess: true,
+        code: "CONV2010",
+        message: "캔버스 이미지 업로드 URL 발급 성공",
+        result: {
+          assetId,
+          source: "canvas",
+          fileName: body.fileName,
+          fileSize: body.fileSize,
+          mimeType: body.mimeType,
+          storageKey: `canvas/${body.noteId}/${assetId}_${body.fileName}`,
+          uploadUrl: `https://s3.amazonaws.com/proovy-mock/canvas/${assetId}?presigned=true`,
+          createdAt: now,
         },
       });
     },
