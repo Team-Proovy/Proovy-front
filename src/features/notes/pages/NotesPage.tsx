@@ -10,6 +10,8 @@
  */
 
 import { useNoteListPage } from "../hooks";
+import { useMyProfile } from "@/features/settings/hooks/useUser";
+import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
 import {
   NotesHeader,
   NotesGrid,
@@ -19,6 +21,8 @@ import {
 } from "../components";
 
 export const NotesPage = () => {
+  const { data: profile } = useMyProfile();
+  const maxNotes = getPlanMaxNotes(profile?.subscription?.plan);
   const {
     currentPage,
     sortOrder,
@@ -67,8 +71,8 @@ export const NotesPage = () => {
             sortOrder={sortOrder}
             isSortDropdownOpen={isSortDropdownOpen}
             isSelectMode={isSelectMode}
-            notesCount={notes.length}
             totalElements={pageInfo?.totalElements || 0}
+            maxNotes={maxNotes}
             selectedCount={selectedIds.length}
             onSelectSort={handleSelectSort}
             onToggleSortDropdown={setIsSortDropdownOpen}

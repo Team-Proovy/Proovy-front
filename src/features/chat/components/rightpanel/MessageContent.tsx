@@ -1,5 +1,7 @@
-import { useMemo } from "react";
-import katex from "katex";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 
 interface MessageContentProps {
@@ -7,95 +9,85 @@ interface MessageContentProps {
   className?: string;
 }
 
-/** 텍스트에서 $...$ (인라인) 및 $$...$$ (블록) LaTeX 구문을 파싱 */
-const parseContent = (text: string) => {
-  // $$...$$ (블록) 먼저, 그 다음 $...$ (인라인) 매칭
-  const regex = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
-  const parts: {
-    type: "text" | "inline-math" | "block-math";
-    value: string;
-  }[] = [];
-
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(text)) !== null) {
-    // 매치 이전 텍스트
-    if (match.index > lastIndex) {
-      parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
-    }
-
-    if (match[1] !== undefined) {
-      // $$...$$ 블록 수식
-      parts.push({ type: "block-math", value: match[1].trim() });
-    } else if (match[2] !== undefined) {
-      // $...$ 인라인 수식
-      parts.push({ type: "inline-math", value: match[2].trim() });
-    }
-
-    lastIndex = match.index + match[0].length;
-  }
-
-  // 남은 텍스트
-  if (lastIndex < text.length) {
-    parts.push({ type: "text", value: text.slice(lastIndex) });
-  }
-
-  return parts;
-};
-
-/** LaTeX → HTML 렌더링 (에러 시 원본 텍스트 반환) */
-const renderLatex = (latex: string, displayMode: boolean): string => {
-  try {
-    return katex.renderToString(latex, {
-      displayMode,
-      throwOnError: false,
-      strict: false,
-    });
-  } catch {
-    return displayMode ? `$$${latex}$$` : `$${latex}$`;
-  }
-};
-
 /**
  * MessageContent - 메시지 내용 렌더링 컴포넌트
  *
- * $...$ → 인라인 수식, $$...$$ → 블록 수식으로 KaTeX 렌더링
- * 그 외 텍스트는 일반 텍스트로 표시
+ * 마크다운 + GFM + 수식($...$, $$...$$)을 렌더링
  */
 export const MessageContent = ({
   content,
   className = "",
 }: MessageContentProps) => {
-  const parts = useMemo(() => parseContent(content), [content]);
-
   return (
-    <span className={className}>
-      {parts.map((part, i) => {
-        if (part.type === "text") {
-          return <span key={i}>{part.value}</span>;
-        }
-
-        const isBlock = part.type === "block-math";
-        const html = renderLatex(part.value, isBlock);
-
-        if (isBlock) {
-          return (
-            <span
-              key={i}
-              className="my-2 block overflow-x-auto"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          );
-        }
-
-        return (
-          <span
-            key={i}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        );
-      })}
-    </span>
+    <div className={className}>
+      <ReactMarkdown
+        remarkPlugins={[remarkMath, remarkGfm]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          h1: ({ children }) => (
+            <h1 className="my-2 text-[18px] font-semibold">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="my-2 text-[16px] font-semibold">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="my-2 text-[15px] font-semibold">{children}</h3>
+          ),
+          p: ({ children }) => <p className="my-1">{children}</p>,
+          br: () => <br />,
+          ul: ({ children }) => (
+            <ul className="my-2 list-disc pl-5">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="my-2 list-decimal pl-5">{children}</ol>
+          ),
+          li: ({ children }) => <li className="my-1">{children}</li>,
+          blockquote: ({ children }) => (
+            <blockquote className="my-2 border-l-2 border-gray-300 pl-3 text-gray-600">
+              {children}
+            </blockquote>
+          ),
+          code: ({ className: codeClassName, children }) => (
+            <code
+              className={`rounded bg-gray-100 px-1 py-0.5 text-[0.9em] ${codeClassName ?? ""}`}
+            >
+              {children}
+            </code>
+          ),
+          pre: ({ children }) => (
+            <pre className="my-2 overflow-x-auto rounded bg-gray-50 p-3 text-sm">
+              {children}
+            </pre>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 underline"
+            >
+              {children}
+            </a>
+          ),
+          table: ({ children }) => (
+            <div className="my-2 overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                {children}
+              </table>
+            </div>
+          ),
+          th: ({ children }) => (
+            <th className="border border-gray-200 bg-gray-50 px-2 py-1 text-left">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="border border-gray-200 px-2 py-1">{children}</td>
+          ),
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
   );
 };

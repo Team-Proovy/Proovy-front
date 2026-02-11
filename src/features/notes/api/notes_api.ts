@@ -12,6 +12,23 @@ import type {
 } from "./notes_types";
 
 const NOTES_BASE = "/api/notes";
+const MAX_CONCURRENT_NOTE_DELETES = 5;
+
+const chunkNoteIds = (noteIds: number[], size: number) => {
+  const chunks: number[][] = [];
+
+  for (let i = 0; i < noteIds.length; i += size) {
+    chunks.push(noteIds.slice(i, i + size));
+  }
+
+  return chunks;
+};
+
+const getDeleteErrorMessage = (error: unknown) => {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "string") return error;
+  return "노트 삭제에 실패했습니다.";
+};
 
 // 노트 목록 조회
 export const getNoteList = async (
@@ -56,13 +73,45 @@ export const getNoteDetail = async (
 export const deleteNotesBulk = async (
   noteIds: number[],
 ): Promise<ApiResponse<DeleteNotesBulkResult>> => {
-  const response = await apiClient.delete<ApiResponse<DeleteNotesBulkResult>>(
-    NOTES_BASE,
-    {
-      data: { noteIds },
+  const deletedNoteIds: number[] = [];
+  const failedNoteIds: number[] = [];
+  const failedReasons: { noteId: number; message: string }[] = [];
+
+  const chunks = chunkNoteIds(noteIds, MAX_CONCURRENT_NOTE_DELETES);
+
+  for (const chunk of chunks) {
+    const results = await Promise.allSettled(
+      chunk.map((noteId) => deleteNote(noteId)),
+    );
+
+    results.forEach((result, index) => {
+      const noteId = chunk[index];
+
+      if (result.status === "fulfilled") {
+        deletedNoteIds.push(noteId);
+      } else {
+        failedNoteIds.push(noteId);
+        failedReasons.push({
+          noteId,
+          message: getDeleteErrorMessage(result.reason),
+        });
+      }
+    });
+  }
+
+  const isSuccess = failedNoteIds.length === 0;
+
+  return {
+    isSuccess,
+    code: isSuccess ? "COMMON200" : "COMMON207",
+    message: isSuccess ? "노트 삭제 성공" : "노트 삭제 부분 성공",
+    result: {
+      deletedCount: deletedNoteIds.length,
+      deletedNoteIds,
+      failedNoteIds,
+      failedReasons,
     },
-  );
-  return response.data;
+  };
 };
 
 // 단일 노트 삭제

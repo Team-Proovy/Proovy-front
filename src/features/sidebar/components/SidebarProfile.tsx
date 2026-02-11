@@ -7,6 +7,12 @@ import {
 } from "../../../shared/components/icons/SidebarIcons";
 
 import { useAuthStore } from "../../auth/store/auth_store";
+import { useNoteList } from "@/features/notes/hooks/useNotes";
+import { useMyProfile } from "@/features/settings/hooks/useUser";
+import {
+  getPlanMaxNotes,
+  normalizePlanType,
+} from "@/features/subscription/types/plan_types";
 
 interface SidebarProfileProps {
   isCollapsed: boolean;
@@ -22,6 +28,18 @@ export const SidebarProfile = ({
   onSettingsClick,
 }: SidebarProfileProps) => {
   const authUser = useAuthStore((state) => state.user);
+  const { data: profile } = useMyProfile();
+  const { data: noteListData } = useNoteList({
+    page: 0,
+    size: 1,
+  });
+
+  const planType = normalizePlanType(
+    profile?.subscription?.plan ?? authUser?.plan,
+  );
+  const maxNotes = getPlanMaxNotes(planType);
+  const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
+  const creditTotal = profile?.credit.totalAvailable ?? 0;
 
   // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
   const formatNickname = (nickname?: string) => {
@@ -43,7 +61,7 @@ export const SidebarProfile = ({
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded-full bg-[#2A6AFF]" />
             <span className="text-[14px] leading-[20px] font-medium text-[#333333]">
-              {authUser?.plan || "Free"}
+              {planType}
             </span>
           </div>
           <button
@@ -66,11 +84,15 @@ export const SidebarProfile = ({
         <div className="flex items-center justify-between text-gray-500">
           <div className="flex items-center gap-1.5">
             <CreditIcon />
-            <span className="text-[14px] font-medium text-[#D1D6DE]">200</span>
+            <span className="text-[14px] font-medium text-[#D1D6DE]">
+              {creditTotal}
+            </span>
           </div>
           <div className="mr-[24px] flex items-center gap-1.5">
             <PaperIcon />
-            <span className="text-[14px] font-medium">5/5</span>
+            <span className="text-[14px] font-medium">
+              {totalNotes}/{maxNotes}
+            </span>
           </div>
         </div>
       </div>
@@ -108,7 +130,9 @@ export const SidebarProfile = ({
         className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
       >
         <CreditIcon size={22} />
-        <span className="text-[10px] font-semibold text-[#2F3440]">200</span>
+        <span className="text-[10px] font-semibold text-[#2F3440]">
+          {creditTotal}
+        </span>
       </div>
       <UserIcon
         onClick={(e) => {
