@@ -67,4 +67,28 @@ export const creditHandlers = [
       result: mockData,
     });
   }),
+
+  // 크레딧 사용
+  http.post("/api/credits/use", async ({ request }) => {
+    // 요청 바디 파싱 (실제 로직 시뮬레이션 가능)
+    // const body = await request.json();
+
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "COMMON200",
+      message: "요청에 성공했습니다.",
+      result: {
+        success: true,
+        usedAmount: 15,
+        balance: {
+          dailyFreeCredit: 65,
+          freeCredit: 50,
+          paidCredit: 120,
+          totalAvailable: 235,
+        },
+        insufficientCredit: false,
+        message: "크레딧이 차감되었습니다.",
+      },
+    });
+  }),
 ];

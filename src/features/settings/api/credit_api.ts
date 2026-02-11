@@ -19,3 +19,13 @@ export const getCreditHistory = async (
   );
   return response.data;
 };
+
+// 크레딧 사용 (차감)
+export const useCredit = async (
+  data: import("./credit_types").CreditUsageRequest,
+): Promise<ApiResponse<import("./credit_types").CreditUsageResult>> => {
+  const response = await apiClient.post<
+    ApiResponse<import("./credit_types").CreditUsageResult>
+  >(`${CREDIT_BASE}/use`, data);
+  return response.data;
+};

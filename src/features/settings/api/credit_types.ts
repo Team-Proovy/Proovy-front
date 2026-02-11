@@ -99,5 +99,32 @@ export interface GetCreditHistoryParams {
   changeType?: "all" | "earn" | "spend" | "expire";
   creditType?: "all" | "daily" | "free" | "paid";
   startDate?: string;
+  startDate?: string;
   endDate?: string;
+}
+
+/** 크레딧 사용 요청 */
+export interface CreditUsageRequest {
+  eventType: CreditEventType;
+  difficulty?: "easy" | "medium" | "hard";
+  featureName: string;
+  description: string;
+  amount?: number | null;
+}
+
+/** 크레딧 잔액 정보 (사용 응답용) */
+export interface CreditBalanceDto {
+  dailyFreeCredit: number;
+  freeCredit: number;
+  paidCredit: number;
+  totalAvailable: number;
+}
+
+/** 크레딧 사용 결과 */
+export interface CreditUsageResult {
+  success: boolean;
+  usedAmount: number;
+  balance: CreditBalanceDto;
+  insufficientCredit: boolean;
+  message: string;
 }
