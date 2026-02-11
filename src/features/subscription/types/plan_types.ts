@@ -28,7 +28,7 @@ export const PLAN_DETAILS: Record<
     name: "Free",
     dailyCredits: 100,
     monthlyCredits: 0,
-    storage: "5GB",
+    storage: "1GB",
     maxNotes: 2,
     maxUploadSize: "10MB",
     price: 0,

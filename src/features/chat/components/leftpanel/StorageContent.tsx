@@ -9,6 +9,7 @@ import { deleteAssets } from "@/features/assets/api/assetApi";
 import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import {
   PLAN_DETAILS,
   type PlanType,
@@ -147,6 +148,8 @@ export const StorageContent = ({
     }
   };
 
+  /* user duplicated declaration removed */
+  const { setViewerFileId } = useStorageStore();
   const [, setSearchParams] = useSearchParams();
 
   const handleOpenViewer = () => {
@@ -156,6 +159,7 @@ export const StorageContent = ({
     }
 
     const targetFileId = selectedIds[0];
+    setViewerFileId(targetFileId);
 
     setSearchParams((prev) => {
       prev.set("panel", "viewer");
@@ -170,6 +174,7 @@ export const StorageContent = ({
 
   const handleFileClick = (fileId: number) => {
     if (isSelectMode) return;
+    setViewerFileId(fileId);
     setSearchParams((prev) => {
       prev.set("panel", "viewer");
       prev.set("file", fileId.toString());
