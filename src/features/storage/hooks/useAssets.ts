@@ -36,7 +36,7 @@ export const useStorageInfo = (keyword?: string) => {
     queryKey: assetKeys.storageList(keyword),
     queryFn: async () => {
       const response = await getStorageUsage(keyword);
-      return response.data;
+      return response.result;
     },
     staleTime: 1000 * 60 * 5, // 5분간 fresh 상태 유지
     gcTime: 1000 * 60 * 10, // 10분간 캐시 보관
@@ -56,7 +56,7 @@ export const useAssetDetail = (assetId: number, enabled = true) => {
     queryKey: assetKeys.detail(assetId),
     queryFn: async () => {
       const response = await getAssetDetail(assetId);
-      return response.data;
+      return response.result;
     },
     enabled: enabled && !!assetId,
     staleTime: 1000 * 60 * 10, // 10분
@@ -122,14 +122,14 @@ export const useUploadAsset = () => {
         fileSize: file.size,
       };
       const urlResponse = await getUploadUrl(requestParams);
-      const { uploadUrl, assetId } = urlResponse.data;
+      const { uploadUrl, assetId } = urlResponse.result;
 
       // 2. S3에 직접 업로드
       await uploadToS3(uploadUrl, file, onProgress);
 
       // 3. 업로드 완료 확인
       const confirmResponse = await confirmUpload(assetId);
-      return confirmResponse.data;
+      return confirmResponse.result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: assetKeys.all });
@@ -148,7 +148,7 @@ export const useDownloadUrl = (assetId: number, enabled = false) => {
     queryKey: [...assetKeys.detail(assetId), "download"],
     queryFn: async () => {
       const response = await getDownloadUrl(assetId);
-      return response.data;
+      return response.result;
     },
     enabled: enabled && !!assetId,
     staleTime: 1000 * 60 * 10, // 10분 (presigned URL 15분 유효)
