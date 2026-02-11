@@ -227,6 +227,8 @@ export const useChatMessages = () => {
     abortControllerRef.current = new AbortController();
 
     const sendFirst = async () => {
+      const signal = abortControllerRef.current!.signal;
+
       try {
         const response = await createConversationApi(
           {
@@ -246,21 +248,17 @@ export const useChatMessages = () => {
                 ? firstMessageData.canvasImageIds
                 : undefined,
           },
-          { isStream: true, signal: abortControllerRef.current?.signal },
+          { isStream: true, signal },
         );
 
-        await processStream(
-          response,
-          tempAssistantMsgId,
-          abortControllerRef.current!.signal,
-        );
+        await processStream(response, tempAssistantMsgId, signal);
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],
         });
       } catch (error) {
-        if (abortControllerRef.current?.signal.aborted) return;
+        if (signal.aborted) return;
         console.error("첫 대화 생성 실패:", error);
         firstMessageSentRef.current = false;
 
@@ -360,6 +358,7 @@ export const useChatMessages = () => {
       setIsStreamingResponse(true);
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
 
       try {
         const response = await createConversationApi(
@@ -375,20 +374,16 @@ export const useChatMessages = () => {
             canvasImageIds:
               canvasImageIds.length > 0 ? canvasImageIds : undefined,
           },
-          { isStream: true, signal: abortControllerRef.current.signal },
+          { isStream: true, signal },
         );
 
-        await processStream(
-          response,
-          tempAssistantMsgId,
-          abortControllerRef.current.signal,
-        );
+        await processStream(response, tempAssistantMsgId, signal);
 
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],
         });
       } catch (error) {
-        if (abortControllerRef.current?.signal.aborted) return;
+        if (signal.aborted) return;
         console.error("대화 생성 실패:", error);
 
         setMessages((prev) => {
