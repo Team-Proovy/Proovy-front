@@ -4,7 +4,6 @@ import {
   type CreditHistoryItem,
 } from "./CreditHistoryTable";
 import { useCreditHistory } from "../../hooks/useCredit";
-import type { CreditSummaryDto } from "../../api/credit_types";
 import { useAuthStore } from "../../../auth/store/auth_store";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
 
@@ -39,7 +38,7 @@ export const CreditTabContent = () => {
         eventType: item.eventName || item.eventType,
         detail: item.description,
         date: formattedDate,
-        change: item.changeType === "SPEND" ? -item.amount : item.amount,
+        change: item.changeType === "EARN" ? item.amount : -item.amount,
       };
     }) || [];
 
@@ -137,7 +136,6 @@ export const CreditTabContent = () => {
 
   // 데이터가 없거나 에러 발생 시 기본값으로 UI 유지
   const safeDailyFreeCredit = summary?.dailyFreeCredit || {
-    amount: 0,
     balance: 0,
     limit: 100, // 기본값
     expiresAt: new Date().toISOString(),
@@ -165,7 +163,7 @@ export const CreditTabContent = () => {
       <CreditInfoContainer
         plan={user?.plan || "Free"}
         totalCredits={safeTotalAvailable}
-        usedCredits={0}
+        usedCredits={creditData?.periodSummary.totalSpent || 0}
         dailyCredits={safeDailyFreeCredit.balance}
         dailyResetTime={resetTimeStr}
       />

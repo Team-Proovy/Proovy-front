@@ -6,6 +6,8 @@ import type {
   SubscriptionUpdateRequest,
   UpgradeSubscriptionRequest,
   CancelSubscriptionResponse,
+  UpdateProfileRequest,
+  DeleteUserResponse,
 } from "./user_types";
 
 const USER_BASE = "/api/users";
@@ -22,11 +24,13 @@ export const getMyProfile = async (): Promise<
 
 // 내 프로필 수정
 export const updateProfile = async (
-  data: import("./user_types").UpdateProfileRequest,
-): Promise<ApiResponse<import("./user_types").MyProfileResponse>> => {
-  const response = await apiClient.patch<
-    ApiResponse<import("./user_types").MyProfileResponse>
-  >(`${USER_BASE}/me`, data);
+  data: UpdateProfileRequest,
+): Promise<ApiResponse<MyProfileResponse>> => {
+  const response = await apiClient.patch<ApiResponse<MyProfileResponse>>(
+    `${USER_BASE}/me`,
+    data,
+  );
+
   return response.data;
 };
 
@@ -42,11 +46,11 @@ export const getMySubscription = async (): Promise<
 
 // 회원 탈퇴
 export const deleteAccount = async (): Promise<
-  ApiResponse<import("./user_types").DeleteUserResponse>
+  ApiResponse<DeleteUserResponse>
 > => {
-  const response = await apiClient.delete<
-    ApiResponse<import("./user_types").DeleteUserResponse>
-  >(`${USER_BASE}/me`);
+  const response = await apiClient.delete<ApiResponse<DeleteUserResponse>>(
+    `${USER_BASE}/me`,
+  );
   return response.data;
 };
 

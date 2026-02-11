@@ -3,8 +3,11 @@ import {
   getMyProfile,
   getMySubscription,
   deleteAccount,
+  cancelSubscription,
+  upgradeSubscription,
 } from "../api/user_api";
 import { tokenUtils } from "@/shared/api/client";
+import type { UpgradeSubscriptionRequest } from "../api/user_types";
 
 // Query Keys
 export const userKeys = {
@@ -45,6 +48,7 @@ export const useDeleteAccount = () => {
   return useMutation({
     mutationFn: deleteAccount,
     onSuccess: () => {
+      tokenUtils.clearTokens();
       window.location.href = "/";
     },
   });
@@ -55,12 +59,7 @@ export const useCancelSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const response = await import("../api/user_api").then((mod) =>
-        mod.cancelSubscription(),
-      );
-      return response;
-    },
+    mutationFn: cancelSubscription,
     onSuccess: (response) => {
       if (response.isSuccess) {
         queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
@@ -75,17 +74,9 @@ export const useUpgradeSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      data: import("../api/user_types").UpgradeSubscriptionRequest,
-    ) => {
-      const response = await import("../api/user_api").then((mod) =>
-        mod.upgradeSubscription(data),
-      );
-      return response;
-    },
+    mutationFn: (data: UpgradeSubscriptionRequest) => upgradeSubscription(data),
     onSuccess: (response) => {
       if (response.isSuccess) {
-        // 업그레이드 성공 시 구독 정보와 프로필(크레딧 포함) 갱신
         queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
         queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       }

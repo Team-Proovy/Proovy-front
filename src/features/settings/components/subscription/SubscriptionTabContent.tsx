@@ -75,12 +75,7 @@ export const SubscriptionTabContent = () => {
 
       if (response.isSuccess) {
         setIsCancelModalOpen(false);
-        // 취소 성공 정보 설정 (API 응답에 cancelInfo가 있다고 가정하거나 계산)
-        // SubscriptionResponse에 cancelInfo가 포함되어 있는지 확인 필요.
-        // response.result가 CancelSubscriptionResponse 타입이라면 cancelInfo가 있을 수 있음.
-        // 여기서는 response.result를 any로 캐스팅하거나 타입을 확인해야 함.
-        const result = response.result as any;
-        const info = result?.cancelInfo || {
+        const info = response.result.cancelInfo ?? {
           nextPlan: "Free",
           effectiveUntil: subscription?.period.endDate || "-",
         };
