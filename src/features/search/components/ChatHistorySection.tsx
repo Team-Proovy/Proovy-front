@@ -5,6 +5,7 @@ interface ChatItemProps {
   preview?: string;
   searchQuery?: string;
   onClick: () => void;
+  isDisabled?: boolean;
 }
 
 /** 검색어 하이라이트 (대소문자 무시) */
@@ -20,7 +21,7 @@ const HighlightText = ({ text, query }: { text: string; query?: string }) => {
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
+        i % 2 === 1 ? (
           <mark
             key={i}
             className="rounded-sm bg-[#2A6AFF]/15 px-0.5 text-[#2A6AFF]"
@@ -35,10 +36,22 @@ const HighlightText = ({ text, query }: { text: string; query?: string }) => {
   );
 };
 
-const ChatItem = ({ title, preview, searchQuery, onClick }: ChatItemProps) => (
+const ChatItem = ({
+  title,
+  preview,
+  searchQuery,
+  onClick,
+  isDisabled,
+}: ChatItemProps) => (
   <button
     onClick={onClick}
-    className="group flex w-full items-center gap-4 rounded-[12px] px-2 py-3 transition-all hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]"
+    disabled={isDisabled}
+    aria-disabled={isDisabled}
+    className={`group flex w-full items-center gap-4 rounded-[12px] px-2 py-3 transition-all ${
+      isDisabled
+        ? "cursor-not-allowed opacity-50"
+        : "hover:bg-white hover:shadow-[0_4px_10px_0_rgba(0,0,0,0.10)]"
+    }`}
   >
     <div className="shrink-0">
       <ChattingIcon
@@ -83,21 +96,24 @@ const ChatHistorySection = ({
       {dateLabel}
     </h3>
     <div className="flex flex-col gap-1">
-      {items.map((item) => (
-        <ChatItem
-          key={item.id}
-          title={item.title}
-          preview={item.preview}
-          searchQuery={searchQuery}
-          onClick={() => {
-            if (onItemClick && item.noteId) {
-              onItemClick(item.noteId);
-            } else {
-              console.log(`${item.id} 이동`);
-            }
-          }}
-        />
-      ))}
+      {items.map((item) => {
+        const isDisabled = !onItemClick || !item.noteId;
+
+        return (
+          <ChatItem
+            key={item.id}
+            title={item.title}
+            preview={item.preview}
+            searchQuery={searchQuery}
+            onClick={() => {
+              if (onItemClick && item.noteId) {
+                onItemClick(item.noteId);
+              }
+            }}
+            isDisabled={isDisabled}
+          />
+        );
+      })}
     </div>
   </div>
 );

@@ -22,7 +22,7 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
     {/* 텍스트 메시지 */}
     <div className="flex items-start justify-end gap-[12px]">
       <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
-        <div className="text-[14px] leading-[20px] font-medium break-words text-black">
+        <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
           <MessageContent content={message.content} />
         </div>
       </div>

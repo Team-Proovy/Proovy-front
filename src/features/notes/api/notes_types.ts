@@ -162,6 +162,8 @@ export interface NoteDetailResponse {
 export interface DeleteNotesBulkResult {
   deletedCount: number;
   deletedNoteIds: number[];
+  failedNoteIds?: number[];
+  failedReasons?: { noteId: number; message: string }[];
 }
 
 /** 단일 삭제 응답 */

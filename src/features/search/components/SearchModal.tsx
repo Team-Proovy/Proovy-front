@@ -106,10 +106,13 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
     data: searchData,
     isLoading: isSearchLoading,
     isError: isSearchError,
-  } = useConversationSearch({
-    query: debouncedQuery,
-    size: 30,
-  });
+  } = useConversationSearch(
+    {
+      query: debouncedQuery,
+      size: 30,
+    },
+    { enabled: isOpen && isSearching },
+  );
 
   const searchGroups = useMemo(() => {
     if (!searchData?.conversations) return [];
