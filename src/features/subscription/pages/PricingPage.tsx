@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
-import { updateSubscription } from "../../settings/api/user_api";
+import { useUpgradeSubscription } from "../../settings/hooks/useUser";
 
 import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
 
@@ -58,13 +58,7 @@ export const PricingPage = () => {
 
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [showUpgradeSuccessModal, setShowUpgradeSuccessModal] = useState(false);
-  const [showDowngradeConfirmModal, setShowDowngradeConfirmModal] =
-    useState(false);
-  const [showDowngradeSuccessModal, setShowDowngradeSuccessModal] =
-    useState(false);
 
-  const [targetPlanForDowngrade, setTargetPlanForDowngrade] =
-    useState<PlanType | null>(null);
   const [targetPlanForUpgrade, setTargetPlanForUpgrade] =
     useState<PlanType | null>(null);
 
@@ -88,21 +82,27 @@ export const PricingPage = () => {
       // 업그레이드 -> 확인 모달 표시
       setTargetPlanForUpgrade(planName);
       setShowUpgradeConfirmModal(true);
-    } else if (targetLevel < currentLevel) {
-      // 다운그레이드 -> 확인 모달 표시
-      setTargetPlanForDowngrade(planName);
-      setShowDowngradeConfirmModal(true);
     }
+    // 다운그레이드는 버튼이 비활성화되므로 처리 불필요
   };
+
+  // useUpgradeSubscription 훅 사용
+  const { mutateAsync: upgrade } = useUpgradeSubscription();
 
   const confirmUpgrade = async () => {
     if (targetPlanForUpgrade) {
       try {
-        const response = await updateSubscription({
-          plan: targetPlanForUpgrade,
+        const planType = targetPlanForUpgrade.toLowerCase() as
+          | "standard"
+          | "pro";
+
+        const response = await upgrade({
+          planType,
         });
 
         if (response.isSuccess) {
+          // 성공 시 쿼리 무효화는 훅 내부에서 처리됨
+          // 로컬 상태(user store) 업데이트는 유지 (UI 즉시 반영용)
           updateUser({ plan: targetPlanForUpgrade });
           setShowUpgradeConfirmModal(false);
           setShowUpgradeSuccessModal(true);
@@ -112,27 +112,6 @@ export const PricingPage = () => {
       } catch (error) {
         console.error("Upgrade failed:", error);
         alert("업그레이드 중 오류가 발생했습니다.");
-      }
-    }
-  };
-
-  const confirmDowngrade = async () => {
-    if (targetPlanForDowngrade) {
-      try {
-        const response = await updateSubscription({
-          plan: targetPlanForDowngrade,
-        });
-
-        if (response.isSuccess) {
-          updateUser({ plan: targetPlanForDowngrade });
-          setShowDowngradeConfirmModal(false);
-          setShowDowngradeSuccessModal(true);
-        } else {
-          alert(response.message || "다운그레이드에 실패했습니다.");
-        }
-      } catch (error) {
-        console.error("Downgrade failed:", error);
-        alert("다운그레이드 중 오류가 발생했습니다.");
       }
     }
   };
@@ -201,15 +180,20 @@ export const PricingPage = () => {
 
           // 버튼 텍스트 로직
           let buttonText = "시작하기";
+          let isDisabled = false;
+
           if (user) {
             // 로그인 상태일 때만 텍스트 변경
             if (isCurrentPlan) {
               buttonText = "사용 중";
-            } else if (isHovered) {
+              isDisabled = true;
+            } else {
               if (thisLevel > currentLevel) {
-                buttonText = "업그레이드";
+                buttonText = isHovered ? "업그레이드" : "시작하기";
               } else {
-                buttonText = "다운그레이드";
+                // 다운그레이드인 경우
+                buttonText = "사용 불가";
+                isDisabled = true;
               }
             }
           }
@@ -243,10 +227,18 @@ export const PricingPage = () => {
 
               <button
                 onClick={() => handlePlanClick(plan.name)}
-                disabled={isCurrentPlan}
+                disabled={isDisabled}
                 // 버튼 스타일 통일, 비활성화 시 불투명도 변경
-                className={`mb-[32px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
-                style={buttonStyle}
+                className={`mb-[32px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
+                style={
+                  isDisabled && !isCurrentPlan
+                    ? {
+                        ...buttonStyle,
+                        backgroundColor: "#E5E7EB",
+                        color: "#9CA4B0",
+                      }
+                    : buttonStyle
+                }
               >
                 {buttonText}
               </button>
@@ -315,60 +307,6 @@ export const PricingPage = () => {
             <button
               onClick={() => {
                 setShowUpgradeSuccessModal(false);
-              }}
-              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
-            >
-              확인
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showDowngradeConfirmModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget)
-              setShowDowngradeConfirmModal(false);
-          }}
-        >
-          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
-            <h2 className="mb-[20px] text-[20px] font-bold text-black">
-              정말 다운그레이드 하시겠습니까?
-            </h2>
-            <div className="flex w-full gap-[12px]">
-              <button
-                onClick={() => setShowDowngradeConfirmModal(false)}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
-              >
-                취소
-              </button>
-              <button
-                onClick={confirmDowngrade}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
-              >
-                예
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showDowngradeSuccessModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget)
-              setShowDowngradeSuccessModal(false);
-          }}
-        >
-          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
-            <h2 className="mb-[20px] text-[20px] font-bold text-black">
-              {targetPlanForDowngrade}를 선택하셨습니다.
-            </h2>
-            <button
-              onClick={() => {
-                setShowDowngradeSuccessModal(false);
               }}
               className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
             >

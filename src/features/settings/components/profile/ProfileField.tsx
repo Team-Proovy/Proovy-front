@@ -3,6 +3,8 @@ interface ProfileFieldProps {
   value?: string;
   placeholder?: string;
   readonly?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 /**
@@ -15,6 +17,8 @@ export const ProfileField = ({
   value,
   placeholder,
   readonly = false,
+  onChange,
+  onBlur,
 }: ProfileFieldProps) => {
   return (
     <div className="flex flex-col gap-[8px]">
@@ -30,7 +34,9 @@ export const ProfileField = ({
       ) : (
         <input
           type="text"
-          defaultValue={value}
+          value={value}
+          onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           className="w-full rounded-[8px] bg-[#F1F4F8] px-[16px] py-[12px] font-['Pretendard'] text-[16px] text-[#2F3440] transition-colors outline-none placeholder:text-[#9CA3AF] focus:ring-1 focus:ring-[#2A6AFF]"
         />

@@ -3,8 +3,11 @@ import {
   getMyProfile,
   getMySubscription,
   deleteAccount,
+  cancelSubscription,
+  upgradeSubscription,
 } from "../api/user_api";
 import { tokenUtils } from "@/shared/api/client";
+import type { UpgradeSubscriptionRequest } from "../api/user_types";
 
 // Query Keys
 export const userKeys = {
@@ -42,14 +45,41 @@ export const useMySubscription = () => {
 
 // 회원 탈퇴 Hook
 export const useDeleteAccount = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: deleteAccount,
     onSuccess: () => {
       tokenUtils.clearTokens();
-      queryClient.clear();
       window.location.href = "/";
+    },
+  });
+};
+
+// 구독 취소 Hook
+export const useCancelSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: cancelSubscription,
+    onSuccess: (response) => {
+      if (response.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      }
+    },
+  });
+};
+
+// 구독 업그레이드 Hook
+export const useUpgradeSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpgradeSubscriptionRequest) => upgradeSubscription(data),
+    onSuccess: (response) => {
+      if (response.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      }
     },
   });
 };

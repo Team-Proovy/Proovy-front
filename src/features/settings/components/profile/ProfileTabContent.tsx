@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import {
   LoginProviderIcon,
   type LoginProvider,
@@ -8,7 +10,8 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
-import { deleteAccount, getMyProfile } from "../../api/user_api";
+import { deleteAccount } from "../../api/user_api";
+import { useMyProfile } from "../../hooks/useUser";
 import { logout as logoutApi } from "../../../auth/api/auth_api";
 
 /**
@@ -18,37 +21,34 @@ export const ProfileTabContent = () => {
   const navigate = useNavigate();
   const { user, updateUser, logout } = useAuthStore();
 
+  const { data: profile } = useMyProfile();
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await getMyProfile();
-        if (response.isSuccess && response.result) {
-          const {
-            email,
-            name,
-            nickname,
-            profileImageUrl,
-            provider,
-            subscription,
-          } = response.result;
+    if (profile) {
+      const { email, name, nickname, profileImageUrl, provider, subscription } =
+        profile;
 
-          // AuthStore 업데이트
-          updateUser({
-            email,
-            name,
-            nickname,
-            profileImageUrl,
-            provider,
-            plan: subscription.plan as "Free" | "Standard" | "Pro",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+      // AuthStore 업데이트 (데이터가 변경된 경우에만 수행하도록 내부적으로 체크하거나,
+      // store 구현에 따라 다름. 여기서는 매번 업데이트하지만 loop는 아님)
+      // 단, infinite update loop를 방지하기 위해 JSON.stringify 등 비교가 필요할 수 있으나
+      // useMyProfile의 data가 stable하다면 괜찮음.
+      // 안전하게 user state와 비교
+      if (
+        user?.nickname !== nickname ||
+        user?.profileImageUrl !== profileImageUrl ||
+        user?.plan !== subscription.plan
+      ) {
+        updateUser({
+          email,
+          name,
+          nickname,
+          profileImageUrl,
+          provider,
+          plan: subscription.plan as "Free" | "Standard" | "Pro",
+        });
       }
-    };
-
-    fetchProfile();
-  }, [updateUser]);
+    }
+  }, [profile, updateUser, user?.nickname, user?.profileImageUrl, user?.plan]);
 
   const loginProvider = user?.provider?.toLowerCase() as
     | LoginProvider
@@ -56,6 +56,9 @@ export const ProfileTabContent = () => {
 
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isWithdrawErrorModalOpen, setIsWithdrawErrorModalOpen] =
+    useState(false);
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState("");
 
   const handleWithdraw = async () => {
     try {
@@ -64,11 +67,25 @@ export const ProfileTabContent = () => {
         logout();
         navigate("/login", { replace: true });
       } else {
-        alert(response.message || "회원 탈퇴에 실패했습니다.");
+        setWithdrawErrorMessage(
+          response.message || "회원 탈퇴에 실패했습니다.",
+        );
+        setIsWithdrawErrorModalOpen(true);
       }
     } catch (error) {
       console.error("회원 탈퇴 에러:", error);
-      alert("회원 탈퇴 중 오류가 발생했습니다.");
+      // API 응답 에러 메시지 추출
+      let message = "회원 탈퇴 중 오류가 발생했습니다.";
+
+      if (error instanceof AxiosError) {
+        const data = error.response?.data as ApiResponse<null>;
+        if (data?.message) {
+          message = data.message;
+        }
+      }
+
+      setWithdrawErrorMessage(message);
+      setIsWithdrawErrorModalOpen(true);
     } finally {
       setIsWithdrawModalOpen(false);
     }
@@ -121,12 +138,12 @@ export const ProfileTabContent = () => {
           <ProfileField
             label="이름"
             value={user?.name || ""}
-            placeholder="이름을 입력하세요"
+            readonly
           />
           <ProfileField
             label="닉네임"
             value={user?.nickname || ""}
-            placeholder="닉네임을 입력하세요"
+            readonly
           />
         </div>
       </div>
@@ -160,6 +177,29 @@ export const ProfileTabContent = () => {
         confirmText="회원탈퇴"
         variant="danger"
       />
+
+      {/* 회원 탈퇴 실패(구독 중 등) 에러 모달 */}
+      {isWithdrawErrorModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget)
+              setIsWithdrawErrorModalOpen(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-center text-[18px] font-bold whitespace-pre-wrap text-black">
+              {withdrawErrorMessage}
+            </h2>
+            <button
+              onClick={() => setIsWithdrawErrorModalOpen(false)}
+              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A50D1]"
+            >
+              확인하기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
