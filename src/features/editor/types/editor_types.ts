@@ -60,6 +60,7 @@ export interface ChatAssetDto {
 
 /** 대화 생성 요청 */
 export interface CreateConversationRequest {
+  noteId?: number;
   text: string;
   latex?: string;
   mentionedAssetIds?: number[];
@@ -70,6 +71,7 @@ export interface CreateConversationRequest {
 /** 대화 생성 파라미터 */
 export interface CreateConversationParams {
   isStream?: boolean;
+  signal?: AbortSignal;
 }
 
 /** 대화 생성 응답 (비-스트리밍) */
@@ -284,6 +286,43 @@ export interface CanvasImageUploadResponse {
   uploadUrl: string;
   createdAt: string;
 }
+
+// ============================================================
+// SSE 스트리밍 이벤트 타입
+// ============================================================
+
+/** SSE START 이벤트 — 대화/메시지 ID 수신 */
+export interface SSEStartEvent {
+  type: "START";
+  conversationId: number;
+  userMessageId: number;
+  assistantMessageId: number;
+}
+
+/** SSE CONTENT 이벤트 — AI 응답 텍스트 청크 */
+export interface SSEContentEvent {
+  type: "CONTENT";
+  text: string;
+}
+
+/** SSE DONE 이벤트 — 스트리밍 완료 */
+export interface SSEDoneEvent {
+  type: "DONE";
+}
+
+/** SSE ERROR 이벤트 — 서버 에러 */
+export interface SSEErrorEvent {
+  type: "ERROR";
+  code: string;
+  message: string;
+}
+
+/** SSE 이벤트 유니온 타입 */
+export type SSEEvent =
+  | SSEStartEvent
+  | SSEContentEvent
+  | SSEDoneEvent
+  | SSEErrorEvent;
 
 // ============================================================
 // API 응답 타입 별칭

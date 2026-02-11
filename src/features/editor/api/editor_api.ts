@@ -11,6 +11,7 @@ import type {
   ConversationSearchResponse,
   CanvasImageUploadRequest,
   CanvasImageUploadResponse,
+  SSEEvent,
 } from "../types/editor_types";
 
 /**
@@ -47,6 +48,7 @@ export const createConversation = async (
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(request),
+      signal: params?.signal,
     },
   );
 
@@ -113,4 +115,58 @@ export const uploadCanvasImage = async (
     request,
   );
   return response.data;
+};
+
+/**
+ * SSE 스트림 파서
+ * fetch Response에서 SSE 이벤트를 비동기 제너레이터로 파싱합니다.
+ *
+ * 지원 형식:
+ * - data: {"type":"START",...}  → JSON 파싱
+ * - data: {"type":"CONTENT","text":"..."}  → JSON 파싱
+ * - data: 일반 텍스트  → CONTENT 이벤트로 래핑
+ * - data: [DONE]  → DONE 이벤트
+ */
+export const parseSSEStream = async function* (
+  response: Response,
+): AsyncGenerator<SSEEvent> {
+  if (!response.body) {
+    throw new Error("스트리밍 응답 본문이 없습니다.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith(":")) continue;
+
+        if (trimmed.startsWith("data:")) {
+          const data = trimmed.slice(5).trim();
+          if (data === "[DONE]") {
+            yield { type: "DONE" };
+            return;
+          }
+          try {
+            yield JSON.parse(data) as SSEEvent;
+          } catch {
+            // JSON 파싱 실패 시 일반 텍스트 → CONTENT 이벤트
+            yield { type: "CONTENT", text: data } as SSEEvent;
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 };

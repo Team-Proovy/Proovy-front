@@ -5,6 +5,7 @@ import {
 } from "@/shared/components/icons/SettingsIcons";
 import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
+import { ThinkingBar } from "./ThinkingBar";
 import type { ChatMessage } from "../../types/chat_types";
 
 interface ChatMessagesProps {
@@ -36,7 +37,13 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
 );
 
 // AI 메시지 컴포넌트
-const AssistantMessage = ({ content }: { content: string }) => (
+const AssistantMessage = ({
+  content,
+  isStreaming,
+}: {
+  content: string;
+  isStreaming?: boolean;
+}) => (
   <div className="flex items-start justify-start gap-[12px]">
     <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[40px] border-[0.5px] border-[#D1D6DE] bg-white">
       <SubscriptionIcon
@@ -44,11 +51,18 @@ const AssistantMessage = ({ content }: { content: string }) => (
         isActive={true}
       />
     </div>
-    <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
-      <div className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
-        <MessageContent content={content} />
+    {isStreaming && !content ? (
+      <ThinkingBar />
+    ) : (
+      <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
+        <div className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
+          <MessageContent content={content} />
+          {isStreaming && (
+            <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-500 align-middle" />
+          )}
+        </div>
       </div>
-    </div>
+    )}
   </div>
 );
 
@@ -93,7 +107,10 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
               {message.role === "user" ? (
                 <UserMessage message={message} />
               ) : (
-                <AssistantMessage content={message.content} />
+                <AssistantMessage
+                  content={message.content}
+                  isStreaming={message.isStreaming}
+                />
               )}
             </div>
           );

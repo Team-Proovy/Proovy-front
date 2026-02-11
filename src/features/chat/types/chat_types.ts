@@ -17,4 +17,6 @@ export interface ChatMessage {
   content: string;
   /** 사용자가 첨부한 파일 목록 (user 메시지에만 존재) */
   attachments?: MessageAttachment[];
+  /** SSE 스트리밍 진행 중 여부 (assistant 메시지에만 사용) */
+  isStreaming?: boolean;
 }
