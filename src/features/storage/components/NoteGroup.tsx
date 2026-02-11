@@ -1,14 +1,15 @@
 import { StorageChevronIcon } from "../../../shared/components/icons/StorageIcons";
 import { NoteCard } from "./NoteCard";
 import { useStorageStore } from "../store/useStorageStore";
-import type { AssetDetailResponseData } from "@/features/assets/types/asset";
+import type { AssetSummaryDto } from "../api/assets_types";
+import { mapAssetSource, mapAssetCategory, mapOcrStatus } from "../utils/asset-mapper";
 
 interface NoteGroupProps {
   title: string;
   storageUsedDisplay: string;
   storageLimitDisplay: string;
   usagePercent: number;
-  notes: AssetDetailResponseData[];
+  notes: AssetSummaryDto[];
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -90,21 +91,20 @@ export const NoteGroup = ({
 
       {isOpen && (
         <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
-          {notes.map((asset) => {
-            return (
-              <NoteCard
-                key={asset.assetId}
-                label={asset.fileName}
-                type={asset.source === "upload" ? "upload" : "ai"}
-                fileUrl={asset.thumbnailUrl || undefined}
-                mimeType={asset.mimeType}
-                ocrStatus={asset.ocrStatus}
-                isSelected={selectedIds.includes(asset.assetId)}
-                isSelectMode={isSelectMode}
-                onSelect={() => toggleIdSelection(asset.assetId)}
-              />
-            );
-          })}
+          {notes.map((asset) => (
+            <NoteCard
+              key={asset.assetId}
+              label={asset.fileName}
+              type={mapAssetSource(asset.source)}
+              thumbnailUrl={asset.thumbnailUrl}
+              mimeType={asset.mimeType}
+              fileCategory={mapAssetCategory(asset.fileCategory)}
+              ocrStatus={mapOcrStatus(asset.ocrStatus)}
+              isSelected={selectedIds.includes(asset.assetId)}
+              isSelectMode={isSelectMode}
+              onSelect={() => toggleIdSelection(asset.assetId)}
+            />
+          ))}
         </div>
       )}
     </div>

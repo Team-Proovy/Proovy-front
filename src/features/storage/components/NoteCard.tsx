@@ -3,20 +3,24 @@ import {
   StorageCheckboxUncheckedIcon,
   StorageCheckboxCheckedIcon,
 } from "../../../shared/components/icons/StorageIcons";
-import { PdfPreview } from "../../../shared/components/pdf-preview/PdfPreview";
-
-// API 명세서의 ocrStatus 타입을 반영
-type OcrStatus = "pending" | "processing" | "completed" | "failed";
+import {
+  getBadgeColor,
+  getBadgeText,
+  type AssetSourceType,
+  type AssetCategoryType,
+  type OcrStatusType,
+} from "../utils/asset-mapper";
 
 interface NoteCardProps {
-  label: string; // fileName
-  type: "upload" | "ai"; // source 필드 기반
+  label: string; // 파일명
+  type: AssetSourceType; // 파일 출처 ("upload" | "ai")
   isSelected: boolean;
   isSelectMode: boolean;
   onSelect: () => void;
-  fileUrl?: string;
+  thumbnailUrl?: string | null; // 썸네일 URL (백엔드 제공)
   mimeType?: string;
-  ocrStatus?: OcrStatus;
+  fileCategory?: AssetCategoryType;
+  ocrStatus?: OcrStatusType;
   onClick?: () => void;
 }
 
@@ -26,13 +30,87 @@ export const NoteCard = ({
   isSelected,
   isSelectMode,
   onSelect,
-  fileUrl,
+  thumbnailUrl,
   mimeType,
+  fileCategory,
   ocrStatus = "completed",
   onClick,
 }: NoteCardProps) => {
-  // 소스에 따른 배지 텍스트 결정
-  const badgeText = type === "upload" ? "업로드" : "AI 생성";
+  // 파일 출처에 따른 배지 정보
+  const badgeText = getBadgeText(type);
+  const badgeColor = getBadgeColor(type);
+
+  // 썸네일 렌더링 로직
+  const renderThumbnail = () => {
+    // OCR 처리 중일 때
+    if (ocrStatus === "pending" || ocrStatus === "processing") {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <LoadingSpinner size={40} />
+          <p className="text-[12px] font-medium text-blue-600">분석 중...</p>
+        </div>
+      );
+    }
+
+    // 썸네일 URL이 있으면 항상 이미지로 렌더링 (PDF 썸네일 포함)
+    if (thumbnailUrl) {
+      return (
+        <img
+          src={thumbnailUrl}
+          alt={label}
+          className="h-full w-full object-contain"
+          onError={(e) => {
+            // 이미지 로드 실패 시 fallback
+            e.currentTarget.style.display = "none";
+            e.currentTarget.parentElement!.innerHTML =
+              '<p class="text-[13px] text-gray-400">썸네일 없음</p>';
+          }}
+        />
+      );
+    }
+
+    // 썸네일이 없을 때 파일 타입에 따른 기본 아이콘 표시
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200">
+          {fileCategory === "document" || mimeType === "application/pdf" ? (
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="text-gray-500"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+          ) : (
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="text-gray-500"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+          )}
+        </div>
+        <p className="text-[11px] text-gray-400">썸네일 없음</p>
+      </div>
+    );
+  };
 
   return (
     <div
@@ -47,7 +125,7 @@ export const NoteCard = ({
         overflow: "hidden",
       }}
     >
-      {/* 1. 썸네일 영역: 파일 형식 및 OCR 상태에 따라 다르게 렌더링 */}
+      {/* 썸네일 영역 */}
       <div
         className="relative flex items-center justify-center overflow-hidden"
         style={{
@@ -68,36 +146,12 @@ export const NoteCard = ({
           </div>
         )}
 
-        {/* 실제 파일 미리보기 로직 */}
+        {/* 썸네일 렌더링 */}
         <div className="flex h-full w-full items-center justify-center p-2">
-          {ocrStatus === "pending" || ocrStatus === "processing" ? (
-            // 분석 중일 때 보여줄 로딩 뷰
-            <div className="flex flex-col items-center gap-2">
-              <LoadingSpinner size={40} />
-              <p className="text-[12px] font-medium text-blue-600">
-                분석 중...
-              </p>
-            </div>
-          ) : fileUrl ? (
-            // 완료 상태일 때 파일 타입별 렌더링
-            mimeType === "application/pdf" ? (
-              <PdfPreview
-                fileUrl={fileUrl}
-                width={120}
-              />
-            ) : (
-              <img
-                src={fileUrl}
-                alt={label}
-                className="h-full w-full object-cover"
-              />
-            )
-          ) : (
-            <p className="text-[13px] text-gray-400">이미지 없음</p>
-          )}
+          {renderThumbnail()}
         </div>
 
-        {/* 2. 업로드 배지: source 필드값에 따라 색상 변경 */}
+        {/* 업로드/AI 생성 배지 */}
         <div
           style={{
             position: "absolute",
@@ -109,7 +163,7 @@ export const NoteCard = ({
             justifyContent: "center",
             alignItems: "center",
             borderRadius: "10px",
-            background: type === "upload" ? "#003880" : "#E2A242",
+            background: badgeColor,
             zIndex: 10,
           }}
         >
@@ -119,7 +173,7 @@ export const NoteCard = ({
         </div>
       </div>
 
-      {/* 3. 파일명 영역 */}
+      {/* 파일명 영역 */}
       <div
         className="flex items-center"
         style={{
