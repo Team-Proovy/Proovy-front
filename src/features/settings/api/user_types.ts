@@ -134,8 +134,22 @@ export interface CancelInfoDto {
   nextPlan: string;
 }
 
+/** 구독 취소 시 혜택 정보 (String 타입 반환됨) */
+export interface CancelBenefitsDto {
+  dailyCredit: number;
+  monthlyCredit: number;
+  maxMonthlyCredit: number;
+  storageLimit: string;
+  maxFileSize: string;
+  maxNotes: number;
+}
+
 /** 구독 취소 응답 */
-export interface CancelSubscriptionResponse extends SubscriptionResponse {
+export interface CancelSubscriptionResponse extends Omit<
+  SubscriptionResponse,
+  "benefits"
+> {
+  benefits: CancelBenefitsDto;
   cancelInfo?: CancelInfoDto;
 }
 
