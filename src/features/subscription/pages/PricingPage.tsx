@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
-import { updateSubscription } from "../../settings/api/user_api";
+import {
+  updateSubscription,
+  upgradeSubscription,
+} from "../../settings/api/user_api";
 
 import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
 
@@ -98,8 +101,12 @@ export const PricingPage = () => {
   const confirmUpgrade = async () => {
     if (targetPlanForUpgrade) {
       try {
-        const response = await updateSubscription({
-          plan: targetPlanForUpgrade,
+        const planType = targetPlanForUpgrade.toLowerCase() as
+          | "standard"
+          | "pro";
+
+        const response = await upgradeSubscription({
+          planType,
         });
 
         if (response.isSuccess) {

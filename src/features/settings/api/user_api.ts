@@ -4,6 +4,8 @@ import type {
   MyProfileResponse,
   SubscriptionResponse,
   SubscriptionUpdateRequest,
+  UpgradeSubscriptionRequest,
+  CancelSubscriptionResponse,
 } from "./user_types";
 
 const USER_BASE = "/api/users";
@@ -42,5 +44,26 @@ export const updateSubscription = async (
     `${USER_BASE}/me/subscription`,
     data,
   );
+  return response.data;
+};
+
+// 구독 업그레이드
+export const upgradeSubscription = async (
+  data: UpgradeSubscriptionRequest,
+): Promise<ApiResponse<SubscriptionResponse>> => {
+  const response = await apiClient.patch<ApiResponse<SubscriptionResponse>>(
+    `${USER_BASE}/me/subscription/upgrade`,
+    data,
+  );
+  return response.data;
+};
+
+// 구독 취소
+export const cancelSubscription = async (): Promise<
+  ApiResponse<CancelSubscriptionResponse>
+> => {
+  const response = await apiClient.patch<
+    ApiResponse<CancelSubscriptionResponse>
+  >(`${USER_BASE}/me/subscription/cancel`);
   return response.data;
 };

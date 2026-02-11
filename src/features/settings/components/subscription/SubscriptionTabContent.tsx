@@ -8,14 +8,14 @@ import {
   PLAN_DETAILS,
 } from "../../../subscription/types/plan_types";
 import { PlanInfoCard } from "./PlanInfoCard";
-import { getMySubscription } from "../../api/user_api";
+import { getMySubscription, cancelSubscription } from "../../api/user_api";
 
 /**
  * SubscriptionTabContent - 구독 정보 탭
  */
 export const SubscriptionTabContent = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
 
   const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
 
@@ -30,9 +30,9 @@ export const SubscriptionTabContent = () => {
             name: currentPlan.displayName,
             dailyCredits: benefits.dailyCredit,
             monthlyCredits: benefits.monthlyCredit,
-            storage: benefits.storageLimit,
+            storage: `${benefits.storageLimit}GB`,
             maxNotes: benefits.maxNotes,
-            maxUploadSize: benefits.maxFileSize,
+            maxUploadSize: `${benefits.maxFileSize}MB`,
             price: currentPlan.price,
             startDate: period.startDate,
             endDate: period.endDate,
@@ -61,11 +61,21 @@ export const SubscriptionTabContent = () => {
   // 모달 상태
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
-  const handleCancelSubscription = () => {
-    // TODO: 실제 API 연동 시에는 백엔드에 구독 취소 요청을 보내야 합니다.
-    // 현재는 프론트엔드 상태만 'Free'로 변경합니다.
-    updateUser({ plan: "Free" });
-    setIsCancelModalOpen(false);
+  const handleCancelSubscription = async () => {
+    try {
+      const response = await cancelSubscription();
+
+      if (response.isSuccess) {
+        alert("구독 해지가 예약되었습니다. 현재 혜택은 만료일까지 유지됩니다.");
+        setIsCancelModalOpen(false);
+        window.location.reload();
+      } else {
+        alert(response.message || "구독 취소에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Cancel failed:", error);
+      alert("구독 취소 중 오류가 발생했습니다.");
+    }
   };
 
   return (
