@@ -91,9 +91,13 @@ export const useChatMessages = () => {
 
   /** SSE 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
   const processStream = useCallback(
-    async (response: Response, tempAssistantMsgId: string) => {
+    async (
+      response: Response,
+      tempAssistantMsgId: string,
+      signal: AbortSignal,
+    ) => {
       for await (const event of parseSSEStream(response)) {
-        if (abortControllerRef.current?.signal.aborted) return;
+        if (signal.aborted) return;
 
         switch (event.type) {
           case "thread_id":
@@ -245,7 +249,11 @@ export const useChatMessages = () => {
           { isStream: true, signal: abortControllerRef.current?.signal },
         );
 
-        await processStream(response, tempAssistantMsgId);
+        await processStream(
+          response,
+          tempAssistantMsgId,
+          abortControllerRef.current!.signal,
+        );
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
         queryClient.invalidateQueries({
@@ -370,7 +378,11 @@ export const useChatMessages = () => {
           { isStream: true, signal: abortControllerRef.current.signal },
         );
 
-        await processStream(response, tempAssistantMsgId);
+        await processStream(
+          response,
+          tempAssistantMsgId,
+          abortControllerRef.current.signal,
+        );
 
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],

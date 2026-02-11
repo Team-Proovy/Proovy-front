@@ -167,6 +167,21 @@ export const parseSSEStream = async function* (
         }
       }
     }
+    // 스트림 종료 후 잔여 버퍼 처리
+    buffer += decoder.decode(); // flush decoder
+    const remaining = buffer.trim();
+    if (remaining && remaining.startsWith("data:")) {
+      const data = remaining.slice(5).trim();
+      if (data === "[DONE]") {
+        yield { type: "DONE" };
+      } else {
+        try {
+          yield JSON.parse(data) as SSEEvent;
+        } catch {
+          yield { type: "token", content: data } as SSEEvent;
+        }
+      }
+    }
   } finally {
     reader.releaseLock();
   }
