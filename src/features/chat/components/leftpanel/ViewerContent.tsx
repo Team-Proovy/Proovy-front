@@ -11,6 +11,7 @@ import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
 
 import { useAuthStore } from "@/features/auth/store/auth_store";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import {
   PLAN_DETAILS,
   type PlanType,
@@ -44,6 +45,41 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   const [error, setError] = useState<string | null>(null);
   const [, setSearchParams] = useSearchParams();
   const { user } = useAuthStore();
+  const { viewerFileId, setViewerFileId } = useStorageStore();
+
+  // URL의 fileId가 있으면 스토어 업데이트 (딥링크 지원)
+  useEffect(() => {
+    if (fileId) {
+      const parsedId = parseInt(fileId, 10);
+      if (!isNaN(parsedId) && parsedId !== viewerFileId) {
+        setViewerFileId(parsedId);
+      }
+    }
+  }, [fileId, setViewerFileId, viewerFileId]);
+
+  // 실제 사용할 ID 결정 (스토어 우선, 없으면 props)
+  // props는 초기 로드 시 딥링크 처리를 위해 필요하지만, 이후엔 스토어 값이 우선됨
+  const activeFileId = viewerFileId || (fileId ? parseInt(fileId, 10) : null);
+
+  // ESC 키 핸들러: 파일 닫기 (스토어 + URL 초기화)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setViewerFileId(null); // 스토어 초기화
+        setSearchParams(
+          (prev) => {
+            prev.delete("panel");
+            prev.delete("file");
+            return prev;
+          },
+          { replace: true },
+        );
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setSearchParams, setViewerFileId]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<RenderTask | null>(null);
@@ -88,6 +124,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
         // 업로드 성공 시 해당 파일로 즉시 이동
         if (result?.assetId) {
+          setViewerFileId(result.assetId); // 스토어 업데이트
           setSearchParams((prev) => {
             prev.set("panel", "viewer");
             prev.set("file", result.assetId.toString());
@@ -108,7 +145,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     let cancelled = false;
 
     const fetchUrlData = async () => {
-      if (!fileId) return;
+      if (!activeFileId) return;
 
       setIsLoading(true);
       setError(null);
@@ -119,12 +156,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       setNumPages(null);
 
       try {
-        const numericId = parseInt(fileId, 10);
-        if (isNaN(numericId)) {
-          throw new Error("유효하지 않은 파일 ID입니다.");
-        }
-
-        const response = await getDownloadUrl(numericId);
+        const response = await getDownloadUrl(activeFileId);
         if (cancelled) return;
         const { downloadUrl, fileName: fetchedFileName } = response.result;
 
@@ -161,7 +193,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     return () => {
       cancelled = true;
     };
-  }, [fileId]);
+  }, [activeFileId]);
 
   // 2. PDF 문서 로드 (pdfUrl 변경 시에만)
   useEffect(() => {
@@ -246,7 +278,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     };
   }, [pageNumber, scale, fileType, numPages]);
 
-  if (!fileId) {
+  if (!activeFileId) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2">
         {/* hidden input for file upload */}
@@ -280,7 +312,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       {/* 파일 정보 및 네비게이션 바 */}
       <div className="flex shrink-0 items-center justify-between border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
         <span className="truncate text-sm font-medium text-gray-700">
-          {fileName || `파일 ${fileId}`}
+          {fileName || `파일 ${activeFileId}`}
         </span>
         {fileType === "pdf" && (
           <div className="flex items-center gap-2 text-sm text-gray-500">
