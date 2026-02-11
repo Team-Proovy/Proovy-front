@@ -4,7 +4,6 @@ import { RouterProvider } from "react-router-dom";
 import { AppQueryProvider } from "./app/providers/query_provider";
 import { router } from "./app/router/routes";
 import "./app/styles/global.css";
-
 // MSW 개발 환경에서만 활성화
 const enableMocking = async () => {
   if (import.meta.env.DEV) {

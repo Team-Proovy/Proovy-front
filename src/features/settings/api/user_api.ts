@@ -4,6 +4,10 @@ import type {
   MyProfileResponse,
   SubscriptionResponse,
   SubscriptionUpdateRequest,
+  UpgradeSubscriptionRequest,
+  CancelSubscriptionResponse,
+  UpdateProfileRequest,
+  DeleteUserResponse,
 } from "./user_types";
 
 const USER_BASE = "/api/users";
@@ -18,6 +22,18 @@ export const getMyProfile = async (): Promise<
   return response.data;
 };
 
+// 내 프로필 수정
+export const updateProfile = async (
+  data: UpdateProfileRequest,
+): Promise<ApiResponse<MyProfileResponse>> => {
+  const response = await apiClient.patch<ApiResponse<MyProfileResponse>>(
+    `${USER_BASE}/me`,
+    data,
+  );
+
+  return response.data;
+};
+
 // 내 구독 상세 정보 조회
 export const getMySubscription = async (): Promise<
   ApiResponse<SubscriptionResponse>
@@ -29,8 +45,12 @@ export const getMySubscription = async (): Promise<
 };
 
 // 회원 탈퇴
-export const deleteAccount = async (): Promise<ApiResponse<null>> => {
-  const response = await apiClient.delete<ApiResponse<null>>(`${USER_BASE}/me`);
+export const deleteAccount = async (): Promise<
+  ApiResponse<DeleteUserResponse>
+> => {
+  const response = await apiClient.delete<ApiResponse<DeleteUserResponse>>(
+    `${USER_BASE}/me`,
+  );
   return response.data;
 };
 
@@ -42,5 +62,26 @@ export const updateSubscription = async (
     `${USER_BASE}/me/subscription`,
     data,
   );
+  return response.data;
+};
+
+// 구독 업그레이드
+export const upgradeSubscription = async (
+  data: UpgradeSubscriptionRequest,
+): Promise<ApiResponse<SubscriptionResponse>> => {
+  const response = await apiClient.patch<ApiResponse<SubscriptionResponse>>(
+    `${USER_BASE}/me/subscription/upgrade`,
+    data,
+  );
+  return response.data;
+};
+
+// 구독 취소
+export const cancelSubscription = async (): Promise<
+  ApiResponse<CancelSubscriptionResponse>
+> => {
+  const response = await apiClient.patch<
+    ApiResponse<CancelSubscriptionResponse>
+  >(`${USER_BASE}/me/subscription/cancel`);
   return response.data;
 };

@@ -52,6 +52,12 @@ export interface MyProfileResponse {
   storage: StorageDto;
 }
 
+/** 프로필 수정 요청 */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  profileImageUrl?: string;
+}
+
 // ============================================================
 // 구독 정보 상세 타입
 // ============================================================
@@ -77,8 +83,8 @@ export interface BenefitsDto {
   dailyCredit: number;
   monthlyCredit: number;
   maxMonthlyCredit: number;
-  storageLimit: string;
-  maxFileSize: string;
+  storageLimit: number;
+  maxFileSize: number;
   maxNotes: number;
 }
 
@@ -114,6 +120,37 @@ export interface SubscriptionResponse {
 /** 구독 변경 요청 */
 export interface SubscriptionUpdateRequest {
   plan: "Free" | "Standard" | "Pro";
+}
+
+/** 구독 업그레이드 요청 */
+export interface UpgradeSubscriptionRequest {
+  planType: "standard" | "pro";
+}
+
+/** 취소 정보 */
+export interface CancelInfoDto {
+  canceledAt: string;
+  effectiveUntil: string;
+  nextPlan: string;
+}
+
+/** 구독 취소 시 혜택 정보 (String 타입 반환됨) */
+export interface CancelBenefitsDto {
+  dailyCredit: number;
+  monthlyCredit: number;
+  maxMonthlyCredit: number;
+  storageLimit: string;
+  maxFileSize: string;
+  maxNotes: number;
+}
+
+/** 구독 취소 응답 */
+export interface CancelSubscriptionResponse extends Omit<
+  SubscriptionResponse,
+  "benefits"
+> {
+  benefits: CancelBenefitsDto;
+  cancelInfo?: CancelInfoDto;
 }
 
 /** 회원 탈퇴 응답 */

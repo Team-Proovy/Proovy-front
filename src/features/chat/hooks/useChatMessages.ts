@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
-import { useCreateConversation } from "@/features/editor/hooks/useEditorQueries";
-import { createConversationJson } from "@/features/editor/api/editor_api";
+import {
+  createConversation as createConversationApi,
+  parseSSEStream,
+} from "@/features/editor/api/editor_api";
 import { useNoteDetail } from "@/features/notes/hooks/useNotes";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
@@ -73,17 +75,123 @@ export const useChatMessages = () => {
     }
   }, [noteDetail, hasFirstMessage]);
 
-  // ─── 대화 생성 (후속 대화) ───
-  const { mutate: createConversation, isPending: isMutating } =
-    useCreateConversation();
-
+  // ─── 스트리밍 상태 관리 ───
   const [isUploading, setIsUploading] = useState(false);
   const [isFirstMessageSending, setIsFirstMessageSending] = useState(false);
-  const isSending = isMutating || isUploading || isFirstMessageSending;
+  const [isStreamingResponse, setIsStreamingResponse] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isSending = isStreamingResponse || isUploading || isFirstMessageSending;
+
+  // 컴포넌트 언마운트 시 진행 중인 스트리밍 중단
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  /** SSE 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
+  const processStream = useCallback(
+    async (
+      response: Response,
+      tempAssistantMsgId: string,
+      signal: AbortSignal,
+    ) => {
+      for await (const event of parseSSEStream(response)) {
+        if (signal.aborted) return;
+
+        switch (event.type) {
+          case "thread_id":
+            // 스레드 ID 수신 — 필요 시 저장 가능
+            break;
+
+          case "message":
+            if (
+              event.content.type === "custom" &&
+              event.content.custom_data?.status
+            ) {
+              // 진행 상황 업데이트 (ThinkingBar에 표시)
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? { ...m, statusText: event.content.custom_data.status }
+                    : m,
+                ),
+              );
+            } else if (event.content.type === "ai") {
+              // 최종 응답 — token 누적분을 서버 최종 텍스트로 교체 (정합성 보장)
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? {
+                        ...m,
+                        content: event.content.content,
+                        statusText: undefined,
+                      }
+                    : m,
+                ),
+              );
+            }
+            break;
+
+          case "token":
+            // LLM 토큰 실시간 누적 (사용자에게 보이는 텍스트)
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === tempAssistantMsgId
+                  ? {
+                      ...m,
+                      content: m.content + event.content,
+                      statusText: undefined,
+                    }
+                  : m,
+              ),
+            );
+            break;
+
+          case "DONE":
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === tempAssistantMsgId
+                  ? { ...m, isStreaming: false, statusText: undefined }
+                  : m,
+              ),
+            );
+            break;
+
+          case "error":
+            console.error("[SSE] 서버 에러:", event.content);
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === tempAssistantMsgId
+                  ? {
+                      ...m,
+                      isStreaming: false,
+                      statusText: undefined,
+                      content:
+                        typeof event.content === "string"
+                          ? event.content
+                          : "응답 중 오류가 발생했어요.",
+                    }
+                  : m,
+              ),
+            );
+            return;
+        }
+      }
+
+      // DONE 이벤트 없이 스트림 종료된 경우 안전하게 처리
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempAssistantMsgId && m.isStreaming
+            ? { ...m, isStreaming: false, statusText: undefined }
+            : m,
+        ),
+      );
+    },
+    [],
+  );
 
   // ─── 첫 대화 자동 전송 (HomePage에서 진입 시) ───
-  // StrictMode에서 useEffect가 2회 실행되므로,
-  // hasRun ref로 API 호출을 1회로 제한 + active cleanup으로 늦은 응답 무시
   const firstMessageSentRef = useRef(false);
 
   useEffect(() => {
@@ -95,8 +203,10 @@ export const useChatMessages = () => {
         ? firstMessageData.attachments
         : undefined;
 
-    // 낙관적 UI: 사용자 메시지 먼저 표시
     const tempUserMsgId = `temp-first-${Date.now()}`;
+    const tempAssistantMsgId = `temp-assistant-${Date.now()}`;
+
+    // 사용자 메시지 + AI 스트리밍 플레이스홀더
     setMessages([
       {
         id: tempUserMsgId,
@@ -104,68 +214,78 @@ export const useChatMessages = () => {
         content: firstMessageData.text,
         attachments,
       },
+      {
+        id: tempAssistantMsgId,
+        role: "assistant",
+        content: "",
+        isStreaming: true,
+      },
     ]);
 
     setIsFirstMessageSending(true);
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
 
-    // TODO: 백엔드에서 noteId 파라미터 추가 시 여기에 noteId 전달
-    createConversationJson({
-      text: firstMessageData.text,
-      latex: firstMessageData.latex,
-      mentionedAssetIds:
-        firstMessageData.mentionedAssetIds.length > 0
-          ? firstMessageData.mentionedAssetIds
-          : undefined,
-      chosenFeatures:
-        firstMessageData.chosenFeatures.length > 0
-          ? firstMessageData.chosenFeatures
-          : undefined,
-      canvasImageIds:
-        firstMessageData.canvasImageIds.length > 0
-          ? firstMessageData.canvasImageIds
-          : undefined,
-    })
-      .then((response) => {
-        const { userMessage, assistantMessage } = response.result;
-        setMessages((prev) => [
-          ...prev.map((m) =>
-            m.id === tempUserMsgId
-              ? {
-                  id: `msg-${userMessage.messageId}`,
-                  role: "user" as const,
-                  content: userMessage.content,
-                  attachments,
-                }
-              : m,
-          ),
+    const sendFirst = async () => {
+      const signal = abortControllerRef.current!.signal;
+
+      try {
+        const response = await createConversationApi(
           {
-            id: `msg-${assistantMessage.messageId}`,
-            role: "assistant",
-            content: assistantMessage.content,
+            noteId: Number(noteId),
+            text: firstMessageData.text,
+            latex: firstMessageData.latex,
+            mentionedAssetIds:
+              firstMessageData.mentionedAssetIds.length > 0
+                ? firstMessageData.mentionedAssetIds
+                : undefined,
+            chosenFeatures:
+              firstMessageData.chosenFeatures.length > 0
+                ? firstMessageData.chosenFeatures
+                : undefined,
+            canvasImageIds:
+              firstMessageData.canvasImageIds.length > 0
+                ? firstMessageData.canvasImageIds
+                : undefined,
           },
-        ]);
-        setIsFirstMessageSending(false);
+          { isStream: true, signal },
+        );
+
+        await processStream(response, tempAssistantMsgId, signal);
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],
         });
-      })
-      .catch((error) => {
+      } catch (error) {
+        if (signal.aborted) return;
         console.error("첫 대화 생성 실패:", error);
         firstMessageSentRef.current = false;
-        setMessages((prev) => [
-          ...prev.filter((m) => m.id !== tempUserMsgId),
-          {
-            id: `error-${Date.now()}`,
-            role: "assistant",
-            content:
-              "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
-          },
-        ]);
+
+        setMessages((prev) => {
+          const hasContent = prev.find((m) => m.isStreaming && m.content);
+          if (hasContent) {
+            return prev.map((m) =>
+              m.isStreaming ? { ...m, isStreaming: false } : m,
+            );
+          }
+          return [
+            ...prev.filter((m) => !m.isStreaming),
+            {
+              id: `error-${Date.now()}`,
+              role: "assistant" as const,
+              content:
+                "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
+            },
+          ];
+        });
+      } finally {
         setIsFirstMessageSending(false);
-      });
-  }, [firstMessageData]);
+      }
+    };
+
+    sendFirst();
+  }, [firstMessageData, noteId, processStream, queryClient]);
 
   // ─── 후속 대화 전송 핸들러 ───
   const handleSend = useCallback(
@@ -215,8 +335,10 @@ export const useChatMessages = () => {
             }))
           : undefined;
 
-      // 4. 낙관적 UI + API 호출
+      // 4. 낙관적 UI + SSE 스트리밍 API 호출
       const tempUserMsgId = `temp-${Date.now()}`;
+      const tempAssistantMsgId = `temp-assistant-${Date.now()}`;
+
       setMessages((prev) => [
         ...prev,
         {
@@ -225,58 +347,67 @@ export const useChatMessages = () => {
           content: data.message,
           attachments: messageAttachments,
         },
+        {
+          id: tempAssistantMsgId,
+          role: "assistant",
+          content: "",
+          isStreaming: true,
+        },
       ]);
 
-      // TODO: 백엔드에서 noteId 파라미터 추가 시 여기에 noteId 전달
-      createConversation(
-        {
-          text: data.message,
-          latex: data.latex,
-          mentionedAssetIds: allAssetIds.length > 0 ? allAssetIds : undefined,
-          chosenFeatures:
-            data.mentionedToolCodes.length > 0
-              ? data.mentionedToolCodes
-              : undefined,
-          canvasImageIds:
-            canvasImageIds.length > 0 ? canvasImageIds : undefined,
-        },
-        {
-          onSuccess: (response) => {
-            const { userMessage, assistantMessage } = response.result;
-            setMessages((prev) => [
-              ...prev.map((m) =>
-                m.id === tempUserMsgId
-                  ? {
-                      id: `msg-${userMessage.messageId}`,
-                      role: "user" as const,
-                      content: userMessage.content,
-                      attachments: messageAttachments,
-                    }
-                  : m,
-              ),
-              {
-                id: `msg-${assistantMessage.messageId}`,
-                role: "assistant",
-                content: assistantMessage.content,
-              },
-            ]);
+      setIsStreamingResponse(true);
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
+      try {
+        const response = await createConversationApi(
+          {
+            noteId: nId,
+            text: data.message,
+            latex: data.latex,
+            mentionedAssetIds: allAssetIds.length > 0 ? allAssetIds : undefined,
+            chosenFeatures:
+              data.mentionedToolCodes.length > 0
+                ? data.mentionedToolCodes
+                : undefined,
+            canvasImageIds:
+              canvasImageIds.length > 0 ? canvasImageIds : undefined,
           },
-          onError: (error) => {
-            console.error("대화 생성 실패:", error);
-            setMessages((prev) => [
-              ...prev.filter((m) => m.id !== tempUserMsgId),
-              {
-                id: `error-${Date.now()}`,
-                role: "assistant",
-                content:
-                  "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
-              },
-            ]);
-          },
-        },
-      );
+          { isStream: true, signal },
+        );
+
+        await processStream(response, tempAssistantMsgId, signal);
+
+        queryClient.invalidateQueries({
+          queryKey: ["notes", "detail", noteId],
+        });
+      } catch (error) {
+        if (signal.aborted) return;
+        console.error("대화 생성 실패:", error);
+
+        setMessages((prev) => {
+          const hasContent = prev.find((m) => m.isStreaming && m.content);
+          if (hasContent) {
+            return prev.map((m) =>
+              m.isStreaming ? { ...m, isStreaming: false } : m,
+            );
+          }
+          return [
+            ...prev.filter((m) => !m.isStreaming),
+            {
+              id: `error-${Date.now()}`,
+              role: "assistant" as const,
+              content:
+                "죄송합니다. 응답을 생성하지 못했습니다. 다시 시도해주세요.",
+            },
+          ];
+        });
+      } finally {
+        setIsStreamingResponse(false);
+      }
     },
-    [noteId, createConversation, queryClient],
+    [noteId, processStream, queryClient],
   );
 
   // ─── 파생 데이터 ───

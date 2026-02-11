@@ -60,6 +60,7 @@ export interface ChatAssetDto {
 
 /** 대화 생성 요청 */
 export interface CreateConversationRequest {
+  noteId?: number;
   text: string;
   latex?: string;
   mentionedAssetIds?: number[];
@@ -70,6 +71,7 @@ export interface CreateConversationRequest {
 /** 대화 생성 파라미터 */
 export interface CreateConversationParams {
   isStream?: boolean;
+  signal?: AbortSignal;
 }
 
 /** 대화 생성 응답 (비-스트리밍) */
@@ -284,6 +286,66 @@ export interface CanvasImageUploadResponse {
   uploadUrl: string;
   createdAt: string;
 }
+
+// ============================================================
+// SSE 스트리밍 이벤트 타입 (POST /api/conversations?isStream=true)
+// ============================================================
+
+/** thread_id 이벤트 — 스트리밍 시작, 대화 스레드 ID 수신 */
+export interface SSEThreadIdEvent {
+  type: "thread_id";
+  thread_id: string;
+  run_id: string;
+}
+
+/** 진행 상황용 custom_data */
+export interface SSECustomData {
+  node?: string;
+  status?: string;
+  final_output?: unknown;
+}
+
+/** SSE ChatMessage 구조 (message 이벤트의 content) */
+export interface SSEChatMessageContent {
+  type: "human" | "ai" | "tool" | "custom";
+  content: string;
+  tool_calls: unknown[];
+  tool_call_id: string | null;
+  run_id: string | null;
+  response_metadata: Record<string, unknown>;
+  custom_data: SSECustomData;
+}
+
+/** message 이벤트 — 진행 상황(custom) 또는 최종 응답(ai) */
+export interface SSEMessageEvent {
+  type: "message";
+  content: SSEChatMessageContent;
+}
+
+/** token 이벤트 — LLM 토큰 스트리밍 (실시간 텍스트 조각) */
+export interface SSETokenEvent {
+  type: "token";
+  content: string;
+}
+
+/** DONE 이벤트 — 스트림 종료 */
+export interface SSEDoneEvent {
+  type: "DONE";
+}
+
+/** error 이벤트 — 서버 에러 */
+export interface SSEErrorEvent {
+  type: "error";
+  content: string;
+}
+
+/** SSE 이벤트 유니온 타입 */
+export type SSEEvent =
+  | SSEThreadIdEvent
+  | SSEMessageEvent
+  | SSETokenEvent
+  | SSEDoneEvent
+  | SSEErrorEvent;
 
 // ============================================================
 // API 응답 타입 별칭

@@ -293,8 +293,8 @@ export const notesHandlers = [
   http.delete(`${BASE_URL}/api/notes`, async ({ request }) => {
     await delay(500);
 
-    const body = await request.json();
-    const noteIds = body.noteIds as number[];
+    const body = (await request.json()) as { noteIds: number[] };
+    const noteIds = body.noteIds;
 
     console.log("[MSW] 노트 벌크 삭제:", noteIds);
 
