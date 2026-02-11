@@ -15,6 +15,11 @@ import { StorageToolbar } from "../components/StorageToolbar";
 import { NoteGroup } from "../components/NoteGroup";
 import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
+import { useAuthStore } from "@/features/auth/store/auth_store"; // Import auth store
+import {
+  PLAN_DETAILS,
+  type PlanType,
+} from "@/features/subscription/types/plan_types"; // Import plan details
 
 export const StoragePage = () => {
   const [keyword, setKeyword] = useState("");
@@ -23,49 +28,49 @@ export const StoragePage = () => {
   const [openNoteIds, setOpenNoteIds] = useState<number[]>([]);
 
   const { isDeleteModalOpen, isSuccessModalOpen } = useStorageStore();
-  // TODO: 서버 데이터 연결 시 주석 해제
-  // const { data, isLoading } = useStorageInfo(keyword);
+  const { user } = useAuthStore(); // Get current user
+
+  // 노트당 최대 용량 계산 (512MB)
+  // Logic: All plans have 512MB per note limit (Total Storage / Max Notes)
+  // Free: 1GB / 2 = 512MB
+  // Standard: 5GB / 10 = 512MB
+  // Pro: 10GB / 20 = 512MB
+  const NOTE_STORAGE_LIMIT_BYTES = 512 * 1024 * 1024;
+  const NOTE_STORAGE_LIMIT_DISPLAY = "512MB";
 
   // MOCK DATA FOR UI VERIFICATION
   const isLoading = false;
+
+  // 사용자 플랜에 따른 전체 용량 정보 (mock)
+  const userPlanType = (user?.plan as PlanType) || "Free";
+  const planDetails = PLAN_DETAILS[userPlanType];
+
   const data = {
     totalUsed: 251658240,
-    totalLimit: 524288000,
+    totalLimit:
+      parseInt(planDetails.storage.replace("GB", "")) * 1024 * 1024 * 1024, // Parse based on plan
     totalUsedDisplay: "240MB",
-    totalLimitDisplay: "500MB",
+    totalLimitDisplay: planDetails.storage,
     usagePercent: 48,
     plan: {
-      planType: "free" as const,
+      planType: userPlanType,
       isActive: true,
     },
     notes: [
       {
         noteId: 1,
         title: "컴퓨터 구조 (CSED311)",
-        storageUsed: 125829120,
-        storageLimit: 262144000,
-        storageUsedDisplay: "120MB",
-        storageLimitDisplay: "250MB",
+        storageUsed: 126353920, // ~120.5MB
+        // storageLimit: NOTE_STORAGE_LIMIT_BYTES, // Derived in render
         assets: [
           {
             assetId: 101,
             source: "upload" as const,
             fileName: "Lecture_01_Intro.pdf",
-            fileSize: 10485760,
+            fileSize: 126353920,
             mimeType: "application/pdf",
             ocrStatus: "completed" as const,
             createdAt: "2024-02-09T09:00:00Z",
-            thumbnailUrl: null,
-            fileCategory: "document" as const,
-          },
-          {
-            assetId: 102,
-            source: "ai_generated" as const,
-            fileName: "Lecture_01_Summary.md",
-            fileSize: 5120,
-            mimeType: "text/markdown",
-            ocrStatus: "completed" as const,
-            createdAt: "2024-02-09T10:00:00Z",
             thumbnailUrl: null,
             fileCategory: "document" as const,
           },
@@ -74,32 +79,18 @@ export const StoragePage = () => {
       {
         noteId: 2,
         title: "운영체제 (CSED312)",
-        storageUsed: 52428800,
-        storageLimit: 262144000,
-        storageUsedDisplay: "50MB",
-        storageLimitDisplay: "250MB",
+        storageUsed: 52428800, // 50MB
         assets: [
           {
             assetId: 201,
             source: "upload" as const,
             fileName: "Process_Synchronization.pdf",
-            fileSize: 15728640,
+            fileSize: 52428800,
             mimeType: "application/pdf",
             ocrStatus: "processing" as const,
             createdAt: "2024-02-09T11:00:00Z",
             thumbnailUrl: null,
             fileCategory: "document" as const,
-          },
-          {
-            assetId: 202,
-            source: "upload" as const,
-            fileName: "Memory_Management_Graph.png",
-            fileSize: 204800,
-            mimeType: "image/png",
-            ocrStatus: "completed" as const,
-            createdAt: "2024-02-09T12:00:00Z",
-            thumbnailUrl: "https://placehold.co/400x300/png",
-            fileCategory: "image" as const,
           },
         ],
       },
@@ -121,6 +112,11 @@ export const StoragePage = () => {
 
   // keyword 사용 (lint 경고 방지)
   void keyword;
+
+  const formatBytesToMB = (bytes: number) => {
+    const mb = bytes / (1024 * 1024);
+    return Number.isInteger(mb) ? mb.toFixed(0) : mb.toFixed(1);
+  };
 
   return (
     <>
@@ -150,22 +146,24 @@ export const StoragePage = () => {
             {isLoading ? (
               <p>데이터를 불러오는 중입니다...</p>
             ) : (
-              data?.notes.map((note) => (
-                <NoteGroup
-                  key={note.noteId}
-                  title={note.title}
-                  storageUsedDisplay={note.storageUsedDisplay}
-                  storageLimitDisplay={note.storageLimitDisplay}
-                  usagePercent={
-                    note.storageLimit > 0
-                      ? (note.storageUsed / note.storageLimit) * 100
-                      : 0
-                  }
-                  notes={note.assets}
-                  isOpen={openNoteIds.includes(note.noteId)}
-                  onToggle={() => handleToggle(note.noteId)}
-                />
-              ))
+              data?.notes.map((note) => {
+                const usedMBDisplay = `${formatBytesToMB(note.storageUsed)}MB`;
+                const usagePercent =
+                  (note.storageUsed / NOTE_STORAGE_LIMIT_BYTES) * 100;
+
+                return (
+                  <NoteGroup
+                    key={note.noteId}
+                    title={note.title}
+                    storageUsedDisplay={usedMBDisplay}
+                    storageLimitDisplay={NOTE_STORAGE_LIMIT_DISPLAY}
+                    usagePercent={Math.min(usagePercent, 100)} // Cap at 100%
+                    notes={note.assets}
+                    isOpen={openNoteIds.includes(note.noteId)}
+                    onToggle={() => handleToggle(note.noteId)}
+                  />
+                );
+              })
             )}
           </div>
         </div>

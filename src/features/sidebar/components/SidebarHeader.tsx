@@ -33,7 +33,7 @@ export const SidebarHeader = ({
             className="group rounded p-1 transition-colors"
           >
             <BarArrowIcon
-              className="mr-2 text-[#6B7280] transition-colors duration-500 group-hover:text-[#2A6AFF]"
+              className="mr-2 cursor-pointer text-[#6B7280] transition-colors duration-500 group-hover:text-[#2A6AFF]"
               size={26}
             />
           </button>
