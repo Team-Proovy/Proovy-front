@@ -157,5 +157,29 @@ export interface DifficultyMultipliers {
 export interface CreditCostResult {
   costs: CreditCostItem[];
   featureCosts: FeatureCostItem[];
+  costs: CreditCostItem[];
+  featureCosts: FeatureCostItem[];
   difficultyMultipliers: DifficultyMultipliers;
 }
+
+/** 크레딧 잔액 조회 결과 */
+export interface CreditBalanceResult {
+  dailyFreeCredit: number;
+  dailyFreeLimit: number;
+  dailyExpiresAt: string;
+  freeCredit: number;
+  paidCredit: number;
+  paidExpiresAt: string;
+  totalAvailable: number;
+  canUse: boolean;
+  checkedCost?: number;
+}
+
+/** 예상 비용 조회 요청 파라미터 */
+export interface EstimateCostParams {
+  featureName: string;
+  difficulty?: "easy" | "medium" | "hard";
+}
+
+/** 예상 비용 조회 결과 */
+export type EstimatedCostResult = number;

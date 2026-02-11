@@ -69,10 +69,7 @@ export const creditHandlers = [
   }),
 
   // 크레딧 사용
-  http.post("/api/credits/use", async ({ request }) => {
-    // 요청 바디 파싱 (실제 로직 시뮬레이션 가능)
-    // const body = await request.json();
-
+  http.post("/api/credits/use", async () => {
     return HttpResponse.json({
       isSuccess: true,
       code: "COMMON200",
@@ -141,6 +138,39 @@ export const creditHandlers = [
           hard: 2.0,
         },
       },
+    });
+  }),
+
+  // 크레딧 잔액 조회
+  http.get("/api/credits/balance", ({ request }) => {
+    const url = new URL(request.url);
+    const checkCost = url.searchParams.get("checkCost");
+
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "COMMON200",
+      message: "요청에 성공했습니다.",
+      result: {
+        dailyFreeCredit: 80,
+        dailyFreeLimit: 100,
+        dailyExpiresAt: "2026-01-31T00:00:00",
+        freeCredit: 50,
+        paidCredit: 120,
+        paidExpiresAt: "2026-02-28T00:00:00",
+        totalAvailable: 250,
+        canUse: true,
+        checkedCost: checkCost ? Number(checkCost) : undefined,
+      },
+    });
+  }),
+
+  // 예상 비용 조회
+  http.get("/api/credits/estimate", async () => {
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "COMMON200",
+      message: "요청에 성공했습니다.",
+      result: 15,
     });
   }),
 ];
