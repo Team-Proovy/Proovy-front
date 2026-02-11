@@ -17,11 +17,22 @@
  * 2. 사이드바/새로고침/직접 URL 접근 → GET /api/notes/{noteId}로 히스토리 로드
  */
 
+import { useParams } from "react-router-dom";
 import { LeftPanel, RightPanel, Divider, ChatHeader } from "../components";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useChatPanel } from "../hooks/useChatPanel";
 
+/**
+ * noteId가 변경될 때 전체 컴포넌트 리마운트를 강제하는 래퍼.
+ * 같은 라우트 패턴(/app/chat/:noteId)에서 다른 노트로 이동 시
+ * React Router가 컴포넌트를 재사용하여 useRef/state가 stale해지는 문제를 방지.
+ */
 export const ChatPage = () => {
+  const { noteId } = useParams<{ noteId: string }>();
+  return <ChatPageContent key={noteId} />;
+};
+
+const ChatPageContent = () => {
   const {
     noteId,
     messages,

@@ -10,6 +10,8 @@
  */
 
 import { useNoteListPage } from "../hooks";
+import { useMyProfile } from "@/features/settings/hooks/useUser";
+import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
 import {
   NotesHeader,
   NotesGrid,
@@ -19,6 +21,8 @@ import {
 } from "../components";
 
 export const NotesPage = () => {
+  const { data: profile } = useMyProfile();
+  const maxNotes = getPlanMaxNotes(profile?.subscription?.plan);
   const {
     currentPage,
     sortOrder,
@@ -42,6 +46,8 @@ export const NotesPage = () => {
     handleDeleteSuccess,
     handleCloseSuccessModal,
   } = useNoteListPage();
+
+  const visibleNotes = currentPage === 0 ? notes.slice(0, 5) : notes;
 
   if (isError) {
     return (
@@ -67,8 +73,8 @@ export const NotesPage = () => {
             sortOrder={sortOrder}
             isSortDropdownOpen={isSortDropdownOpen}
             isSelectMode={isSelectMode}
-            notesCount={notes.length}
             totalElements={pageInfo?.totalElements || 0}
+            maxNotes={maxNotes}
             selectedCount={selectedIds.length}
             onSelectSort={handleSelectSort}
             onToggleSortDropdown={setIsSortDropdownOpen}
@@ -78,11 +84,13 @@ export const NotesPage = () => {
           {/* 노트 그리드 영역 */}
           <div>
             <NotesGrid
-              notes={notes}
+              notes={visibleNotes}
               isLoading={isLoading}
               isSelectMode={isSelectMode}
               selectedIds={selectedIds}
               onToggleSelection={toggleIdSelection}
+              showAddCard={currentPage === 0}
+              totalSlots={6}
             />
           </div>
 

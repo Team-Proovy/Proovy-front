@@ -12,8 +12,8 @@ interface NotesHeaderProps {
   sortOrder: SortOrder;
   isSortDropdownOpen: boolean;
   isSelectMode: boolean;
-  notesCount: number;
   totalElements: number;
+  maxNotes?: number;
   onSelectSort: (value: SortOrder) => void;
   onToggleSortDropdown: (open: boolean) => void;
   onActionClick: () => void;
@@ -24,8 +24,8 @@ export const NotesHeader = ({
   sortOrder,
   isSortDropdownOpen,
   isSelectMode,
-  notesCount,
   totalElements,
+  maxNotes,
   onSelectSort,
   onToggleSortDropdown,
   onActionClick,
@@ -130,8 +130,8 @@ export const NotesHeader = ({
               노트 개수
             </span>
             <span className="text-[16px] leading-[20px] font-medium">
-              <span className="font-bold text-[#2A6AFF]">{notesCount}</span>
-              <span className="text-black">/{totalElements}</span>
+              <span className="font-bold text-[#2A6AFF]">{totalElements}</span>
+              <span className="text-black">/{maxNotes ?? totalElements}</span>
             </span>
           </div>
         </div>

@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreateNote } from "@/features/notes/hooks/useNotes";
+import { useCreateNote, useNoteList } from "@/features/notes/hooks/useNotes";
+import { useMyProfile } from "@/features/settings/hooks/useUser";
+import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import {
   getUploadUrl,
@@ -40,6 +43,12 @@ export interface FirstMessageState {
 export const useHomeSend = () => {
   const navigate = useNavigate();
   const { mutate: createNote, isPending: isCreatingNote } = useCreateNote();
+  const { data: profile, isLoading: isProfileLoading } = useMyProfile();
+  const authUser = useAuthStore((state) => state.user);
+  const { data: noteListData } = useNoteList({
+    page: 0,
+    size: 1,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -51,6 +60,21 @@ export const useHomeSend = () => {
   const clearError = () => setUploadError(null);
 
   const handleSend = (data: ChatSendData) => {
+    const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
+    const resolvedPlan = profile?.subscription?.plan ?? authUser?.plan;
+    const shouldCheckLimit = !isProfileLoading || !!resolvedPlan;
+
+    if (shouldCheckLimit) {
+      const maxNotes = getPlanMaxNotes(resolvedPlan);
+
+      if (totalNotes >= maxNotes) {
+        setUploadError(
+          "노트 생성 개수가 초과하였습니다. 플랜을 업그레이드 해주세요.",
+        );
+        return;
+      }
+    }
+
     // 노트만 생성 (title은 서버가 자동 생성)
     createNote(
       {},

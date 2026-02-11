@@ -56,9 +56,7 @@ export const mapAssetSource = (source: string): AssetSourceType => {
  * @param category - 백엔드 API의 fileCategory 값
  * @returns AssetCategoryType
  */
-export const mapAssetCategory = (
-  category: string,
-): AssetCategoryType => {
+export const mapAssetCategory = (category: string): AssetCategoryType => {
   return category === "image" ? "image" : "document";
 };
 
@@ -88,9 +86,7 @@ export const mapOcrStatus = (status: string): OcrStatusType => {
  * @param asset - 백엔드 API의 AssetSummaryDto
  * @returns AssetCardInfo
  */
-export const mapAssetToCardInfo = (
-  asset: AssetSummaryDto,
-): AssetCardInfo => {
+export const mapAssetToCardInfo = (asset: AssetSummaryDto): AssetCardInfo => {
   return {
     assetId: asset.assetId,
     fileName: asset.fileName,

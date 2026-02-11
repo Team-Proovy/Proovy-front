@@ -2,7 +2,11 @@ import { StorageChevronIcon } from "../../../shared/components/icons/StorageIcon
 import { NoteCard } from "./NoteCard";
 import { useStorageStore } from "../store/useStorageStore";
 import type { AssetSummaryDto } from "../api/assets_types";
-import { mapAssetSource, mapAssetCategory, mapOcrStatus } from "../utils/asset-mapper";
+import {
+  mapAssetSource,
+  mapAssetCategory,
+  mapOcrStatus,
+} from "../utils/asset-mapper";
 
 interface NoteGroupProps {
   title: string;

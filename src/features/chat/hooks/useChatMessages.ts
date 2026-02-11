@@ -11,6 +11,8 @@ import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { ConversationInfo } from "@/features/notes/api/notes_types";
 import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
+import { creditKeys } from "@/features/settings/hooks/useCredit";
+import { userKeys } from "@/features/settings/hooks/useUser";
 
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
@@ -257,6 +259,9 @@ export const useChatMessages = () => {
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],
         });
+        // 크레딧 잔액 최신화 (대화 생성 시 서버에서 자동 차감)
+        queryClient.invalidateQueries({ queryKey: creditKeys.all });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       } catch (error) {
         if (signal.aborted) return;
         console.error("첫 대화 생성 실패:", error);
@@ -382,6 +387,9 @@ export const useChatMessages = () => {
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],
         });
+        // 크레딧 잔액 최신화 (대화 생성 시 서버에서 자동 차감)
+        queryClient.invalidateQueries({ queryKey: creditKeys.all });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
       } catch (error) {
         if (signal.aborted) return;
         console.error("대화 생성 실패:", error);

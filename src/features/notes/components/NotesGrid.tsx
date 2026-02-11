@@ -14,6 +14,8 @@ interface NotesGridProps {
   isSelectMode: boolean;
   selectedIds: number[];
   onToggleSelection: (id: number) => void;
+  showAddCard?: boolean;
+  totalSlots?: number;
 }
 
 export const NotesGrid = ({
@@ -22,26 +24,40 @@ export const NotesGrid = ({
   isSelectMode,
   selectedIds,
   onToggleSelection,
+  showAddCard = false,
+  totalSlots = 6,
 }: NotesGridProps) => {
+  const usedSlots = (showAddCard ? 1 : 0) + notes.length;
+  const placeholderCount = Math.max(0, totalSlots - usedSlots);
+
   return (
     <div className="mt-[21px] w-full">
       <div className="grid [grid-template-columns:repeat(2,271px)] gap-[40px] min-[1340px]:[grid-template-columns:repeat(3,271px)]">
-        <NotesAddCard />
+        {showAddCard && <NotesAddCard />}
 
         {isLoading ? (
           <div className="col-span-full flex items-center justify-center py-[40px]">
             <LoadingSpinner size={80} />
           </div>
         ) : notes.length > 0 ? (
-          notes.map((note) => (
-            <NoteCard
-              key={note.noteId}
-              note={note}
-              isSelectMode={isSelectMode}
-              isSelected={selectedIds.includes(note.noteId)}
-              onToggleSelection={onToggleSelection}
-            />
-          ))
+          <>
+            {notes.map((note) => (
+              <NoteCard
+                key={note.noteId}
+                note={note}
+                isSelectMode={isSelectMode}
+                isSelected={selectedIds.includes(note.noteId)}
+                onToggleSelection={onToggleSelection}
+              />
+            ))}
+            {Array.from({ length: placeholderCount }).map((_, index) => (
+              <div
+                key={`placeholder-${index}`}
+                aria-hidden="true"
+                className="h-[229px] w-[271px] rounded-[12px] border-[0.5px] border-transparent bg-transparent"
+              />
+            ))}
+          </>
         ) : (
           <div className="col-span-full flex items-center justify-center py-[40px]">
             <span className="text-[14px] leading-[20px] text-[#6D6D6D]">
