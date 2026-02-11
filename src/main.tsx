@@ -24,11 +24,3 @@ enableMocking().then(() => {
     </StrictMode>,
   );
 });
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <AppQueryProvider>
-      <RouterProvider router={router} />
-    </AppQueryProvider>
-  </StrictMode>,
-);
