@@ -10,6 +10,7 @@ import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import { useStorageStore } from "@/features/storage/store/useStorageStore";
+import { assetKeys } from "@/features/storage/hooks/useAssets";
 import {
   PLAN_DETAILS,
   type PlanType,
@@ -131,8 +132,12 @@ export const StorageContent = ({
       const response = await deleteAssets(targetIds);
 
       if (response.isSuccess) {
-        // 성공 시 쿼리 무효화하여 목록 갱신
-        queryClient.invalidateQueries({ queryKey: noteKeys.detail(noteId) });
+        // 성공 시 쿼리 무효화하여 목록 갱신 (노트 상세 + 저장소 정보 모두 갱신)
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: noteKeys.detail(noteId) }),
+          queryClient.invalidateQueries({ queryKey: assetKeys.storage }),
+          queryClient.invalidateQueries({ queryKey: assetKeys.all }),
+        ]);
 
         setSelectedIds([]);
         setIsDeleteModalOpen(false);
