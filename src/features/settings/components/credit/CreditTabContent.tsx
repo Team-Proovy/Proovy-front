@@ -163,7 +163,7 @@ export const CreditTabContent = () => {
       <CreditInfoContainer
         plan={user?.plan || "Free"}
         totalCredits={safeTotalAvailable}
-        usedCredits={creditData?.periodSummary.totalSpent || 0}
+        usedCredits={creditData?.periodSummary?.totalSpent || 0}
         dailyCredits={safeDailyFreeCredit.balance}
         dailyResetTime={resetTimeStr}
       />
