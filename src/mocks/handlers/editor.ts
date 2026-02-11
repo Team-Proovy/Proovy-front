@@ -171,13 +171,14 @@ export const editorHandlers = [
     });
   }),
 
-  /** POST /api/conversations - 대화 생성 (Mock: JSON 응답) */
+  /** POST /api/conversations - 대화 생성 (SSE 스트리밍 / JSON) */
   http.post<never, CreateConversationRequest>(
     `${BASE_URL}/api/conversations`,
     async ({ request }) => {
-      await delay(800);
-
+      const url = new URL(request.url);
+      const isStream = url.searchParams.get("isStream") !== "false";
       const body = await request.json();
+
       const now = new Date().toISOString();
       const convId = ++conversationIdCounter;
       const userMsgId = ++messageIdCounter;
@@ -188,48 +189,130 @@ export const editorHandlers = [
       // Mock AI 응답 생성
       const aiContent = `"${userText.slice(0, 30)}..."에 대해 답변드립니다.\n\n이 문제는 다음과 같은 접근으로 풀 수 있습니다:\n\n1단계: 문제의 조건을 정리합니다.\n2단계: 핵심 개념을 적용합니다.\n3단계: 결과를 도출합니다.\n\n추가 질문이 있으시면 말씀해주세요!`;
 
-      return HttpResponse.json<
-        ApiResponse<{
-          conversationId: number;
-          userMessage: {
-            messageId: number;
-            content: string;
-            mentionedAssets: { assetId: number; fileName: string }[];
-            mentionedTools: string[];
-            createdAt: string;
-          };
-          assistantMessage: {
-            messageId: number;
-            content: string;
-            usedTools: string[];
-            status: string;
-            createdAt: string;
-          };
-        }>
-      >({
-        isSuccess: true,
-        code: "CONV2010",
-        message: "대화 생성 성공",
-        result: {
-          conversationId: convId,
-          userMessage: {
-            messageId: userMsgId,
-            content: userText,
-            mentionedAssets:
-              body.mentionedAssetIds?.map((id: number) => ({
-                assetId: id,
-                fileName: `file_${id}.pdf`,
-              })) || [],
-            mentionedTools: body.chosenFeatures || [],
-            createdAt: now,
+      // 비-스트리밍: 기존 JSON 응답
+      if (!isStream) {
+        await delay(800);
+        return HttpResponse.json<
+          ApiResponse<{
+            conversationId: number;
+            userMessage: {
+              messageId: number;
+              content: string;
+              mentionedAssets: { assetId: number; fileName: string }[];
+              mentionedTools: string[];
+              createdAt: string;
+            };
+            assistantMessage: {
+              messageId: number;
+              content: string;
+              usedTools: string[];
+              status: string;
+              createdAt: string;
+            };
+          }>
+        >({
+          isSuccess: true,
+          code: "CONV2010",
+          message: "대화 생성 성공",
+          result: {
+            conversationId: convId,
+            userMessage: {
+              messageId: userMsgId,
+              content: userText,
+              mentionedAssets:
+                body.mentionedAssetIds?.map((id: number) => ({
+                  assetId: id,
+                  fileName: `file_${id}.pdf`,
+                })) || [],
+              mentionedTools: body.chosenFeatures || [],
+              createdAt: now,
+            },
+            assistantMessage: {
+              messageId: assistantMsgId,
+              content: aiContent,
+              usedTools: body.chosenFeatures || [],
+              status: "COMPLETED",
+              createdAt: now,
+            },
           },
-          assistantMessage: {
-            messageId: assistantMsgId,
-            content: aiContent,
-            usedTools: body.chosenFeatures || [],
-            status: "COMPLETED",
-            createdAt: now,
-          },
+        });
+      }
+
+      // SSE 스트리밍 응답 (실제 서버 형식)
+      const encoder = new TextEncoder();
+      const threadId = crypto.randomUUID();
+      const runId = crypto.randomUUID();
+
+      // 진행 상황 시뮬레이션 단계
+      const statusSteps = [
+        { node: "Intent", status: "질문의 의도를 분석하고 있습니다." },
+        {
+          node: "Solve_Analysis",
+          status: "문제를 분석하고 필요한 정보를 정리하고 있습니다.",
+        },
+        {
+          node: "Solve_Writer",
+          status: "풀이 결과를 정리하여 답변을 작성하고 있습니다.",
+        },
+        {
+          node: "Solution",
+          status: "풀이 과정을 정리하고 있습니다.",
+        },
+        {
+          node: "Check",
+          status: "답이 올바른지 검산하고 있습니다.",
+        },
+      ];
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          // 1. thread_id 이벤트
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "thread_id", thread_id: threadId, run_id: runId })}\n\n`,
+            ),
+          );
+
+          // 2. message(custom) 이벤트 — 진행 상황
+          for (const step of statusSteps) {
+            await new Promise((r) => setTimeout(r, 600));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "message", content: { type: "custom", content: "", tool_calls: [], tool_call_id: null, run_id: runId, response_metadata: {}, custom_data: step } })}\n\n`,
+              ),
+            );
+          }
+
+          // 3. token 이벤트 — AI 응답을 한 글자씩 전송
+          for (const char of aiContent) {
+            await new Promise((r) => setTimeout(r, 20));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "token", content: char })}\n\n`,
+              ),
+            );
+          }
+
+          // 4. message(ai) 이벤트 — 최종 응답
+          await new Promise((r) => setTimeout(r, 50));
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "message", content: { type: "ai", content: aiContent, tool_calls: [], tool_call_id: null, run_id: runId, response_metadata: {}, custom_data: {} } })}\n\n`,
+            ),
+          );
+
+          // 5. [DONE] 시그널
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+
+          controller.close();
+        },
+      });
+
+      return new HttpResponse(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
         },
       });
     },

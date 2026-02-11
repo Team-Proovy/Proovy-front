@@ -11,6 +11,7 @@ import type {
   ConversationSearchResponse,
   CanvasImageUploadRequest,
   CanvasImageUploadResponse,
+  SSEEvent,
 } from "../types/editor_types";
 
 /**
@@ -47,6 +48,7 @@ export const createConversation = async (
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(request),
+      signal: params?.signal,
     },
   );
 
@@ -113,4 +115,74 @@ export const uploadCanvasImage = async (
     request,
   );
   return response.data;
+};
+
+/**
+ * SSE 스트림 파서
+ * fetch Response에서 SSE 이벤트를 비동기 제너레이터로 파싱합니다.
+ *
+ * 지원 형식:
+ * - data: {"type":"thread_id",...}  → JSON 파싱
+ * - data: {"type":"message",...}    → JSON 파싱 (진행 상황 / 최종 응답)
+ * - data: {"type":"token",...}      → JSON 파싱 (실시간 텍스트)
+ * - data: {"type":"error",...}      → JSON 파싱
+ * - data: [DONE]                     → 스트림 종료
+ */
+export const parseSSEStream = async function* (
+  response: Response,
+): AsyncGenerator<SSEEvent> {
+  if (!response.body) {
+    throw new Error("스트리밍 응답 본문이 없습니다.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith(":")) continue;
+
+        if (trimmed.startsWith("data:")) {
+          const data = trimmed.slice(5).trim();
+          if (data === "[DONE]") {
+            yield { type: "DONE" };
+            return;
+          }
+          try {
+            yield JSON.parse(data) as SSEEvent;
+          } catch {
+            // JSON 파싱 실패 시 token 이벤트로 래핑
+            yield { type: "token", content: data } as SSEEvent;
+          }
+        }
+      }
+    }
+    // 스트림 종료 후 잔여 버퍼 처리
+    buffer += decoder.decode(); // flush decoder
+    const remaining = buffer.trim();
+    if (remaining && remaining.startsWith("data:")) {
+      const data = remaining.slice(5).trim();
+      if (data === "[DONE]") {
+        yield { type: "DONE" };
+      } else {
+        try {
+          yield JSON.parse(data) as SSEEvent;
+        } catch {
+          yield { type: "token", content: data } as SSEEvent;
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 };
