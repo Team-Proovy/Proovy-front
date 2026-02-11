@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { deleteAssets } from "@/features/assets/api/assetApi";
 
 export interface Note {
   id: number;
@@ -25,7 +26,7 @@ interface StorageState {
   setSuccessModalOpen: (isOpen: boolean) => void;
   setNotes: (notes: Note[]) => void;
   addNote: (note: Note) => void;
-  deleteSelectedNotes: () => void;
+  deleteSelectedNotes: () => Promise<void>;
 
   viewerFileId: number | null;
   setViewerFileId: (id: number | null) => void;
@@ -61,16 +62,32 @@ export const useStorageStore = create<StorageState>((set) => ({
   setNotes: (noteCards) => set({ noteCards }),
   addNote: (note) =>
     set((state) => ({ noteCards: [note, ...state.noteCards] })),
-  deleteSelectedNotes: () =>
-    set((state) => ({
-      noteCards: state.noteCards.filter(
-        (note) => !state.selectedIds.includes(note.id),
-      ),
-      selectedIds: [],
-      isSelectMode: false,
-      isDeleteModalOpen: false,
-      isSuccessModalOpen: true,
-    })),
+  deleteSelectedNotes: async () => {
+    const state = useStorageStore.getState();
+    const { selectedIds } = state;
+
+    if (selectedIds.length === 0) return;
+
+    try {
+      // 실제 API 호출
+      await deleteAssets(selectedIds);
+
+      // 성공 시 상태 업데이트
+      set({
+        noteCards: state.noteCards.filter(
+          (note) => !selectedIds.includes(note.id),
+        ),
+        selectedIds: [],
+        isSelectMode: false,
+        isDeleteModalOpen: false,
+        isSuccessModalOpen: true,
+      });
+    } catch (error) {
+      console.error("파일 삭제 실패:", error);
+      alert("파일 삭제에 실패했습니다.");
+      set({ isDeleteModalOpen: false });
+    }
+  },
 
   viewerFileId: null,
   setViewerFileId: (id) => set({ viewerFileId: id }),

@@ -48,8 +48,8 @@ export const StorageContent = ({
 }: StorageContentProps) => {
   const queryClient = useQueryClient();
   const [hasProcessingAssets, setHasProcessingAssets] = useState(false);
-  const { data: noteDetail } = useNoteDetail(noteId, undefined, {
-    refetchInterval: hasProcessingAssets ? 3000 : false,
+  const { data: noteDetail, refetch } = useNoteDetail(noteId, undefined, {
+    refetchInterval: hasProcessingAssets ? 2000 : false, // 2초로 단축
   });
   const { user } = useAuthStore();
 
@@ -61,7 +61,12 @@ export const StorageContent = ({
           asset.ocrStatus === "pending" || asset.ocrStatus === "processing",
       ) ?? false;
     setHasProcessingAssets(isProcessing);
-  }, [noteDetail]);
+
+    // 처리 중이던 에셋이 완료되면 한 번 더 갱신
+    if (!isProcessing && hasProcessingAssets) {
+      refetch();
+    }
+  }, [noteDetail, hasProcessingAssets, refetch]);
 
   // BOX 파일 목록 (업로드된 자산)
   const boxFiles = useMemo<StorageFile[]>(() => {
@@ -132,11 +137,10 @@ export const StorageContent = ({
       const response = await deleteAssets(targetIds);
 
       if (response.isSuccess) {
-        // 성공 시 쿼리 무효화하여 목록 갱신 (노트 상세 + 저장소 정보 모두 갱신)
+        // 쿼리 즉시 갱신 (refetch 사용)
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: noteKeys.detail(noteId) }),
-          queryClient.invalidateQueries({ queryKey: assetKeys.storage }),
-          queryClient.invalidateQueries({ queryKey: assetKeys.all }),
+          queryClient.refetchQueries({ queryKey: noteKeys.detail(noteId) }),
+          queryClient.refetchQueries({ queryKey: assetKeys.storage }),
         ]);
 
         setSelectedIds([]);
@@ -312,6 +316,7 @@ export const StorageContent = ({
             <StorageActionButtons
               onOpenViewer={handleOpenViewer}
               onDelete={handleDelete}
+              selectedCount={selectedIds.length}
             />
           </div>
         )}

@@ -1,8 +1,22 @@
 import { useStorageStore } from "../store/useStorageStore";
+import { useQueryClient } from "@tanstack/react-query";
+import { assetKeys } from "../hooks/useAssets";
+import { noteKeys } from "@/features/notes/hooks/useNotes";
 
 export const DeleteNotesModal = () => {
+  const queryClient = useQueryClient();
   const { setDeleteModalOpen, deleteSelectedNotes, selectedIds } =
     useStorageStore();
+
+  const handleDelete = async () => {
+    await deleteSelectedNotes();
+
+    // 쿼리 즉시 갱신 (refetch 사용)
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: assetKeys.storage }),
+      queryClient.refetchQueries({ queryKey: noteKeys.all }),
+    ]);
+  };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -97,7 +111,7 @@ export const DeleteNotesModal = () => {
           </button>
 
           <button
-            onClick={deleteSelectedNotes}
+            onClick={handleDelete}
             style={{
               display: "flex",
               width: "240px",

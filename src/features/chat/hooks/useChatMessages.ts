@@ -5,7 +5,7 @@ import {
   createConversation as createConversationApi,
   parseSSEStream,
 } from "@/features/editor/api/editor_api";
-import { useNoteDetail } from "@/features/notes/hooks/useNotes";
+import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { ConversationInfo } from "@/features/notes/api/notes_types";
@@ -13,6 +13,7 @@ import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 import { creditKeys } from "@/features/settings/hooks/useCredit";
 import { userKeys } from "@/features/settings/hooks/useUser";
+import { assetKeys } from "@/features/storage/hooks/useAssets";
 
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
@@ -308,7 +309,12 @@ export const useChatMessages = () => {
           const result = await uploadAttachments(nId, data.attachments);
           uploadedFileAssetIds = result.fileAssetIds;
           canvasImageIds = result.canvasAssetIds;
-          queryClient.invalidateQueries({ queryKey: ["noteAssets", nId] });
+
+          // 쿼리 즉시 갱신
+          await Promise.all([
+            queryClient.refetchQueries({ queryKey: noteKeys.detail(String(nId)) }),
+            queryClient.refetchQueries({ queryKey: assetKeys.storage }),
+          ]);
         } catch (error) {
           console.error("[ChatPage] 첨부 파일 업로드 실패:", error);
           setIsUploading(false);
