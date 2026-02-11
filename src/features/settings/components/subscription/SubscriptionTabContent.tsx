@@ -129,7 +129,7 @@ export const SubscriptionTabContent = () => {
         variant="danger"
       />
 
-      {/* 이미 해지 예약된 경우 표시되는 모달 */}
+      {/* 이미 해지 예약된 경우 모달 */}
       {isReservedModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
