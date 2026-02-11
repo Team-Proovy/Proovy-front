@@ -53,7 +53,7 @@ export const SidebarProfile = ({
                 onUpgradeClick();
               }
             }}
-            className={`flex h-[24px] w-[88px] items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors ${
+            className={`flex h-[24px] w-[88px] cursor-pointer items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors ${
               authUser?.plan === "Pro"
                 ? "cursor-default opacity-50"
                 : "hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"

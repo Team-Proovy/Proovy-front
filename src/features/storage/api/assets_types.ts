@@ -106,3 +106,48 @@ export type AssetDetail = AssetDetailResponse;
 export interface AssetDeleteRequest {
   assetIds: string[];
 }
+
+// ============================================================
+// Storage API 타입
+// ============================================================
+
+/** 자산 요약 정보 (스토리지 페이지용) */
+export interface AssetSummaryDto {
+  assetId: number;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+  fileCategory: "document" | "image";
+  source: "upload" | "ai_generated";
+  ocrStatus: "pending" | "processing" | "completed" | "failed";
+  thumbnailUrl: string | null;
+  createdAt: string;
+}
+
+/** 노트별 스토리지 정보 */
+export interface NoteStorageDto {
+  noteId: number;
+  title: string;
+  storageUsed: number; // MB 단위
+  storageLimit: number; // MB 단위 (고정 512MB)
+  storageUsedDisplay: string; // "120MB"
+  storageLimitDisplay: string; // "512MB"
+  assets: AssetSummaryDto[];
+}
+
+/** 플랜 정보 */
+export interface PlanDto {
+  planType: "free" | "standard" | "pro";
+  isActive: boolean;
+}
+
+/** 스토리지 사용량 조회 응답 */
+export interface StorageResponse {
+  totalUsed: number; // MB 단위
+  totalLimit: number; // MB 단위
+  totalUsedDisplay: string; // "240MB" or "1.5GB"
+  totalLimitDisplay: string; // "1GB", "5GB", "10GB"
+  usagePercent: number; // 0-100
+  plan: PlanDto;
+  notes: NoteStorageDto[];
+}

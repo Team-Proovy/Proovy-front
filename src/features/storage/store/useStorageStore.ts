@@ -26,6 +26,9 @@ interface StorageState {
   setNotes: (notes: Note[]) => void;
   addNote: (note: Note) => void;
   deleteSelectedNotes: () => void;
+
+  viewerFileId: number | null;
+  setViewerFileId: (id: number | null) => void;
 }
 
 export const useStorageStore = create<StorageState>((set) => ({
@@ -68,4 +71,7 @@ export const useStorageStore = create<StorageState>((set) => ({
       isDeleteModalOpen: false,
       isSuccessModalOpen: true,
     })),
+
+  viewerFileId: null,
+  setViewerFileId: (id) => set({ viewerFileId: id }),
 }));
