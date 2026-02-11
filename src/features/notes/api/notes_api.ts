@@ -7,6 +7,8 @@ import type {
   CreateNoteResponse,
   NoteDetailParams,
   NoteDetailResponse,
+  DeleteNotesBulkResult,
+  DeleteNoteResult,
 } from "./notes_types";
 
 const NOTES_BASE = "/api/notes";
@@ -46,6 +48,29 @@ export const getNoteDetail = async (
   const response = await apiClient.get<ApiResponse<NoteDetailResponse>>(
     `${NOTES_BASE}/${noteId}`,
     { params },
+  );
+  return response.data;
+};
+
+// 노트 벌크 삭제
+export const deleteNotesBulk = async (
+  noteIds: number[],
+): Promise<ApiResponse<DeleteNotesBulkResult>> => {
+  const response = await apiClient.delete<ApiResponse<DeleteNotesBulkResult>>(
+    NOTES_BASE,
+    {
+      data: { noteIds },
+    },
+  );
+  return response.data;
+};
+
+// 단일 노트 삭제
+export const deleteNote = async (
+  noteId: number,
+): Promise<ApiResponse<DeleteNoteResult>> => {
+  const response = await apiClient.delete<ApiResponse<DeleteNoteResult>>(
+    `${NOTES_BASE}/${noteId}`,
   );
   return response.data;
 };

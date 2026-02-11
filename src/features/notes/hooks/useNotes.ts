@@ -4,7 +4,13 @@ import {
   useQueryClient,
   useInfiniteQuery,
 } from "@tanstack/react-query";
-import { getNoteList, createNote, getNoteDetail } from "../api/notes_api";
+import {
+  getNoteList,
+  createNote,
+  getNoteDetail,
+  deleteNotesBulk,
+  deleteNote,
+} from "../api/notes_api";
 import type {
   NoteListParams,
   CreateNoteRequest,
@@ -91,5 +97,31 @@ export const useNoteDetail = (
     enabled: (options?.enabled ?? true) && !!noteId,
     staleTime: 1000 * 60 * 1, // 1분
     refetchInterval: options?.refetchInterval,
+  });
+};
+
+// 노트 벌크 삭제 Hook
+export const useDeleteNotesBulk = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (noteIds: number[]) => deleteNotesBulk(noteIds),
+    onSuccess: () => {
+      // 노트 목록 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+    },
+  });
+};
+
+// 단일 노트 삭제 Hook
+export const useDeleteNote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (noteId: number) => deleteNote(noteId),
+    onSuccess: () => {
+      // 노트 목록 캐시 무효화
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+    },
   });
 };
