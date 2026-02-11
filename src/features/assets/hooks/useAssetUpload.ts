@@ -34,20 +34,24 @@ export const useAssetUpload = () => {
 
       // 3. 서버에 업로드 완료 확정 알림 (assetApi 사용)
       const confirmResponse = await confirmUpload(assetId);
-      console.log("서버 업로드 확정 완료:", confirmResponse.message);
+      console.log("✅ 업로드 확정 완료:", {
+        assetId,
+        fileName: confirmResponse.result.fileName,
+        ocrStatus: confirmResponse.result.ocrStatus,
+        thumbnailUrl: confirmResponse.result.thumbnailUrl,
+      });
 
-      // 쿼리 무효화 (노트 상세 + 저장소 정보 갱신 -> 모든 storage 관련 화면 동기화)
+      // 쿼리 즉시 갱신 (invalidate가 아닌 refetch 사용)
       await Promise.all([
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: noteKeys.detail(String(noteId)),
         }),
-        queryClient.invalidateQueries({
+        queryClient.refetchQueries({
           queryKey: assetKeys.storage,
         }),
-        queryClient.invalidateQueries({
-          queryKey: assetKeys.all,
-        }),
       ]);
+
+      console.log("✅ 쿼리 갱신 완료");
 
       // 4. 업로드 성공 후 반환
       return confirmResponse.result;
