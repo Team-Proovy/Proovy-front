@@ -59,9 +59,6 @@ const AssistantMessage = ({
       <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-sm leading-5 break-all whitespace-pre-wrap text-gray-900">
           <MessageContent content={content} />
-          {isStreaming && (
-            <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-blue-500 align-middle" />
-          )}
         </div>
       </div>
     )}

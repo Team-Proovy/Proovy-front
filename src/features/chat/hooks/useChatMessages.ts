@@ -155,7 +155,23 @@ export const useChatMessages = () => {
             break;
 
           case "error":
-            throw new Error(event.content);
+            console.error("[SSE] 서버 에러:", event.content);
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === tempAssistantMsgId
+                  ? {
+                      ...m,
+                      isStreaming: false,
+                      statusText: undefined,
+                      content:
+                        typeof event.content === "string"
+                          ? event.content
+                          : "응답 중 오류가 발생했어요.",
+                    }
+                  : m,
+              ),
+            );
+            return;
         }
       }
 
@@ -203,6 +219,7 @@ export const useChatMessages = () => {
     ]);
 
     setIsFirstMessageSending(true);
+    abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
     const sendFirst = async () => {
@@ -225,7 +242,7 @@ export const useChatMessages = () => {
                 ? firstMessageData.canvasImageIds
                 : undefined,
           },
-          { isStream: true, signal: abortControllerRef.current!.signal },
+          { isStream: true, signal: abortControllerRef.current?.signal },
         );
 
         await processStream(response, tempAssistantMsgId);
@@ -333,6 +350,7 @@ export const useChatMessages = () => {
       ]);
 
       setIsStreamingResponse(true);
+      abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
 
       try {
