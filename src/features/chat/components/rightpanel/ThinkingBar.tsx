@@ -26,13 +26,13 @@ export const ThinkingBar = ({ statusText }: ThinkingBarProps) => {
   const iconColor = isBlue ? "#2A6AFF" : "#6B7280";
 
   return (
-    <div className="flex h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
+    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
       <SparkleIcon
         size={24}
         color={iconColor}
         className="shrink-0 transition-colors duration-300"
       />
-      <div className="shrink-0 text-[14px] leading-[20px] font-medium break-all whitespace-pre-wrap text-[#6B7280]">
+      <div className="min-w-0 text-[14px] leading-[20px] font-medium break-all whitespace-pre-wrap text-[#6B7280]">
         {statusText || "채팅에 대한 답변 생성중..."}
       </div>
     </div>

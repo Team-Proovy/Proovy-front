@@ -140,7 +140,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
           );
         })}
         {/* 하단 여백 — 사용자 메시지가 상단에 위치할 수 있도록 충분한 빈 공간 확보 */}
-        <div className="min-h-screen shrink-0" />
+        <div className="min-h-[80vh] shrink-0" />
       </div>
     </div>
   );

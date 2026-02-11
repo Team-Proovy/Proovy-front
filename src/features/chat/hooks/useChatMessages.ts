@@ -82,12 +82,12 @@ export const useChatMessages = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isSending = isStreamingResponse || isUploading || isFirstMessageSending;
 
-  // 컴포넌트 언마운트 시 스트리밍 중단
-  // useEffect(() => {
-  //   return () => {
-  //     abortControllerRef.current?.abort();
-  //   };
-  // }, []);
+  // 컴포넌트 언마운트 시 진행 중인 스트리밍 중단
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   /** SSE 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
   const processStream = useCallback(
