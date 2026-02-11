@@ -8,7 +8,7 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
-import { deleteAccount, updateProfile } from "../../api/user_api";
+import { deleteAccount } from "../../api/user_api";
 import { useMyProfile } from "../../hooks/useUser";
 import { logout as logoutApi } from "../../../auth/api/auth_api";
 
@@ -47,42 +47,6 @@ export const ProfileTabContent = () => {
       }
     }
   }, [profile, updateUser, user?.nickname, user?.profileImageUrl, user?.plan]);
-
-  // 닉네임 상태 관리
-  const [nickname, setNickname] = useState("");
-
-  // 초기 닉네임 설정
-  useEffect(() => {
-    if (user?.nickname) {
-      setNickname(user.nickname);
-    }
-  }, [user?.nickname]);
-
-  const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNickname(e.target.value);
-  };
-
-  const handleNicknameBlur = async () => {
-    // 변경사항이 없거나 비어있으면 무시
-    if (!nickname.trim() || nickname === user?.nickname) {
-      setNickname(user?.nickname || ""); // 원래대로 복구
-      return;
-    }
-
-    try {
-      const response = await updateProfile({ nickname });
-      if (response.isSuccess && response.result) {
-        // 전역 스토어 업데이트 (사이드바 등 즉시 반영)
-        updateUser({ nickname: response.result.nickname });
-      } else {
-        alert(response.message || "닉네임 수정에 실패했습니다.");
-        setNickname(user?.nickname || ""); // 실패 시 복구
-      }
-    } catch (error) {
-      console.error("닉네임 수정 실패:", error);
-      setNickname(user?.nickname || ""); // 에러 시 복구
-    }
-  };
 
   const loginProvider = user?.provider?.toLowerCase() as
     | LoginProvider
@@ -159,10 +123,8 @@ export const ProfileTabContent = () => {
           />
           <ProfileField
             label="닉네임"
-            value={nickname}
-            onChange={handleNicknameChange}
-            onBlur={handleNicknameBlur}
-            placeholder="닉네임을 입력하세요"
+            value={user?.nickname || ""}
+            readonly
           />
         </div>
       </div>
