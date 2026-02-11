@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { UploadUrlRequest } from "../types/asset";
 import { getUploadUrl, uploadToS3, confirmUpload } from "../api/assetApi";
 import { noteKeys } from "@/features/notes/hooks/useNotes";
+import { assetKeys } from "@/features/storage/hooks/useAssets";
 
 export const useAssetUpload = () => {
   const queryClient = useQueryClient();
@@ -35,10 +36,18 @@ export const useAssetUpload = () => {
       const confirmResponse = await confirmUpload(assetId);
       console.log("서버 업로드 확정 완료:", confirmResponse.message);
 
-      // 쿼리 무효화 (노트 상세 정보 갱신 -> StorageContent 목록 업데이트)
-      queryClient.invalidateQueries({
-        queryKey: noteKeys.detail(String(noteId)),
-      });
+      // 쿼리 무효화 (노트 상세 + 저장소 정보 갱신 -> 모든 storage 관련 화면 동기화)
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: noteKeys.detail(String(noteId)),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: assetKeys.storage,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: assetKeys.all,
+        }),
+      ]);
 
       // 4. 업로드 성공 후 반환
       return confirmResponse.result;
