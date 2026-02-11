@@ -99,7 +99,6 @@ export interface GetCreditHistoryParams {
   changeType?: "all" | "earn" | "spend" | "expire";
   creditType?: "all" | "daily" | "free" | "paid";
   startDate?: string;
-  startDate?: string;
   endDate?: string;
 }
 
@@ -155,8 +154,6 @@ export interface DifficultyMultipliers {
 
 /** 크레딧 비용 조회 결과 */
 export interface CreditCostResult {
-  costs: CreditCostItem[];
-  featureCosts: FeatureCostItem[];
   costs: CreditCostItem[];
   featureCosts: FeatureCostItem[];
   difficultyMultipliers: DifficultyMultipliers;
