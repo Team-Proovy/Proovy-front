@@ -7,12 +7,12 @@ import "./app/styles/global.css";
 
 // MSW 개발 환경에서만 활성화
 const enableMocking = async () => {
-  if (import.meta.env.DEV) {
-    const { worker } = await import("./mocks/browser");
-    return worker.start({
-      onUnhandledRequest: "bypass", // 미처리 요청은 실제 서버로 전달
-    });
-  }
+  // if (import.meta.env.DEV) {
+  //   const { worker } = await import("./mocks/browser");
+  //   return worker.start({
+  //     onUnhandledRequest: "bypass", // 미처리 요청은 실제 서버로 전달
+  //   });
+  // }
   return Promise.resolve();
 };
 

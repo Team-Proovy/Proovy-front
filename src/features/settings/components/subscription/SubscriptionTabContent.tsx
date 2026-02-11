@@ -30,9 +30,15 @@ export const SubscriptionTabContent = () => {
             name: currentPlan.displayName,
             dailyCredits: benefits.dailyCredit,
             monthlyCredits: benefits.monthlyCredit,
-            storage: `${benefits.storageLimit}GB`,
+            storage: String(benefits.storageLimit).toUpperCase().endsWith("GB")
+              ? String(benefits.storageLimit)
+              : `${benefits.storageLimit}GB`,
             maxNotes: benefits.maxNotes,
-            maxUploadSize: `${benefits.maxFileSize}MB`,
+            maxUploadSize: String(benefits.maxFileSize)
+              .toUpperCase()
+              .endsWith("MB")
+              ? String(benefits.maxFileSize)
+              : `${benefits.maxFileSize}MB`,
             price: currentPlan.price,
             startDate: period?.startDate || "-",
             endDate: period?.endDate || "-",
