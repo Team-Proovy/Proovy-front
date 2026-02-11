@@ -288,39 +288,62 @@ export interface CanvasImageUploadResponse {
 }
 
 // ============================================================
-// SSE 스트리밍 이벤트 타입
+// SSE 스트리밍 이벤트 타입 (POST /api/conversations?isStream=true)
 // ============================================================
 
-/** SSE START 이벤트 — 대화/메시지 ID 수신 */
-export interface SSEStartEvent {
-  type: "START";
-  conversationId: number;
-  userMessageId: number;
-  assistantMessageId: number;
+/** thread_id 이벤트 — 스트리밍 시작, 대화 스레드 ID 수신 */
+export interface SSEThreadIdEvent {
+  type: "thread_id";
+  thread_id: string;
+  run_id: string;
 }
 
-/** SSE CONTENT 이벤트 — AI 응답 텍스트 청크 */
-export interface SSEContentEvent {
-  type: "CONTENT";
-  text: string;
+/** 진행 상황용 custom_data */
+export interface SSECustomData {
+  node?: string;
+  status?: string;
+  final_output?: unknown;
 }
 
-/** SSE DONE 이벤트 — 스트리밍 완료 */
+/** SSE ChatMessage 구조 (message 이벤트의 content) */
+export interface SSEChatMessageContent {
+  type: "human" | "ai" | "tool" | "custom";
+  content: string;
+  tool_calls: unknown[];
+  tool_call_id: string | null;
+  run_id: string | null;
+  response_metadata: Record<string, unknown>;
+  custom_data: SSECustomData;
+}
+
+/** message 이벤트 — 진행 상황(custom) 또는 최종 응답(ai) */
+export interface SSEMessageEvent {
+  type: "message";
+  content: SSEChatMessageContent;
+}
+
+/** token 이벤트 — LLM 토큰 스트리밍 (실시간 텍스트 조각) */
+export interface SSETokenEvent {
+  type: "token";
+  content: string;
+}
+
+/** DONE 이벤트 — 스트림 종료 */
 export interface SSEDoneEvent {
   type: "DONE";
 }
 
-/** SSE ERROR 이벤트 — 서버 에러 */
+/** error 이벤트 — 서버 에러 */
 export interface SSEErrorEvent {
-  type: "ERROR";
-  code: string;
-  message: string;
+  type: "error";
+  content: string;
 }
 
 /** SSE 이벤트 유니온 타입 */
 export type SSEEvent =
-  | SSEStartEvent
-  | SSEContentEvent
+  | SSEThreadIdEvent
+  | SSEMessageEvent
+  | SSETokenEvent
   | SSEDoneEvent
   | SSEErrorEvent;
 

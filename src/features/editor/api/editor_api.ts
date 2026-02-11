@@ -122,10 +122,11 @@ export const uploadCanvasImage = async (
  * fetch Response에서 SSE 이벤트를 비동기 제너레이터로 파싱합니다.
  *
  * 지원 형식:
- * - data: {"type":"START",...}  → JSON 파싱
- * - data: {"type":"CONTENT","text":"..."}  → JSON 파싱
- * - data: 일반 텍스트  → CONTENT 이벤트로 래핑
- * - data: [DONE]  → DONE 이벤트
+ * - data: {"type":"thread_id",...}  → JSON 파싱
+ * - data: {"type":"message",...}    → JSON 파싱 (진행 상황 / 최종 응답)
+ * - data: {"type":"token",...}      → JSON 파싱 (실시간 텍스트)
+ * - data: {"type":"error",...}      → JSON 파싱
+ * - data: [DONE]                     → 스트림 종료
  */
 export const parseSSEStream = async function* (
   response: Response,
@@ -160,8 +161,8 @@ export const parseSSEStream = async function* (
           try {
             yield JSON.parse(data) as SSEEvent;
           } catch {
-            // JSON 파싱 실패 시 일반 텍스트 → CONTENT 이벤트
-            yield { type: "CONTENT", text: data } as SSEEvent;
+            // JSON 파싱 실패 시 token 이벤트로 래핑
+            yield { type: "token", content: data } as SSEEvent;
           }
         }
       }

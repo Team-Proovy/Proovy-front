@@ -19,4 +19,6 @@ export interface ChatMessage {
   attachments?: MessageAttachment[];
   /** SSE 스트리밍 진행 중 여부 (assistant 메시지에만 사용) */
   isStreaming?: boolean;
+  /** AI 진행 상황 텍스트 — message(custom) 이벤트의 status (assistant 메시지에만 사용) */
+  statusText?: string;
 }

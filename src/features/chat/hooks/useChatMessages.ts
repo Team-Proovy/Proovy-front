@@ -83,45 +83,62 @@ export const useChatMessages = () => {
   const isSending = isStreamingResponse || isUploading || isFirstMessageSending;
 
   // 컴포넌트 언마운트 시 스트리밍 중단
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     abortControllerRef.current?.abort();
+  //   };
+  // }, []);
 
   /** SSE 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
   const processStream = useCallback(
-    async (
-      response: Response,
-      tempUserMsgId: string,
-      tempAssistantMsgId: string,
-    ) => {
-      let currentUserMsgId = tempUserMsgId;
-      let currentAssistantMsgId = tempAssistantMsgId;
-
+    async (response: Response, tempAssistantMsgId: string) => {
       for await (const event of parseSSEStream(response)) {
         if (abortControllerRef.current?.signal.aborted) return;
 
         switch (event.type) {
-          case "START":
-            currentUserMsgId = `msg-${event.userMessageId}`;
-            currentAssistantMsgId = `msg-${event.assistantMessageId}`;
-            setMessages((prev) =>
-              prev.map((m) => {
-                if (m.id === tempUserMsgId)
-                  return { ...m, id: currentUserMsgId };
-                if (m.id === tempAssistantMsgId)
-                  return { ...m, id: currentAssistantMsgId };
-                return m;
-              }),
-            );
+          case "thread_id":
+            // 스레드 ID 수신 — 필요 시 저장 가능
             break;
 
-          case "CONTENT":
+          case "message":
+            if (
+              event.content.type === "custom" &&
+              event.content.custom_data?.status
+            ) {
+              // 진행 상황 업데이트 (ThinkingBar에 표시)
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? { ...m, statusText: event.content.custom_data.status }
+                    : m,
+                ),
+              );
+            } else if (event.content.type === "ai") {
+              // 최종 응답 — token 누적분을 서버 최종 텍스트로 교체 (정합성 보장)
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? {
+                        ...m,
+                        content: event.content.content,
+                        statusText: undefined,
+                      }
+                    : m,
+                ),
+              );
+            }
+            break;
+
+          case "token":
+            // LLM 토큰 실시간 누적 (사용자에게 보이는 텍스트)
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === currentAssistantMsgId
-                  ? { ...m, content: m.content + event.text }
+                m.id === tempAssistantMsgId
+                  ? {
+                      ...m,
+                      content: m.content + event.content,
+                      statusText: undefined,
+                    }
                   : m,
               ),
             );
@@ -130,23 +147,23 @@ export const useChatMessages = () => {
           case "DONE":
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === currentAssistantMsgId
-                  ? { ...m, isStreaming: false }
+                m.id === tempAssistantMsgId
+                  ? { ...m, isStreaming: false, statusText: undefined }
                   : m,
               ),
             );
             break;
 
-          case "ERROR":
-            throw new Error(event.message);
+          case "error":
+            throw new Error(event.content);
         }
       }
 
       // DONE 이벤트 없이 스트림 종료된 경우 안전하게 처리
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === currentAssistantMsgId && m.isStreaming
-            ? { ...m, isStreaming: false }
+          m.id === tempAssistantMsgId && m.isStreaming
+            ? { ...m, isStreaming: false, statusText: undefined }
             : m,
         ),
       );
@@ -211,7 +228,7 @@ export const useChatMessages = () => {
           { isStream: true, signal: abortControllerRef.current!.signal },
         );
 
-        await processStream(response, tempUserMsgId, tempAssistantMsgId);
+        await processStream(response, tempAssistantMsgId);
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
         queryClient.invalidateQueries({
@@ -335,7 +352,7 @@ export const useChatMessages = () => {
           { isStream: true, signal: abortControllerRef.current.signal },
         );
 
-        await processStream(response, tempUserMsgId, tempAssistantMsgId);
+        await processStream(response, tempAssistantMsgId);
 
         queryClient.invalidateQueries({
           queryKey: ["notes", "detail", noteId],

@@ -238,34 +238,71 @@ export const editorHandlers = [
         });
       }
 
-      // SSE 스트리밍 응답
+      // SSE 스트리밍 응답 (실제 서버 형식)
       const encoder = new TextEncoder();
+      const threadId = crypto.randomUUID();
+      const runId = crypto.randomUUID();
+
+      // 진행 상황 시뮬레이션 단계
+      const statusSteps = [
+        { node: "Intent", status: "질문의 의도를 분석하고 있습니다." },
+        {
+          node: "Solve_Analysis",
+          status: "문제를 분석하고 필요한 정보를 정리하고 있습니다.",
+        },
+        {
+          node: "Solve_Writer",
+          status: "풀이 결과를 정리하여 답변을 작성하고 있습니다.",
+        },
+        {
+          node: "Solution",
+          status: "풀이 과정을 정리하고 있습니다.",
+        },
+        {
+          node: "Check",
+          status: "답이 올바른지 검산하고 있습니다.",
+        },
+      ];
+
       const stream = new ReadableStream({
         async start(controller) {
-          // START 이벤트
+          // 1. thread_id 이벤트
           controller.enqueue(
             encoder.encode(
-              `data: ${JSON.stringify({ type: "START", conversationId: convId, userMessageId: userMsgId, assistantMessageId: assistantMsgId })}\n\n`,
+              `data: ${JSON.stringify({ type: "thread_id", thread_id: threadId, run_id: runId })}\n\n`,
             ),
           );
 
-          // CONTENT 이벤트 — AI 응답을 15자 단위로 분할 전송
-          const chunkSize = 15;
-          for (let i = 0; i < aiContent.length; i += chunkSize) {
-            const chunk = aiContent.slice(i, i + chunkSize);
-            await new Promise((r) => setTimeout(r, 50));
+          // 2. message(custom) 이벤트 — 진행 상황
+          for (const step of statusSteps) {
+            await new Promise((r) => setTimeout(r, 600));
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "CONTENT", text: chunk })}\n\n`,
+                `data: ${JSON.stringify({ type: "message", content: { type: "custom", content: "", tool_calls: [], tool_call_id: null, run_id: runId, response_metadata: {}, custom_data: step } })}\n\n`,
               ),
             );
           }
 
-          // DONE 이벤트
+          // 3. token 이벤트 — AI 응답을 한 글자씩 전송
+          for (const char of aiContent) {
+            await new Promise((r) => setTimeout(r, 20));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "token", content: char })}\n\n`,
+              ),
+            );
+          }
+
+          // 4. message(ai) 이벤트 — 최종 응답
           await new Promise((r) => setTimeout(r, 50));
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: "DONE" })}\n\n`),
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "message", content: { type: "ai", content: aiContent, tool_calls: [], tool_call_id: null, run_id: runId, response_metadata: {}, custom_data: {} } })}\n\n`,
+            ),
           );
+
+          // 5. [DONE] 시그널
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
 
           controller.close();
         },
