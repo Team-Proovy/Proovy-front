@@ -47,6 +47,8 @@ export const NotesPage = () => {
     handleCloseSuccessModal,
   } = useNoteListPage();
 
+  const visibleNotes = currentPage === 0 ? notes.slice(0, 5) : notes;
+
   if (isError) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-white">
@@ -82,11 +84,13 @@ export const NotesPage = () => {
           {/* 노트 그리드 영역 */}
           <div>
             <NotesGrid
-              notes={notes}
+              notes={visibleNotes}
               isLoading={isLoading}
               isSelectMode={isSelectMode}
               selectedIds={selectedIds}
               onToggleSelection={toggleIdSelection}
+              showAddCard={currentPage === 0}
+              totalSlots={6}
             />
           </div>
 

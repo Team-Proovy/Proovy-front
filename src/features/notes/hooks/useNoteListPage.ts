@@ -18,7 +18,7 @@ export const useNoteListPage = () => {
   // API 데이터 조회
   const { data, isLoading, isError } = useNoteList({
     page: currentPage,
-    size: 20,
+    size: 6,
     sort: sortOrder,
   });
 
