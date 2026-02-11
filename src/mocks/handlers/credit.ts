@@ -91,4 +91,56 @@ export const creditHandlers = [
       },
     });
   }),
+
+  // 크레딧 비용 조회
+  http.get("/api/credits/costs", () => {
+    return HttpResponse.json({
+      isSuccess: true,
+      code: "COMMON200",
+      message: "요청에 성공했습니다.",
+      result: {
+        costs: [
+          {
+            eventType: "OCR",
+            description: "OCR 처리",
+            costAmount: 10,
+            isFixed: true,
+          },
+          {
+            eventType: "CODE_EXECUTION",
+            description: "코드 실행",
+            costAmount: 5,
+            isFixed: true,
+          },
+          {
+            eventType: "LLM_QUERY",
+            description: "AI 질의 (사용량 기반)",
+            costAmount: null,
+            isFixed: false,
+          },
+        ],
+        featureCosts: [
+          {
+            featureName: "Solve",
+            baseCost: 10,
+            easyCost: 10,
+            mediumCost: 15,
+            hardCost: 20,
+          },
+          {
+            featureName: "Explain",
+            baseCost: 5,
+            easyCost: 5,
+            mediumCost: 8,
+            hardCost: 10,
+          },
+        ],
+        difficultyMultipliers: {
+          easy: 1.0,
+          medium: 1.5,
+          hard: 2.0,
+        },
+      },
+    });
+  }),
 ];

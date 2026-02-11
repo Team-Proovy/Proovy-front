@@ -128,3 +128,34 @@ export interface CreditUsageResult {
   insufficientCredit: boolean;
   message: string;
 }
+
+/** 기능별 비용 정보 */
+export interface CreditCostItem {
+  eventType: CreditEventType;
+  description: string;
+  costAmount: number | null;
+  isFixed: boolean;
+}
+
+/** 세부 기능 비용 정보 */
+export interface FeatureCostItem {
+  featureName: string;
+  baseCost: number;
+  easyCost: number;
+  mediumCost: number;
+  hardCost: number;
+}
+
+/** 난이도별 가중치 */
+export interface DifficultyMultipliers {
+  easy: number;
+  medium: number;
+  hard: number;
+}
+
+/** 크레딧 비용 조회 결과 */
+export interface CreditCostResult {
+  costs: CreditCostItem[];
+  featureCosts: FeatureCostItem[];
+  difficultyMultipliers: DifficultyMultipliers;
+}
