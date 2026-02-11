@@ -20,6 +20,16 @@ export const getMyProfile = async (): Promise<
   return response.data;
 };
 
+// 내 프로필 수정
+export const updateProfile = async (
+  data: import("./user_types").UpdateProfileRequest,
+): Promise<ApiResponse<import("./user_types").MyProfileResponse>> => {
+  const response = await apiClient.patch<
+    ApiResponse<import("./user_types").MyProfileResponse>
+  >(`${USER_BASE}/me`, data);
+  return response.data;
+};
+
 // 내 구독 상세 정보 조회
 export const getMySubscription = async (): Promise<
   ApiResponse<SubscriptionResponse>

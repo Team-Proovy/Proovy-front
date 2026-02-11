@@ -52,6 +52,12 @@ export interface MyProfileResponse {
   storage: StorageDto;
 }
 
+/** 프로필 수정 요청 */
+export interface UpdateProfileRequest {
+  nickname?: string;
+  profileImageUrl?: string;
+}
+
 // ============================================================
 // 구독 정보 상세 타입
 // ============================================================
