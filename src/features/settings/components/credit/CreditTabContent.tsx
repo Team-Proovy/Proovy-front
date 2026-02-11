@@ -1,88 +1,95 @@
+import { useEffect, useState } from "react";
 import { CreditInfoContainer } from "./CreditInfoContainer";
 import {
   CreditHistoryTable,
   type CreditHistoryItem,
 } from "./CreditHistoryTable";
+import { getCreditHistory } from "../../api/credit_api";
+import type { CreditSummaryDto } from "../../api/credit_types";
+import { useAuthStore } from "../../../auth/store/auth_store";
 
 /**
  * CreditTabContent - 크레딧 사용내역 탭
  */
 export const CreditTabContent = () => {
-  // TODO: API 연결 후 실제 데이터로 교체
-  const creditInfo = {
-    plan: "무료",
-    totalCredits: 1200,
-    usedCredits: 663,
-    dailyCredits: 100,
-    dailyResetTime: "매일 00:00에 100으로 새로고침",
-  };
+  const { user } = useAuthStore();
+  const [summary, setSummary] = useState<CreditSummaryDto | null>(null);
+  const [history, setHistory] = useState<CreditHistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const creditHistory: CreditHistoryItem[] = [
-    {
-      id: 1,
-      eventType: "메시지",
-      detail: "메시지 문제 풀어주고 해설지 만들어줘",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 2,
-      eventType: "ABC 이벤트 지급",
-      detail: "-",
-      date: "2026-01-01 07:38",
-      change: 100,
-    },
-    {
-      id: 3,
-      eventType: "1월 구독 크레딧",
-      detail: "-",
-      date: "2026-01-01 07:38",
-      change: 100,
-    },
-    {
-      id: 4,
-      eventType: "메시지",
-      detail:
-        "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...1111111111111111",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 5,
-      eventType: "메시지",
-      detail: "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 6,
-      eventType: "메시지",
-      detail: "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 7,
-      eventType: "메시지",
-      detail: "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 8,
-      eventType: "메시지",
-      detail: "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-    {
-      id: 9,
-      eventType: "메시지",
-      detail: "1번 문제는 어떤 개념을 사용해서 풀어야 하는지 분석해줘...",
-      date: "2026-01-01 07:38",
-      change: -100,
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await getCreditHistory({
+          page: 0,
+          size: 20,
+          // 필요시 필터 추가
+        });
+
+        if (response.isSuccess && response.result) {
+          setSummary(response.result.creditSummary);
+
+          // 히스토리 매핑
+          const historyItems: CreditHistoryItem[] =
+            response.result.history.content.map((item) => {
+              const date = new Date(item.createdAt);
+              const formattedDate = `${date.getFullYear()}-${String(
+                date.getMonth() + 1,
+              ).padStart(2, "0")}-${String(date.getDate()).padStart(
+                2,
+                "0",
+              )} ${String(date.getHours()).padStart(2, "0")}:${String(
+                date.getMinutes(),
+              ).padStart(2, "0")}`;
+
+              return {
+                id: item.historyId,
+                eventType: item.eventName || item.eventType, // eventName이 없으면 타입 사용
+                detail: item.description,
+                date: formattedDate,
+                change:
+                  item.changeType === "SPEND" ? -item.amount : item.amount,
+              };
+            });
+          setHistory(historyItems);
+        }
+      } catch (error) {
+        console.error("Failed to fetch credit history:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        로딩 중...
+      </div>
+    );
+  }
+
+  // 데이터가 없을 경우 기본값 또는 빈 상태 처리
+  if (!summary) {
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        데이터를 불러올 수 없습니다.
+      </div>
+    );
+  }
+
+  const { dailyFreeCredit, totalAvailable } = summary;
+
+  // 일일 리셋 시간 포맷팅 (예: 매일 00:00)
+  const resetDate = new Date(dailyFreeCredit.expiresAt);
+  const resetTimeStr = `매일 ${resetDate.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })}에 ${dailyFreeCredit.limit}으로 새로고침`;
 
   return (
     <div className="flex flex-col">
@@ -94,16 +101,17 @@ export const CreditTabContent = () => {
 
       {/* 크레딧 정보 컨테이너 - 770x240 */}
       <CreditInfoContainer
-        plan={creditInfo.plan}
-        totalCredits={creditInfo.totalCredits}
-        usedCredits={creditInfo.usedCredits}
-        dailyCredits={creditInfo.dailyCredits}
-        dailyResetTime={creditInfo.dailyResetTime}
+        plan={user?.plan || "Free"}
+        totalCredits={totalAvailable}
+        usedCredits={0} // API 응답에 사용량 총계가 없으므로 0 또는 별도 계산 필요 (여기서는 API에 사용량 제공 안됨)
+        // 만약 기간별 사용량(periodSummary.totalSpent)을 보여주고 싶다면 API 응답에서 periodSummary를 상태로 저장해 사용
+        dailyCredits={dailyFreeCredit.balance}
+        dailyResetTime={resetTimeStr}
       />
 
       {/* 크레딧 사용 내역 테이블 - 770x240 */}
       <div className="mt-[20px]">
-        <CreditHistoryTable history={creditHistory} />
+        <CreditHistoryTable history={history} />
       </div>
     </div>
   );

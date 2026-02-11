@@ -34,8 +34,8 @@ export const SubscriptionTabContent = () => {
             maxNotes: benefits.maxNotes,
             maxUploadSize: `${benefits.maxFileSize}MB`,
             price: currentPlan.price,
-            startDate: period.startDate,
-            endDate: period.endDate,
+            startDate: period?.startDate || "-",
+            endDate: period?.endDate || "-",
           };
           setPlanInfo(mappedPlan);
         }
