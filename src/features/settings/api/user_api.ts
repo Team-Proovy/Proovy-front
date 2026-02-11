@@ -41,8 +41,12 @@ export const getMySubscription = async (): Promise<
 };
 
 // 회원 탈퇴
-export const deleteAccount = async (): Promise<ApiResponse<null>> => {
-  const response = await apiClient.delete<ApiResponse<null>>(`${USER_BASE}/me`);
+export const deleteAccount = async (): Promise<
+  ApiResponse<import("./user_types").DeleteUserResponse>
+> => {
+  const response = await apiClient.delete<
+    ApiResponse<import("./user_types").DeleteUserResponse>
+  >(`${USER_BASE}/me`);
   return response.data;
 };
 

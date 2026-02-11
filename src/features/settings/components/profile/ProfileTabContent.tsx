@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import type { ApiResponse } from "@/shared/api/shared_types";
 import {
   LoginProviderIcon,
   type LoginProvider,
@@ -54,6 +56,9 @@ export const ProfileTabContent = () => {
 
   // 회원 탈퇴 모달 상태
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [isWithdrawErrorModalOpen, setIsWithdrawErrorModalOpen] =
+    useState(false);
+  const [withdrawErrorMessage, setWithdrawErrorMessage] = useState("");
 
   const handleWithdraw = async () => {
     try {
@@ -62,11 +67,25 @@ export const ProfileTabContent = () => {
         logout();
         navigate("/login", { replace: true });
       } else {
-        alert(response.message || "회원 탈퇴에 실패했습니다.");
+        setWithdrawErrorMessage(
+          response.message || "회원 탈퇴에 실패했습니다.",
+        );
+        setIsWithdrawErrorModalOpen(true);
       }
     } catch (error) {
       console.error("회원 탈퇴 에러:", error);
-      alert("회원 탈퇴 중 오류가 발생했습니다.");
+      // API 응답 에러 메시지 추출
+      let message = "회원 탈퇴 중 오류가 발생했습니다.";
+
+      if (error instanceof AxiosError) {
+        const data = error.response?.data as ApiResponse<null>;
+        if (data?.message) {
+          message = data.message;
+        }
+      }
+
+      setWithdrawErrorMessage(message);
+      setIsWithdrawErrorModalOpen(true);
     } finally {
       setIsWithdrawModalOpen(false);
     }
@@ -158,6 +177,29 @@ export const ProfileTabContent = () => {
         confirmText="회원탈퇴"
         variant="danger"
       />
+
+      {/* 회원 탈퇴 실패(구독 중 등) 에러 모달 */}
+      {isWithdrawErrorModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget)
+              setIsWithdrawErrorModalOpen(false);
+          }}
+        >
+          <div className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg">
+            <h2 className="mb-[20px] text-center text-[18px] font-bold whitespace-pre-wrap text-black">
+              {withdrawErrorMessage}
+            </h2>
+            <button
+              onClick={() => setIsWithdrawErrorModalOpen(false)}
+              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A50D1]"
+            >
+              확인하기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

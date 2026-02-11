@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
-import { upgradeSubscription } from "../../settings/api/user_api";
+import { useUpgradeSubscription } from "../../settings/hooks/useUser";
 
 import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
 
@@ -86,6 +86,9 @@ export const PricingPage = () => {
     // 다운그레이드는 버튼이 비활성화되므로 처리 불필요
   };
 
+  // useUpgradeSubscription 훅 사용
+  const { mutateAsync: upgrade } = useUpgradeSubscription();
+
   const confirmUpgrade = async () => {
     if (targetPlanForUpgrade) {
       try {
@@ -93,11 +96,13 @@ export const PricingPage = () => {
           | "standard"
           | "pro";
 
-        const response = await upgradeSubscription({
+        const response = await upgrade({
           planType,
         });
 
         if (response.isSuccess) {
+          // 성공 시 쿼리 무효화는 훅 내부에서 처리됨
+          // 로컬 상태(user store) 업데이트는 유지 (UI 즉시 반영용)
           updateUser({ plan: targetPlanForUpgrade });
           setShowUpgradeConfirmModal(false);
           setShowUpgradeSuccessModal(true);
