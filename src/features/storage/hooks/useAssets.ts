@@ -8,17 +8,16 @@ import {
   deleteAssetsBulk,
   getStorageUsage,
 } from "../api/assets_api";
-import type {
-  UploadUrlRequest,
-  StorageResponse,
-} from "../api/assets_types";
+import type { UploadUrlRequest, StorageResponse } from "../api/assets_types";
 
 // Query Keys
 export const assetKeys = {
   all: ["assets"] as const,
   storage: ["storage"] as const,
   storageList: (keyword?: string) =>
-    keyword ? [...assetKeys.storage, "list", keyword] : [...assetKeys.storage, "list"] as const,
+    keyword
+      ? [...assetKeys.storage, "list", keyword]
+      : ([...assetKeys.storage, "list"] as const),
   details: () => [...assetKeys.all, "detail"] as const,
   detail: (id: number) => [...assetKeys.details(), id] as const,
 };
@@ -177,8 +176,7 @@ export const useDeleteAssetsBulk = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (assetIds: number[]) =>
-      deleteAssetsBulk({ assetIds }),
+    mutationFn: (assetIds: number[]) => deleteAssetsBulk({ assetIds }),
     onSuccess: (_, assetIds) => {
       assetIds.forEach((id) => {
         queryClient.removeQueries({ queryKey: assetKeys.detail(id) });

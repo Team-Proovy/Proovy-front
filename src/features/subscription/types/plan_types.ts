@@ -54,3 +54,14 @@ export const PLAN_DETAILS: Record<
     price: 0,
   },
 };
+
+export const normalizePlanType = (plan?: string): PlanType => {
+  const value = (plan ?? "").toLowerCase();
+
+  if (value === "pro") return "Pro";
+  if (value === "standard") return "Standard";
+  return "Free";
+};
+
+export const getPlanMaxNotes = (plan?: string) =>
+  PLAN_DETAILS[normalizePlanType(plan)].maxNotes;

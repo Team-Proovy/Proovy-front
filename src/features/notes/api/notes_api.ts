@@ -56,13 +56,17 @@ export const getNoteDetail = async (
 export const deleteNotesBulk = async (
   noteIds: number[],
 ): Promise<ApiResponse<DeleteNotesBulkResult>> => {
-  const response = await apiClient.delete<ApiResponse<DeleteNotesBulkResult>>(
-    NOTES_BASE,
-    {
-      data: { noteIds },
+  await Promise.all(noteIds.map((noteId) => deleteNote(noteId)));
+
+  return {
+    isSuccess: true,
+    code: "COMMON200",
+    message: "노트 삭제 성공",
+    result: {
+      deletedCount: noteIds.length,
+      deletedNoteIds: noteIds,
     },
-  );
-  return response.data;
+  };
 };
 
 // 단일 노트 삭제
