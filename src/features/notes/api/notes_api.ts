@@ -7,6 +7,8 @@ import type {
   CreateNoteResponse,
   NoteDetailParams,
   NoteDetailResponse,
+  DeleteNotesBulkResult,
+  DeleteNoteResult,
 } from "./notes_types";
 
 const NOTES_BASE = "/api/notes";
@@ -53,33 +55,22 @@ export const getNoteDetail = async (
 // 노트 벌크 삭제
 export const deleteNotesBulk = async (
   noteIds: number[],
-): Promise<ApiResponse<{ deletedCount: number; deletedNoteIds: number[] }>> => {
-  const response = await apiClient.delete<
-    ApiResponse<{ deletedCount: number; deletedNoteIds: number[] }>
-  >(NOTES_BASE, {
-    data: { noteIds },
-  });
+): Promise<ApiResponse<DeleteNotesBulkResult>> => {
+  const response = await apiClient.delete<ApiResponse<DeleteNotesBulkResult>>(
+    NOTES_BASE,
+    {
+      data: { noteIds },
+    },
+  );
   return response.data;
 };
 
 // 단일 노트 삭제
 export const deleteNote = async (
   noteId: number,
-): Promise<
-  ApiResponse<{
-    deletedNoteId: number;
-    deletedConversationCount: number;
-    deletedAssetCount: number;
-    freedStorageBytes: number;
-  }>
-> => {
-  const response = await apiClient.delete<
-    ApiResponse<{
-      deletedNoteId: number;
-      deletedConversationCount: number;
-      deletedAssetCount: number;
-      freedStorageBytes: number;
-    }>
-  >(`${NOTES_BASE}/${noteId}`);
+): Promise<ApiResponse<DeleteNoteResult>> => {
+  const response = await apiClient.delete<ApiResponse<DeleteNoteResult>>(
+    `${NOTES_BASE}/${noteId}`,
+  );
   return response.data;
 };

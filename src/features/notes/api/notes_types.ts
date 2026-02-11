@@ -155,3 +155,21 @@ export interface NoteDetailResponse {
   createdAt: string;
   lastUsedAt: string;
 }
+
+// ============================================================
+// 삭제 관련 응답 타입
+// ============================================================
+
+/** 벌크 삭제 응답 */
+export interface DeleteNotesBulkResult {
+  deletedCount: number;
+  deletedNoteIds: number[];
+}
+
+/** 단일 삭제 응답 */
+export interface DeleteNoteResult {
+  deletedNoteId: number;
+  deletedConversationCount: number;
+  deletedAssetCount: number;
+  freedStorageBytes: number;
+}

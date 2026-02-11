@@ -86,6 +86,8 @@ export const NoteCard = ({
     return (
       <button
         onClick={() => onToggleSelection(note.noteId)}
+        aria-pressed={isSelected}
+        aria-label={`${note.title} ${isSelected ? "선택됨" : "선택 안됨"}`}
         className={`group relative flex h-[229px] w-[271px] flex-col rounded-[12px] text-left transition-colors ${
           isSelected
             ? "border-[1.5px] border-[#2A6AFF] bg-[#F1F4F8]"

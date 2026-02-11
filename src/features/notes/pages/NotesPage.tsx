@@ -32,7 +32,6 @@ export const NotesPage = () => {
     isLoading,
     isError,
     handleSelectSort,
-    toggleSelectMode,
     toggleIdSelection,
     handleActionClick,
     handlePreviousPage,
@@ -70,6 +69,7 @@ export const NotesPage = () => {
             isSelectMode={isSelectMode}
             notesCount={notes.length}
             totalElements={pageInfo?.totalElements || 0}
+            selectedCount={selectedIds.length}
             onSelectSort={handleSelectSort}
             onToggleSortDropdown={setIsSortDropdownOpen}
             onActionClick={handleActionClick}

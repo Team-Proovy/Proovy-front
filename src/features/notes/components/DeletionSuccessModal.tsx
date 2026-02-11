@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 interface DeletionSuccessModalProps {
   onClose: () => void;
 }
@@ -5,6 +7,15 @@ interface DeletionSuccessModalProps {
 export const DeletionSuccessModal = ({
   onClose,
 }: DeletionSuccessModalProps) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();

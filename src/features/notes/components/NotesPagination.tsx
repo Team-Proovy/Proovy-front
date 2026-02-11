@@ -2,12 +2,7 @@
  * NotesPagination - 페이지네이션 컴포넌트
  */
 
-interface PageInfo {
-  hasPrevious: boolean;
-  hasNext: boolean;
-  totalPages: number;
-  totalElements: number;
-}
+import type { PageInfo } from "../../../shared/api/shared_types";
 
 interface NotesPaginationProps {
   pageInfo: PageInfo | undefined;

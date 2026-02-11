@@ -3,6 +3,7 @@
  * - 제목, 정렬 버튼, 선택 버튼, 노트 개수
  */
 
+import { useEffect, useRef } from "react";
 import { DropdownIcon } from "../../../shared/components/icons/ChatInputIcons";
 import { SORT_OPTIONS } from "../constants/sort_options";
 import type { SortOrder } from "../constants/sort_options";
@@ -16,6 +17,7 @@ interface NotesHeaderProps {
   onSelectSort: (value: SortOrder) => void;
   onToggleSortDropdown: (open: boolean) => void;
   onActionClick: () => void;
+  selectedCount?: number;
 }
 
 export const NotesHeader = ({
@@ -27,7 +29,30 @@ export const NotesHeader = ({
   onSelectSort,
   onToggleSortDropdown,
   onActionClick,
+  selectedCount = 0,
 }: NotesHeaderProps) => {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isSortDropdownOpen &&
+        dropdownRef.current &&
+        toggleRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        !toggleRef.current.contains(event.target as Node)
+      ) {
+        onToggleSortDropdown(false);
+      }
+    };
+
+    if (isSortDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isSortDropdownOpen, onToggleSortDropdown]);
   return (
     <div>
       {/* 제목 */}
@@ -42,8 +67,12 @@ export const NotesHeader = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[8px]">
             {/* 정렬 드롭다운 */}
-            <div className="relative">
+            <div
+              className="relative"
+              ref={dropdownRef}
+            >
               <button
+                ref={toggleRef}
                 type="button"
                 onClick={() => onToggleSortDropdown(!isSortDropdownOpen)}
                 className="flex h-[28px] w-[140px] items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
@@ -84,15 +113,12 @@ export const NotesHeader = ({
             {/* 선택 버튼 */}
             <button
               onClick={onActionClick}
-              className={`flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white ${
+              disabled={isSelectMode && selectedCount === 0}
+              className={`flex h-[32px] w-[80px] items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 ${
                 isSelectMode
                   ? "border-[#2A6AFF] text-[#2A6AFF]"
                   : "text-[#9CA4B0]"
               }`}
-              style={{
-                width: "80px",
-                height: "32px",
-              }}
             >
               {isSelectMode ? "삭제하기" : "선택"}
             </button>

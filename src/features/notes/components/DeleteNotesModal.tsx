@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDeleteNote } from "../hooks/useNotes";
+import { useDeleteNotesBulk } from "../hooks/useNotes";
 
 interface DeleteNotesModalProps {
   selectedIds: number[];
@@ -13,7 +13,8 @@ export const DeleteNotesModal = ({
   onSuccess,
 }: DeleteNotesModalProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
-  const deleteNoteMutation = useDeleteNote();
+  const [error, setError] = useState<string | null>(null);
+  const deleteNotesBulkMutation = useDeleteNotesBulk();
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isDeleting) {
@@ -23,15 +24,16 @@ export const DeleteNotesModal = ({
 
   const handleDeleteClick = async () => {
     setIsDeleting(true);
+    setError(null);
     try {
-      // 각 노트를 병렬로 삭제
-      const deletePromises = selectedIds.map((id) =>
-        deleteNoteMutation.mutateAsync(id),
-      );
-      await Promise.all(deletePromises);
+      // 벌크 삭제 API 1회 호출
+      await deleteNotesBulkMutation.mutateAsync(selectedIds);
       onSuccess();
-    } catch (error) {
-      console.error("노트 삭제 실패:", error);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "노트 삭제에 실패했습니다";
+      console.error("노트 삭제 실패:", err);
+      setError(errorMessage);
       setIsDeleting(false);
     }
   };
@@ -92,6 +94,24 @@ export const DeleteNotesModal = ({
           >
             삭제된 노트는 복구가 불가능합니다.
           </p>
+
+          {error && (
+            <p
+              style={{
+                color: "#E74C3C",
+                textAlign: "center",
+                fontFamily: "Pretendard",
+                fontSize: "14px",
+                fontStyle: "normal",
+                fontWeight: 400,
+                lineHeight: "20px",
+                width: "319px",
+                marginTop: "12px",
+              }}
+            >
+              {error}
+            </p>
+          )}
         </div>
 
         {/* Buttons Section */}
