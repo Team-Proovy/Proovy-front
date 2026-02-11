@@ -8,7 +8,8 @@ import { ProfileField } from "./ProfileField";
 
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../../auth/store/auth_store";
-import { deleteAccount, getMyProfile, updateProfile } from "../../api/user_api";
+import { deleteAccount, updateProfile } from "../../api/user_api";
+import { useMyProfile } from "../../hooks/useUser";
 import { logout as logoutApi } from "../../../auth/api/auth_api";
 
 /**
@@ -18,38 +19,34 @@ export const ProfileTabContent = () => {
   const navigate = useNavigate();
   const { user, updateUser, logout } = useAuthStore();
 
+  const { data: profile } = useMyProfile();
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await getMyProfile();
-        if (response.isSuccess && response.result) {
-          const {
-            email,
-            name,
-            nickname,
-            profileImageUrl,
-            provider,
-            subscription,
-          } = response.result;
+    if (profile) {
+      const { email, name, nickname, profileImageUrl, provider, subscription } =
+        profile;
 
-          // AuthStore 업데이트
-          updateUser({
-            email,
-            name,
-            nickname,
-            profileImageUrl,
-            provider,
-            plan: subscription.plan as "Free" | "Standard" | "Pro",
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch profile:", error);
+      // AuthStore 업데이트 (데이터가 변경된 경우에만 수행하도록 내부적으로 체크하거나,
+      // store 구현에 따라 다름. 여기서는 매번 업데이트하지만 loop는 아님)
+      // 단, infinite update loop를 방지하기 위해 JSON.stringify 등 비교가 필요할 수 있으나
+      // useMyProfile의 data가 stable하다면 괜찮음.
+      // 안전하게 user state와 비교
+      if (
+        user?.nickname !== nickname ||
+        user?.profileImageUrl !== profileImageUrl ||
+        user?.plan !== subscription.plan
+      ) {
+        updateUser({
+          email,
+          name,
+          nickname,
+          profileImageUrl,
+          provider,
+          plan: subscription.plan as "Free" | "Standard" | "Pro",
+        });
       }
-    };
-
-    fetchProfile();
-    fetchProfile();
-  }, [updateUser]);
+    }
+  }, [profile, updateUser, user?.nickname, user?.profileImageUrl, user?.plan]);
 
   // 닉네임 상태 관리
   const [nickname, setNickname] = useState("");

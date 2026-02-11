@@ -42,14 +42,30 @@ export const useMySubscription = () => {
 
 // 회원 탈퇴 Hook
 export const useDeleteAccount = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: deleteAccount,
     onSuccess: () => {
-      tokenUtils.clearTokens();
-      queryClient.clear();
       window.location.href = "/";
+    },
+  });
+};
+
+// 구독 취소 Hook
+export const useCancelSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const response = await import("../api/user_api").then((mod) =>
+        mod.cancelSubscription(),
+      );
+      return response;
+    },
+    onSuccess: (response) => {
+      if (response.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      }
     },
   });
 };

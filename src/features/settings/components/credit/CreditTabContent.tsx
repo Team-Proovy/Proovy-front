@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { CreditInfoContainer } from "./CreditInfoContainer";
 import {
   CreditHistoryTable,
   type CreditHistoryItem,
 } from "./CreditHistoryTable";
-import { getCreditHistory } from "../../api/credit_api";
+import { useCreditHistory } from "../../hooks/useCredit";
 import type { CreditSummaryDto } from "../../api/credit_types";
 import { useAuthStore } from "../../../auth/store/auth_store";
 import { Skeleton } from "@/shared/components/ui/Skeleton";
@@ -14,56 +13,35 @@ import { Skeleton } from "@/shared/components/ui/Skeleton";
  */
 export const CreditTabContent = () => {
   const { user } = useAuthStore();
-  const [summary, setSummary] = useState<CreditSummaryDto | null>(null);
-  const [history, setHistory] = useState<CreditHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await getCreditHistory({
-          page: 0,
-          size: 20,
-          // 필요시 필터 추가
-        });
+  // React Query Hook 사용
+  const { data: creditData, isLoading: loading } = useCreditHistory({
+    page: 0,
+    size: 20,
+  });
 
-        if (response.isSuccess && response.result) {
-          setSummary(response.result.creditSummary);
+  const summary = creditData?.creditSummary || null;
 
-          // 히스토리 매핑
-          const historyItems: CreditHistoryItem[] =
-            response.result.history.content.map((item) => {
-              const date = new Date(item.createdAt);
-              const formattedDate = `${date.getFullYear()}-${String(
-                date.getMonth() + 1,
-              ).padStart(2, "0")}-${String(date.getDate()).padStart(
-                2,
-                "0",
-              )} ${String(date.getHours()).padStart(2, "0")}:${String(
-                date.getMinutes(),
-              ).padStart(2, "0")}`;
+  const history: CreditHistoryItem[] =
+    creditData?.history.content.map((item) => {
+      const date = new Date(item.createdAt);
+      const formattedDate = `${date.getFullYear()}-${String(
+        date.getMonth() + 1,
+      ).padStart(2, "0")}-${String(date.getDate()).padStart(
+        2,
+        "0",
+      )} ${String(date.getHours()).padStart(2, "0")}:${String(
+        date.getMinutes(),
+      ).padStart(2, "0")}`;
 
-              return {
-                id: item.historyId,
-                eventType: item.eventName || item.eventType, // eventName이 없으면 타입 사용
-                detail: item.description,
-                date: formattedDate,
-                change:
-                  item.changeType === "SPEND" ? -item.amount : item.amount,
-              };
-            });
-          setHistory(historyItems);
-        }
-      } catch (error) {
-        console.error("Failed to fetch credit history:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+      return {
+        id: item.historyId,
+        eventType: item.eventName || item.eventType,
+        detail: item.description,
+        date: formattedDate,
+        change: item.changeType === "SPEND" ? -item.amount : item.amount,
+      };
+    }) || [];
 
   // 로딩 상태일 때 스켈레톤 UI
   if (loading) {
