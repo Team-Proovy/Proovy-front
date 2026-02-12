@@ -78,21 +78,46 @@ export const useAttachments = (): UseAttachmentsReturn => {
   }, []);
 
   /** 파일 추가 (클립 버튼 또는 드래그앤드롭) */
-  const addFiles = useCallback((files: FileList | File[]) => {
-    const newAttachments: Attachment[] = Array.from(files).map((file) => {
-      const isImage = file.type.startsWith("image/");
-      return {
-        id: generateId(),
-        type: "file" as AttachmentType,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type,
-        previewUrl: isImage ? URL.createObjectURL(file) : undefined,
-        file,
-      };
-    });
-    setAttachments((prev) => [...prev, ...newAttachments]);
-  }, []);
+  const addFiles = useCallback(
+    (files: FileList | File[]) => {
+      const userPlan = normalizePlanType(user?.plan);
+      const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
+      const maxSizeBytes = parseSize(maxUploadSizeStr);
+
+      const validFiles = Array.from(files).filter((file) => {
+        // 1. 형식 체크
+        if (!isValidFileType(file)) {
+          alert("허용되지 않은 파일 형식입니다.");
+          return false;
+        }
+
+        // 2. 용량 체크 (플랜 기반)
+        if (file.size > maxSizeBytes) {
+          alert(
+            `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
+          );
+          return false;
+        }
+
+        return true;
+      });
+
+      const newAttachments: Attachment[] = validFiles.map((file) => {
+        const isImage = file.type.startsWith("image/");
+        return {
+          id: generateId(),
+          type: "file" as AttachmentType,
+          name: file.name,
+          size: file.size,
+          mimeType: file.type,
+          previewUrl: isImage ? URL.createObjectURL(file) : undefined,
+          file,
+        };
+      });
+      setAttachments((prev) => [...prev, ...newAttachments]);
+    },
+    [user],
+  );
 
   /** 캔버스 이미지 추가 */
   const addCanvasImage = useCallback((blob: Blob) => {
@@ -164,37 +189,8 @@ export const useAttachments = (): UseAttachmentsReturn => {
       const files = e.dataTransfer.files;
       if (!files || files.length === 0) return;
 
-      const validFiles = Array.from(files).filter((file) => {
-        // 1. 형식 체크
-        if (!isValidFileType(file)) {
-          console.warn(
-            `[첨부] 허용되지 않은 파일 형식: "${file.name}" (type=${file.type})`,
-          );
-          alert("허용되지 않은 파일 형식입니다.");
-          return false;
-        }
-
-        // 2. 용량 체크 (플랜 기반)
-        const userPlan = normalizePlanType(user?.plan);
-        const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
-        const maxSizeBytes = parseSize(maxUploadSizeStr);
-
-        if (file.size > maxSizeBytes) {
-          console.warn(
-            `[첨부] 용량 초과: "${file.name}" (${file.size} > ${maxSizeBytes})`,
-          );
-          alert(
-            `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
-          );
-          return false;
-        }
-
-        return true;
-      });
-
-      if (validFiles.length > 0) {
-        addFiles(validFiles);
-      }
+      // addFiles 내부에서 유효성 검사 수행
+      addFiles(files);
     },
     [addFiles],
   );
