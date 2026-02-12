@@ -8,7 +8,11 @@ import {
   PLAN_DETAILS,
 } from "../../../subscription/types/plan_types";
 import { PlanInfoCard } from "./PlanInfoCard";
-import { useMySubscription, useCancelSubscription } from "../../hooks/useUser";
+import {
+  useMySubscription,
+  useCancelSubscription,
+  useResumeSubscription,
+} from "../../hooks/useUser";
 
 /**
  * SubscriptionTabContent - 구독 정보 탭
@@ -19,6 +23,7 @@ export const SubscriptionTabContent = () => {
 
   const { data: subscription } = useMySubscription();
   const { mutateAsync: cancelSubscription } = useCancelSubscription();
+  const { mutateAsync: resumeSubscription } = useResumeSubscription();
 
   // 초기값 또는 로딩 중일 때 기본값 설정
   const userPlanName: PlanType = (user?.plan as PlanType) || "Free";
@@ -53,6 +58,7 @@ export const SubscriptionTabContent = () => {
 
   // 모달 상태
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isResumeModalOpen, setIsResumeModalOpen] = useState(false);
   const [isReservedModalOpen, setIsReservedModalOpen] = useState(false);
   const [showCancelSuccessModal, setShowCancelSuccessModal] = useState(false);
   const [cancelInfo, setCancelInfo] = useState<{
@@ -61,12 +67,17 @@ export const SubscriptionTabContent = () => {
   } | null>(null);
 
   const handleCancelClick = () => {
-    // autoRenew가 false이면 이미 해지 예약 상태
+    // autoRenew가 false이면 이미 해지 예약 상태 -> 재개 버튼으로 처리하므로 여기선 모달 불필요할 수 있으나
+    // 혹시라도 버튼이 잘못 노출된 경우를 대비
     if (subscription && !subscription.billing.autoRenew) {
       setIsReservedModalOpen(true);
     } else {
       setIsCancelModalOpen(true);
     }
+  };
+
+  const handleResumeClick = () => {
+    setIsResumeModalOpen(true);
   };
 
   const handleCancelSubscription = async () => {
@@ -91,6 +102,26 @@ export const SubscriptionTabContent = () => {
     }
   };
 
+  const handleResumeSubscription = async () => {
+    try {
+      const response = await resumeSubscription();
+      if (response.isSuccess) {
+        setIsResumeModalOpen(false);
+        // 성공 시 데이터 갱신되므로 별도 처리 불필요 (React Query invalidate)
+        alert("구독이 성공적으로 재개되었습니다.");
+      } else {
+        alert(response.message || "구독 재개에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("Resume failed:", error);
+      alert("구독 재개 중 오류가 발생했습니다.");
+    }
+  };
+
+  // 구독 해지 예약 상태인지 확인 (autoRenew가 false이고 Free 플랜이 아닌 경우)
+  const isSubscriptionCancelled =
+    subscription && !subscription.billing.autoRenew && userPlanName !== "Free";
+
   return (
     <div className="flex flex-col">
       <h3 className="font-['Pretendard'] text-[20px] font-semibold text-black">
@@ -109,12 +140,23 @@ export const SubscriptionTabContent = () => {
         </button>
 
         {userPlanName !== "Free" && (
-          <button
-            onClick={handleCancelClick}
-            className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] font-normal text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
-          >
-            구독취소
-          </button>
+          <>
+            {isSubscriptionCancelled ? (
+              <button
+                onClick={handleResumeClick}
+                className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] bg-[#2A6AFF] font-['Pretendard'] text-[16px] font-normal text-white transition-colors hover:bg-[#1A50D1]"
+              >
+                구독 재개
+              </button>
+            ) : (
+              <button
+                onClick={handleCancelClick}
+                className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] bg-[rgba(220,53,69,0.10)] font-['Pretendard'] text-[16px] font-normal text-[#DC3545] transition-colors hover:bg-[rgba(220,53,69,0.20)]"
+              >
+                구독취소
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -129,7 +171,17 @@ export const SubscriptionTabContent = () => {
         variant="danger"
       />
 
-      {/* 이미 해지 예약된 경우 모달 */}
+      <ConfirmModal
+        isOpen={isResumeModalOpen}
+        onClose={() => setIsResumeModalOpen(false)}
+        onConfirm={handleResumeSubscription}
+        title="구독 재개"
+        description="구독을 재개하시겠습니까? 다음 결제일부터 자동 결제가 다시 시작됩니다."
+        warningText=""
+        confirmText="재개하기"
+      />
+
+      {/* 이미 해지 예약된 경우 모달 (예외 케이스용) */}
       {isReservedModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"

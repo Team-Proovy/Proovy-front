@@ -5,6 +5,7 @@ import {
   deleteAccount,
   cancelSubscription,
   upgradeSubscription,
+  resumeSubscription,
 } from "../api/user_api";
 import { tokenUtils } from "@/shared/api/client";
 import type { UpgradeSubscriptionRequest } from "../api/user_types";
@@ -75,6 +76,21 @@ export const useUpgradeSubscription = () => {
 
   return useMutation({
     mutationFn: (data: UpgradeSubscriptionRequest) => upgradeSubscription(data),
+    onSuccess: (response) => {
+      if (response.isSuccess) {
+        queryClient.invalidateQueries({ queryKey: userKeys.subscription() });
+        queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+      }
+    },
+  });
+};
+
+// 구독 재개 Hook
+export const useResumeSubscription = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: resumeSubscription,
     onSuccess: (response) => {
       if (response.isSuccess) {
         queryClient.invalidateQueries({ queryKey: userKeys.subscription() });

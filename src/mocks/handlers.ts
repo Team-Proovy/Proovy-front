@@ -11,9 +11,9 @@
 //   와일드카드 경로(notesHandlers: /api/notes/:noteId)보다 앞에 와야 함
 export const handlers = [
   // ...authHandlers,
-  // ...userHandlers, // 실제 API 사용을 위해 주석 처리
-  // ...editorHandlers, // 실제 API 사용을 위해 주석 처리
-  // ...assetsHandlers, // 실제 API 사용을 위해 주석 처리
-  // ...notesHandlers, // 실제 API 사용을 위해 주석 처리
-  // ...creditHandlers, // 실제 API 사용을 위해 주석 처리
+  ...userHandlers,
+  ...editorHandlers,
+  ...assetsHandlers,
+  ...notesHandlers,
+  ...creditHandlers,
 ];
