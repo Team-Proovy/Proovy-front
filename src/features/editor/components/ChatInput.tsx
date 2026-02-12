@@ -1,4 +1,5 @@
-import { useRef, lazy, Suspense } from "react";
+import { useRef, lazy, Suspense, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MathfieldElement } from "mathlive";
 import "mathlive";
 
@@ -74,6 +75,8 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const [showCreditModal, setShowCreditModal] = useState(false);
 
   // Custom Hooks
   const {
@@ -162,7 +165,7 @@ export const ChatInput = ({
       });
 
       if (!creditResponse.result.success) {
-        alert(creditResponse.result.message || "크레딧이 부족합니다.");
+        setShowCreditModal(true);
         return;
       }
     } catch (error) {
@@ -315,6 +318,44 @@ export const ChatInput = ({
             onAdd={addCanvasImage}
           />
         </Suspense>
+      )}
+      {/* 크레딧 부족 안내 모달 */}
+      {showCreditModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowCreditModal(false)}
+        >
+          <div
+            className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-[20px] font-['Pretendard'] text-[20px] font-bold text-black">
+              크레딧 부족
+            </h2>
+            <p className="mb-[30px] text-center font-['Pretendard'] text-[16px] leading-[24px] text-[#5D6470]">
+              현재 사용할 수 있는 크레딧이 없습니다.
+              <br />
+              업그레이드 하시겠습니까?
+            </p>
+            <div className="flex w-full gap-[10px]">
+              <button
+                onClick={() => setShowCreditModal(false)}
+                className="flex-1 cursor-pointer rounded-[12px] bg-[#F1F4F8] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-[#6B7280] transition-colors hover:bg-[#E5E8EC]"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreditModal(false);
+                  navigate("/pricing");
+                }}
+                className="flex-1 cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A50D1]"
+              >
+                업그레이드
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
