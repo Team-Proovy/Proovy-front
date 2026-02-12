@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { isFileAllowed } from "@/features/assets/utils/fileValidation";
+import { useAuthStore } from "@/features/auth/store/auth_store";
+import {
+  PLAN_DETAILS,
+  type PlanType,
+} from "@/features/subscription/types/plan_types";
+import { parseSize } from "@/shared/utils/file-utils";
 
 /**
  * 뷰어 파일 미리보기 관리 훅
@@ -27,6 +33,8 @@ export const useViewerFile = (
     };
   }, [pdfUrl]);
 
+  const { user } = useAuthStore();
+
   const {
     fileInputRef,
     openFileExplorer,
@@ -34,16 +42,27 @@ export const useViewerFile = (
     isDragging,
     dragProps,
   } = useFileUpload((file) => {
-    if (file && isFileAllowed(file)) {
-      setFileName(file.name);
-      viewerFileRef.current = file;
-      setPdfUrl(URL.createObjectURL(file));
-      // 파일 크기나 형식 검증은 isFileAllowed에서 처리하지만,
-      // 추가적인 검증이 필요하면 여기서 처리.
-      // 하지만 isFileAllowed는 boolean만 반환.
+    if (!file) return;
 
-      // 파일 선택 시 note 생성을 바로 하진 않음.
+    if (!isFileAllowed(file)) {
+      alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+      return;
     }
+
+    const userPlan = (user?.plan as PlanType) || "Free";
+    const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
+    const maxSizeBytes = parseSize(maxUploadSizeStr);
+
+    if (file.size > maxSizeBytes) {
+      alert(
+        `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
+      );
+      return;
+    }
+
+    setFileName(file.name);
+    viewerFileRef.current = file;
+    setPdfUrl(URL.createObjectURL(file));
   });
 
   const handleRemove = (e: React.MouseEvent) => {

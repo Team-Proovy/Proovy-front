@@ -21,14 +21,7 @@ interface ViewerContentProps {
   fileId?: string;
 }
 
-const parseSize = (sizeStr: string) => {
-  const value = parseInt(sizeStr.replace(/\D/g, ""), 10);
-  const unit = sizeStr.replace(/[^A-Za-z]/g, "").toUpperCase();
-  if (unit.includes("GB")) return value * 1024 * 1024 * 1024;
-  if (unit.includes("MB")) return value * 1024 * 1024;
-  if (unit.includes("KB")) return value * 1024;
-  return value;
-};
+import { parseSize } from "@/shared/utils/file-utils";
 
 export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   // 1. 상태 동기화 및 전역 이벤트 핸들링 (커스텀 훅)

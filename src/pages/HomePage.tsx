@@ -7,14 +7,6 @@ import { ErrorBanner } from "./components/ErrorBanner";
 
 /**
  * HomePage - 새 노트 시작점
- *
- * URL: /app/home
- * 레이아웃: AppLayout (Outlet)에서 렌더링됨
- *
- * 기능:
- * - 파일 업로드 또는 텍스트 입력으로 새 노트 생성
- * - 첫 메시지 전송 시 노트 자동 생성 → /app/chat/:chatId 로 이동
- * - 뷰어 파일은 로컬 미리보기만 표시, 노트 생성 후에 업로드
  */
 export const HomePage = () => {
   const { viewerFileRef, isSending, uploadError, clearError, handleSend } =

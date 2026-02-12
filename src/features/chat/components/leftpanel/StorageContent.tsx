@@ -15,6 +15,7 @@ import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
+import { parseSize } from "@/shared/utils/file-utils";
 import {
   PLAN_DETAILS,
   type PlanType,
@@ -60,15 +61,6 @@ const getMimeType = (fileType: string | undefined | null) => {
   if (type === "image") return "image/jpeg"; // generic fallback시 그냥 image/jpeg로 매핑
 
   return fileType;
-};
-
-const parseSize = (sizeStr: string) => {
-  const value = parseInt(sizeStr.replace(/\D/g, ""), 10);
-  const unit = sizeStr.replace(/[^A-Za-z]/g, "").toUpperCase();
-  if (unit.includes("GB")) return value * 1024 * 1024 * 1024;
-  if (unit.includes("MB")) return value * 1024 * 1024;
-  if (unit.includes("KB")) return value * 1024;
-  return value;
 };
 
 export const StorageContent = ({
