@@ -504,7 +504,7 @@ Closes #이슈번호
 | 페이지          | PascalCase | `LoginPage.tsx`, `ChatPage.tsx`                  |
 | 컴포넌트        | PascalCase | `ChatHeader.tsx`, `MessageInput.tsx`             |
 | Hook            | camelCase  | `useAuth.ts`, `useChatMessages.ts`               |
-| Utility / API   | snake_case | `auth_api.ts`, `math_utils.ts`, `fileValidation` |
+| Utility / API   | snake_case | `auth_api.ts`, `math_utils.ts`, `file_validation.ts` |
 | Store (Zustand) | snake_case | `auth_store.ts`, `chat_store.ts`                 |
 | Type 정의 파일  | snake_case | `chat_types.ts`, `auth_types.ts`                 |
 
