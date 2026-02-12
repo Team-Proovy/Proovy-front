@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
 import { useUpgradeSubscription } from "../../settings/hooks/useUser";
 
-import type { PlanType } from "../types/plan_types"; // Assuming relative path from features/subscription/pages to features/subscription/types is ../types
+import type { PlanType } from "../types/plan_types";
 
 export const PricingPage = () => {
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const fromHome = location.state?.from === "home";
 
   const plans: {
     name: PlanType;
@@ -59,7 +63,6 @@ export const PricingPage = () => {
   ];
 
   const { user, updateUser } = useAuthStore();
-  const navigate = useNavigate();
 
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [showUpgradeSuccessModal, setShowUpgradeSuccessModal] = useState(false);
@@ -88,7 +91,6 @@ export const PricingPage = () => {
       setTargetPlanForUpgrade(planName);
       setShowUpgradeConfirmModal(true);
     }
-    // 다운그레이드는 버튼이 비활성화되므로 처리 불필요
   };
 
   // useUpgradeSubscription 훅 사용
@@ -106,8 +108,6 @@ export const PricingPage = () => {
         });
 
         if (response.isSuccess) {
-          // 성공 시 쿼리 무효화는 훅 내부에서 처리됨
-          // 로컬 상태(user store) 업데이트는 유지 (UI 즉시 반영용)
           updateUser({ plan: targetPlanForUpgrade });
           setShowUpgradeConfirmModal(false);
           setShowUpgradeSuccessModal(true);
@@ -124,10 +124,16 @@ export const PricingPage = () => {
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[20px]">
       <button
-        onClick={() => navigate("/")}
+        onClick={() => {
+          if (fromHome) {
+            navigate("/app/home");
+          } else {
+            navigate("/");
+          }
+        }}
         className="absolute top-4 left-4 cursor-pointer font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
       >
-        ← 돌아가기
+        {fromHome ? "← 돌아가기(홈)" : "← 돌아가기"}
       </button>
 
       <div className="mt-[40px] mb-[40px] flex flex-col items-center text-center md:mt-0">
@@ -147,21 +153,13 @@ export const PricingPage = () => {
 
       <div className="flex flex-wrap items-stretch justify-center gap-[20px] md:gap-[36px]">
         {plans.map((plan) => {
-          // 플랜 상태 결정 로직
           const currentPlanName = user?.plan || "Free";
-          const isCurrentPlan = !!user && currentPlanName === plan.name; // 비로그인 시 isCurrentPlan은 false
-
-          // 선택 상태 (로컬 호버)
+          const isCurrentPlan = !!user && currentPlanName === plan.name;
           const isHovered = hoveredPlan === plan.name;
-
-          // 레벨 결정
           const currentLevel = planLevels[currentPlanName] || 0;
           const thisLevel = planLevels[plan.name] || 0;
-
-          // 카드 시각적 상태 (현재 플랜 강조 - 로그인 시에만)
           const isHighlighted = isCurrentPlan;
 
-          // 동적 스타일
           const cardStyle = {
             border: isHighlighted ? "1px solid #2A6AFF" : "1px solid #D1D6DE",
             backgroundColor: isHighlighted ? "#F4F7FF" : "#FFFFFF",
@@ -229,7 +227,6 @@ export const PricingPage = () => {
               <button
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={isDisabled}
-                // 버튼 스타일 통일, 비활성화 시 불투명도 변경
                 className={`mb-[24px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 select-text ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
                 style={
                   isDisabled && !isCurrentPlan

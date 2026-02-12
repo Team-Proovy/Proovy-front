@@ -1,7 +1,13 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const CTASection = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handlePricingClick = () => {
+    const isFromApp = location.pathname.startsWith("/app");
+    navigate("/pricing", { state: { from: isFromApp ? "home" : "landing" } });
+  };
 
   return (
     <section className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-white from-5% via-[#F0F6FF] via-50% to-white to-95% px-[20px] py-[60px] md:flex-row md:px-[92px] md:py-[100px]">
@@ -17,7 +23,7 @@ export const CTASection = () => {
         </p>
 
         <button
-          onClick={() => navigate("/pricing")}
+          onClick={handlePricingClick}
           className="mt-[48px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] border-[0.5px] border-solid border-[#D1D6DE] bg-white font-['Pretendard'] text-[20px] font-semibold text-black transition-all hover:bg-gray-50 active:scale-95"
         >
           요금제 확인하기

@@ -26,7 +26,7 @@ export const SidebarHeader = ({
         <div className="mb-2 flex w-[240px] items-center justify-between pr-2 pl-[15px]">
           <div
             onClick={onLogoClick}
-            className="cursor-pointer"
+            className="select-none"
           >
             <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           </div>

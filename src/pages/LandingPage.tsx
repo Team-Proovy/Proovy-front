@@ -35,8 +35,8 @@ export const LandingPage = () => {
           <FeatureSection
             title={["PC, 태블릿", "어디서든 자유롭게"]}
             description={[
-              "어떤 형태의 파일이든 프루비는 정확히 인식해",
-              "문제를 같이 풀 수 있어요.",
+              "기기에 구애받지 않고 언제 어디서나 프루비를",
+              "사용할 수 있어요.",
             ]}
             imageSrc="/landing/illust_viewer_laptop.png"
             isReversed

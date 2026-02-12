@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { loginWithNaver } from "../api/auth_api";
 import { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth_store";
+import { tokenUtils } from "@/shared/api/client";
 import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
 
 export const NaverCallbackPage = () => {
@@ -39,13 +40,16 @@ export const NaverCallbackPage = () => {
     sessionStorage.removeItem("naver_oauth_state");
 
     const processLogin = async () => {
+      tokenUtils.clearTokens();
       try {
         const data = await loginWithNaver(code, state);
 
         if (data.isSuccess && data.result) {
+          console.log("Naver login success, result:", data.result);
           login(data.result);
 
           if (data.result.loginType === "SIGNUP_REQUIRED") {
+            console.log("Signup required, navigating to /signup");
             navigate("/signup", {
               state: {
                 naverInfo: data.result.naverInfo,
@@ -53,9 +57,17 @@ export const NaverCallbackPage = () => {
               },
             });
           } else {
+            if (data.result.token) {
+              tokenUtils.setTokens(
+                data.result.token.accessToken,
+                data.result.token.refreshToken,
+              );
+            }
+            console.log("Login complete, navigating to /app/home");
             navigate("/app/home");
           }
         } else {
+          console.error("Naver login failed message:", data.message);
           setErrorMsg(`로그인 실패: ${data.message}`);
         }
       } catch (error) {
