@@ -13,12 +13,15 @@ import { assetKeys } from "@/features/storage/hooks/useAssets";
 import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
-import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
+import {
+  isValidFileType,
+  FILE_ACCEPT,
+} from "@/features/assets/utils/fileValidation";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { parseSize } from "@/shared/utils/file-utils";
 import {
   PLAN_DETAILS,
-  type PlanType,
+  normalizePlanType,
 } from "@/features/subscription/types/plan_types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 
@@ -189,16 +192,13 @@ export const StorageContent = ({
   const handleFileSelect = async (file: File) => {
     if (!file) return;
 
-    const isValidType =
-      file.type === "application/pdf" || file.type.startsWith("image/");
-
-    if (!isValidType) {
+    if (!isValidFileType(file)) {
       alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
       return;
     }
 
-    const userPlan = (user?.plan as PlanType) || "Free";
-    const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
+    const userPlan = normalizePlanType(user?.plan);
+    const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
     const maxSizeBytes = parseSize(maxUploadSizeStr);
 
     if (file.size > maxSizeBytes) {

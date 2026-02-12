@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
-import { isFileAllowed } from "@/features/assets/utils/fileValidation";
+import { isValidFileType } from "@/features/assets/utils/fileValidation";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import {
   PLAN_DETAILS,
-  type PlanType,
+  normalizePlanType,
 } from "@/features/subscription/types/plan_types";
 import { parseSize } from "@/shared/utils/file-utils";
 
@@ -44,13 +44,13 @@ export const useViewerFile = (
   } = useFileUpload((file) => {
     if (!file) return;
 
-    if (!isFileAllowed(file)) {
+    if (!isValidFileType(file)) {
       alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
       return;
     }
 
-    const userPlan = (user?.plan as PlanType) || "Free";
-    const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
+    const userPlan = normalizePlanType(user?.plan);
+    const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
     const maxSizeBytes = parseSize(maxUploadSizeStr);
 
     if (file.size > maxSizeBytes) {
