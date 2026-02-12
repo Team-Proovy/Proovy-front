@@ -35,7 +35,7 @@ export const Sidebar = ({
     >
       <aside className="relative flex h-full flex-col">
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-white transition-all duration-300 ease-in-out ${
+          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-transparent transition-all duration-300 ease-in-out ${
             isCollapsed ? "w-[80px]" : "w-[240px]"
           }`}
         />
@@ -79,7 +79,7 @@ export const Sidebar = ({
           </nav>
 
           {/* 최근 노트 목록 (남은 공간 채움) */}
-          <div className="min-h-0 w-[260px] flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <RecentNotes isCollapsed={isCollapsed} />
           </div>
 
