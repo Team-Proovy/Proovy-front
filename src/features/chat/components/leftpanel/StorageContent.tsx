@@ -10,6 +10,16 @@ import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
 import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
+import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
+import { useFileUpload } from "@/shared/hooks/useFileUpload";
+import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
+import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
+import { LoadingSpinner } from "@/shared/components/loading-spinner";
+import {
+  PLAN_DETAILS,
+  type PlanType,
+} from "@/features/subscription/types/plan_types";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 
 interface StorageFile {
   id: number;
@@ -52,6 +62,15 @@ const getMimeType = (fileType: string | undefined | null) => {
   return fileType;
 };
 
+const parseSize = (sizeStr: string) => {
+  const value = parseInt(sizeStr.replace(/\D/g, ""), 10);
+  const unit = sizeStr.replace(/[^A-Za-z]/g, "").toUpperCase();
+  if (unit.includes("GB")) return value * 1024 * 1024 * 1024;
+  if (unit.includes("MB")) return value * 1024 * 1024;
+  if (unit.includes("KB")) return value * 1024;
+  return value;
+};
+
 export const StorageContent = ({
   noteId,
   onTabChange,
@@ -61,6 +80,9 @@ export const StorageContent = ({
   const { data: noteDetail, refetch } = useNoteDetail(noteId, undefined, {
     refetchInterval: hasProcessingAssets ? 2000 : false, // 2초로 단축
   });
+  const { user } = useAuthStore();
+  const { uploadAsset } = useAssetUpload();
+  const [isUploading, setIsUploading] = useState(false);
 
   // OCR 처리 중인 에셋이 있으면 폴링 활성화
   useEffect(() => {
@@ -171,6 +193,68 @@ export const StorageContent = ({
   const { setViewerFileId } = useStorageStore();
   const [, setSearchParams] = useSearchParams();
 
+  // 파일 업로드 핸들러
+  const handleFileSelect = async (file: File) => {
+    if (!file) return;
+
+    const isValidType =
+      file.type === "application/pdf" || file.type.startsWith("image/");
+
+    if (!isValidType) {
+      alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+      return;
+    }
+
+    const userPlan = (user?.plan as PlanType) || "Free";
+    const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
+    const maxSizeBytes = parseSize(maxUploadSizeStr);
+
+    if (file.size > maxSizeBytes) {
+      alert(
+        `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
+      );
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+
+      if (!noteId) {
+        console.error("noteId가 없습니다.");
+        alert("노트 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
+        setIsUploading(false);
+        return;
+      }
+
+      const parsed = Number(noteId);
+      if (isNaN(parsed) || parsed <= 0) {
+        console.error(`유효하지 않은 noteId: ${noteId}`);
+        alert("유효하지 않은 노트입니다. 노트를 다시 열어주세요.");
+        setIsUploading(false);
+        return;
+      }
+
+      const result = await uploadAsset(parsed, file);
+
+      if (result?.assetId) {
+        // 업로드 성공 시 쿼리 갱신
+        await queryClient.refetchQueries({ queryKey: noteKeys.detail(noteId) });
+        // 선택적으로 뷰어로 바로 이동할 수도 있지만, 요구사항은 "서버로 파일 업로드" 임.
+        // 여기서는 업로드 후 목록에 표시되는 것이 우선.
+      }
+    } catch (err) {
+      console.error("파일 업로드 실패:", err);
+      alert("파일 업로드에 실패했습니다.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
+    handleFileSelect,
+    FILE_ACCEPT,
+  );
+
   const handleOpenViewer = () => {
     if (selectedIds.length === 0) {
       onTabChange("viewer");
@@ -215,6 +299,14 @@ export const StorageContent = ({
 
   return (
     <div className="flex h-full flex-col">
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileChange}
+        accept={FILE_ACCEPT}
+      />
+
       {/* 헤더: BOX | 선택 버튼 | 노트 용량 (한 줄) */}
       <div className="flex shrink-0 items-center border-b border-[#D1D6DE] px-6 py-3">
         {/* 선택 버튼 */}
@@ -260,11 +352,40 @@ export const StorageContent = ({
           </div>
 
           {/* BOX 파일 목록 */}
-          {boxFiles.length > 0 ? (
-            <div className="mb-[40px] grid grid-cols-[repeat(auto-fill,240px)] gap-5">
-              {boxFiles.map((file) => (
+          <div className="mb-[40px] grid grid-cols-[repeat(auto-fill,240px)] gap-5">
+            {/* 업로드 버튼 (선택 모드가 아닐 때만 표시) */}
+            {!isSelectMode && (
+              <button
+                onClick={openFileExplorer}
+                disabled={isUploading}
+                type="button"
+                className="group flex cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white px-[20px] py-[36px] shadow-[4px_4px_20px_0px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33] disabled:cursor-not-allowed disabled:opacity-50"
+                style={{
+                  width: "240px",
+                  height: "180px",
+                }}
+              >
+                {isUploading ? (
+                  <LoadingSpinner size={40} />
+                ) : (
+                  <>
+                    <div>
+                      <PdfIcon size={48} />
+                    </div>
+                    <p className="text-[16px] font-normal text-[#666666] transition-colors duration-700 group-hover:text-[#2542F0]">
+                      파일 업로드 하기
+                    </p>
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* 파일 리스트 */}
+            {boxFiles.length > 0 ? (
+              boxFiles.map((file) => (
                 <NoteCard
                   key={file.id}
+                  id={file.id}
                   label={file.label}
                   type={file.type}
                   thumbnailUrl={file.fileUrl}
@@ -275,13 +396,18 @@ export const StorageContent = ({
                   onSelect={() => toggleIdSelection(file.id)}
                   onClick={() => handleFileClick(file.id)}
                 />
-              ))}
-            </div>
-          ) : (
-            <div className="mb-[40px] flex h-[100px] items-center justify-center text-gray-400">
-              업로드된 파일이 없습니다.
-            </div>
-          )}
+              ))
+            ) : (
+              /* 파일이 없을 때 메시지 (업로드 버튼이 있으므로 굳이 필요 없거나, 버튼 옆에 텍스트로? 아니면 그냥 버튼만 있어도 됨) */
+              /* 기존 로직: 파일 없으면 "업로드된 파일이 없습니다" 띄움. 
+                 하지만 이제 버튼이 항상(선택모드 제외) 있으므로,
+                 파일이 0개여도 업로드 버튼은 보임.
+                 따라서 별도 Empty 메시지는 선택모드일 때만 필요할 수도 있음.
+                 일단 여기서는 boxFiles가 map 되므로 자연스럽게 버튼 뒤에 아무것도 안 나옴.
+               */
+              <></>
+            )}
+          </div>
 
           {/* THREAD 섹션 */}
           <div className="mb-3">
@@ -292,6 +418,7 @@ export const StorageContent = ({
               {threadFiles.map((file) => (
                 <NoteCard
                   key={file.id}
+                  id={file.id}
                   label={file.label}
                   type={file.type}
                   thumbnailUrl={file.fileUrl}
