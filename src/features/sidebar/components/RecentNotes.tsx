@@ -66,19 +66,19 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
           border-radius: 0px;
         }
       `}</style>
-      
+
       <div
-        className={`flex flex-col h-full w-full px-5 pb-4 transition-opacity duration-300 ease-in-out ${
+        className={`flex h-full w-full flex-col px-5 pb-4 transition-opacity duration-300 ease-in-out ${
           isCollapsed ? "opacity-0" : "opacity-100"
         }`}
       >
         {/* 섹션 타이틀 */}
-        <p className="mb-2 px-3 text-[12px] font-medium text-[#454545] flex-shrink-0">
+        <p className="mb-2 flex-shrink-0 px-3 text-[12px] font-medium text-[#454545]">
           최근 노트
         </p>
 
         {/* 노트 리스트 - 스크롤 활성화 */}
-        <ul className="recent-notes-list flex flex-col gap-0.5 pr-3 flex-1 overflow-y-auto min-h-0">
+        <ul className="recent-notes-list flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto pr-3">
           {isLoading ? (
             // 로딩 상태
             [1, 2, 3].map((i) => (

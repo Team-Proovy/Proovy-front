@@ -11,7 +11,7 @@ export const useResponsiveNotesCount = (
   containerRef: RefObject<HTMLDivElement | null>,
   listRef: RefObject<HTMLUListElement | null>,
   minCount: number = 1,
-  maxCount: number = 50
+  maxCount: number = 50,
 ) => {
   const [notesCount, setNotesCount] = useState<number>(20);
 
@@ -23,10 +23,10 @@ export const useResponsiveNotesCount = (
 
       const containerHeight = containerRef.current.clientHeight;
       const listElement = listRef.current;
-      
+
       // 리스트의 직접 자식인 li 요소들 (skeleton 제외)
       const listItems = Array.from(listElement.children).filter(
-        (child) => child.tagName === "LI"
+        (child) => child.tagName === "LI",
       );
 
       if (listItems.length === 0) {
@@ -34,7 +34,9 @@ export const useResponsiveNotesCount = (
         const ESTIMATED_ITEM_HEIGHT = 32; // py-[6px] + 텍스트 + gap
         const HEADER_HEIGHT = 20;
         const availableHeight = containerHeight - HEADER_HEIGHT;
-        const estimatedCount = Math.floor(availableHeight / ESTIMATED_ITEM_HEIGHT);
+        const estimatedCount = Math.floor(
+          availableHeight / ESTIMATED_ITEM_HEIGHT,
+        );
         const count = Math.max(minCount, Math.min(estimatedCount, maxCount));
         setNotesCount(count);
         return;
@@ -66,7 +68,10 @@ export const useResponsiveNotesCount = (
 
         // 추가 아이템들은 gap 포함
         const itemHeightWithGap = itemHeight + gapHeight;
-        while (remainingHeight >= itemHeightWithGap && fittingCount < maxCount) {
+        while (
+          remainingHeight >= itemHeightWithGap &&
+          fittingCount < maxCount
+        ) {
           remainingHeight -= itemHeightWithGap;
           fittingCount++;
         }

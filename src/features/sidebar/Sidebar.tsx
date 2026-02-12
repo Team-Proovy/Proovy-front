@@ -35,7 +35,7 @@ export const Sidebar = ({
     >
       <aside className="relative flex h-full flex-col">
         <div
-          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-transparent transition-all duration-300 ease-in-out ${
+          className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-white transition-all duration-300 ease-in-out ${
             isCollapsed ? "w-[80px]" : "w-[240px]"
           }`}
         />
