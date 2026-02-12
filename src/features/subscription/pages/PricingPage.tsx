@@ -76,7 +76,7 @@ export const PricingPage = () => {
   const handlePlanClick = (planName: PlanType) => {
     // 로그인 확인
     if (!user) {
-      alert("로그인이 필요한 서비스입니다.");
+      navigate("/login");
       return;
     }
 
@@ -124,10 +124,10 @@ export const PricingPage = () => {
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[20px]">
       <button
-        onClick={() => navigate("/app/home")}
+        onClick={() => navigate("/")}
         className="absolute top-4 left-4 cursor-pointer font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
       >
-        ← 돌아가기 (홈)
+        ← 돌아가기
       </button>
 
       <div className="mt-[40px] mb-[40px] flex flex-col items-center text-center md:mt-0">

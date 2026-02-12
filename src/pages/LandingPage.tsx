@@ -1,45 +1,58 @@
-/**
- * LandingPage - 마케팅 랜딩 페이지
- *
- * URL: /
- * 인증: 불필요
- *
- * 기능:
- * - Proovy 서비스 소개
- * - 로그인/회원가입 CTA
- */
-
-import { Link } from "react-router-dom";
+import { LandingHeader } from "../features/landing/components/LandingHeader";
+import { HeroSection } from "../features/landing/components/HeroSection";
+import { FeatureSection } from "../features/landing/components/FeatureSection";
+import { FeatureGrid } from "../features/landing/components/FeatureGrid";
+import { CTASection } from "../features/landing/components/CTASection";
+import { FAQSection } from "../features/landing/components/FAQSection";
+import { LandingFooter } from "../features/landing/components/LandingFooter";
 
 export const LandingPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white">
-      {/*임시 페이지*/}
-      <h1 className="mb-6 text-5xl font-medium text-gray-900">
-        임시 랜딩 페이지
-      </h1>
+    <div className="flex w-full flex-col bg-white">
+      <LandingHeader />
 
-      {/* 로고 */}
-      <h1 className="mb-6 text-5xl font-bold text-gray-900">Proovy</h1>
+      <main className="w-full">
+        <HeroSection />
 
-      {/* 서브 타이틀 */}
-      <p className="mb-10 text-lg text-gray-600">AI 기반 학습 도우미</p>
-
-      {/* CTA 버튼 */}
-      <div className="flex gap-4">
-        <Link
-          to="/login"
-          className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+        <div
+          id="intro"
+          className="scroll-mt-[80px]"
         >
-          로그인
-        </Link>
-        <Link
-          to="/login"
-          className="rounded-lg border border-gray-300 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50"
+          <FeatureSection
+            title={["뷰어를 함께 보면서", "AI튜터에게 질문하기"]}
+            description={[
+              "뷰어로 볼 파일을 업로드하면 AI튜터와 함께 보면서",
+              "대화할 수 있어요.",
+            ]}
+            imageSrc="https://proovy-public.s3.ap-northeast-2.amazonaws.com/landing/illust_viewer.png"
+            imageAlt="Viewer and AI Tutor"
+          />
+        </div>
+
+        <FeatureSection
+          title={["궁금한 문제는", "선택해서 바로 물어보기"]}
+          description={[
+            "어떤 형태의 파일이든 프루비는 정확히 인식해",
+            "문제를 같이 풀 수 있어요.",
+          ]}
+          imageSrc="https://proovy-public.s3.ap-northeast-2.amazonaws.com/landing/illust_laptop.png"
+          isReversed
+          imageAlt="Problem Selection"
+        />
+
+        <FeatureGrid />
+
+        <div
+          id="pricing"
+          className="scroll-mt-[80px]"
         >
-          시작하기
-        </Link>
-      </div>
+          <CTASection />
+        </div>
+
+        <FAQSection />
+      </main>
+
+      <LandingFooter />
     </div>
   );
 };

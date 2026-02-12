@@ -18,6 +18,9 @@
 
 /* 3. 기본 레이어에서 html과 body에 폰트 강제 적용 */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html,
   body {
     @apply font-sans;
