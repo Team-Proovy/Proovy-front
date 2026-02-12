@@ -88,8 +88,24 @@ export const NotesPagination = ({
   onNextPage,
   onPageChange,
 }: NotesPaginationProps) => {
-  if (!pageInfo || pageInfo.totalPages <= 1) {
+  if (!pageInfo) {
     return null;
+  }
+
+  if (pageInfo.totalPages <= 1) {
+    return (
+      <div className="mt-[40px] flex items-center justify-center gap-[4px]">
+        <button
+          type="button"
+          disabled={true}
+          className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border border-[#D1D6DE] bg-[rgba(42,106,255,0.2)]"
+        >
+          <span className="text-[14px] leading-[22.4px] font-medium tracking-[-0.7px] text-[#003880]">
+            1
+          </span>
+        </button>
+      </div>
+    );
   }
 
   const paginationItems = getPaginationItems(

@@ -32,8 +32,8 @@ export const StorageToolbar = ({
   };
 
   return (
-    <div className="3xl:max-w-[1360px] relative mx-auto mb-[8px] flex w-full max-w-[520px] items-center lg:max-w-[800px] 2xl:max-w-[1080px]">
-      <div className="flex flex-1 items-center gap-[20px]">
+    <div className="3xl:max-w-[1360px] mx-auto mb-[8px] grid w-full max-w-[520px] [grid-template-columns:1fr_auto] items-center gap-x-[32px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+      <div className="flex items-center gap-[20px]">
         <div
           className="relative w-[220px] lg:w-[440px]"
           style={{ height: "32px" }}
@@ -69,128 +69,125 @@ export const StorageToolbar = ({
           {isSelectMode ? "삭제하기" : "선택"}
         </button>
       </div>
-
-      <div className="absolute right-[20px] flex items-center">
-        <div
+      <div
+        className="shrink-0 justify-self-end"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "4px",
+        }}
+      >
+        <span
           style={{
-            display: "flex",
-            width: "113px",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: "4px",
+            color: "#000",
+            fontFamily: "Pretendard",
+            fontSize: "14px",
+            fontStyle: "normal",
+            fontWeight: 500,
+            lineHeight: "20px",
+            alignSelf: "stretch",
           }}
         >
-          <span
-            style={{
-              color: "#000",
-              fontFamily: "Pretendard",
-              fontSize: "14px",
-              fontStyle: "normal",
-              fontWeight: 500,
-              lineHeight: "20px",
-              alignSelf: "stretch",
-            }}
+          전체 용량
+        </span>
+        <div className="flex items-center gap-[11px]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="56"
+            height="12"
+            viewBox="0 0 56 12"
+            fill="none"
           >
-            전체 용량
-          </span>
-          <div className="flex items-center gap-[11px]">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="56"
-              height="12"
-              viewBox="0 0 56 12"
-              fill="none"
-            >
+            <rect
+              x="0.25"
+              y="0.25"
+              width="55.5"
+              height="11.5"
+              rx="5.75"
+              fill="white"
+              stroke="#D1D6DE"
+              strokeWidth="0.5"
+            />
+            <g filter="url(#filter0_i_781_1618)">
               <rect
-                x="0.25"
-                y="0.25"
-                width="55.5"
-                height="11.5"
-                rx="5.75"
-                fill="white"
-                stroke="#D1D6DE"
-                strokeWidth="0.5"
+                width={barWidth}
+                height="12"
+                rx="6"
+                fill={barColor}
               />
-              <g filter="url(#filter0_i_781_1618)">
-                <rect
-                  width={barWidth}
-                  height="12"
-                  rx="6"
-                  fill={barColor}
+            </g>
+            <defs>
+              <filter
+                id="filter0_i_781_1618"
+                x="0"
+                y="0"
+                width={barWidth}
+                height="13"
+                filterUnits="userSpaceOnUse"
+                colorInterpolationFilters="sRGB"
+              >
+                <feFlood
+                  floodOpacity="0"
+                  result="BackgroundImageFix"
                 />
-              </g>
-              <defs>
-                <filter
-                  id="filter0_i_781_1618"
-                  x="0"
-                  y="0"
-                  width={barWidth}
-                  height="13"
-                  filterUnits="userSpaceOnUse"
-                  colorInterpolationFilters="sRGB"
-                >
-                  <feFlood
-                    floodOpacity="0"
-                    result="BackgroundImageFix"
-                  />
-                  <feBlend
-                    mode="normal"
-                    in="SourceGraphic"
-                    in2="BackgroundImageFix"
-                    result="shape"
-                  />
-                  <feColorMatrix
-                    in="SourceAlpha"
-                    type="matrix"
-                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-                    result="hardAlpha"
-                  />
-                  <feOffset dy="1" />
-                  <feGaussianBlur stdDeviation="0.5" />
-                  <feComposite
-                    in2="hardAlpha"
-                    operator="arithmetic"
-                    k2="-1"
-                    k3="1"
-                  />
-                  <feColorMatrix
-                    type="matrix"
-                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
-                  />
-                  <feBlend
-                    mode="normal"
-                    in2="shape"
-                    result="effect1_innerShadow_781_1618"
-                  />
-                </filter>
-              </defs>
-            </svg>
-            <div className="flex items-center">
-              <span
-                style={{
-                  color: barColor,
-                  fontFamily: "Pretendard",
-                  fontSize: "13px",
-                  fontStyle: "normal",
-                  fontWeight: 700,
-                  lineHeight: "18px",
-                }}
-              >
-                {totalUsedDisplay}
-              </span>
-              <span
-                style={{
-                  color: "#000",
-                  fontFamily: "Pretendard",
-                  fontSize: "13px",
-                  fontStyle: "normal",
-                  fontWeight: 400,
-                  lineHeight: "18px",
-                }}
-              >
-                /{totalLimitDisplay}
-              </span>
-            </div>
+                <feBlend
+                  mode="normal"
+                  in="SourceGraphic"
+                  in2="BackgroundImageFix"
+                  result="shape"
+                />
+                <feColorMatrix
+                  in="SourceAlpha"
+                  type="matrix"
+                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                  result="hardAlpha"
+                />
+                <feOffset dy="1" />
+                <feGaussianBlur stdDeviation="0.5" />
+                <feComposite
+                  in2="hardAlpha"
+                  operator="arithmetic"
+                  k2="-1"
+                  k3="1"
+                />
+                <feColorMatrix
+                  type="matrix"
+                  values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+                />
+                <feBlend
+                  mode="normal"
+                  in2="shape"
+                  result="effect1_innerShadow_781_1618"
+                />
+              </filter>
+            </defs>
+          </svg>
+          <div className="flex items-center">
+            <span
+              style={{
+                color: barColor,
+                fontFamily: "Pretendard",
+                fontSize: "13px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                lineHeight: "18px",
+              }}
+            >
+              {totalUsedDisplay}
+            </span>
+            <span
+              style={{
+                color: "#000",
+                fontFamily: "Pretendard",
+                fontSize: "13px",
+                fontStyle: "normal",
+                fontWeight: 400,
+                lineHeight: "18px",
+              }}
+            >
+              /{totalLimitDisplay}
+            </span>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import type {
   CreateNoteRequest,
   NoteDto,
   NoteDetailResponse,
+  UpdateNoteTitleResponse,
 } from "../../features/notes/api/notes_types";
 import { mockNoteAssets } from "./editor";
 
@@ -98,12 +99,13 @@ export const notesHandlers = [
     const start = page * size;
     const paginatedNotes = sortedNotes.slice(start, start + size);
 
+    const totalNotes = mockNotes.length;
     const pageInfo = {
       page,
       size,
-      totalElements: mockNotes.length,
-      totalPages: Math.ceil(mockNotes.length / size),
-      hasNext: start + size < mockNotes.length,
+      totalElements: totalNotes,
+      totalPages: Math.ceil(totalNotes / size),
+      hasNext: start + size < totalNotes,
       hasPrevious: page > 0,
     };
 
@@ -383,6 +385,57 @@ export const notesHandlers = [
         deletedAssetCount: assetCount,
         freedStorageBytes,
       },
+    });
+  }),
+  // 노트 제목 변경
+  http.patch(`${BASE_URL}/api/notes/:noteId`, async ({ params, request }) => {
+    await delay(300);
+
+    const noteId = Number(params.noteId);
+    const body = (await request.json()) as { title?: string };
+    const nextTitle = body.title?.trim();
+
+    if (!nextTitle) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "NOTE4002",
+          message: "제목이 비어있습니다.",
+          result: null,
+        },
+        { status: 400 },
+      );
+    }
+
+    const noteIndex = mockNotes.findIndex((n) => n.noteId === noteId);
+    if (noteIndex === -1) {
+      return HttpResponse.json(
+        {
+          isSuccess: false,
+          code: "NOTE4041",
+          message: "노트를 찾을 수 없습니다.",
+          result: null,
+        },
+        { status: 404 },
+      );
+    }
+
+    mockNotes[noteIndex] = {
+      ...mockNotes[noteIndex],
+      title: nextTitle,
+    };
+
+    const result: UpdateNoteTitleResponse = {
+      noteId,
+      title: nextTitle,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return HttpResponse.json<ApiResponse<UpdateNoteTitleResponse>>({
+      isSuccess: true,
+      code: "NOTE2000",
+      message: "노트 제목 수정 성공",
+      result,
     });
   }),
 ];

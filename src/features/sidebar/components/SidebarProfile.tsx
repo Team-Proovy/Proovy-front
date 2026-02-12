@@ -39,6 +39,7 @@ export const SidebarProfile = ({
   );
   const maxNotes = getPlanMaxNotes(planType);
   const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
+  const displayTotalNotes = totalNotes;
   const creditTotal = profile?.credit.totalAvailable ?? 0;
 
   // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
@@ -91,7 +92,7 @@ export const SidebarProfile = ({
           <div className="mr-[24px] flex items-center gap-1.5">
             <PaperIcon />
             <span className="text-[14px] font-medium">
-              {totalNotes}/{maxNotes}
+              {displayTotalNotes}/{maxNotes}
             </span>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   getNoteList,
   createNote,
   getNoteDetail,
+  updateNoteTitle,
   deleteNotesBulk,
   deleteNote,
 } from "../api/notes_api";
@@ -71,6 +72,22 @@ export const useCreateNote = () => {
     onSuccess: () => {
       // 노트 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+    },
+  });
+};
+
+// 노트 제목 변경 Hook
+export const useUpdateNoteTitle = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ noteId, title }: { noteId: number; title: string }) =>
+      updateNoteTitle(noteId, { title }),
+    onSuccess: (_response, variables) => {
+      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: noteKeys.detail(String(variables.noteId)),
+      });
     },
   });
 };
