@@ -9,9 +9,6 @@ import { useCreditHistory } from "../../hooks/useCredit";
 import { useAuthStore } from "../../../auth/store/auth_store";
 import { userKeys, useMyProfile } from "../../hooks/useUser";
 
-/**
- * CreditTabContent - 크레딧 사용내역 탭
- */
 export const CreditTabContent = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -22,10 +19,8 @@ export const CreditTabContent = () => {
     size: 20,
   });
 
-  // 프로필 데이터 (사이드바와 동일한 소스 사용 - 크레딧 정보 동기화 위함)
   const { data: profile } = useMyProfile();
 
-  // 크레딧 데이터가 변경되면(refetch 등) 프로필 데이터도 갱신하여 사이드바 동기화
   useEffect(() => {
     if (creditData) {
       queryClient.invalidateQueries({ queryKey: userKeys.profile() });
@@ -60,8 +55,6 @@ export const CreditTabContent = () => {
     limit: 100, // 기본값
     resetsAt: new Date().toISOString(),
   };
-
-  // const safeTotalAvailable = profile?.credit.totalAvailable || 0; // Unused, removing
 
   // 일일 리셋 시간 포맷팅 (예: 매일 00:00)
   const resetDate = new Date(safeDailyCredit.resetsAt);

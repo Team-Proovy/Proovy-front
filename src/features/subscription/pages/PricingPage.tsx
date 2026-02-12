@@ -183,12 +183,10 @@ export const PricingPage = () => {
 
           const checkColor = isHighlighted || isHovered ? "#2A6AFF" : "#D1D6DE";
 
-          // 버튼 텍스트 로직
           let buttonText = "시작하기";
           let isDisabled = false;
 
           if (user) {
-            // 로그인 상태일 때만 텍스트 변경
             if (isCurrentPlan) {
               buttonText = "사용 중";
               isDisabled = true;
@@ -196,13 +194,11 @@ export const PricingPage = () => {
               if (thisLevel > currentLevel) {
                 buttonText = isHovered ? "업그레이드" : "시작하기";
               } else {
-                // 다운그레이드인 경우
                 buttonText = "사용 불가";
                 isDisabled = true;
               }
             }
           }
-          // 비로그인 상태일 때는 항상 "시작하기"
 
           return (
             <div

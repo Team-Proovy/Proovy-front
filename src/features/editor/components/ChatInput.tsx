@@ -162,7 +162,7 @@ export const ChatInput = ({
     try {
       const creditResponse = await deductCredit({
         eventType: "LLM_QUERY",
-        difficulty: "medium", // 기본값 설정 (필요시 prop으로 전달받도록 수정 가능)
+        difficulty: "medium",
         featureName: "Chat",
         description: "AI 채팅 질문",
       });

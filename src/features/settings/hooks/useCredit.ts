@@ -30,7 +30,6 @@ export const useUseCredit = () => {
   return useMutation({
     mutationFn: useCredit,
     onSuccess: (data) => {
-      // 크레딧 사용 성공 시 히스토리 및 사용자 프로필(사이드바 크레딧) 갱신
       if (data.result.success) {
         const newBalance = data.result.balance;
         queryClient.setQueryData<MyProfileResponse>(

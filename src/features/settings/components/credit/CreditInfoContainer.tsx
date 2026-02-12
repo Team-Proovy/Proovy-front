@@ -31,7 +31,6 @@ export const CreditInfoContainer = ({
     <>
       <div className="flex h-auto w-full flex-col rounded-[12px] bg-[#F1F4F8] px-[24px] py-[20px]">
         {/* 상단: 요금제 + 업그레이드 버튼 */}
-        {/* 상단: 요금제 + 업그레이드 버튼 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[12px]">
             <span className="font-['Pretendard'] text-[16px] font-medium text-black">

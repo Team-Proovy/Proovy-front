@@ -104,15 +104,14 @@ export const ProfileTabContent = () => {
   };
 
   const handleWithdrawConfirm = () => {
-    // 2차: 유료 플랜 사용자 체크
-    // profile.subscription.plan 또는 user.plan 사용
-    // user.plan은 string, profile.subscription.plan은 string
-    // Free가 아니면 경고 모달
     const currentPlan = profile?.subscription?.plan || user?.plan || "Free";
 
     if (currentPlan !== "Free") {
-      // 구독 중인 경우 autoRenew 확인
-      // subscription 데이터가 로드되지 않았을 수 있으므로 체크
+      if (subscription === undefined) {
+        alert("구독 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
       if (subscription?.billing.autoRenew) {
         setIsWithdrawModalOpen(false);
         setIsMustCancelModalOpen(true);

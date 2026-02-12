@@ -26,7 +26,6 @@ export const SubscriptionTabContent = () => {
   const { mutateAsync: cancelSubscription } = useCancelSubscription();
   const { mutateAsync: resumeSubscription } = useResumeSubscription();
 
-  // 초기값 또는 로딩 중일 때 기본값 설정
   const userPlanName: PlanType = (user?.plan as PlanType) || "Free";
   const defaultPlanDetail = PLAN_DETAILS[userPlanName] || PLAN_DETAILS["Free"];
 
@@ -109,7 +108,6 @@ export const SubscriptionTabContent = () => {
       const response = await resumeSubscription();
       if (response.isSuccess) {
         setIsResumeModalOpen(false);
-        // 성공 시 데이터 갱신되므로 별도 처리 불필요 (React Query invalidate)
         setShowResumeSuccessModal(true);
       } else {
         // 실패 메시지 처리
@@ -140,7 +138,6 @@ export const SubscriptionTabContent = () => {
     }
   };
 
-  // 구독 해지 예약 상태인지 확인 (autoRenew가 false이고 Free 플랜이 아닌 경우)
   const isSubscriptionCancelled =
     subscription && !subscription.billing.autoRenew && userPlanName !== "Free";
 
@@ -308,7 +305,6 @@ export const SubscriptionTabContent = () => {
             <button
               onClick={() => {
                 setShowCancelSuccessModal(false);
-                // window.location.reload(); // 제거: 모달 유지 및 React Query로 갱신
               }}
               className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
             >
