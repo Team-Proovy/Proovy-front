@@ -21,34 +21,39 @@ export const PricingPage = () => {
       price: "0",
       features: [
         "하루 100 크레딧 제공",
-        "월 0 크레딧 제공",
+        "월 총 ~3,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 2개",
-        "저장소 5GB",
-        "업로드당 10MB",
+        "저장소 1GB",
+        "단일 파일 크기 10MB",
       ],
     },
     {
       name: "Standard",
       description: "부담 없는 일상 사용에 적합한 플랜",
-      price: "0",
+      price: "6,900",
       features: [
         "하루 100 크레딧 제공",
-        "월 5000 크레딧 제공",
+        "월 2,000 크레딧 제공",
+        "월 총 ~5,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 10개",
         "저장소 5GB",
-        "업로드당 50MB",
+        "단일 파일 크기 50MB",
       ],
     },
     {
       name: "Pro",
       description: "부족함 없는 사용에 적합한 플랜",
-      price: "0",
+      price: "14,900",
       features: [
         "하루 100 크레딧 제공",
-        "월 8000 크레딧 제공",
+        "월 5,000 크레딧 제공",
+        "월 총 ~8,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 20개",
         "저장소 10GB",
-        "업로드당 100MB",
+        "단일 파일 크기 100MB",
       ],
     },
   ];
@@ -117,7 +122,7 @@ export const PricingPage = () => {
   };
 
   return (
-    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
+    <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[40px]">
       <button
         onClick={() => navigate("/app/home")}
         className="absolute top-4 left-4 font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
@@ -125,7 +130,7 @@ export const PricingPage = () => {
         ← 돌아가기 (홈)
       </button>
 
-      <div className="mb-[40px] flex flex-col items-center text-center">
+      <div className="mt-[40px] mb-[40px] flex flex-col items-center text-center md:mt-0">
         <div className="flex items-center justify-center">
           <ProovyLogo className="h-[40px] w-auto md:h-[58px]" />
           <span className="font-['Pretendard'] text-[30px] leading-[40px] font-bold tracking-[-0.01em] text-black md:text-[40px] md:leading-[58px]">
@@ -140,7 +145,7 @@ export const PricingPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-[20px] md:gap-[36px]">
+      <div className="flex flex-wrap items-stretch justify-center gap-[20px] md:gap-[36px]">
         {plans.map((plan) => {
           // 플랜 상태 결정 로직
           const currentPlanName = user?.plan || "Free";
@@ -204,7 +209,7 @@ export const PricingPage = () => {
               key={plan.name}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
-              className="flex h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
+              className="flex h-auto min-h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
               style={cardStyle}
             >
               <div className="mb-[24px] flex flex-col gap-[8px]">

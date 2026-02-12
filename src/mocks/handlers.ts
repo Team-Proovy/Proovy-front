@@ -1,9 +1,9 @@
 // import { authHandlers } from "./handlers/auth"; // 로그인은 실제 API 사용
-import { userHandlers } from "./handlers/user";
-import { notesHandlers } from "./handlers/notes";
-import { assetsHandlers } from "./handlers/assets";
-import { editorHandlers } from "./handlers/editor";
-import { creditHandlers } from "./handlers/credit";
+// import { userHandlers } from "./handlers/user";
+// import { notesHandlers } from "./handlers/notes";
+// import { assetsHandlers } from "./handlers/assets";
+// import { editorHandlers } from "./handlers/editor";
+// import { creditHandlers } from "./handlers/credit";
 
 // 모든 API 핸들러 통합
 // authHandlers는 제외 - 카카오 로그인은 실제 백엔드 API 사용
@@ -11,9 +11,9 @@ import { creditHandlers } from "./handlers/credit";
 //   와일드카드 경로(notesHandlers: /api/notes/:noteId)보다 앞에 와야 함
 export const handlers = [
   // ...authHandlers,
-  ...userHandlers,
-  ...editorHandlers,
-  ...assetsHandlers,
-  ...notesHandlers,
-  ...creditHandlers,
+  // ...userHandlers, // 실제 API 사용을 위해 주석 처리
+  // ...editorHandlers, // 실제 API 사용을 위해 주석 처리
+  // ...assetsHandlers, // 실제 API 사용을 위해 주석 처리
+  // ...notesHandlers, // 실제 API 사용을 위해 주석 처리
+  // ...creditHandlers, // 실제 API 사용을 위해 주석 처리
 ];

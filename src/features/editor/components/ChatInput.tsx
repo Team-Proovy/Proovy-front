@@ -25,6 +25,7 @@ import {
   useChatContent,
 } from "../hooks";
 import { useAttachments, type Attachment } from "../hooks/useAttachments";
+import { useUseCredit } from "../../settings/hooks/useCredit";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
@@ -136,8 +137,11 @@ export const ChatInput = ({
     if (handleAtMenuKeyDown(e)) return;
   };
 
+  // 크레딧 사용 뮤테이션
+  const { mutateAsync: deductCredit } = useUseCredit();
+
   // 전송 핸들러
-  const handleSend = () => {
+  const handleSend = async () => {
     if (isSending) return;
     if (!hasContent && attachments.length === 0) return;
 
@@ -147,6 +151,25 @@ export const ChatInput = ({
       : { text: "", latex: undefined, mentionedAssetIds: [] as number[] };
 
     if (!extracted.text && attachments.length === 0) return;
+
+    // 크레딧 차감 시도
+    try {
+      const creditResponse = await deductCredit({
+        eventType: "LLM_QUERY",
+        difficulty: "medium", // 기본값 설정 (필요시 prop으로 전달받도록 수정 가능)
+        featureName: "Chat",
+        description: "AI 채팅 질문",
+      });
+
+      if (!creditResponse.result.success) {
+        alert(creditResponse.result.message || "크레딧이 부족합니다.");
+        return;
+      }
+    } catch (error) {
+      console.error("Credit deduction failed:", error);
+      alert("크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
 
     // 도구 코드 수집
     const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
