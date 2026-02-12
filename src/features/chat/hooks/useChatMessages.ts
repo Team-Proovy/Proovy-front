@@ -55,13 +55,83 @@ export const useChatMessages = () => {
   const firstMessageData = initialStateRef.current?.firstMessage as
     | FirstMessageState
     | undefined;
+  const chatEntrySource =
+    (initialStateRef.current as { chatEntrySource?: string } | null)
+      ?.chatEntrySource ?? "unknown";
 
   const viewerFile = firstMessageData?.viewerFile;
 
   const hasFirstMessage = !!firstMessageData;
 
   // ─── 노트 상세 로드 (제목·메타데이터 + 재진입 시 히스토리) ───
-  const { data: noteDetail, isLoading: isNoteLoading } = useNoteDetail(noteId);
+  const {
+    data: noteDetail,
+    isLoading: isNoteLoading,
+    isError: isNoteDetailError,
+    error: noteDetailError,
+  } = useNoteDetail(
+    noteId,
+    {
+      conversationPage: 0,
+      conversationSize: 50,
+    },
+    {
+      fetchAllConversations: true,
+      refetchOnMount: "always",
+    },
+  );
+
+  useEffect(() => {
+    if (!noteId) return;
+    console.info("[ChatHistory] 채팅방 진입", {
+      noteId,
+      source: chatEntrySource,
+      hasFirstMessage,
+    });
+  }, [noteId, chatEntrySource, hasFirstMessage]);
+
+  useEffect(() => {
+    if (!noteId || hasFirstMessage || isNoteLoading) return;
+
+    if (isNoteDetailError) {
+      console.error("[ChatHistory] 노트 상세 조회 실패", {
+        noteId,
+        source: chatEntrySource,
+        error: noteDetailError,
+      });
+      return;
+    }
+
+    if (!noteDetail) return;
+
+    const conversationCount = noteDetail.conversations?.length ?? 0;
+    const pageInfo = noteDetail.conversationPageInfo;
+
+    if (conversationCount === 0) {
+      console.error("[ChatHistory] 노트 상세 조회 성공했지만 대화가 비어있음", {
+        noteId,
+        source: chatEntrySource,
+        conversationCount,
+        pageInfo,
+      });
+      return;
+    }
+
+    console.info("[ChatHistory] 대화 히스토리 로드 성공", {
+      noteId,
+      source: chatEntrySource,
+      conversationCount,
+      pageInfo,
+    });
+  }, [
+    noteId,
+    hasFirstMessage,
+    isNoteLoading,
+    isNoteDetailError,
+    noteDetailError,
+    noteDetail,
+    chatEntrySource,
+  ]);
 
   // ─── 메시지 상태 ───
   const [messages, setMessages] = useState<ChatMessage[]>([]);
