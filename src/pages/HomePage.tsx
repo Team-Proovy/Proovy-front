@@ -1,4 +1,3 @@
-import { ChevronDown } from "lucide-react";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import { useHomeSend } from "./hooks/useHomeSend";
 import { useViewerFile } from "./hooks/useViewerFile";
