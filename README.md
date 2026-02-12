@@ -84,7 +84,82 @@ Proovy의 도메인 모델은 **채팅 메시지, 수식 메타데이터, API �
 
 ---
 
-## 2️⃣ 프레임워크 선택에 대한 팀 합의 원칙
+### 주요 의존성 및 라이브러리
+
+#### 상태 관리
+
+- **@tanstack/react-query**: 서버 상태 관리 및 캐싱
+- **zustand**: 클라이언트 상태 관리 (간결하고 가벼운 구조)
+
+#### 수식 입력 및 렌더링
+
+- **mathlive**: 수학 수식 입력 컴포넌트
+- **katex**: LaTeX 기반 수식 렌더링
+- **remark-math**, **rehype-katex**: markdown 내 수식 지원
+
+#### PDF 및 문서 뷰어
+
+- **pdfjs-dist**: PDF 렌더링 및 뷰어
+- **react-markdown**: markdown 마크업 렌더링
+
+#### 캔버스 / 드로잉
+
+- **tldraw**: 화이트보드 및 드로잉 기능
+
+#### API 및 HTTP
+
+- **axios**: HTTP 클라이언트
+- **msw**: Mock Service Worker (개발 환경에서 API 모킹)
+
+#### UI 컴포넌트
+
+- **lucide-react**: 아이콘 라이브러리
+- **clsx**, **tailwind-merge**: CSS 클래스 유틸리티
+
+#### 라우팅
+
+- **react-router-dom**: 클라이언트 라우팅
+
+---
+
+## 2️⃣ 빌드 및 개발 스크립트
+
+### 사용 가능한 스크립트
+
+```bash
+# 개발 서버 실행 (http://localhost:5173)
+pnpm run dev
+
+# 프로덕션 빌드
+pnpm run build
+
+# ESLint 검사
+pnpm run lint
+
+# Prettier 코드 포매팅
+pnpm run format
+
+# 빌드된 결과 미리보기
+pnpm run preview
+```
+
+### 환경 설정 (.env)
+
+프로젝트 루트에 `.env` 파일을 생성하여 다음 환경 변수를 설정합니다:
+
+```env
+# API 서버
+VITE_API_BASE_URL=http://localhost:3000
+
+# 서비스 환경
+VITE_ENV=development
+```
+
+**주의**: `.env`는 git에 커밋되지 않습니다. 팀원과 공유할 때는 `.env.example` 파일을 제공하세요.
+
+---
+
+## 3️⃣ 프레임워크 선택에 대한 팀 합의 원칙
 
 - 본 프로젝트의 기본 프레임워크는 **React**입니다.
 - **React 외의 프레임워크(Next.js, Vue, Expo 등)** 를 도입할 경우:
@@ -94,7 +169,7 @@ Proovy의 도메인 모델은 **채팅 메시지, 수식 메타데이터, API �
 
 ---
 
-## 3️⃣ 프레임워크별 추가 평가 요소
+## 4️⃣ 프레임워크별 추가 평가 요소
 
 ### Next.js 선택 시 (참고)
 
@@ -116,41 +191,51 @@ Next.js를 사용할 경우, 아래 항목들이 주요 평가 기준이 됩니�
 
 ---
 
-## 4️⃣ 프로젝트 구조 (Feature-based Structure)
+## 5️⃣ 프로젝트 구조 (Feature-based Structure)
 
 ```bash
 src/
 ├── app/                      # 앱 전역 설정
-│   ├── providers/            # 전역 Provider
+│   ├── providers/            # 전역 Provider (React Query, MSW)
 │   ├── router/               # 라우터 설정
 │   └── styles/               # 전역 스타일
 │
 ├── features/                 # 핵심 비즈니스 기능
 │   ├── auth/                 # 로그인 / 인증
-│   ├── editor/               # 캔버스 / 수식 입력
 │   ├── chat/                 # 채팅 / SSE
-│   ├── viewer/               # PDF / 이미지 뷰어
-│   └── workspace/            # 통합 작업공간
+│   ├── editor/               # 캔버스 / 수식 입력 (tldraw, mathlive)
+│   ├── assets/               # 자산 업로드 / 파일 관리
+│   ├── notes/                # 노트 관리
+│   ├── search/               # 검색 기능
+│   ├── settings/             # 설정
+│   ├── sidebar/              # 사이드바
+│   ├── storage/              # 스토리지 관리
+│   └── subscription/         # 구독 및 결제
 │
 ├── shared/                   # 전역 공통 모듈
-│   ├── api/
-│   ├── assets/
-│   ├── config/
-│   ├── hooks/
-│   ├── layout/
-│   ├── ui/
-│   └── utils/
+│   ├── api/                  # API 클라이언트 (axios)
+│   ├── assets/               # 이미지 등 정적 자산
+│   ├── components/           # 공용 컴포넌트
+│   ├── hooks/                # 공용 훅
+│   ├── layout/               # 레이아웃 컴포넌트
+│   ├── lib/                  # 유틸리티 함수
+│   └── utils/                # 헬퍼 함수
 │
 ├── pages/                    # 페이지 단위 컴포넌트
 │   ├── HomePage.tsx
-│   ├── LoginPage.tsx
+│   ├── LandingPage.tsx
+│
+├── mocks/                    # Mock Service Worker (MSW)
+│   ├── browser.ts
+│   ├── handlers.ts
+│   └── handlers/
 │
 └── main.tsx                  # 앱 진입점
 ```
 
 ---
 
-## 5️⃣ Git Workflow & Convention
+## 6️⃣ Git Workflow & Convention
 
 ### Branch Strategy
 
@@ -237,7 +322,7 @@ Closes #이슈번호
 
 ---
 
-## 6️⃣ Code Convention
+## 7️⃣ Code Convention
 
 ### File Naming
 
@@ -331,7 +416,7 @@ interface Props {
 
 ---
 
-## 7️⃣ 개발 전 필수 체크리스트
+## 8️⃣ 개발 전 필수 체크리스트
 
 ### 기능 개발 시작
 
