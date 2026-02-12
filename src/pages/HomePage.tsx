@@ -61,22 +61,7 @@ export const HomePage = () => {
               isSending={isSending}
             />
           </div>
-
-          {/* 예시 섹션 */}
-          <div className="space-y-4">
-            <p className="text-[18px] font-semibold text-[#6B6B6B]">
-              또는 다음 예시로 시작해 보세요.
-            </p>
-          </div>
         </div>
-      </div>
-
-      {/* 하단 스크롤 안내 */}
-      <div className="flex w-full flex-col items-center justify-center pb-8 text-[#666666]">
-        <p className="mb-2 text-[18px] font-semibold">
-          내려서 다양한 예시 확인하기
-        </p>
-        <ChevronDown size={50} />
       </div>
     </div>
   );

@@ -15,13 +15,12 @@ import {
 import { DragDropOverlay } from "@/features/editor/components/input/DragDropOverlay";
 import { ViewerEmpty } from "./ViewerEmpty";
 import { FileRenderer } from "./FileRenderer";
+import { parseSize } from "@/shared/utils/file-utils";
 
 interface ViewerContentProps {
   noteId: string;
   fileId?: string;
 }
-
-import { parseSize } from "@/shared/utils/file-utils";
 
 export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   // 1. 상태 동기화 및 전역 이벤트 핸들링 (커스텀 훅)

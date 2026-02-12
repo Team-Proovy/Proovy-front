@@ -1,10 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  isFileAllowed,
+  isValidFileType,
   formatFileSize,
   getFileTypeLabel,
   getFileIconColor,
 } from "@/features/assets/utils/fileValidation";
+import { useAuthStore } from "@/features/auth/store/auth_store";
+import {
+  PLAN_DETAILS,
+  normalizePlanType,
+} from "@/features/subscription/types/plan_types";
+import { parseSize } from "@/shared/utils/file-utils";
 
 // 파일 표시 유틸 re-export (기존 import 경로 호환)
 export { formatFileSize, getFileTypeLabel, getFileIconColor };
@@ -61,6 +67,8 @@ export const useAttachments = (): UseAttachmentsReturn => {
     attachmentsRef.current = attachments;
   }, [attachments]);
   const [isDragOver, setIsDragOver] = useState(false);
+  /* user store access */
+  const { user } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
 
@@ -157,12 +165,30 @@ export const useAttachments = (): UseAttachmentsReturn => {
       if (!files || files.length === 0) return;
 
       const validFiles = Array.from(files).filter((file) => {
-        if (!isFileAllowed(file)) {
+        // 1. 형식 체크
+        if (!isValidFileType(file)) {
           console.warn(
-            `[첨부] 거부됨: "${file.name}" (type=${file.type}, size=${file.size})`,
+            `[첨부] 허용되지 않은 파일 형식: "${file.name}" (type=${file.type})`,
+          );
+          alert("허용되지 않은 파일 형식입니다.");
+          return false;
+        }
+
+        // 2. 용량 체크 (플랜 기반)
+        const userPlan = normalizePlanType(user?.plan);
+        const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
+        const maxSizeBytes = parseSize(maxUploadSizeStr);
+
+        if (file.size > maxSizeBytes) {
+          console.warn(
+            `[첨부] 용량 초과: "${file.name}" (${file.size} > ${maxSizeBytes})`,
+          );
+          alert(
+            `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
           );
           return false;
         }
+
         return true;
       });
 
