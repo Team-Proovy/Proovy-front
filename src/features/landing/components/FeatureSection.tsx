@@ -17,7 +17,7 @@ export const FeatureSection = ({
 }: FeatureSectionProps) => {
   return (
     <section
-      className={`flex w-full flex-col items-center justify-center px-[20px] py-[100px] md:px-[92px] ${isReversed ? "md:flex-row-reverse" : "md:flex-row"} gap-[40px] md:gap-[100px]`}
+      className={`flex w-full flex-col items-center justify-center px-[20px] py-[100px] md:px-[92px] ${isReversed ? "md:flex-row-reverse" : "md:flex-row"} gap-[60px] md:gap-[160px]`}
     >
       <div className="flex max-w-[440px] flex-col text-center md:text-left">
         <h2 className="font-['Pretendard'] text-[32px] leading-[1.3] font-bold text-black md:text-[36px]">

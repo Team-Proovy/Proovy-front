@@ -14,7 +14,7 @@ const faqs: FAQItem[] = [
   {
     question: "Proovy의 답변이 정확한 이유는 무엇인가요?",
     answer:
-      "최신 논문 및 전공 서적 데이터를 기반으로 학습된 모델과, 사용자가 직접 업로드한 파일을 참고하는 RAG(Retrieval-Augmented Generation) 기술을 사용하기 때문입니다.",
+      "Proovy는 문제 풀이 과정에서 코드를 생성하고 실행하여 검증된 답을 제공합니다. 이를 통해 AI의 기본적인 계산 실수를 방지할 수 있습니다. 또한 별도의 OCR 처리를 통해 더 정확한 인식률을 제공합니다.",
   },
   {
     question: "Proovy 이용은 무료인가요?",
@@ -34,7 +34,7 @@ export const FAQSection = () => {
   return (
     <section
       id="faq"
-      className="flex w-full scroll-mt-[80px] flex-col items-center bg-white px-[20px] py-[100px]"
+      className="flex w-full scroll-mt-[80px] flex-col items-center bg-white px-[20px] py-[60px] md:py-[80px]"
     >
       <h2 className="mb-[60px] font-['Pretendard'] text-[32px] font-bold text-black md:text-[36px]">
         자주 묻는 질문
@@ -72,7 +72,7 @@ export const FAQSection = () => {
               </svg>
             </button>
             {openIndex === idx && (
-              <div className="px-[40px] pb-[22px] font-['Pretendard'] text-[16px] leading-[1.6] text-gray-600">
+              <div className="px-[40px] pb-[22px] font-['Pretendard'] text-[16px] leading-[1.6] text-black">
                 {faq.answer}
               </div>
             )}
