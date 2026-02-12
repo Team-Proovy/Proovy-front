@@ -122,10 +122,10 @@ export const PricingPage = () => {
   };
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[40px]">
+    <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[20px]">
       <button
         onClick={() => navigate("/app/home")}
-        className="absolute top-4 left-4 font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
+        className="absolute top-4 left-4 cursor-pointer font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
       >
         ← 돌아가기 (홈)
       </button>
@@ -209,10 +209,10 @@ export const PricingPage = () => {
               key={plan.name}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
-              className="flex h-auto min-h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
+              className="flex h-auto min-h-[400px] w-[320px] flex-col rounded-[20px] px-[20px] py-[30px] transition-all duration-300"
               style={cardStyle}
             >
-              <div className="mb-[24px] flex flex-col gap-[8px]">
+              <div className="mb-[16px] flex flex-col gap-[8px]">
                 <h3 className="font-['Pretendard'] text-[24px] leading-[32px] font-bold tracking-[-0.01em] text-black">
                   {plan.name}
                 </h3>
@@ -221,7 +221,7 @@ export const PricingPage = () => {
                 </p>
               </div>
 
-              <div className="mb-[24px] flex items-end gap-[4px]">
+              <div className="mb-[16px] flex items-end gap-[4px]">
                 <span className="font-['Pretendard'] text-[42px] leading-[48px] font-bold tracking-[-0.01em] text-black">
                   {plan.price}원
                 </span>
@@ -234,7 +234,7 @@ export const PricingPage = () => {
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={isDisabled}
                 // 버튼 스타일 통일, 비활성화 시 불투명도 변경
-                className={`mb-[32px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
+                className={`mb-[24px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
                 style={
                   isDisabled && !isCurrentPlan
                     ? {
@@ -248,7 +248,7 @@ export const PricingPage = () => {
                 {buttonText}
               </button>
 
-              <div className="flex flex-col gap-[16px]">
+              <div className="flex flex-col gap-[12px]">
                 {plan.features.map((feature, idx) => (
                   <div
                     key={idx}
@@ -283,13 +283,13 @@ export const PricingPage = () => {
             <div className="flex w-full gap-[12px]">
               <button
                 onClick={() => setShowUpgradeConfirmModal(false)}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
+                className="h-[48px] flex-1 cursor-pointer rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
               >
                 취소
               </button>
               <button
                 onClick={confirmUpgrade}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+                className="h-[48px] flex-1 cursor-pointer rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
               >
                 업그레이드
               </button>
@@ -313,7 +313,7 @@ export const PricingPage = () => {
               onClick={() => {
                 setShowUpgradeSuccessModal(false);
               }}
-              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
             >
               확인
             </button>

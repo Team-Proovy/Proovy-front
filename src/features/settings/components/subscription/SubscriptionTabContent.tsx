@@ -105,7 +105,7 @@ export const SubscriptionTabContent = () => {
           onClick={() => navigate("/pricing")}
           className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF]/20 hover:text-white active:bg-[#2A6AFF] active:text-white"
         >
-          업그레이드
+          {userPlanName === "Pro" ? "현재 플랜" : "업그레이드"}
         </button>
 
         {userPlanName !== "Free" && (

@@ -50,10 +50,6 @@ export const CreditTabContent = () => {
         detail: item.description,
         date: formattedDate,
         change: item.changeType === "EARN" ? item.amount : -item.amount,
-        remainingCredit:
-          item.balanceAfter.daily +
-          item.balanceAfter.free +
-          item.balanceAfter.paid,
       };
     }) || [];
 
@@ -65,7 +61,7 @@ export const CreditTabContent = () => {
     resetsAt: new Date().toISOString(),
   };
 
-  const safeTotalAvailable = profile?.credit.totalAvailable || 0;
+  // const safeTotalAvailable = profile?.credit.totalAvailable || 0; // Unused, removing
 
   // 일일 리셋 시간 포맷팅 (예: 매일 00:00)
   const resetDate = new Date(safeDailyCredit.resetsAt);
@@ -86,11 +82,10 @@ export const CreditTabContent = () => {
       {/* 크레딧 정보 컨테이너 */}
       <CreditInfoContainer
         plan={user?.plan || "Free"}
-        totalCredits={safeTotalAvailable}
-        // 사용자가 아직 무료 크레딧을 받지 않았으므로 0으로 고정 요청함
-        // 추후 프로필 API에 무료/보너스 크레딧 필드가 생기면 해당 값으로 매핑 필요
-        usedCredits={0}
-        dailyCredits={safeDailyCredit.balance}
+        monthlyCreditBalance={profile?.credit.monthlyCredit.balance || 0}
+        monthlyCreditLimit={profile?.credit.monthlyCredit.limit || 0}
+        dailyCreditBalance={profile?.credit.dailyCredit.balance || 0}
+        dailyCreditLimit={profile?.credit.dailyCredit.limit || 100}
         dailyResetTime={resetTimeStr}
       />
 
