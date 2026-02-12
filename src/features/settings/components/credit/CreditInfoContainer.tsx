@@ -43,7 +43,7 @@ export const CreditInfoContainer = ({
           </div>
           <button
             onClick={() => navigate("/pricing")}
-            className="h-[28px] w-[100px] cursor-pointer rounded-[18px] bg-[#2A6AFF] px-[16px] py-[4px] font-['Pretendard'] text-[14px] text-white transition-colors hover:bg-[#1a5ae8]"
+            className="h-[28px] w-[100px] cursor-pointer rounded-[18px] border-[0.5px] border-[#D1D6DE] bg-transparent px-[16px] py-[4px] font-['Pretendard'] text-[14px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF] hover:text-white active:bg-[#1A5AE8] active:text-white"
           >
             {plan === "Pro" ? "현재 플랜" : "업그레이드"}
           </button>

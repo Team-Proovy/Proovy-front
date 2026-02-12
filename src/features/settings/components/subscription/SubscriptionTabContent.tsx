@@ -156,7 +156,7 @@ export const SubscriptionTabContent = () => {
       <div className="mt-[28px] flex gap-[16px]">
         <button
           onClick={() => navigate("/pricing")}
-          className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF]/20 hover:text-white active:bg-[#2A6AFF] active:text-white"
+          className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-transparent font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF] hover:text-white active:bg-[#1A5AE8] active:text-white"
         >
           {userPlanName === "Pro" ? "현재 플랜" : "업그레이드"}
         </button>
@@ -166,7 +166,7 @@ export const SubscriptionTabContent = () => {
             {isSubscriptionCancelled ? (
               <button
                 onClick={handleResumeClick}
-                className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] bg-[#2A6AFF] font-['Pretendard'] text-[16px] font-normal text-white transition-colors hover:bg-[#1A50D1]"
+                className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] bg-[#2A6AFF] font-['Pretendard'] text-[16px] font-normal text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
               >
                 구독 재개
               </button>
@@ -246,7 +246,7 @@ export const SubscriptionTabContent = () => {
               </button>
               <button
                 onClick={handleResumeSubscription}
-                className="flex-1 cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A50D1]"
+                className="flex-1 cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
               >
                 재개하기
               </button>
@@ -272,7 +272,7 @@ export const SubscriptionTabContent = () => {
             </p>
             <button
               onClick={() => setIsReservedModalOpen(false)}
-              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A50D1]"
+              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
             >
               확인
             </button>
@@ -310,7 +310,7 @@ export const SubscriptionTabContent = () => {
                 setShowCancelSuccessModal(false);
                 // window.location.reload(); // 제거: 모달 유지 및 React Query로 갱신
               }}
-              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF] text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
             >
               확인
             </button>
@@ -335,7 +335,7 @@ export const SubscriptionTabContent = () => {
             </p>
             <button
               onClick={() => setShowResumeSuccessModal(false)}
-              className="w-full cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A50D1]"
+              className="w-full cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A5AE8] active:bg-[#1546B3]"
             >
               확인
             </button>

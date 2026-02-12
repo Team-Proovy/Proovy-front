@@ -77,6 +77,7 @@ export const ChatInput = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Custom Hooks
   const {
@@ -145,8 +146,10 @@ export const ChatInput = ({
 
   // 전송 핸들러
   const handleSend = async () => {
-    if (isSending) return;
+    if (isSending || isProcessing) return;
     if (!hasContent && attachments.length === 0) return;
+
+    setIsProcessing(true);
 
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
     const extracted = inputRef.current
@@ -166,34 +169,40 @@ export const ChatInput = ({
 
       if (!creditResponse.result.success) {
         setShowCreditModal(true);
+        setIsProcessing(false);
         return;
       }
     } catch (error) {
       console.error("Credit deduction failed:", error);
       alert("크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setIsProcessing(false);
       return;
     }
 
-    // 도구 코드 수집
-    const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
+    try {
+      // 도구 코드 수집
+      const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
 
-    // 부모 콜백 호출
-    onSend?.({
-      message: extracted.text,
-      latex: extracted.latex,
-      mentionedAssetIds: extracted.mentionedAssetIds,
-      mentionedToolCodes,
-      attachments: [...attachments],
-    });
+      // 부모 콜백 호출
+      onSend?.({
+        message: extracted.text,
+        latex: extracted.latex,
+        mentionedAssetIds: extracted.mentionedAssetIds,
+        mentionedToolCodes,
+        attachments: [...attachments],
+      });
 
-    // 입력 상태 초기화
-    if (inputRef.current) {
-      inputRef.current.innerHTML = "";
+      // 입력 상태 초기화
+      if (inputRef.current) {
+        inputRef.current.innerHTML = "";
+      }
+      setHasContent(false);
+      clearMentionedAssets();
+      clearAttachments();
+      handleToolSelect(""); // 선택된 도구 초기화
+    } finally {
+      setIsProcessing(false);
     }
-    setHasContent(false);
-    clearMentionedAssets();
-    clearAttachments();
-    handleToolSelect(""); // 선택된 도구 초기화
   };
 
   // 파일 선택 핸들러

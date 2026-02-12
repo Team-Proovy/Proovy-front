@@ -72,7 +72,7 @@ export const CreditTabContent = () => {
   })}에 ${safeDailyCredit.limit}으로 새로고침`;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col pb-[24px]">
       <h3 className="font-['Pretendard'] text-[20px] font-semibold text-black">
         크레딧 사용내역
       </h3>
@@ -90,7 +90,7 @@ export const CreditTabContent = () => {
       />
 
       {/* 크레딧 사용 내역 테이블 */}
-      <div className="mt-[20px]">
+      <div className="mt-[20px] min-h-0 flex-1">
         <CreditHistoryTable history={history} />
       </div>
     </div>
