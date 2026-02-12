@@ -179,7 +179,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
           <p>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-2 text-sm underline"
+            className="mt-2 cursor-pointer text-sm underline"
           >
             다시 시도
           </button>

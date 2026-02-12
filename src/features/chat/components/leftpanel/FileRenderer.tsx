@@ -117,7 +117,7 @@ export const FileRenderer = ({
         <p>{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mt-2 text-sm underline"
+          className="mt-2 cursor-pointer text-sm underline"
         >
           다시 시도
         </button>
@@ -158,7 +158,7 @@ export const FileRenderer = ({
             <button
               onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
               disabled={pageNumber <= 1}
-              className="rounded p-1 hover:bg-gray-100 disabled:opacity-30"
+              className="cursor-pointer rounded p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
               {"<"}
             </button>
@@ -170,7 +170,7 @@ export const FileRenderer = ({
                 setPageNumber((prev) => Math.min(prev + 1, numPages || prev))
               }
               disabled={!numPages || pageNumber >= numPages}
-              className="rounded p-1 hover:bg-gray-100 disabled:opacity-30"
+              className="cursor-pointer rounded p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
               {">"}
             </button>

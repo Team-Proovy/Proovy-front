@@ -329,7 +329,13 @@ export const useChatMessages = () => {
     };
 
     sendFirst();
-  }, [firstMessageData, noteId, processStream, queryClient, registerPreviewUrl]);
+  }, [
+    firstMessageData,
+    noteId,
+    processStream,
+    queryClient,
+    registerPreviewUrl,
+  ]);
 
   // ─── 후속 대화 전송 핸들러 ───
   const handleSend = useCallback(

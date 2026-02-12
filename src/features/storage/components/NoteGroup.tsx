@@ -33,7 +33,7 @@ export const NoteGroup = ({
     <div className="3xl:max-w-[1360px] mx-auto flex w-full max-w-[520px] flex-col lg:max-w-[800px] 2xl:max-w-[1080px]">
       <button
         onClick={onToggle}
-        className="mx-auto flex w-full items-center justify-between rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] px-[20px] py-[8px] transition-colors"
+        className="mx-auto flex w-full cursor-pointer items-center justify-between rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] px-[20px] py-[8px] transition-colors"
         style={{
           display: "flex",
           height: "40px",
@@ -98,6 +98,7 @@ export const NoteGroup = ({
           {notes.map((asset) => (
             <NoteCard
               key={asset.assetId}
+              id={asset.assetId}
               label={asset.fileName}
               type={mapAssetSource(asset.source)}
               thumbnailUrl={asset.thumbnailUrl}

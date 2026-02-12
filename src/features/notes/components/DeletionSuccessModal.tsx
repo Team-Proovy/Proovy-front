@@ -97,7 +97,7 @@ export const DeletionSuccessModal = ({
               fontWeight: 400,
               lineHeight: "28px",
               letterSpacing: "-0.002px",
-              width: "319px",
+              width: "400px",
               marginTop: "16px",
             }}
           >
