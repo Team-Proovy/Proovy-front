@@ -385,6 +385,7 @@ export const StorageContent = ({
               boxFiles.map((file) => (
                 <NoteCard
                   key={file.id}
+                  id={file.id}
                   label={file.label}
                   type={file.type}
                   thumbnailUrl={file.fileUrl}
@@ -417,6 +418,7 @@ export const StorageContent = ({
               {threadFiles.map((file) => (
                 <NoteCard
                   key={file.id}
+                  id={file.id}
                   label={file.label}
                   type={file.type}
                   thumbnailUrl={file.fileUrl}
