@@ -21,18 +21,24 @@ type PendingAttachment = ChatSendData["attachments"][number];
 const convertConversations = (
   conversations: ConversationInfo[],
 ): ChatMessage[] =>
-  conversations.flatMap((conv) => [
-    {
-      id: `msg-${conv.userMessage.messageId}`,
-      role: "user" as const,
-      content: conv.userMessage.content,
-    },
-    {
-      id: `msg-${conv.assistantMessage.messageId}`,
-      role: "assistant" as const,
-      content: conv.assistantMessage.content,
-    },
-  ]);
+  conversations.flatMap((conv) => {
+    const messages: ChatMessage[] = [];
+    if (conv.userMessage) {
+      messages.push({
+        id: `msg-${conv.userMessage.messageId}`,
+        role: "user" as const,
+        content: conv.userMessage.content,
+      });
+    }
+    if (conv.assistantMessage) {
+      messages.push({
+        id: `msg-${conv.assistantMessage.messageId}`,
+        role: "assistant" as const,
+        content: conv.assistantMessage.content,
+      });
+    }
+    return messages;
+  });
 
 /**
  * 채팅 메시지 상태 관리 훅

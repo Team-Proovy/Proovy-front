@@ -95,7 +95,7 @@ export const StoragePage = () => {
                     (note.storageUsed / note.storageLimit) * 100,
                     100,
                   )}
-                  notes={note.assets}
+                  notes={note.assets ?? []}
                   isOpen={openNoteIds.includes(note.noteId)}
                   onToggle={() => handleToggle(note.noteId)}
                 />

@@ -112,7 +112,7 @@ export const StorageContent = ({
   const threadFiles = useMemo<StorageFile[]>(() => {
     if (!noteDetail?.conversations) return [];
     return noteDetail.conversations.flatMap((conv) =>
-      conv.assistantMessage.generatedFiles.map((file) => ({
+      (conv.assistantMessage?.generatedFiles || []).map((file) => ({
         id: file.fileId,
         label: file.fileName,
         type: "ai",
