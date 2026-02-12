@@ -79,7 +79,7 @@ export const Sidebar = ({
           </nav>
 
           {/* 최근 노트 목록 (남은 공간 채움) */}
-          <div className="min-h-0 w-[260px] flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden">
             <RecentNotes isCollapsed={isCollapsed} />
           </div>
 
