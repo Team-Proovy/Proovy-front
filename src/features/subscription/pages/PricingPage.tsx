@@ -21,34 +21,39 @@ export const PricingPage = () => {
       price: "0",
       features: [
         "하루 100 크레딧 제공",
-        "월 0 크레딧 제공",
+        "월 총 ~3,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 2개",
-        "저장소 5GB",
-        "업로드당 10MB",
+        "저장소 1GB",
+        "단일 파일 크기 10MB",
       ],
     },
     {
       name: "Standard",
       description: "부담 없는 일상 사용에 적합한 플랜",
-      price: "0",
+      price: "6,900",
       features: [
         "하루 100 크레딧 제공",
-        "월 5000 크레딧 제공",
+        "월 2,000 크레딧 제공",
+        "월 총 ~5,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 10개",
         "저장소 5GB",
-        "업로드당 50MB",
+        "단일 파일 크기 50MB",
       ],
     },
     {
       name: "Pro",
       description: "부족함 없는 사용에 적합한 플랜",
-      price: "0",
+      price: "14,900",
       features: [
         "하루 100 크레딧 제공",
-        "월 8000 크레딧 제공",
+        "월 5,000 크레딧 제공",
+        "월 총 ~8,000 크레딧",
+        "모든 모델 사용 가능",
         "노트 개수 20개",
         "저장소 10GB",
-        "업로드당 100MB",
+        "단일 파일 크기 100MB",
       ],
     },
   ];
@@ -117,15 +122,15 @@ export const PricingPage = () => {
   };
 
   return (
-    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden bg-white">
+    <div className="relative flex h-auto min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-white py-[20px]">
       <button
         onClick={() => navigate("/app/home")}
-        className="absolute top-4 left-4 font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
+        className="absolute top-4 left-4 cursor-pointer font-['Pretendard'] text-[12px] leading-[normal] font-semibold text-black hover:opacity-70 md:top-[40px] md:left-[40px]"
       >
         ← 돌아가기 (홈)
       </button>
 
-      <div className="mb-[40px] flex flex-col items-center text-center">
+      <div className="mt-[40px] mb-[40px] flex flex-col items-center text-center md:mt-0">
         <div className="flex items-center justify-center">
           <ProovyLogo className="h-[40px] w-auto md:h-[58px]" />
           <span className="font-['Pretendard'] text-[30px] leading-[40px] font-bold tracking-[-0.01em] text-black md:text-[40px] md:leading-[58px]">
@@ -140,7 +145,7 @@ export const PricingPage = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-[20px] md:gap-[36px]">
+      <div className="flex flex-wrap items-stretch justify-center gap-[20px] md:gap-[36px]">
         {plans.map((plan) => {
           // 플랜 상태 결정 로직
           const currentPlanName = user?.plan || "Free";
@@ -178,12 +183,10 @@ export const PricingPage = () => {
 
           const checkColor = isHighlighted || isHovered ? "#2A6AFF" : "#D1D6DE";
 
-          // 버튼 텍스트 로직
           let buttonText = "시작하기";
           let isDisabled = false;
 
           if (user) {
-            // 로그인 상태일 때만 텍스트 변경
             if (isCurrentPlan) {
               buttonText = "사용 중";
               isDisabled = true;
@@ -191,23 +194,21 @@ export const PricingPage = () => {
               if (thisLevel > currentLevel) {
                 buttonText = isHovered ? "업그레이드" : "시작하기";
               } else {
-                // 다운그레이드인 경우
                 buttonText = "사용 불가";
                 isDisabled = true;
               }
             }
           }
-          // 비로그인 상태일 때는 항상 "시작하기"
 
           return (
             <div
               key={plan.name}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
-              className="flex h-[500px] w-[320px] flex-col rounded-[20px] px-[20px] py-[49px] transition-all duration-300"
+              className="flex h-auto min-h-[400px] w-[320px] flex-col rounded-[20px] px-[20px] py-[30px] transition-all duration-300 select-none"
               style={cardStyle}
             >
-              <div className="mb-[24px] flex flex-col gap-[8px]">
+              <div className="mb-[16px] flex flex-col gap-[8px]">
                 <h3 className="font-['Pretendard'] text-[24px] leading-[32px] font-bold tracking-[-0.01em] text-black">
                   {plan.name}
                 </h3>
@@ -216,7 +217,7 @@ export const PricingPage = () => {
                 </p>
               </div>
 
-              <div className="mb-[24px] flex items-end gap-[4px]">
+              <div className="mb-[16px] flex items-end gap-[4px]">
                 <span className="font-['Pretendard'] text-[42px] leading-[48px] font-bold tracking-[-0.01em] text-black">
                   {plan.price}원
                 </span>
@@ -229,7 +230,7 @@ export const PricingPage = () => {
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={isDisabled}
                 // 버튼 스타일 통일, 비활성화 시 불투명도 변경
-                className={`mb-[32px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
+                className={`mb-[24px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 select-text ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
                 style={
                   isDisabled && !isCurrentPlan
                     ? {
@@ -243,7 +244,7 @@ export const PricingPage = () => {
                 {buttonText}
               </button>
 
-              <div className="flex flex-col gap-[16px]">
+              <div className="flex flex-col gap-[12px]">
                 {plan.features.map((feature, idx) => (
                   <div
                     key={idx}
@@ -278,13 +279,13 @@ export const PricingPage = () => {
             <div className="flex w-full gap-[12px]">
               <button
                 onClick={() => setShowUpgradeConfirmModal(false)}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
+                className="h-[48px] flex-1 cursor-pointer rounded-[10px] bg-[#F1F4F8] text-[#5D6470] transition-colors hover:bg-[#E3E7ED]"
               >
                 취소
               </button>
               <button
                 onClick={confirmUpgrade}
-                className="h-[48px] flex-1 rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+                className="h-[48px] flex-1 cursor-pointer rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
               >
                 업그레이드
               </button>
@@ -308,7 +309,7 @@ export const PricingPage = () => {
               onClick={() => {
                 setShowUpgradeSuccessModal(false);
               }}
-              className="h-[48px] w-full rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
+              className="h-[48px] w-full cursor-pointer rounded-[10px] bg-[#2A6AFF]/50 text-white transition-colors hover:bg-[#2A6AFF] active:bg-[#2A6AFF]"
             >
               확인
             </button>

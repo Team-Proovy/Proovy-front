@@ -1,4 +1,4 @@
-// import { authHandlers } from "./handlers/auth"; // 로그인은 실제 API 사용
+import { authHandlers } from "./handlers/auth"; // 로그인은 실제 API 사용
 import { userHandlers } from "./handlers/user";
 import { notesHandlers } from "./handlers/notes";
 import { assetsHandlers } from "./handlers/assets";
@@ -10,7 +10,7 @@ import { creditHandlers } from "./handlers/credit";
 // ⚠️ 순서 중요: 구체적 경로(editorHandlers: /api/notes/tools)가
 //   와일드카드 경로(notesHandlers: /api/notes/:noteId)보다 앞에 와야 함
 export const handlers = [
-  // ...authHandlers,
+  ...authHandlers,
   ...userHandlers,
   ...editorHandlers,
   ...assetsHandlers,

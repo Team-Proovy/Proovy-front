@@ -83,6 +83,57 @@ export const getNoteDetail = async (
   return response.data;
 };
 
+export const getNoteDetailWithAllConversations = async (
+  noteId: number,
+  params?: NoteDetailParams,
+): Promise<ApiResponse<NoteDetailResponse>> => {
+  const pageSize = params?.conversationSize ?? 50;
+  const firstResponse = await getNoteDetail(noteId, {
+    ...params,
+    conversationPage: 0,
+    conversationSize: pageSize,
+  });
+
+  const firstResult = firstResponse.result;
+  if (!firstResult.conversationPageInfo?.hasNext) {
+    return firstResponse;
+  }
+
+  let currentPage = firstResult.conversationPageInfo.page;
+  let hasNext: boolean = firstResult.conversationPageInfo.hasNext;
+  let mergedConversations = [...firstResult.conversations];
+  let lastPageInfo = firstResult.conversationPageInfo;
+
+  while (hasNext) {
+    const nextPage = currentPage + 1;
+    const pageResponse = await getNoteDetail(noteId, {
+      ...params,
+      conversationPage: nextPage,
+      conversationSize: pageSize,
+    });
+
+    mergedConversations = [
+      ...mergedConversations,
+      ...pageResponse.result.conversations,
+    ];
+    lastPageInfo = pageResponse.result.conversationPageInfo;
+    currentPage = nextPage;
+    hasNext = pageResponse.result.conversationPageInfo.hasNext;
+  }
+
+  return {
+    ...firstResponse,
+    result: {
+      ...firstResult,
+      conversations: mergedConversations,
+      conversationPageInfo: {
+        ...lastPageInfo,
+        hasNext: false,
+      },
+    },
+  };
+};
+
 // 노트 벌크 삭제
 export const deleteNotesBulk = async (
   noteIds: number[],

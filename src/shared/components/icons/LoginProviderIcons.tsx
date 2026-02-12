@@ -4,7 +4,7 @@
  * - 크기: 100x100px, 원형
  */
 
-export type LoginProvider = "kakao" | "google" | "naver";
+export type LoginProvider = "kakao" | "google" | "naver" | "mock";
 
 interface LoginProviderIconProps {
   provider: LoginProvider;
@@ -42,9 +42,26 @@ export const LoginProviderIcon = ({
           className={className}
         />
       );
+    case "mock":
+      return (
+        <div
+          className={`flex items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500 ${className}`}
+          style={{ width: size, height: size, fontSize: size * 0.4 }}
+        >
+          M
+        </div>
+      );
     default: {
-      const _exhaustiveCheck: never = provider;
-      throw new Error(`Unknown provider: ${_exhaustiveCheck}`);
+      // unknown provider인 경우 에러 대신 기본 아이콘(mock 스타일) 보여주기
+      console.warn(`Unknown provider: ${provider}`);
+      return (
+        <div
+          className={`flex items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500 ${className}`}
+          style={{ width: size, height: size, fontSize: size * 0.4 }}
+        >
+          ?
+        </div>
+      );
     }
   }
 };
