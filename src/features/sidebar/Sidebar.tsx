@@ -17,6 +17,7 @@ interface SidebarProps {
   onSettingsClick: () => void;
   onUpgradeClick: () => void;
   onLogoClick: () => void;
+  onHomeClick: () => void;
 }
 
 export const Sidebar = ({
@@ -26,6 +27,7 @@ export const Sidebar = ({
   onSettingsClick,
   onUpgradeClick,
   onLogoClick,
+  onHomeClick,
 }: SidebarProps) => {
   return (
     <div
@@ -57,6 +59,10 @@ export const Sidebar = ({
               icon={HomeIcon}
               label="홈"
               isCollapsed={isCollapsed}
+              onClick={(e) => {
+                e.preventDefault();
+                onHomeClick();
+              }}
             />
             <SearchButton
               icon={SearchIcon}
