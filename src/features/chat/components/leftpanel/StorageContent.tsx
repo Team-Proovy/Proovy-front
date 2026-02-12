@@ -19,6 +19,7 @@ import {
   PLAN_DETAILS,
   type PlanType,
 } from "@/features/subscription/types/plan_types";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 
 interface StorageFile {
   id: number;
