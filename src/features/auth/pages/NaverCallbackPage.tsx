@@ -57,12 +57,6 @@ export const NaverCallbackPage = () => {
               },
             });
           } else {
-            if (data.result.token) {
-              tokenUtils.setTokens(
-                data.result.token.accessToken,
-                data.result.token.refreshToken,
-              );
-            }
             console.log("Login complete, navigating to /app/home");
             navigate("/app/home");
           }
