@@ -17,6 +17,11 @@ export interface CreateNoteRequest {
   title?: string;
 }
 
+/** 노트 제목 변경 요청 */
+export interface UpdateNoteTitleRequest {
+  title: string;
+}
+
 // ============================================================
 // 응답 (Response) 타입
 // ============================================================
@@ -60,6 +65,13 @@ export interface CreateNoteResponse {
   conversationLimit: number;
   firstConversation: FirstConversationDto | null;
   createdAt: string;
+}
+
+/** 노트 제목 변경 응답 */
+export interface UpdateNoteTitleResponse {
+  noteId: number;
+  title: string;
+  updatedAt: string;
 }
 
 /** 노트 정보 (목록용) */

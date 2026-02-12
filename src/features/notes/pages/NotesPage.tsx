@@ -37,7 +37,9 @@ export const NotesPage = () => {
     isError,
     handleSelectSort,
     toggleIdSelection,
-    handleActionClick,
+    handleEnterSelectMode,
+    handleCancelSelectMode,
+    handleDeleteClick,
     handlePreviousPage,
     handleNextPage,
     setCurrentPage,
@@ -47,7 +49,7 @@ export const NotesPage = () => {
     handleCloseSuccessModal,
   } = useNoteListPage();
 
-  const visibleNotes = currentPage === 0 ? notes.slice(0, 5) : notes;
+  const displayTotalElements = pageInfo?.totalElements ?? 0;
 
   if (isError) {
     return (
@@ -65,26 +67,32 @@ export const NotesPage = () => {
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-auto bg-white">
-      <div className="mx-auto flex w-full flex-1 flex-col px-20">
-        <div className="mx-auto my-auto w-[582px] min-[1340px]:w-[893px]">
-          {/* 헤더 영역 */}
-          <NotesHeader
-            sortOrder={sortOrder}
-            isSortDropdownOpen={isSortDropdownOpen}
-            isSelectMode={isSelectMode}
-            totalElements={pageInfo?.totalElements || 0}
-            maxNotes={maxNotes}
-            selectedCount={selectedIds.length}
-            onSelectSort={handleSelectSort}
-            onToggleSortDropdown={setIsSortDropdownOpen}
-            onActionClick={handleActionClick}
-          />
+    <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
+      <div className="mx-auto w-full max-w-[1680px]">
+        <div className="mb-[12px] flex justify-center">
+          <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+            {/* 헤더 영역 */}
+            <NotesHeader
+              sortOrder={sortOrder}
+              isSortDropdownOpen={isSortDropdownOpen}
+              isSelectMode={isSelectMode}
+              totalElements={displayTotalElements}
+              maxNotes={maxNotes}
+              selectedCount={selectedIds.length}
+              onSelectSort={handleSelectSort}
+              onToggleSortDropdown={setIsSortDropdownOpen}
+              onEnterSelectMode={handleEnterSelectMode}
+              onCancelSelectMode={handleCancelSelectMode}
+              onDeleteClick={handleDeleteClick}
+            />
+          </div>
+        </div>
 
-          {/* 노트 그리드 영역 */}
-          <div>
+        {/* 노트 그리드 + 페이지네이션 */}
+        <div className="flex justify-center">
+          <div className="w-[582px] min-[1340px]:w-[893px]">
             <NotesGrid
-              notes={visibleNotes}
+              notes={notes}
               isLoading={isLoading}
               isSelectMode={isSelectMode}
               selectedIds={selectedIds}
@@ -92,16 +100,15 @@ export const NotesPage = () => {
               showAddCard={currentPage === 0}
               totalSlots={6}
             />
-          </div>
 
-          {/* 페이지네이션 */}
-          <NotesPagination
-            pageInfo={pageInfo}
-            currentPage={currentPage}
-            onPreviousPage={handlePreviousPage}
-            onNextPage={handleNextPage}
-            onPageChange={setCurrentPage}
-          />
+            <NotesPagination
+              pageInfo={pageInfo}
+              currentPage={currentPage}
+              onPreviousPage={handlePreviousPage}
+              onNextPage={handleNextPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       </div>
 

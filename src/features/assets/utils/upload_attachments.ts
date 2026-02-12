@@ -48,9 +48,7 @@ export const uploadAttachments = async (
     // 1. Presigned URL 발급
     const mimeType = resolveUploadMimeType(file);
     if (!mimeType) {
-      throw new Error(
-        `지원하지 않는 파일 형식입니다: ${file.name}`,
-      );
+      throw new Error(`지원하지 않는 파일 형식입니다: ${file.name}`);
     }
 
     const { result } = await getUploadUrl({

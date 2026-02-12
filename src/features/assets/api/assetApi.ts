@@ -45,8 +45,7 @@ export const uploadToS3 = async (
 ): Promise<void> => {
   await axios.put(uploadUrl, file, {
     headers: {
-      "Content-Type":
-        (contentType ?? file.type) || "application/octet-stream",
+      "Content-Type": (contentType ?? file.type) || "application/octet-stream",
     },
     onUploadProgress: (e) => {
       if (e.total) {

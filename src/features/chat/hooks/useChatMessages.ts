@@ -15,6 +15,8 @@ import { creditKeys } from "@/features/settings/hooks/useCredit";
 import { userKeys } from "@/features/settings/hooks/useUser";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
 
+type PendingAttachment = ChatSendData["attachments"][number];
+
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
   conversations: ConversationInfo[],
@@ -83,12 +85,45 @@ export const useChatMessages = () => {
   const [isFirstMessageSending, setIsFirstMessageSending] = useState(false);
   const [isStreamingResponse, setIsStreamingResponse] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const managedPreviewUrlsRef = useRef<Set<string>>(new Set());
   const isSending = isStreamingResponse || isUploading || isFirstMessageSending;
 
-  // 컴포넌트 언마운트 시 진행 중인 스트리밍 중단
+  const registerPreviewUrl = useCallback((url?: string) => {
+    if (url?.startsWith("blob:")) {
+      managedPreviewUrlsRef.current.add(url);
+    }
+  }, []);
+
+  const toMessageAttachment = useCallback(
+    (attachment: PendingAttachment): MessageAttachment => {
+      let previewUrl = attachment.previewUrl;
+
+      if (attachment.type === "canvas" && attachment.blob) {
+        previewUrl = URL.createObjectURL(attachment.blob);
+      } else if (attachment.mimeType.startsWith("image/") && attachment.file) {
+        previewUrl = URL.createObjectURL(attachment.file);
+      }
+
+      registerPreviewUrl(previewUrl);
+
+      return {
+        name: attachment.name,
+        mimeType: attachment.mimeType,
+        size: attachment.size,
+        previewUrl,
+      };
+    },
+    [registerPreviewUrl],
+  );
+
+  // 컴포넌트 언마운트 시 진행 중인 스트리밍 + 미리보기 URL 정리
   useEffect(() => {
     return () => {
       abortControllerRef.current?.abort();
+      managedPreviewUrlsRef.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      managedPreviewUrlsRef.current.clear();
     };
   }, []);
 
@@ -203,7 +238,10 @@ export const useChatMessages = () => {
 
     const attachments: MessageAttachment[] | undefined =
       firstMessageData.attachments.length > 0
-        ? firstMessageData.attachments
+        ? firstMessageData.attachments.map((attachment) => {
+            registerPreviewUrl(attachment.previewUrl);
+            return attachment;
+          })
         : undefined;
 
     const tempUserMsgId = `temp-first-${Date.now()}`;
@@ -291,7 +329,13 @@ export const useChatMessages = () => {
     };
 
     sendFirst();
-  }, [firstMessageData, noteId, processStream, queryClient]);
+  }, [
+    firstMessageData,
+    noteId,
+    processStream,
+    queryClient,
+    registerPreviewUrl,
+  ]);
 
   // ─── 후속 대화 전송 핸들러 ───
   const handleSend = useCallback(
@@ -312,7 +356,9 @@ export const useChatMessages = () => {
 
           // 쿼리 즉시 갱신
           await Promise.all([
-            queryClient.refetchQueries({ queryKey: noteKeys.detail(String(nId)) }),
+            queryClient.refetchQueries({
+              queryKey: noteKeys.detail(String(nId)),
+            }),
             queryClient.refetchQueries({ queryKey: assetKeys.storage }),
           ]);
         } catch (error) {
@@ -338,12 +384,7 @@ export const useChatMessages = () => {
       // 3. 첨부 정보
       const messageAttachments: MessageAttachment[] | undefined =
         data.attachments.length > 0
-          ? data.attachments.map((a) => ({
-              name: a.name,
-              mimeType: a.mimeType,
-              size: a.size,
-              previewUrl: a.previewUrl,
-            }))
+          ? data.attachments.map(toMessageAttachment)
           : undefined;
 
       // 4. 낙관적 UI + SSE 스트리밍 API 호출
@@ -421,7 +462,7 @@ export const useChatMessages = () => {
         setIsStreamingResponse(false);
       }
     },
-    [noteId, processStream, queryClient],
+    [noteId, processStream, queryClient, toMessageAttachment],
   );
 
   // ─── 파생 데이터 ───

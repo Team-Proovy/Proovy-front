@@ -27,15 +27,24 @@ export const useViewerFile = (
     };
   }, [pdfUrl]);
 
-  const { fileInputRef, openFileExplorer, handleFileChange } = useFileUpload(
-    (file) => {
-      if (file && isFileAllowed(file)) {
-        setFileName(file.name);
-        viewerFileRef.current = file;
-        setPdfUrl(URL.createObjectURL(file));
-      }
-    },
-  );
+  const {
+    fileInputRef,
+    openFileExplorer,
+    handleFileChange,
+    isDragging,
+    dragProps,
+  } = useFileUpload((file) => {
+    if (file && isFileAllowed(file)) {
+      setFileName(file.name);
+      viewerFileRef.current = file;
+      setPdfUrl(URL.createObjectURL(file));
+      // 파일 크기나 형식 검증은 isFileAllowed에서 처리하지만,
+      // 추가적인 검증이 필요하면 여기서 처리.
+      // 하지만 isFileAllowed는 boolean만 반환.
+
+      // 파일 선택 시 note 생성을 바로 하진 않음.
+    }
+  });
 
   const handleRemove = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,5 +64,7 @@ export const useViewerFile = (
     openFileExplorer,
     handleFileChange,
     handleRemove,
+    isDragging,
+    dragProps,
   };
 };
