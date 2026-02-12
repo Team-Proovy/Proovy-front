@@ -17,6 +17,17 @@ import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
 import { useStorageInfo } from "../hooks/useAssets";
 
+const getNearCapacityMessage = (planType?: string) => {
+  const normalized = (planType ?? "").toLowerCase();
+  if (normalized === "free") {
+    return "저장소가 거의 가득 찼습니다. Standard 플랜으로 업그레이드하세요!";
+  }
+  if (normalized === "standard") {
+    return "저장소가 거의 가득 찼습니다. Pro 플랜으로 업그레이드하세요!";
+  }
+  return "저장소가 거의 가득 찼습니다. 파일을 삭제하여 공간을 확보하세요!";
+};
+
 export const StoragePage = () => {
   const [keyword, setKeyword] = useState("");
   const [openNoteIds, setOpenNoteIds] = useState<number[]>([]);
@@ -38,6 +49,9 @@ export const StoragePage = () => {
   const handleSearch = (value: string) => {
     setKeyword(value);
   };
+
+  const showNearCapacityWarning = (data?.usagePercent ?? 0) >= 90;
+  const nearCapacityMessage = getNearCapacityMessage(data?.plan?.planType);
 
   return (
     <>
@@ -90,6 +104,14 @@ export const StoragePage = () => {
               <p className="text-gray-500">저장된 파일이 없습니다.</p>
             )}
           </div>
+
+          {showNearCapacityWarning && (
+            <div className="mt-6 flex justify-center">
+              <p className="font-['Pretendard'] text-[14px] font-medium text-[#FF3B30]">
+                {nearCapacityMessage}
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {isDeleteModalOpen && <DeleteNotesModal />}

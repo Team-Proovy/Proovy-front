@@ -9,6 +9,7 @@ import {
   getStorageUsage,
 } from "../api/assets_api";
 import type { UploadUrlRequest, StorageResponse } from "../api/assets_types";
+import { resolveUploadMimeType } from "@/features/assets/utils/fileValidation";
 
 // Query Keys
 export const assetKeys = {
@@ -41,7 +42,7 @@ export const useStorageInfo = (keyword?: string) => {
     staleTime: 1000 * 60 * 5, // 5분간 fresh 상태 유지
     gcTime: 1000 * 60 * 10, // 10분간 캐시 보관
     refetchOnWindowFocus: false, // 탭 이동 시 재요청 방지
-    refetchOnMount: false, // 마운트 시 캐시 우선 사용
+    refetchOnMount: "always", // 페이지 재진입 시 항상 최신 데이터 동기화
     retry: 2, // 실패 시 2회 재시도
   });
 };
@@ -69,6 +70,7 @@ export const useAssetDetail = (assetId: number, enabled = true) => {
 const uploadToS3 = async (
   uploadUrl: string,
   file: File,
+  contentType?: string,
   onProgress?: (progress: number) => void,
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
@@ -95,7 +97,10 @@ const uploadToS3 = async (
     xhr.addEventListener("abort", () => reject(new Error("Upload aborted")));
 
     xhr.open("PUT", uploadUrl);
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader(
+      "Content-Type",
+      (contentType ?? file.type) || "application/octet-stream",
+    );
     xhr.send(file);
   });
 };
@@ -114,18 +119,23 @@ export const useUploadAsset = () => {
       file: File;
       onProgress?: (progress: number) => void;
     }) => {
+      const mimeType = resolveUploadMimeType(file);
+      if (!mimeType) {
+        throw new Error("지원하지 않는 파일 형식입니다.");
+      }
+
       // 1. presigned URL 발급
       const requestParams: UploadUrlRequest = {
         noteId,
         fileName: file.name,
-        mimeType: file.type,
+        mimeType,
         fileSize: file.size,
       };
       const urlResponse = await getUploadUrl(requestParams);
       const { uploadUrl, assetId } = urlResponse.result;
 
       // 2. S3에 직접 업로드
-      await uploadToS3(uploadUrl, file, onProgress);
+      await uploadToS3(uploadUrl, file, mimeType, onProgress);
 
       // 3. 업로드 완료 확인
       const confirmResponse = await confirmUpload(assetId);

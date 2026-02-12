@@ -7,6 +7,7 @@ import {
   uploadCanvasImage,
 } from "../api/editor_api";
 import { getNoteDetail } from "@/features/notes/api/notes_api";
+import { noteKeys } from "@/features/notes/hooks/useNotes";
 import type {
   ToolDto,
   ChatAssetDto,
@@ -43,7 +44,7 @@ export const useTools = (query?: string) =>
  */
 export const useNoteAssets = (noteId: number | null, query?: string) =>
   useQuery<ChatAssetDto[], Error, ChatAssetDto[]>({
-    queryKey: ["noteAssets", noteId],
+    queryKey: [...noteKeys.detail(String(noteId ?? "")), "assets"],
     queryFn: async () => {
       if (!noteId) return [];
       const response = await getNoteDetail(noteId);

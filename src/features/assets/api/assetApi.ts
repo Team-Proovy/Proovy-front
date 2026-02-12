@@ -40,11 +40,13 @@ export const getUploadUrl = async (
 export const uploadToS3 = async (
   uploadUrl: string,
   file: File,
+  contentType?: string,
   onProgress?: (percentage: number) => void,
 ): Promise<void> => {
   await axios.put(uploadUrl, file, {
     headers: {
-      "Content-Type": file.type,
+      "Content-Type":
+        (contentType ?? file.type) || "application/octet-stream",
     },
     onUploadProgress: (e) => {
       if (e.total) {

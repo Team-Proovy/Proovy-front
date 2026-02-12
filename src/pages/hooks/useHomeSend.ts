@@ -1,10 +1,16 @@
 import { useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { useCreateNote, useNoteList } from "@/features/notes/hooks/useNotes";
+import {
+  useCreateNote,
+  useNoteList,
+  noteKeys,
+} from "@/features/notes/hooks/useNotes";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
 import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
+import { resolveUploadMimeType } from "@/features/assets/utils/fileValidation";
 import {
   getUploadUrl,
   uploadToS3,
@@ -12,6 +18,7 @@ import {
 } from "@/features/assets/api/assetApi";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
+import { assetKeys } from "@/features/storage/hooks/useAssets";
 
 /** ChatPage로 전달하는 첫 대화 데이터 (location.state) */
 export interface FirstMessageState {
@@ -42,6 +49,7 @@ export interface FirstMessageState {
  */
 export const useHomeSend = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { mutate: createNote, isPending: isCreatingNote } = useCreateNote();
   const { data: profile, isLoading: isProfileLoading } = useMyProfile();
   const authUser = useAuthStore((state) => state.user);
@@ -95,13 +103,17 @@ export const useHomeSend = () => {
             if (viewerFileRef.current) {
               const file = viewerFileRef.current;
               try {
+                const mimeType = resolveUploadMimeType(file);
+                if (!mimeType) {
+                  throw new Error("지원하지 않는 파일 형식");
+                }
                 const { result } = await getUploadUrl({
                   noteId: newNoteId,
                   fileName: file.name,
-                  mimeType: file.type,
+                  mimeType,
                   fileSize: file.size,
                 });
-                await uploadToS3(result.uploadUrl, file);
+                await uploadToS3(result.uploadUrl, file, mimeType);
                 await confirmUpload(result.assetId);
                 uploadedAssetId = result.assetId;
               } catch (error) {
@@ -135,6 +147,15 @@ export const useHomeSend = () => {
           }
 
           if (uploadFailed) return;
+
+          // 저장소/노트 캐시 즉시 무효화 (홈 업로드 후 저장소 페이지 동기화 지연 방지)
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: noteKeys.lists() }),
+            queryClient.invalidateQueries({
+              queryKey: noteKeys.detail(String(newNoteId)),
+            }),
+            queryClient.invalidateQueries({ queryKey: assetKeys.storage }),
+          ]);
 
           // 첨부파일 정보 → ChatPage 전달
           const attachmentInfos: MessageAttachment[] = data.attachments.map(
