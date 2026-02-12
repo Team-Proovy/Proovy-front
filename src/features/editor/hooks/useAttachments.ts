@@ -192,7 +192,7 @@ export const useAttachments = (): UseAttachmentsReturn => {
       // addFiles 내부에서 유효성 검사 수행
       addFiles(files);
     },
-    [addFiles],
+    [addFiles, user],
   );
 
   const dragHandlers = {
