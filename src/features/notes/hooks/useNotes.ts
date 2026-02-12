@@ -8,6 +8,7 @@ import {
   getNoteList,
   createNote,
   getNoteDetail,
+  getNoteDetailWithAllConversations,
   updateNoteTitle,
   deleteNotesBulk,
   deleteNote,
@@ -23,7 +24,8 @@ export const noteKeys = {
   all: ["notes"] as const,
   lists: () => [...noteKeys.all, "list"] as const,
   list: (params?: NoteListParams) => [...noteKeys.lists(), params] as const,
-  detail: (id: string) => [...noteKeys.all, "detail", id] as const,
+  detail: (id: string, params?: NoteDetailParams) =>
+    [...noteKeys.all, "detail", id, params] as const,
 };
 
 // 노트 목록 조회 Hook (일반 페이지네이션)
@@ -103,17 +105,25 @@ export const useUpdateNoteTitle = () => {
 export const useNoteDetail = (
   noteId: string | undefined,
   params?: NoteDetailParams,
-  options?: { enabled?: boolean; refetchInterval?: number | false },
+  options?: {
+    enabled?: boolean;
+    refetchInterval?: number | false;
+    fetchAllConversations?: boolean;
+    refetchOnMount?: boolean | "always";
+  },
 ) => {
   return useQuery({
-    queryKey: noteKeys.detail(noteId ?? ""),
+    queryKey: noteKeys.detail(noteId ?? "", params),
     queryFn: async () => {
-      const response = await getNoteDetail(Number(noteId), params);
+      const response = options?.fetchAllConversations
+        ? await getNoteDetailWithAllConversations(Number(noteId), params)
+        : await getNoteDetail(Number(noteId), params);
       return response.result;
     },
     enabled: (options?.enabled ?? true) && !!noteId,
     staleTime: 1000 * 60 * 1, // 1분
     refetchInterval: options?.refetchInterval,
+    refetchOnMount: options?.refetchOnMount,
   });
 };
 
