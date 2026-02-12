@@ -13,7 +13,14 @@ export const useResponsiveNotesCount = (
   minCount: number = 1,
   maxCount: number = 50,
 ) => {
-  const [notesCount, setNotesCount] = useState<number>(20);
+  // 상수 정의
+  const HEADER_HEIGHT = 20; // p 태그: text-[12px] + mb-2 + padding
+  const ITEM_GAP = 2; // Tailwind gap-0.5 = 0.125rem = 2px
+  const ESTIMATED_ITEM_HEIGHT = 32; // 아이템 예상 높이
+  const DEBOUNCE_DELAY = 100; // ms
+
+  const [notesCount, setNotesCount] = useState<number>(minCount);
+  let resizeTimerId: ReturnType<typeof setTimeout>;
 
   useEffect(() => {
     const calculateNotesCount = () => {
@@ -31,8 +38,6 @@ export const useResponsiveNotesCount = (
 
       if (listItems.length === 0) {
         // li 요소가 없을 때는 추정값으로 계산
-        const ESTIMATED_ITEM_HEIGHT = 32; // py-[6px] + 텍스트 + gap
-        const HEADER_HEIGHT = 20;
         const availableHeight = containerHeight - HEADER_HEIGHT;
         const estimatedCount = Math.floor(
           availableHeight / ESTIMATED_ITEM_HEIGHT,
@@ -50,24 +55,18 @@ export const useResponsiveNotesCount = (
         parseFloat(itemStyles.marginTop) +
         parseFloat(itemStyles.marginBottom);
 
-      // 리스트의 gap 계산 (Tailwind gap-0.5 = 0.125rem = 2px)
-      const gapHeight = 2;
-
-      // 리스트 영역의 실제 여유 높이 (제목 높이와 패딩 제외)
-      const headerHeight = 20; // p 태그: text-[12px] + mb-2 + padding
-      const availableHeight = containerHeight - headerHeight;
+      // 리스트 영역의 실제 여유 높이
+      const availableHeight = containerHeight - HEADER_HEIGHT;
 
       // 정확히 n개가 들어갈 수 있는 높이 계산
-      // 첫 아이템 높이 + (나머지 아이템 높이 + gap) * (n-1)
       let fittingCount = 0;
 
-      // 첫 번째 아이템은 gap이 없음
       if (availableHeight >= itemHeight) {
         fittingCount = 1;
         let remainingHeight = availableHeight - itemHeight;
 
         // 추가 아이템들은 gap 포함
-        const itemHeightWithGap = itemHeight + gapHeight;
+        const itemHeightWithGap = itemHeight + ITEM_GAP;
         while (
           remainingHeight >= itemHeightWithGap &&
           fittingCount < maxCount
@@ -77,9 +76,15 @@ export const useResponsiveNotesCount = (
         }
       }
 
-      // 최소 개수 제한
+      // 최소/최대 개수 제한
       fittingCount = Math.max(minCount, Math.min(fittingCount, maxCount));
       setNotesCount(fittingCount);
+    };
+
+    // 디바운싱된 계산 함수
+    const debouncedCalculate = () => {
+      clearTimeout(resizeTimerId);
+      resizeTimerId = setTimeout(calculateNotesCount, DEBOUNCE_DELAY);
     };
 
     // 약간의 지연을 두고 초기 계산
@@ -87,9 +92,9 @@ export const useResponsiveNotesCount = (
       calculateNotesCount();
     }, 50);
 
-    // ResizeObserver로 컨테이너 크기 변화 감지 (스크린 리사이즈, 사이드바 변화 등)
+    // ResizeObserver로 컨테이너 크기 변화 감지 (디바운싱 적용)
     const observer = new ResizeObserver(() => {
-      calculateNotesCount();
+      debouncedCalculate();
     });
 
     if (containerRef.current) {
@@ -98,7 +103,7 @@ export const useResponsiveNotesCount = (
 
     // MutationObserver로 리스트 자식 요소 변화 감지
     const mutationObserver = new MutationObserver(() => {
-      calculateNotesCount();
+      debouncedCalculate();
     });
 
     if (listRef.current) {
@@ -108,18 +113,15 @@ export const useResponsiveNotesCount = (
       });
     }
 
-    // 창 리사이즈 이벤트도 감지
-    const handleResize = () => {
-      calculateNotesCount();
-    };
-
-    window.addEventListener("resize", handleResize);
+    // 창 리사이즈 이벤트 (디바운싱 적용)
+    window.addEventListener("resize", debouncedCalculate);
 
     return () => {
       clearTimeout(timeoutId);
+      clearTimeout(resizeTimerId);
       observer.disconnect();
       mutationObserver.disconnect();
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", debouncedCalculate);
     };
   }, [containerRef, listRef, minCount, maxCount]);
 

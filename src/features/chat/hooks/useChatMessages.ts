@@ -312,7 +312,9 @@ export const useChatMessages = () => {
 
           // 쿼리 즉시 갱신
           await Promise.all([
-            queryClient.refetchQueries({ queryKey: noteKeys.detail(String(nId)) }),
+            queryClient.refetchQueries({
+              queryKey: noteKeys.detail(String(nId)),
+            }),
             queryClient.refetchQueries({ queryKey: assetKeys.storage }),
           ]);
         } catch (error) {

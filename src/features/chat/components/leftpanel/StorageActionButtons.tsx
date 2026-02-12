@@ -17,7 +17,9 @@ export const StorageActionButtons = ({
   const showViewer = selectedCount === 1;
 
   return (
-    <div className={`flex h-[56px] shrink-0 items-center justify-center gap-4 rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white py-[14px] shadow-[4px_4px_20px_0px_rgba(0,0,0,0.1)] ${showViewer ? 'w-[350px]' : 'w-[140px]'}`}>
+    <div
+      className={`flex h-[56px] shrink-0 items-center justify-center gap-4 rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white py-[14px] shadow-[4px_4px_20px_0px_rgba(0,0,0,0.1)] ${showViewer ? "w-[350px]" : "w-[140px]"}`}
+    >
       {/* 뷰어에서 열기 버튼 - 1개만 선택했을 때만 표시 */}
       {showViewer && (
         <button

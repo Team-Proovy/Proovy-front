@@ -22,21 +22,23 @@ Proovy는 **이공계 대학생을 위한 퍼스널 AI 튜터** 서비스로,
 
 ### Framework / Language
 
-- **React**
-- **TypeScript**
+- **React** ^19.2.0
+- **TypeScript** ~5.9.3
 
 #### React 선택 이유
 
-- 컴포넌트 단위 설계에 최적화되어 있어 **채팅, 뷰어, 캔버스, 워크스페이스**와 같이  
-  UI 복잡도가 높은 화면을 **명확한 책임 단위로 분리**할 수 있습니다.
-- 대화형 UI, 실시간 스트리밍(SSE), 상태 변화가 잦은 화면에 적합합니다.
-- 팀원 전원이 React 사용 경험이 있으며, **공통 이해 수준을 기반으로 빠른 협업**이 가능합니다.
+Proovy는 채팅, 수식 입력, PDF 뷰어, 실시간 에디터 등 **UI 복잡도가 매우 높은 화면**들로 구성되어 있습니다.
+
+- **컴포넌트 단위 설계**로 **채팅, 뷰어, 캔버스, 워크스페이스**를 **명확한 책임 단위로 분리** 가능합니다.
+- 상태 변화가 빈번한 대화형 UI와 실시간 스트리밍(SSE) 기반의 메시지 업데이트에 최적화되어 있습니다.
+- 팀원 전원이 React 경험이 풍부하여, **공통 이해 수준을 기반으로 신속한 협업**이 가능합니다.
 
 #### TypeScript 선택 이유
 
-- 채팅 메시지, 파일 메타데이터, API 응답 등 **구조가 복잡한 데이터 흐름**에서  
-  타입 안정성을 확보하여 런타임 에러를 사전에 방지할 수 있습니다.
-- 협업 시 타입 자체가 **문서 역할**을 하여, 커뮤니케이션 비용을 줄여줍니다.
+Proovy의 도메인 모델은 **채팅 메시지, 수식 메타데이터, API 응답** 등으로 **구조가 복잡**합니다.
+
+- 타입 안정성으로 **런타임 에러를 사전에 방지**하고, 팀 협업 시 타입이 **자체 문서 역할** 수행합니다.
+- IDE 자동완성 지원으로 **개발 생산성이 향상**됩니다.
 
 ---
 
@@ -158,7 +160,11 @@ src/
 
 **브랜치 네이밍 규칙**
 
-- `feat/이슈번호-기능명`
+```text
+feat/이슈번호-기능명
+fix/이슈번호-버그명
+docs/이슈번호-문서명
+```
 
 ---
 
@@ -166,16 +172,32 @@ src/
 
 **규칙**
 
-- `타입: 커밋 내용 (#이슈번호)`
+```text
+타입: 커밋 내용 (#이슈번호)
+```
+
+**타입 종류**
+
+- `feat`: 새로운 기능 추가
+- `fix`: 버그 수정
+- `refactor`: 코드 구조 개선 (기능 변경 없음)
+- `style`: 스타일 정렬 (포매팅)
+- `docs`: 문서 수정
+- `test`: 테스트 추가/수정
+- `chore`: 빌드/의존성 등 기타 변경
 
 **예시**
 
-- `feat: 로그인 UI 구현 (#6)`
-- `fix: 채팅 스크롤 버그 수정 (#12)`
+```text
+feat: 노트 삭제 API 연동 (#128)
+fix: 채팅 자동스크롤 버그 수정 (#45)
+refactor: ChatMessage 컴포넌트 분리 (#67)
+```
 
-**필수**
+**필수 요구사항**
 
 - 커밋 전 반드시 `pnpm run format` 실행
+- 커밋 메시지는 **명령형** 기반 작성 (예: "Add", "Fix", 하지만 "Add한다" X)
 
 ---
 
@@ -183,15 +205,35 @@ src/
 
 **PR 제목 규칙**
 
-- `타입(#이슈번호): PR 내용`
+```text
+타입(#이슈번호): PR 내용
+```
+
+**PR 체크리스트**
+
+```markdown
+## 📝 PR Description
+
+- [ ] 기능 구현 완료
+- [ ] 테스트 완료 (스크린샷 첨부)
+- [ ] 코드 포매팅 완료 (`pnpm run format`)
+- [ ] 타입 에러 없음 (`pnpm run build`)
+- [ ] ESLint 검사 통과 (`pnpm run lint`)
+
+## 🎯 Related Issue
+
+Closes #이슈번호
+
+## 📸 Screenshots
+
+<!-- 변경 사항 스크린샷 첨부 -->
+```
 
 **머지 조건**
 
 - `dev` 브랜치 머지: **2명 이상 Approve 필수**
-
-**필수 첨부**
-
-- 테스트 결과 **스크린샷 첨부 필수**
+- `main` 브랜치 머지: **3명 이상 Approve 필수**
+- CI/CD 체크(포매팅, 빌드, 린트) **모두 통과**
 
 ---
 
@@ -199,27 +241,123 @@ src/
 
 ### File Naming
 
-| 구분              | 규칙       |
-| ----------------- | ---------- |
-| 페이지 / 컴포넌트 | PascalCase |
-| Hook              | camelCase  |
-| 그 외 파일        | snake_case |
+| 구분            | 규칙       | 예시                                                 |
+| --------------- | ---------- | ---------------------------------------------------- |
+| 페이지          | PascalCase | `LoginPage.tsx`, `ChatPage.tsx`                      |
+| 컴포넌트        | PascalCase | `ChatHeader.tsx`, `MessageInput.tsx`                 |
+| Hook            | camelCase  | `useAuth.ts`, `useChatMessages.ts`                   |
+| Utility / API   | snake_case | `auth_api.ts`, `math_utils.ts`, `file_validation.ts` |
+| Store (Zustand) | snake_case | `auth_store.ts`, `chat_store.ts`                     |
+| Type 정의 파일  | snake_case | `chat_types.ts`, `auth_types.ts`                     |
 
 ---
 
 ### Variable & Function Naming
 
-- **배열(Array)**: 복수형 (예: `users`, `messageList`)
-- **객체(Object)**: 단수형 (예: `currentUser`)
-- **Boolean**: `is` / `has` / `should` 접두사 사용 (예: `isLoading`, `hasError`)
-- **함수(Function)**: 동사 + 명사 (예: `getUserData`, `handleSubmit`)
+#### Array (배열)
+
+```typescript
+// ✅ 좋음: 복수형
+const users = [];
+const messageList = [];
+const chatMessages = [];
+
+// ❌ 나쁜 예: 단수형
+const user = [];
+const message = [];
+```
+
+#### Object / Single Entity (객체/단일 항목)
+
+```typescript
+// ✅ 좋음: 단수형
+const currentUser = { id: 1, name: "John" };
+const selectedMessage = { id: 123, content: "Hello" };
+const userData = {};
+
+// ❌ 나쁜 예: 복수형
+const users = { id: 1, name: "John" }; // 단일 객체는 복수로 표현하면 혼란
+```
+
+#### Boolean
+
+```typescript
+// ✅ 좋음: is / has / should 접두사
+const isLoading = true;
+const hasError = false;
+const shouldRefresh = true;
+const isAuthenticated = false;
+const hasNewMessages = true;
+
+// ❌ 나쁜 예: 접두사 없음
+const loading = true; // 변수 타입이 불명확
+const error = false; // boolean인지 Error 객체인지 불명확
+const check = true; // 너무 모호함
+```
+
+#### Function
+
+```typescript
+// ✅ 좋음: 동사 + 명사
+const getUserData = (id: string) => {};
+const handleClick = () => {};
+const fetchChatMessages = () => {};
+const validatePhoneNumber = (phone: string) => boolean;
+const updateNoteTitle = (noteId: string, title: string) => {};
+
+// ❌ 나쁜 예: 명사만 또는 너무 일반적
+const userData = () => {}; // 함수인지 변수인지 불명확
+const process = () => {}; // 너무 일반적
+const fn = () => {}; // 의미가 없음
+```
+
+#### React Component Props
+
+```typescript
+// ✅ 좋음: 명확한 의도
+interface ChatHeaderProps {
+  isLoading: boolean;
+  onClose: () => void;
+  messageCount: number;
+}
+
+// ❌ 나쁜 예: 모호한 이름
+interface Props {
+  loading: boolean;
+  callback: () => void;
+  count: number;
+}
+```
 
 ---
 
 ## 7️⃣ 개발 전 필수 체크리스트
 
-- [ ] Issue 생성 및 Assignee/Label 설정
-- [ ] `dev` 최신화 후 브랜치 생성
-- [ ] 기능 단위 개발 (1 Issue = 1 Feature)
-- [ ] Prettier 적용
-- [ ] 테스트 후 PR 생성 및 스크린샷 첨부
+### 기능 개발 시작
+
+- [ ] **Issue 생성**: 작업 내용을 명확히 기술하고 Assignee/Label 설정
+- [ ] **브랜치 생성**: `dev` 브랜치 최신화 후 `feat/이슈번호-기능명` 브랜치 생성
+- [ ] **코드 컨벤션 준수**: 파일명, 변수명, 함수명이 모두 가이드 따름
+- [ ] **타입 정의**: 모든 API 응답, Props에 TypeScript 타입 정의 완료
+
+### 코드 작성 중
+
+- [ ] **포매팅**: 개발 중에도 자주 `pnpm run format` 실행
+- [ ] **린트**: 린트 에러 없는 상태 유지 (`pnpm run lint`)
+- [ ] **타입 체크**: 타입 에러 없음 (`pnpm run build` 성공)
+- [ ] **로딩/에러 상태**: 비동기 작업 시 `isLoading`, `error` 상태 표시
+
+### 커밋 및 테스트
+
+- [ ] **포매팅**: `pnpm run format` 실행
+- [ ] **린트**: `pnpm run lint` 검사 통과
+- [ ] **빌드**: `pnpm run build` 성공
+- [ ] **기능 테스트**: 해당 기능이 의도대로 작동하는지 확인
+- [ ] **스크린샷**: 주요 UI 변경사항 스크린샷 준비
+
+### PR 생성 및 머지
+
+- [ ] **PR 제목**: `타입(#이슈번호): 설명` 형식 준수
+- [ ] **체크리스트**: PR 템플릿의 모든 항목 체크
+- [ ] **리뷰 요청**: 최소 2명 이상의 리뷰어 지정
+- [ ] **Approve 확보**: 2명 이상 Approve 후 머지
