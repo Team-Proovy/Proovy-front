@@ -31,8 +31,8 @@ export const NotesGrid = ({
   const placeholderCount = Math.max(0, totalSlots - usedSlots);
 
   return (
-    <div className="mt-[21px] w-full">
-      <div className="grid [grid-template-columns:repeat(2,271px)] gap-[40px] min-[1340px]:[grid-template-columns:repeat(3,271px)]">
+    <div className="mt-[21px]">
+      <div className="grid grid-cols-[repeat(2,271px)] gap-[40px] min-[1340px]:grid-cols-[repeat(3,271px)]">
         {showAddCard && <NotesAddCard />}
 
         {isLoading ? (

@@ -68,48 +68,40 @@ export const NotesPage = () => {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
-      <div className="mx-auto w-full max-w-[1680px]">
-        <div className="mb-[12px] flex justify-center">
-          <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
-            {/* 헤더 영역 */}
-            <NotesHeader
-              sortOrder={sortOrder}
-              isSortDropdownOpen={isSortDropdownOpen}
-              isSelectMode={isSelectMode}
-              totalElements={displayTotalElements}
-              maxNotes={maxNotes}
-              selectedCount={selectedIds.length}
-              onSelectSort={handleSelectSort}
-              onToggleSortDropdown={setIsSortDropdownOpen}
-              onEnterSelectMode={handleEnterSelectMode}
-              onCancelSelectMode={handleCancelSelectMode}
-              onDeleteClick={handleDeleteClick}
-            />
-          </div>
-        </div>
+      <div className="3xl:max-w-[1360px] mx-auto w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+        {/* 헤더 영역 */}
+        <NotesHeader
+          sortOrder={sortOrder}
+          isSortDropdownOpen={isSortDropdownOpen}
+          isSelectMode={isSelectMode}
+          totalElements={displayTotalElements}
+          maxNotes={maxNotes}
+          selectedCount={selectedIds.length}
+          onSelectSort={handleSelectSort}
+          onToggleSortDropdown={setIsSortDropdownOpen}
+          onEnterSelectMode={handleEnterSelectMode}
+          onCancelSelectMode={handleCancelSelectMode}
+          onDeleteClick={handleDeleteClick}
+        />
 
         {/* 노트 그리드 + 페이지네이션 */}
-        <div className="flex justify-center">
-          <div className="w-[582px] min-[1340px]:w-[893px]">
-            <NotesGrid
-              notes={notes}
-              isLoading={isLoading}
-              isSelectMode={isSelectMode}
-              selectedIds={selectedIds}
-              onToggleSelection={toggleIdSelection}
-              showAddCard={currentPage === 0}
-              totalSlots={6}
-            />
+        <NotesGrid
+          notes={notes}
+          isLoading={isLoading}
+          isSelectMode={isSelectMode}
+          selectedIds={selectedIds}
+          onToggleSelection={toggleIdSelection}
+          showAddCard={currentPage === 0}
+          totalSlots={6}
+        />
 
-            <NotesPagination
-              pageInfo={pageInfo}
-              currentPage={currentPage}
-              onPreviousPage={handlePreviousPage}
-              onNextPage={handleNextPage}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </div>
+        <NotesPagination
+          pageInfo={pageInfo}
+          currentPage={currentPage}
+          onPreviousPage={handlePreviousPage}
+          onNextPage={handleNextPage}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       {/* 모달 영역 */}
