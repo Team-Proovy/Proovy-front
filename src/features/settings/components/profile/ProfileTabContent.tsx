@@ -112,7 +112,7 @@ export const ProfileTabContent = () => {
         return;
       }
 
-      if (subscription?.billing.autoRenew) {
+      if (subscription?.billing?.autoRenew) {
         setIsWithdrawModalOpen(false);
         setIsMustCancelModalOpen(true);
       } else {

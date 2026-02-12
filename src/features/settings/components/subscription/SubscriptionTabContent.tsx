@@ -70,7 +70,7 @@ export const SubscriptionTabContent = () => {
   const handleCancelClick = () => {
     // autoRenew가 false이면 이미 해지 예약 상태 -> 재개 버튼으로 처리하므로 여기선 모달 불필요할 수 있으나
     // 혹시라도 버튼이 잘못 노출된 경우를 대비
-    if (subscription && !subscription.billing.autoRenew) {
+    if (subscription && !subscription.billing?.autoRenew) {
       setIsReservedModalOpen(true);
     } else {
       setIsCancelModalOpen(true);
@@ -139,7 +139,7 @@ export const SubscriptionTabContent = () => {
   };
 
   const isSubscriptionCancelled =
-    subscription && !subscription.billing.autoRenew && userPlanName !== "Free";
+    subscription && !subscription.billing?.autoRenew && userPlanName !== "Free";
 
   return (
     <div className="flex flex-col">
