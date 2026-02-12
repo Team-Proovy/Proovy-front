@@ -107,7 +107,7 @@ export const PricingPage = () => {
     }
   };
 
-  // useUpgradeSubscription 훅 사용
+  // useUpgradeSubscription 훅
   const { mutateAsync: upgrade } = useUpgradeSubscription();
 
   const confirmUpgrade = async () => {
