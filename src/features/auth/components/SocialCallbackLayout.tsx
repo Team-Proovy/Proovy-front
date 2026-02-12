@@ -36,7 +36,7 @@ export const SocialCallbackLayout = ({
           <div className="mt-4">
             <button
               onClick={handleRetry}
-              className="rounded bg-gray-800 px-4 py-2 text-white hover:bg-gray-700"
+              className="cursor-pointer rounded-[8px] bg-[#2A6AFF] px-[16px] py-[8px] font-['Pretendard'] text-[14px] font-semibold text-white transition-all duration-200 hover:bg-[#1A5AE8] active:bg-[#1546B3]"
             >
               로그인 페이지로 돌아가기
             </button>

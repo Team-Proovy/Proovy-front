@@ -157,3 +157,6 @@ export interface CancelSubscriptionResponse extends Omit<
 export interface DeleteUserResponse {
   deletedAt: string;
 }
+
+/** 구독 재개 응답 */
+export interface ResumeSubscriptionResponse extends SubscriptionResponse {}

@@ -8,6 +8,7 @@ import type {
   CancelSubscriptionResponse,
   UpdateProfileRequest,
   DeleteUserResponse,
+  ResumeSubscriptionResponse,
 } from "./user_types";
 
 const USER_BASE = "/api/users";
@@ -83,5 +84,15 @@ export const cancelSubscription = async (): Promise<
   const response = await apiClient.patch<
     ApiResponse<CancelSubscriptionResponse>
   >(`${USER_BASE}/me/subscription/cancel`);
+  return response.data;
+};
+
+// 구독 재개
+export const resumeSubscription = async (): Promise<
+  ApiResponse<ResumeSubscriptionResponse>
+> => {
+  const response = await apiClient.patch<
+    ApiResponse<ResumeSubscriptionResponse>
+  >(`${USER_BASE}/me/subscription/resume`);
   return response.data;
 };

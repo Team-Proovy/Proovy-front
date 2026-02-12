@@ -219,7 +219,7 @@ export const SignupPage = () => {
                   !formData.department ||
                   !formData.referralSource
                     ? "cursor-not-allowed bg-[#E3E7ED] text-[#9CA4B0]"
-                    : "bg-[#2F3440] text-white hover:bg-[#2A6AFF] active:scale-[0.98] active:bg-[#003880]"
+                    : "cursor-pointer bg-[#2A6AFF] text-white hover:bg-[#1a5ae8] active:scale-[0.98] active:bg-[#003880]"
                 } `}
               >
                 {isLoading ? "처리 중..." : "가입 완료하기"}

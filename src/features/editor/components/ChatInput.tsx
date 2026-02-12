@@ -1,4 +1,5 @@
-import { useRef, lazy, Suspense } from "react";
+import { useRef, lazy, Suspense, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { MathfieldElement } from "mathlive";
 import "mathlive";
 
@@ -25,6 +26,7 @@ import {
   useChatContent,
 } from "../hooks";
 import { useAttachments, type Attachment } from "../hooks/useAttachments";
+import { useUseCredit } from "../../settings/hooks/useCredit";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
@@ -73,6 +75,9 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Custom Hooks
   const {
@@ -136,10 +141,15 @@ export const ChatInput = ({
     if (handleAtMenuKeyDown(e)) return;
   };
 
+  // 크레딧 사용 뮤테이션
+  const { mutateAsync: deductCredit } = useUseCredit();
+
   // 전송 핸들러
-  const handleSend = () => {
-    if (isSending) return;
+  const handleSend = async () => {
+    if (isSending || isProcessing) return;
     if (!hasContent && attachments.length === 0) return;
+
+    setIsProcessing(true);
 
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
     const extracted = inputRef.current
@@ -148,26 +158,51 @@ export const ChatInput = ({
 
     if (!extracted.text && attachments.length === 0) return;
 
-    // 도구 코드 수집
-    const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
+    // 크레딧 차감 시도
+    try {
+      const creditResponse = await deductCredit({
+        eventType: "LLM_QUERY",
+        difficulty: "medium",
+        featureName: "Chat",
+        description: "AI 채팅 질문",
+      });
 
-    // 부모 콜백 호출
-    onSend?.({
-      message: extracted.text,
-      latex: extracted.latex,
-      mentionedAssetIds: extracted.mentionedAssetIds,
-      mentionedToolCodes,
-      attachments: [...attachments],
-    });
-
-    // 입력 상태 초기화
-    if (inputRef.current) {
-      inputRef.current.innerHTML = "";
+      if (!creditResponse.result.success) {
+        setShowCreditModal(true);
+        setIsProcessing(false);
+        return;
+      }
+    } catch (error) {
+      console.error("Credit deduction failed:", error);
+      alert("크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setIsProcessing(false);
+      return;
     }
-    setHasContent(false);
-    clearMentionedAssets();
-    clearAttachments();
-    handleToolSelect(""); // 선택된 도구 초기화
+
+    try {
+      // 도구 코드 수집
+      const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
+
+      // 부모 콜백 호출
+      onSend?.({
+        message: extracted.text,
+        latex: extracted.latex,
+        mentionedAssetIds: extracted.mentionedAssetIds,
+        mentionedToolCodes,
+        attachments: [...attachments],
+      });
+
+      // 입력 상태 초기화
+      if (inputRef.current) {
+        inputRef.current.innerHTML = "";
+      }
+      setHasContent(false);
+      clearMentionedAssets();
+      clearAttachments();
+      handleToolSelect(""); // 선택된 도구 초기화
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // 파일 선택 핸들러
@@ -292,6 +327,44 @@ export const ChatInput = ({
             onAdd={addCanvasImage}
           />
         </Suspense>
+      )}
+      {/* 크레딧 부족 안내 모달 */}
+      {showCreditModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowCreditModal(false)}
+        >
+          <div
+            className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-[20px] font-['Pretendard'] text-[20px] font-bold text-black">
+              크레딧 부족
+            </h2>
+            <p className="mb-[30px] text-center font-['Pretendard'] text-[16px] leading-[24px] text-[#5D6470]">
+              현재 사용할 수 있는 크레딧이 없습니다.
+              <br />
+              업그레이드 하시겠습니까?
+            </p>
+            <div className="flex w-full gap-[10px]">
+              <button
+                onClick={() => setShowCreditModal(false)}
+                className="flex-1 cursor-pointer rounded-[12px] bg-[#F1F4F8] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-[#6B7280] transition-colors hover:bg-[#E5E8EC]"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreditModal(false);
+                  navigate("/pricing");
+                }}
+                className="flex-1 cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A50D1]"
+              >
+                업그레이드
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

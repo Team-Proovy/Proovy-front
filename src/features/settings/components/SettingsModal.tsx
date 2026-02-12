@@ -80,7 +80,9 @@ export const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
           {/* 구분선 */}
 
           {/* 탭 컨텐츠 */}
-          <SettingsContent activeTab={activeTab} />
+          <div className="min-h-0 flex-1">
+            <SettingsContent activeTab={activeTab} />
+          </div>
         </div>
       </div>
     </div>
