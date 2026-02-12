@@ -150,9 +150,7 @@ export const NotesHeader = ({
               노트 개수
             </span>
             <span className="text-[16px] leading-[20px] font-medium">
-              <span className="font-bold text-[#2A6AFF]">
-                {totalElements}
-              </span>
+              <span className="font-bold text-[#2A6AFF]">{totalElements}</span>
               <span className="text-black">/{maxNotes ?? totalElements}</span>
             </span>
           </div>
