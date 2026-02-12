@@ -69,7 +69,7 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
 
       <div
         className={`flex h-full w-full flex-col px-5 pb-4 transition-opacity duration-300 ease-in-out ${
-          isCollapsed ? "opacity-0" : "opacity-100"
+          isCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
         {/* 섹션 타이틀 */}
@@ -82,10 +82,9 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
           {isLoading ? (
             // 로딩 상태
             [1, 2, 3].map((i) => (
-              <div
-                key={`skeleton-${i}`}
-                className="h-[30px] animate-pulse rounded bg-gray-200"
-              />
+              <li key={`skeleton-${i}`} className="px-3">
+                <div className="h-[30px] animate-pulse rounded bg-gray-200" />
+              </li>
             ))
           ) : error ? (
             // 에러 상태
