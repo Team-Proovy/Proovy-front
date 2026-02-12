@@ -68,9 +68,9 @@ export const NotesPage = () => {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
-      <div className="mx-auto w-full max-w-[1680px]">
+      <div className="mx-auto w-full max-w-[1680px] pl-16">
         <div className="mb-[12px] flex justify-center">
-          <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+          <div className="w-[582px] min-[1340px]:w-[893px]">
             {/* 헤더 영역 */}
             <NotesHeader
               sortOrder={sortOrder}
