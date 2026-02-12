@@ -53,16 +53,16 @@ export const SidebarProfile = ({
     }
     return nickname;
   };
-  // 플랜별 인디케이터 색상 (Free < Standard < Pro 순으로 진하게)
+  // 플랜별 인디케이터 색상 (가입완료 버튼 색상: Free -> Standard -> Pro 순으로 진하게)
   const getPlanIndicatorColor = (plan: string) => {
     switch (plan) {
       case "Pro":
-        return "bg-[#2A6AFF]";
+        return "bg-[#003880]"; // Active (Darkest)
       case "Standard":
-        return "bg-[#6B9EFF]";
+        return "bg-[#1a5ae8]"; // Hover (Darker)
       case "Free":
       default:
-        return "bg-[#B3CCFF]";
+        return "bg-[#85B0FF]"; // Lighter Base
     }
   };
 

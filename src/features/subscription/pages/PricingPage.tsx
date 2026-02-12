@@ -209,7 +209,7 @@ export const PricingPage = () => {
               key={plan.name}
               onMouseEnter={() => setHoveredPlan(plan.name)}
               onMouseLeave={() => setHoveredPlan(null)}
-              className="flex h-auto min-h-[400px] w-[320px] flex-col rounded-[20px] px-[20px] py-[30px] transition-all duration-300"
+              className="flex h-auto min-h-[400px] w-[320px] flex-col rounded-[20px] px-[20px] py-[30px] transition-all duration-300 select-none"
               style={cardStyle}
             >
               <div className="mb-[16px] flex flex-col gap-[8px]">
@@ -234,7 +234,7 @@ export const PricingPage = () => {
                 onClick={() => handlePlanClick(plan.name)}
                 disabled={isDisabled}
                 // 버튼 스타일 통일, 비활성화 시 불투명도 변경
-                className={`mb-[24px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
+                className={`mb-[24px] flex h-[52px] w-[280px] items-center justify-center rounded-[12px] p-[10px] text-[20px] leading-[28px] font-semibold transition-all duration-300 select-text ${isDisabled && !isCurrentPlan ? "cursor-default opacity-50" : isDisabled && isCurrentPlan ? "cursor-default" : "cursor-pointer"}`}
                 style={
                   isDisabled && !isCurrentPlan
                     ? {

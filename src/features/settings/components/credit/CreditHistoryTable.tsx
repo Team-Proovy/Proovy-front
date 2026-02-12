@@ -17,11 +17,11 @@ export const CreditHistoryTable = ({ history }: CreditHistoryTableProps) => {
   return (
     <div className="flex h-[240px] w-full flex-col overflow-hidden rounded-[12px] border border-[0.5px] border-[#D1D6DE]">
       {/* 테이블 헤더 */}
-      <div className="grid grid-cols-[120px_1fr_150px_100px] gap-[10px] rounded-t-[12px] bg-[#F1F4F8] px-[23px] py-[7px]">
+      <div className="grid grid-cols-[130px_1fr_110px_100px] gap-[10px] rounded-t-[12px] bg-[#F1F4F8] px-[23px] py-[7px]">
         <span className="font-['Pretendard'] text-[12px] font-medium text-[#6B7280]">
           이벤트 내용
         </span>
-        <span className="font-['Pretendard'] text-[12px] font-medium text-[#6B7280]">
+        <span className="truncate font-['Pretendard'] text-[12px] font-medium text-[#6B7280]">
           세부사항
         </span>
         <span className="font-['Pretendard'] text-[12px] font-medium text-[#6B7280]">
@@ -37,7 +37,7 @@ export const CreditHistoryTable = ({ history }: CreditHistoryTableProps) => {
         {history.map((item) => (
           <div
             key={item.id}
-            className="mb-[10px] grid grid-cols-[120px_1fr_150px_100px] gap-[10px]"
+            className="mb-[10px] grid grid-cols-[130px_1fr_110px_100px] gap-[10px]"
           >
             <span className="font-['Pretendard'] text-[12px] font-semibold text-black">
               {item.eventType}
