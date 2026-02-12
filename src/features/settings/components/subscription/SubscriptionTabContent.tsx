@@ -152,7 +152,7 @@ export const SubscriptionTabContent = () => {
 
       <div className="mt-[28px] flex gap-[16px]">
         <button
-          onClick={() => navigate("/pricing")}
+          onClick={() => navigate("/pricing", { state: { from: "home" } })}
           className="duration-300ms flex h-[32px] w-[150px] cursor-pointer items-center justify-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-transparent font-['Pretendard'] text-[16px] text-black transition-colors hover:border-transparent hover:bg-[#2A6AFF] hover:text-white active:bg-[#1A5AE8] active:text-white"
         >
           {userPlanName === "Pro" ? "현재 플랜" : "업그레이드"}

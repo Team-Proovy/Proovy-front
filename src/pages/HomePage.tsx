@@ -45,8 +45,8 @@ export const HomePage = () => {
       )}
 
       {/* 메인 홈 화면 - 한 화면을 꽉 채우는 구성 */}
-      <div className="flex min-h-screen flex-col items-center">
-        <div className="flex flex-1 flex-col justify-center px-5 pt-[100px]">
+      <div className="flex min-h-screen w-full flex-col items-center">
+        <div className="flex w-full flex-1 flex-col justify-center px-5 pt-[100px]">
           <div className="mx-auto flex w-full max-w-[920px] flex-col">
             {/* 타이틀 */}
             <div className="mb-8">

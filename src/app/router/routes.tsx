@@ -13,6 +13,10 @@ import { GoogleCallbackPage } from "../../features/auth/pages/GoogleCallbackPage
 
 // Layouts
 import { AppLayout } from "../../shared/layout/AppLayout";
+import {
+  ProtectedRoute,
+  PublicRoute,
+} from "../../shared/router/components/RouteGuards";
 
 // Features - Chat
 import { ChatPage } from "../../features/chat/pages/ChatPage";
@@ -28,15 +32,25 @@ import { PricingPage } from "../../features/subscription/pages/PricingPage";
 
 export const router = createBrowserRouter([
   // ========================================
-  // 🌐 Public Routes (인증 불필요)
+  // 🌐 Public Routes (인증 지향적이나 로그인이 필수는 아님)
   // ========================================
   {
     path: "/",
-    element: <LandingPage />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
+    element: <PublicRoute />,
+    children: [
+      {
+        index: true,
+        element: <LandingPage />,
+      },
+      {
+        path: "login",
+        element: <LoginPage />,
+      },
+      {
+        path: "signup",
+        element: <SignupPage />,
+      },
+    ],
   },
   {
     path: "/oauth/kakao/callback",
@@ -50,37 +64,38 @@ export const router = createBrowserRouter([
     path: "/oauth/google/callback",
     element: <GoogleCallbackPage />,
   },
-  {
-    path: "/signup",
-    element: <SignupPage />,
-  },
 
   // ========================================
   // 🔒 Protected Routes (인증 필요)
   // ========================================
   {
     path: "/app",
-    element: <AppLayout />,
+    element: <ProtectedRoute />,
     children: [
-      // 홈 - 새 노트 시작점
       {
-        path: "home",
-        element: <HomePage />,
-      },
-      // 노트 목록 - 전체 노트 리스트
-      {
-        path: "notes",
-        element: <NotesPage />,
-      },
-      // 저장소 - 전체 파일 리스트
-      {
-        path: "storage",
-        element: <StoragePage />,
-      },
-      // 대화방
-      {
-        path: "chat/:noteId",
-        element: <ChatPage />,
+        element: <AppLayout />,
+        children: [
+          // 홈 - 새 노트 시작점
+          {
+            path: "home",
+            element: <HomePage />,
+          },
+          // 노트 목록 - 전체 노트 리스트
+          {
+            path: "notes",
+            element: <NotesPage />,
+          },
+          // 저장소 - 전체 파일 리스트
+          {
+            path: "storage",
+            element: <StoragePage />,
+          },
+          // 대화방
+          {
+            path: "chat/:noteId",
+            element: <ChatPage />,
+          },
+        ],
       },
     ],
   },
