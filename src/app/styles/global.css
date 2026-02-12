@@ -3,6 +3,8 @@
 @import "tailwindcss";
 
 @theme {
+  --breakpoint-3xl: 1360px;
+
   /* 2. 테일윈드의 기본 'sans' 폰트 변수를 Pretendard로 덮어쓰기 */
   /* 이렇게 하면 별도로 font-pretendard를 선언하지 않아도 모든 기본 텍스트에 적용된다. */
   --font-sans:
@@ -22,6 +24,17 @@
     /* 폰트가 더 깔끔하게 보이도록 안티앨리어싱 추가 */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  button,
+  [role="button"],
+  [role="link"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }
 

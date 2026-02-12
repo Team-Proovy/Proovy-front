@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
 import { PdfPreview } from "@/shared/components/pdf-preview/PdfPreview";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
+import { DragDropOverlay } from "@/features/editor/components/input/DragDropOverlay";
 
 interface ViewerUploadCardProps {
   pdfUrl: string | null;
@@ -10,6 +11,8 @@ interface ViewerUploadCardProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onOpenExplorer: () => void;
   onRemove: (e: React.MouseEvent) => void;
+  isDragging: boolean;
+  dragProps: React.HTMLAttributes<HTMLDivElement>;
 }
 
 /**
@@ -25,8 +28,13 @@ export const ViewerUploadCard = ({
   onFileChange,
   onOpenExplorer,
   onRemove,
+  isDragging,
+  dragProps,
 }: ViewerUploadCardProps) => (
-  <>
+  <div
+    className="relative shrink-0"
+    {...dragProps}
+  >
     <input
       type="file"
       ref={fileInputRef}
@@ -34,6 +42,13 @@ export const ViewerUploadCard = ({
       onChange={onFileChange}
       accept={FILE_ACCEPT}
     />
+
+    {/* Drag Overlay */}
+    {isDragging && (
+      <div className="absolute inset-0 z-50 overflow-hidden rounded-[12px]">
+        <DragDropOverlay />
+      </div>
+    )}
 
     {pdfUrl ? (
       <div className="group relative flex h-[160px] w-[220px] shrink-0 flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
@@ -80,6 +95,7 @@ export const ViewerUploadCard = ({
     ) : (
       <button
         onClick={onOpenExplorer}
+        type="button"
         className="group flex h-[160px] w-[220px] shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
       >
         <div>
@@ -90,5 +106,5 @@ export const ViewerUploadCard = ({
         </p>
       </button>
     )}
-  </>
+  </div>
 );

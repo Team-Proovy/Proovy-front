@@ -20,6 +20,18 @@ import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
 
+const createPersistentPreviewUrl = (
+  attachment: ChatSendData["attachments"][number],
+): string | undefined => {
+  if (attachment.type === "canvas" && attachment.blob) {
+    return URL.createObjectURL(attachment.blob);
+  }
+  if (attachment.mimeType.startsWith("image/") && attachment.file) {
+    return URL.createObjectURL(attachment.file);
+  }
+  return attachment.previewUrl;
+};
+
 /** ChatPage로 전달하는 첫 대화 데이터 (location.state) */
 export interface FirstMessageState {
   /** 사용자 질문/지시문 (ConversationRequest.text) */
@@ -163,7 +175,7 @@ export const useHomeSend = () => {
               name: a.name,
               mimeType: a.mimeType,
               size: a.size,
-              previewUrl: a.previewUrl,
+              previewUrl: createPersistentPreviewUrl(a),
             }),
           );
 

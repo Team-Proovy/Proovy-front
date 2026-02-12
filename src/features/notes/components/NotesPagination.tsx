@@ -88,8 +88,28 @@ export const NotesPagination = ({
   onNextPage,
   onPageChange,
 }: NotesPaginationProps) => {
-  if (!pageInfo || pageInfo.totalPages <= 1) {
+  if (!pageInfo) {
     return null;
+  }
+
+  if (pageInfo.totalPages === 0) {
+    return null;
+  }
+
+  if (pageInfo.totalPages === 1) {
+    return (
+      <div className="mt-[40px] flex items-center justify-center gap-[4px]">
+        <button
+          type="button"
+          disabled={true}
+          className="flex h-[30px] w-[30px] cursor-not-allowed items-center justify-center rounded-[8px] border border-[#D1D6DE] bg-[rgba(42,106,255,0.2)]"
+        >
+          <span className="text-[14px] leading-[22.4px] font-medium tracking-[-0.7px] text-[#003880]">
+            1
+          </span>
+        </button>
+      </div>
+    );
   }
 
   const paginationItems = getPaginationItems(
@@ -104,7 +124,7 @@ export const NotesPagination = ({
       <button
         onClick={onPreviousPage}
         disabled={!pageInfo.hasPrevious}
-        className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] disabled:opacity-50"
+        className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <ArrowLeftIcon />
       </button>
@@ -127,7 +147,7 @@ export const NotesPagination = ({
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`flex h-[30px] w-[30px] items-center justify-center rounded-[8px] border transition-colors ${
+            className={`flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[8px] border transition-colors ${
               currentPage === page
                 ? "border-[#D1D6DE] bg-[rgba(42,106,255,0.2)]"
                 : "border-[#D1D6DE] bg-white hover:bg-gray-50"
@@ -148,7 +168,7 @@ export const NotesPagination = ({
       <button
         onClick={onNextPage}
         disabled={!pageInfo.hasNext}
-        className="flex h-[30px] w-[30px] items-center justify-center rounded-[8px] disabled:opacity-50"
+        className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[8px] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <ArrowRightIcon />
       </button>

@@ -27,6 +27,8 @@ export const HomePage = () => {
     openFileExplorer,
     handleFileChange,
     handleRemove,
+    isDragging,
+    dragProps,
   } = useViewerFile(viewerFileRef);
 
   return (
@@ -58,6 +60,8 @@ export const HomePage = () => {
               onFileChange={handleFileChange}
               onOpenExplorer={openFileExplorer}
               onRemove={handleRemove}
+              isDragging={isDragging}
+              dragProps={dragProps}
             />
 
             <ChatInput

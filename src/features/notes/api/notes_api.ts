@@ -5,6 +5,8 @@ import type {
   NoteListResponse,
   CreateNoteRequest,
   CreateNoteResponse,
+  UpdateNoteTitleRequest,
+  UpdateNoteTitleResponse,
   NoteDetailParams,
   NoteDetailResponse,
   DeleteNotesBulkResult,
@@ -47,6 +49,18 @@ export const createNote = async (
 ): Promise<ApiResponse<CreateNoteResponse>> => {
   const response = await apiClient.post<ApiResponse<CreateNoteResponse>>(
     NOTES_BASE,
+    data,
+  );
+  return response.data;
+};
+
+// 노트 제목 변경
+export const updateNoteTitle = async (
+  noteId: number,
+  data: UpdateNoteTitleRequest,
+): Promise<ApiResponse<UpdateNoteTitleResponse>> => {
+  const response = await apiClient.patch<ApiResponse<UpdateNoteTitleResponse>>(
+    `${NOTES_BASE}/${noteId}`,
     data,
   );
   return response.data;
