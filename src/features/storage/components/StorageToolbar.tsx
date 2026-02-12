@@ -21,13 +21,13 @@ export const StorageToolbar = ({
   const { isSelectMode, toggleSelectMode, setDeleteModalOpen, selectedIds } =
     useStorageStore();
 
-  const handleActionClick = () => {
-    if (isSelectMode) {
-      if (selectedIds.length > 0) {
-        setDeleteModalOpen(true);
-      }
-    } else {
-      toggleSelectMode();
+  const handleSelectToggle = () => {
+    toggleSelectMode();
+  };
+
+  const handleDeleteClick = () => {
+    if (selectedIds.length > 0) {
+      setDeleteModalOpen(true);
     }
   };
 
@@ -56,18 +56,40 @@ export const StorageToolbar = ({
             />
           </button>
         </div>
+        {/* 선택/취소 버튼 */}
         <button
-          onClick={handleActionClick}
-          className={`flex items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white ${
-            isSelectMode ? "border-[#2A6AFF] text-[#2A6AFF]" : "text-[#9CA4B0]"
+          onClick={handleSelectToggle}
+          className={`flex items-center justify-center rounded-xl border-[0.5px] font-['Pretendard'] text-[14px] font-medium transition-all ${
+            isSelectMode
+              ? "border-[#2A6AFF] bg-[#2A6AFF] text-white hover:bg-[#1E56D9]"
+              : "border-[#D1D6DE] bg-white text-[#9CA4B0] hover:border-[#2A6AFF] hover:text-[#2A6AFF]"
           }`}
           style={{
-            width: isSelectMode ? "80px" : "56px",
+            width: "56px",
             height: "32px",
           }}
         >
-          {isSelectMode ? "삭제하기" : "선택"}
+          {isSelectMode ? "취소" : "선택"}
         </button>
+
+        {/* 삭제하기 버튼 - 선택 모드일 때만 표시 */}
+        {isSelectMode && (
+          <button
+            onClick={handleDeleteClick}
+            disabled={selectedIds.length === 0}
+            className={`flex items-center justify-center rounded-xl border-[0.5px] font-['Pretendard'] text-[14px] font-medium transition-all ${
+              selectedIds.length > 0
+                ? "border-[#FF3B30] bg-[#FF3B30] text-white hover:bg-[#E6352A]"
+                : "cursor-not-allowed border-[#D1D6DE] bg-[#F5F5F5] text-[#9CA4B0]"
+            }`}
+            style={{
+              width: "80px",
+              height: "32px",
+            }}
+          >
+            삭제하기
+          </button>
+        )}
       </div>
       <div
         className="shrink-0 justify-self-end"

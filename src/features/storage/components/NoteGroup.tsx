@@ -98,6 +98,7 @@ export const NoteGroup = ({
           {notes.map((asset) => (
             <NoteCard
               key={asset.assetId}
+              id={asset.assetId}
               label={asset.fileName}
               type={mapAssetSource(asset.source)}
               thumbnailUrl={asset.thumbnailUrl}

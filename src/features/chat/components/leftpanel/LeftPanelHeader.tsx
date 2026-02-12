@@ -16,7 +16,7 @@ export const LeftPanelHeader = ({
         {/* Viewer 탭 */}
         <button
           onClick={() => onTabChange("viewer")}
-          className={`relative px-[10px] py-[10px] text-[16px] font-bold transition-colors ${
+          className={`relative cursor-pointer px-[10px] py-[10px] text-[16px] font-bold transition-colors ${
             activeTab === "viewer"
               ? "text-[#2A6AFF]"
               : "text-[#9CA4B0] hover:text-gray-600"
@@ -32,7 +32,7 @@ export const LeftPanelHeader = ({
         {/* Storage 탭 */}
         <button
           onClick={() => onTabChange("storage")}
-          className={`relative px-[10px] py-[10px] text-[16px] font-bold transition-colors ${
+          className={`relative cursor-pointer px-[10px] py-[10px] text-[16px] font-bold transition-colors ${
             activeTab === "storage"
               ? "text-[#2A6AFF]"
               : "text-[#9CA4B0] hover:text-gray-600"

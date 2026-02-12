@@ -3,6 +3,7 @@ import {
   StorageCheckboxUncheckedIcon,
   StorageCheckboxCheckedIcon,
 } from "../../../shared/components/icons/StorageIcons";
+import { PdfPreview } from "@/shared/components/pdf-preview/PdfPreview";
 import {
   getBadgeColor,
   getBadgeText,
@@ -11,7 +12,11 @@ import {
   type OcrStatusType,
 } from "../utils/asset-mapper";
 
+import { useState, useEffect } from "react";
+import { getDownloadUrl } from "@/features/assets/api/assetApi";
+
 interface NoteCardProps {
+  id: number; // Asset ID required for fetching download URL
   label: string; // 파일명
   type: AssetSourceType; // 파일 출처 ("upload" | "ai")
   isSelected: boolean;
@@ -25,6 +30,7 @@ interface NoteCardProps {
 }
 
 export const NoteCard = ({
+  id,
   label,
   type,
   isSelected,
@@ -40,6 +46,23 @@ export const NoteCard = ({
   const badgeText = getBadgeText(type);
   const badgeColor = getBadgeColor(type);
 
+  const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
+
+  // 업로드된 PDF의 경우, 썸네일 URL이 깨질 수 있으므로 원본 다운로드 URL을 받아와서 미리보기를 띄운다.
+  useEffect(() => {
+    if (type === "upload" && mimeType === "application/pdf") {
+      const fetchUrl = async () => {
+        try {
+          const response = await getDownloadUrl(id);
+          setPdfDownloadUrl(response.result.downloadUrl);
+        } catch (error) {
+          console.error("PDF 다운로드 URL 조회 실패:", error);
+        }
+      };
+      fetchUrl();
+    }
+  }, [id, type, mimeType]);
+
   // 썸네일 렌더링 로직
   const renderThumbnail = () => {
     // OCR 처리 중일 때
@@ -52,7 +75,27 @@ export const NoteCard = ({
       );
     }
 
-    // 썸네일 URL이 있으면 항상 이미지로 렌더링 (PDF 썸네일 포함)
+    // AI 생성 PDF 파일인 경우 (thumbnailUrl이 곧 파일 URL임)
+    if (type === "ai" && mimeType === "application/pdf" && thumbnailUrl) {
+      return (
+        <PdfPreview
+          fileUrl={thumbnailUrl}
+          width={240}
+        />
+      );
+    }
+
+    // 업로드된 PDF 파일인 경우 (별도로 가져온 downloadUrl 사용)
+    if (type === "upload" && mimeType === "application/pdf" && pdfDownloadUrl) {
+      return (
+        <PdfPreview
+          fileUrl={pdfDownloadUrl}
+          width={240}
+        />
+      );
+    }
+
+    // 썸네일 URL이 있을 때 (이미지 등)
     if (thumbnailUrl) {
       return (
         <img
