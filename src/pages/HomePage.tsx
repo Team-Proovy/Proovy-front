@@ -1,4 +1,3 @@
-import { ChevronDown } from "lucide-react";
 import { ChatInput } from "../features/editor/components/ChatInput";
 import { useHomeSend } from "./hooks/useHomeSend";
 import { useViewerFile } from "./hooks/useViewerFile";
@@ -8,6 +7,7 @@ import { FeatureSection } from "../features/landing/components/FeatureSection";
 import { FeatureGrid } from "../features/landing/components/FeatureGrid";
 import { CTASection } from "../features/landing/components/CTASection";
 import { FAQSection } from "../features/landing/components/FAQSection";
+import { ChevronDown } from "lucide-react";
 
 /**
  * HomePage - 새 노트 시작점

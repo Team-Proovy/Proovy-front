@@ -134,9 +134,11 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
 
   // 결과 클릭 → 해당 노트 채팅방으로 이동
   const handleResultClick = useCallback(
-    (noteId: number) => {
+    (noteId: number, source: "search-modal-search" | "search-modal-recent") => {
       onClose();
-      navigate(`/app/chat/${noteId}`);
+      navigate(`/app/chat/${noteId}`, {
+        state: { chatEntrySource: source },
+      });
     },
     [navigate, onClose],
   );
@@ -211,7 +213,9 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
                     key={section.date}
                     dateLabel={section.date}
                     items={section.chats}
-                    onItemClick={handleResultClick}
+                    onItemClick={(noteId) =>
+                      handleResultClick(noteId, "search-modal-search")
+                    }
                     searchQuery={debouncedQuery}
                   />
                 ))}
@@ -232,7 +236,9 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
                 key={section.date}
                 dateLabel={section.date}
                 items={section.chats}
-                onItemClick={handleResultClick}
+                onItemClick={(noteId) =>
+                  handleResultClick(noteId, "search-modal-recent")
+                }
               />
             ))
           ) : (
