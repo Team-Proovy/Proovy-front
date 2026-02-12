@@ -6,6 +6,7 @@ interface NavItemProps {
   icon: React.ElementType;
   label: string;
   isCollapsed: boolean;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
 export const NavItem = ({
@@ -13,6 +14,7 @@ export const NavItem = ({
   icon: Icon,
   label,
   isCollapsed,
+  onClick,
 }: NavItemProps) => {
   const [searchParams] = useSearchParams();
   const isSearchOpen = searchParams.get("search") === "true";
@@ -20,7 +22,10 @@ export const NavItem = ({
   return (
     <NavLink
       to={to}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onClick) onClick(e);
+      }}
       className={({ isActive }) => {
         const active = isActive && !isSearchOpen;
         // 사이드바가 펼쳐졌을 때 - active

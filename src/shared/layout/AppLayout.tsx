@@ -32,20 +32,35 @@ export const AppLayout = () => {
     navigate(location.pathname);
   };
 
+  const isHomePage = location.pathname === "/app/home";
+
+  const handleHomeClick = () => {
+    if (isHomePage) {
+      // 홈 화면의 스크롤 컨테이너를 찾아 최상단으로 이동
+      const scrollContainer = document.querySelector("main");
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      navigate("/app/home");
+    }
+  };
+
   return (
-    <div className="flex h-screen w-full bg-[#F8F9FA]">
-      {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 (선택된 메뉴 튀어나옴 효과) */}
+    <div className="flex h-screen w-full overflow-hidden bg-[#F8F9FA]">
+      {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 */}
       <Sidebar
         isCollapsed={isCollapsed}
         onToggle={setIsCollapsed}
         onSearchClick={() => {}} // SearchButton 내부에서 처리됨
         onSettingsClick={() => setIsSettingsOpen(true)}
-        onUpgradeClick={() => navigate("/pricing")}
-        onLogoClick={() => navigate("/app/home")}
+        onUpgradeClick={() => navigate("/pricing", { state: { from: "home" } })}
+        onLogoClick={handleHomeClick}
+        onHomeClick={handleHomeClick}
       />
 
       {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
-      <main className="relative flex flex-1 flex-col overflow-hidden transition-all duration-300">
+      <main className="relative flex flex-1 flex-col overflow-y-auto transition-all duration-300">
         <Outlet />
       </main>
 

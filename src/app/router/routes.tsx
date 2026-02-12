@@ -78,7 +78,6 @@ export const router = createBrowserRouter([
         element: <StoragePage />,
       },
       // 대화방
-      // ?panel=viewer|storage, ?file=fileId
       {
         path: "chat/:noteId",
         element: <ChatPage />,
