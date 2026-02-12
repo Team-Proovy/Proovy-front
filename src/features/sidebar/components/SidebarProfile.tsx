@@ -53,13 +53,31 @@ export const SidebarProfile = ({
     }
     return nickname;
   };
+  // 플랜별 인디케이터 색상 (Free < Standard < Pro 순으로 진하게)
+  const getPlanIndicatorColor = (plan: string) => {
+    switch (plan) {
+      case "Pro":
+        return "bg-[#2A6AFF]";
+      case "Standard":
+        return "bg-[#6B9EFF]";
+      case "Free":
+      default:
+        return "bg-[#B3CCFF]";
+    }
+  };
 
   return !isCollapsed ? (
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs">
+      <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs select-none">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-[#2A6AFF]" />
+          <div className="flex items-center gap-0.5">
+            <div className="flex w-[24px] justify-center">
+              <div
+                className={`h-[8px] w-[8px] rounded-full ${getPlanIndicatorColor(
+                  planType,
+                )}`}
+              />
+            </div>
             <span className="text-[14px] leading-[20px] font-medium text-[#333333]">
               {planType}
             </span>
@@ -71,7 +89,7 @@ export const SidebarProfile = ({
                 onUpgradeClick();
               }
             }}
-            className={`flex h-[24px] w-[88px] cursor-pointer items-center justify-center rounded bg-[#2A6AFF] text-[14px] leading-none text-white transition-colors ${
+            className={`flex h-[24px] w-[70px] cursor-pointer items-center justify-center rounded bg-[#2A6AFF] text-[12px] leading-none text-white transition-colors ${
               authUser?.plan === "Pro"
                 ? "cursor-default opacity-50"
                 : "hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
@@ -84,15 +102,16 @@ export const SidebarProfile = ({
         <div className="flex items-center justify-between text-gray-500">
           <div className="flex items-center gap-1.5">
             <CreditIcon />
-            <span className="text-[14px] font-medium text-[#D1D6DE]">
+            <span className="text-[14px] font-medium text-[#333333]">
               {creditTotal}
             </span>
           </div>
-          <div className="mr-[24px] flex items-center gap-1.5">
+          <div className="flex w-[70px] items-center gap-1.5">
             <PaperIcon />
-            <span className="text-[14px] font-medium">
-              {totalNotes}/{maxNotes}
-            </span>
+            <div className="text-[14px] font-medium">
+              <span className="text-[#333333]">{totalNotes}</span>
+              <span className="text-[#9CA4B0]">/{maxNotes}</span>
+            </div>
           </div>
         </div>
       </div>
