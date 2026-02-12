@@ -11,23 +11,17 @@ import { useAuthStore } from "../store/auth_store";
 export const SignupPage = () => {
   const navigate = useNavigate();
   const location = useLocation(); // To get passed state from callback
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [isLoading, setIsLoading] = useState(false);
 
   // KakaoCallbackPage에서 전달받은 signupToken
   const signupToken = location.state?.signupToken as string | undefined;
 
   useEffect(() => {
-    // 1. 이미 로그인된 사용자는 홈으로 리다이렉트
-    if (isAuthenticated) {
-      navigate("/app/home", { replace: true });
-      return;
-    }
-    // 2. 회원가입 토큰이 없으면 (잘못된 접근) 로그인 페이지로 리다이렉트
+    // 회원가입 토큰이 없으면 (잘못된 접근) 로그인 페이지로 리다이렉트
     if (!signupToken) {
       navigate("/login", { replace: true });
     }
-  }, [isAuthenticated, signupToken, navigate]);
+  }, [signupToken, navigate]);
 
   // 소셜 로그인 정보에서 이름 가져오기
   const initialName =
