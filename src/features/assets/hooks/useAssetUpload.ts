@@ -4,6 +4,7 @@ import type { UploadUrlRequest } from "../types/asset";
 import { getUploadUrl, uploadToS3, confirmUpload } from "../api/assetApi";
 import { noteKeys } from "@/features/notes/hooks/useNotes";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
+import { resolveUploadMimeType } from "../utils/fileValidation";
 
 export const useAssetUpload = () => {
   const queryClient = useQueryClient();
@@ -16,10 +17,15 @@ export const useAssetUpload = () => {
     setProgress(0);
 
     try {
+      const mimeType = resolveUploadMimeType(file);
+      if (!mimeType) {
+        throw new Error("지원하지 않는 파일 형식입니다.");
+      }
+
       const requestParams: UploadUrlRequest = {
         noteId: noteId,
         fileName: file.name,
-        mimeType: file.type,
+        mimeType,
         fileSize: file.size,
       };
 
@@ -28,7 +34,7 @@ export const useAssetUpload = () => {
       const { uploadUrl, assetId } = uploadUrlResponse.result;
 
       // 2. S3에 파일 업로드 (진행률 반영, assetApi 사용)
-      await uploadToS3(uploadUrl, file, (percentage) => {
+      await uploadToS3(uploadUrl, file, mimeType, (percentage) => {
         setProgress(percentage);
       });
 

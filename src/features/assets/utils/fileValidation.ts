@@ -8,6 +8,13 @@ export const ALLOWED_MIME_TYPES = [
 
 /** 확장자 기반 폴백 (file.type이 비어있을 때) */
 export const ALLOWED_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".webp"];
+const EXTENSION_TO_MIME: Record<string, string> = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+};
 
 /** 최대 파일 크기: 30MB */
 export const MAX_FILE_SIZE = 30 * 1024 * 1024;
@@ -27,6 +34,20 @@ export const isFileAllowed = (file: File): boolean => {
 };
 
 /**
+ * 업로드에 사용할 MIME 타입 결정
+ * - file.type이 유효하면 그대로 사용
+ * - 비어있거나 비정상이면 확장자 기반으로 복원
+ */
+export const resolveUploadMimeType = (file: File): string | null => {
+  if (file.type && ALLOWED_MIME_TYPES.includes(file.type)) {
+    return file.type;
+  }
+  const ext = file.name.toLowerCase().split(".").pop();
+  if (!ext) return null;
+  return EXTENSION_TO_MIME[ext] ?? null;
+};
+
+/**
  * 파일 유효성 검증 (업로드 API 호출 전 사용)
  * - 실패 시 Error throw
  */
@@ -37,19 +58,10 @@ export const validateFile = (file: File) => {
   }
 
   // 2. 파일 형식 체크 (MIME → 확장자 폴백)
-  if (file.type) {
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      throw new Error(
-        "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
-      );
-    }
-  } else {
-    const ext = file.name.toLowerCase().split(".").pop();
-    if (!ext || !ALLOWED_EXTENSIONS.includes(`.${ext}`)) {
-      throw new Error(
-        "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
-      );
-    }
+  if (!resolveUploadMimeType(file)) {
+    throw new Error(
+      "지원하지 않는 파일 형식입니다. PDF, PNG, JPEG, WEBP 파일만 업로드 가능합니다.",
+    );
   }
 
   // 3. 파일명 길이 체크
