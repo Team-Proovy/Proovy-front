@@ -10,7 +10,7 @@ import {
   type MouseEvent,
   type KeyboardEvent,
 } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useUpdateNoteTitle } from "../hooks/useNotes";
 import {
   NoteEditIcon,
@@ -31,9 +31,11 @@ export const NoteCard = ({
   isSelected,
   onToggleSelection,
 }: NoteCardProps) => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(note.title);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isSubmittingRef = useRef(false);
   const { mutateAsync: updateNoteTitle, isPending } = useUpdateNoteTitle();
 
   useEffect(() => {
@@ -60,6 +62,10 @@ export const NoteCard = ({
   };
 
   const handleSubmitEdit = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+
     const nextTitle = draftTitle.trim();
 
     if (!nextTitle || nextTitle === note.title) {
@@ -67,9 +73,12 @@ export const NoteCard = ({
       return;
     }
 
+    isSubmittingRef.current = true;
+
     try {
       await updateNoteTitle({ noteId: note.noteId, title: nextTitle });
     } finally {
+      isSubmittingRef.current = false;
       setIsEditing(false);
     }
   };
@@ -95,6 +104,28 @@ export const NoteCard = ({
     event.stopPropagation();
   };
 
+  const handleCardActivate = () => {
+    if (isEditing) {
+      return;
+    }
+
+    if (isSelectMode) {
+      onToggleSelection(note.noteId);
+      return;
+    }
+
+    navigate(`/app/chat/${note.noteId}`);
+  };
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    handleCardActivate();
+  };
+
   const noteContent = (
     <>
       <NoteThumbnail
@@ -106,7 +137,6 @@ export const NoteCard = ({
         draftTitle={draftTitle}
         createdAt={note.createdAt}
         lastUsedAt={note.lastUsedAt}
-        isSelectMode={isSelectMode}
         isEditing={isEditing}
         isSaving={isPending}
         inputRef={inputRef}
@@ -122,20 +152,18 @@ export const NoteCard = ({
 
   if (isSelectMode) {
     return (
-      <button
-        onClick={() => {
-          if (!isEditing) {
-            onToggleSelection(note.noteId);
-          }
-        }}
+      <div
+        onClick={handleCardActivate}
+        onKeyDown={handleCardKeyDown}
         aria-pressed={isSelected}
         aria-label={`${note.title} ${isSelected ? "선택됨" : "선택 안됨"}`}
-        className={`group relative flex h-[229px] w-[271px] flex-col rounded-[12px] text-left transition-colors ${
+        role="button"
+        tabIndex={0}
+        className={`group relative flex h-[229px] w-[271px] cursor-pointer flex-col rounded-[12px] text-left transition-colors transition-transform hover:scale-[1.02] ${
           isSelected
             ? "border-[1.5px] border-[#2A6AFF] bg-[#F1F4F8]"
             : "border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] hover:bg-[#E8ECF1]"
         }`}
-        type="button"
       >
         {/* 체크박스 */}
         <div
@@ -151,17 +179,21 @@ export const NoteCard = ({
         </div>
 
         {noteContent}
-      </button>
+      </div>
     );
   }
 
   return (
-    <Link
-      to={`/app/chat/${note.noteId}`}
-      className="group flex h-[229px] w-[271px] flex-col rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] transition-colors hover:bg-[#E8ECF1]"
+    <div
+      onClick={handleCardActivate}
+      onKeyDown={handleCardKeyDown}
+      role="link"
+      tabIndex={0}
+      aria-label={`${note.title} 노트로 이동`}
+      className="group flex h-[229px] w-[271px] cursor-pointer flex-col rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] transition-colors transition-transform hover:scale-[1.02] hover:bg-[#E8ECF1]"
     >
       {noteContent}
-    </Link>
+    </div>
   );
 };
 
@@ -196,7 +228,6 @@ function NoteInfo({
   draftTitle,
   createdAt,
   lastUsedAt,
-  isSelectMode,
   isEditing,
   isSaving,
   inputRef,
@@ -211,7 +242,6 @@ function NoteInfo({
   draftTitle: string;
   createdAt: string;
   lastUsedAt: string;
-  isSelectMode: boolean;
   isEditing: boolean;
   isSaving: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
@@ -243,11 +273,11 @@ function NoteInfo({
               {title}
             </h3>
           )}
-          {isSelectMode && !isEditing && (
+          {!isEditing && (
             <button
               type="button"
               onClick={onStartEdit}
-              className="flex h-[24px] w-[24px] items-center justify-center rounded-[6px] text-[#9CA4B0] transition-colors hover:bg-[#E8ECF1] hover:text-[#2A6AFF]"
+              className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center rounded-[6px] text-[#9CA4B0] transition-colors hover:bg-[#E8ECF1] hover:text-[#2A6AFF]"
               aria-label="노트 제목 수정"
             >
               <NoteEditIcon className="h-[18px] w-[18px]" />

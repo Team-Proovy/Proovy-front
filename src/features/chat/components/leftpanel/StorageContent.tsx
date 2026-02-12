@@ -312,7 +312,7 @@ export const StorageContent = ({
         {/* 선택 버튼 */}
         <button
           onClick={handleSelectToggle}
-          className={`flex items-center justify-center rounded-[12px] border-[0.5px] text-[14px] font-medium transition-all hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white ${
+          className={`flex cursor-pointer items-center justify-center rounded-[12px] border-[0.5px] text-[14px] font-medium transition-all hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white ${
             isSelectMode
               ? "border-[#2A6AFF] bg-[#2A6AFF] text-white"
               : "border-[#D1D6DE] bg-white text-[#9CA4B0]"

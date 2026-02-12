@@ -80,7 +80,7 @@ export const NotesHeader = ({
                   ref={toggleRef}
                   type="button"
                   onClick={() => onToggleSortDropdown(!isSortDropdownOpen)}
-                  className="flex h-[28px] w-[140px] items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
+                  className="flex h-[28px] w-[140px] cursor-pointer items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
                 >
                   <span className="font-['Noto_Sans_KR',sans-serif] text-[14px] leading-[15px] font-normal whitespace-nowrap text-[#2F3440]">
                     {SORT_OPTIONS.find((option) => option.value === sortOrder)
@@ -102,7 +102,7 @@ export const NotesHeader = ({
                         key={option.value}
                         type="button"
                         onClick={() => onSelectSort(option.value)}
-                        className={`mx-[4px] flex w-[calc(100%-8px)] items-center rounded-[8px] px-[12px] py-[8px] text-left text-[13px] leading-[18px] transition-shadow ${
+                        className={`mx-[4px] flex w-[calc(100%-8px)] cursor-pointer items-center rounded-[8px] px-[12px] py-[8px] text-left text-[13px] leading-[18px] transition-shadow ${
                           sortOrder === option.value
                             ? "border border-[#2A6AFF] font-medium text-[#003880]"
                             : "text-[#2F3440] hover:shadow-[0_0_0_3px_rgba(42,106,255,0.15)]"
@@ -120,7 +120,7 @@ export const NotesHeader = ({
                 <div className="flex items-center gap-[8px]">
                   <button
                     onClick={onCancelSelectMode}
-                    className="flex h-[32px] w-[80px] items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white"
+                    className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
                     type="button"
                   >
                     취소
@@ -128,7 +128,7 @@ export const NotesHeader = ({
                   <button
                     onClick={onDeleteClick}
                     disabled={selectedCount === 0}
-                    className="flex h-[32px] w-[80px] items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#2A6AFF] transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#2A6AFF] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white disabled:cursor-not-allowed disabled:opacity-50"
                     type="button"
                   >
                     삭제하기
@@ -137,7 +137,7 @@ export const NotesHeader = ({
               ) : (
                 <button
                   onClick={onEnterSelectMode}
-                  className="flex h-[32px] w-[80px] items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-all hover:border-[#2A6AFF] hover:bg-[#2A6AFF] hover:text-white"
+                  className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
                   type="button"
                 >
                   선택

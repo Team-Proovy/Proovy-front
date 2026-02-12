@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { StorageSearchIcon } from "../../../shared/components/icons/StorageIcons";
 import { useStorageStore } from "../store/useStorageStore";
 
@@ -14,6 +15,8 @@ export const StorageToolbar = ({
   usagePercent,
   onSearch,
 }: StorageToolbarProps) => {
+  const rawFilterId = useId();
+  const filterId = `storage-toolbar-filter-${rawFilterId.replace(/:/g, "")}`;
   const isDanger = usagePercent >= 90;
   const barColor = isDanger ? "#FF4D4D" : "#2A6AFF";
   const barWidth = Math.min((usagePercent / 100) * 55.5, 55.5);
@@ -56,38 +59,32 @@ export const StorageToolbar = ({
             />
           </button>
         </div>
-        {/* 선택/취소 버튼 */}
-        <button
-          onClick={handleSelectToggle}
-          className={`flex items-center justify-center rounded-xl border-[0.5px] font-['Pretendard'] text-[14px] font-medium transition-all ${
-            isSelectMode
-              ? "border-[#2A6AFF] bg-[#2A6AFF] text-white hover:bg-[#1E56D9]"
-              : "border-[#D1D6DE] bg-white text-[#9CA4B0] hover:border-[#2A6AFF] hover:text-[#2A6AFF]"
-          }`}
-          style={{
-            width: "56px",
-            height: "32px",
-          }}
-        >
-          {isSelectMode ? "취소" : "선택"}
-        </button>
-
-        {/* 삭제하기 버튼 - 선택 모드일 때만 표시 */}
-        {isSelectMode && (
+        {/* 선택/취소 + 삭제 버튼 (노트목록 디자인 통일) */}
+        {isSelectMode ? (
+          <div className="flex items-center gap-[8px]">
+            <button
+              onClick={handleSelectToggle}
+              className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
+              type="button"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              disabled={selectedIds.length === 0}
+              className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#2A6AFF] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              type="button"
+            >
+              삭제하기
+            </button>
+          </div>
+        ) : (
           <button
-            onClick={handleDeleteClick}
-            disabled={selectedIds.length === 0}
-            className={`flex items-center justify-center rounded-xl border-[0.5px] font-['Pretendard'] text-[14px] font-medium transition-all ${
-              selectedIds.length > 0
-                ? "border-[#FF3B30] bg-[#FF3B30] text-white hover:bg-[#E6352A]"
-                : "cursor-not-allowed border-[#D1D6DE] bg-[#F5F5F5] text-[#9CA4B0]"
-            }`}
-            style={{
-              width: "80px",
-              height: "32px",
-            }}
+            onClick={handleSelectToggle}
+            className="flex h-[32px] w-[80px] cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
+            type="button"
           >
-            삭제하기
+            선택
           </button>
         )}
       </div>
@@ -131,7 +128,7 @@ export const StorageToolbar = ({
               stroke="#D1D6DE"
               strokeWidth="0.5"
             />
-            <g filter="url(#filter0_i_781_1618)">
+            <g filter={`url(#${filterId})`}>
               <rect
                 width={barWidth}
                 height="12"
@@ -141,7 +138,7 @@ export const StorageToolbar = ({
             </g>
             <defs>
               <filter
-                id="filter0_i_781_1618"
+                id={filterId}
                 x="0"
                 y="0"
                 width={barWidth}

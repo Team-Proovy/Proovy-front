@@ -108,7 +108,6 @@ export const NotesPage = () => {
               onNextPage={handleNextPage}
               onPageChange={setCurrentPage}
             />
-            {/* <div className="min-h-[12vh]" /> */}
           </div>
         </div>
       </div>
