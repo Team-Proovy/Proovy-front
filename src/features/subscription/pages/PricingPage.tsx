@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import { useAuthStore } from "../../auth/store/auth_store";
-import { useUpgradeSubscription } from "../../settings/hooks/useUser";
+import {
+  useUpgradeSubscription,
+  useMySubscription,
+} from "../../settings/hooks/useUser";
 
-import type { PlanType } from "../types/plan_types";
+import { type PlanType, normalizePlanType } from "../types/plan_types";
 
 export const PricingPage = () => {
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
@@ -63,6 +66,17 @@ export const PricingPage = () => {
   ];
 
   const { user, updateUser } = useAuthStore();
+  const { data: subscription } = useMySubscription();
+
+  // 최신 구독 정보로 동기화
+  useEffect(() => {
+    if (subscription && user) {
+      const serverPlan = normalizePlanType(subscription.currentPlan.name);
+      if (user.plan !== serverPlan) {
+        updateUser({ plan: serverPlan });
+      }
+    }
+  }, [subscription, user, updateUser]);
 
   const [showUpgradeConfirmModal, setShowUpgradeConfirmModal] = useState(false);
   const [showUpgradeSuccessModal, setShowUpgradeSuccessModal] = useState(false);
