@@ -32,8 +32,12 @@ export const AppLayout = () => {
     navigate(location.pathname);
   };
 
+  const isHomePage = location.pathname === "/app/home";
+
   return (
-    <div className="flex h-screen w-full bg-[#F8F9FA]">
+    <div
+      className={`flex h-screen w-full bg-[#F8F9FA] ${isHomePage ? "overflow-y-auto" : "overflow-hidden"}`}
+    >
       {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 (선택된 메뉴 튀어나옴 효과) */}
       <Sidebar
         isCollapsed={isCollapsed}
@@ -45,7 +49,9 @@ export const AppLayout = () => {
       />
 
       {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
-      <main className="relative flex flex-1 flex-col overflow-hidden transition-all duration-300">
+      <main
+        className={`relative flex flex-1 flex-col transition-all duration-300 ${isHomePage ? "" : "overflow-y-auto"}`}
+      >
         <Outlet />
       </main>
 
