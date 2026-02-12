@@ -8,13 +8,8 @@ import { NoteCard } from "@/features/storage/components/NoteCard";
 import { deleteAssets } from "@/features/assets/api/assetApi";
 import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import type { PanelTab } from "./types";
-import { useAuthStore } from "@/features/auth/store/auth_store";
 import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
-import {
-  PLAN_DETAILS,
-  type PlanType,
-} from "@/features/subscription/types/plan_types";
 
 interface StorageFile {
   id: number;
@@ -24,6 +19,21 @@ interface StorageFile {
   mimeType?: string;
   ocrStatus?: "pending" | "processing" | "completed" | "failed";
 }
+
+const normalizeOcrStatus = (
+  status: string | undefined | null,
+): StorageFile["ocrStatus"] => {
+  const normalized = status?.toLowerCase();
+  if (
+    normalized === "pending" ||
+    normalized === "processing" ||
+    normalized === "completed" ||
+    normalized === "failed"
+  ) {
+    return normalized;
+  }
+  return "pending";
+};
 
 interface StorageContentProps {
   noteId: string;
@@ -51,14 +61,14 @@ export const StorageContent = ({
   const { data: noteDetail, refetch } = useNoteDetail(noteId, undefined, {
     refetchInterval: hasProcessingAssets ? 2000 : false, // 2초로 단축
   });
-  const { user } = useAuthStore();
 
   // OCR 처리 중인 에셋이 있으면 폴링 활성화
   useEffect(() => {
     const isProcessing =
       noteDetail?.assets?.some(
         (asset) =>
-          asset.ocrStatus === "pending" || asset.ocrStatus === "processing",
+          normalizeOcrStatus(asset.ocrStatus) === "pending" ||
+          normalizeOcrStatus(asset.ocrStatus) === "processing",
       ) ?? false;
     setHasProcessingAssets(isProcessing);
 
@@ -77,7 +87,7 @@ export const StorageContent = ({
       type: "upload",
       fileUrl: asset.thumbnailUrl ?? undefined,
       mimeType: getMimeType(asset.fileType), // fileType -> mimeType 변환 적용
-      ocrStatus: asset.ocrStatus as StorageFile["ocrStatus"],
+      ocrStatus: normalizeOcrStatus(asset.ocrStatus),
     }));
   }, [noteDetail]);
 
@@ -192,14 +202,8 @@ export const StorageContent = ({
     onTabChange("viewer");
   };
 
-  // 용량 계산 (MB 단위) -> 사용자 플랜에 따른 스토리지 한도 계산
-  const userPlan = (user?.plan as PlanType) || "Free";
-  const planStorageLimit = PLAN_DETAILS[userPlan]?.storage || "5GB";
-
-  // GB -> MB 변환
-  const totalLimitMB = planStorageLimit.includes("GB")
-    ? parseInt(planStorageLimit.replace("GB", "")) * 1024
-    : parseInt(planStorageLimit.replace("MB", "")) || 500;
+  // 노트별 용량 제한은 512MB 고정
+  const totalLimitMB = 512;
 
   const usedBytes =
     noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0;

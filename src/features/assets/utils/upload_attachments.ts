@@ -1,5 +1,6 @@
 import type { Attachment } from "@/features/editor/hooks/useAttachments";
 import { getUploadUrl, uploadToS3, confirmUpload } from "../api/assetApi";
+import { resolveUploadMimeType } from "./fileValidation";
 
 /** 첨부 파일 업로드 결과 */
 export interface UploadAttachmentsResult {
@@ -45,15 +46,22 @@ export const uploadAttachments = async (
     }
 
     // 1. Presigned URL 발급
+    const mimeType = resolveUploadMimeType(file);
+    if (!mimeType) {
+      throw new Error(
+        `지원하지 않는 파일 형식입니다: ${file.name}`,
+      );
+    }
+
     const { result } = await getUploadUrl({
       noteId,
       fileName: file.name,
-      mimeType: file.type,
+      mimeType,
       fileSize: file.size,
     });
 
     // 2. S3 업로드
-    await uploadToS3(result.uploadUrl, file);
+    await uploadToS3(result.uploadUrl, file, mimeType);
 
     // 3. 서버 확정 (OCR 시작)
     await confirmUpload(result.assetId);
