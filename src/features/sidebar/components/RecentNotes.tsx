@@ -121,6 +121,7 @@ const RecentNoteItem = ({ note }: { note: RecentNote }) => {
     <li>
       <NavLink
         to={`/app/chat/${note.id}`}
+        state={{ chatEntrySource: "sidebar-recent-notes" }}
         className={({ isActive }) =>
           `block truncate rounded-lg py-[6px] pl-[12px] text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] transition-colors ${
             isActive ? "mr-[-6px] bg-[#EBEBEB]" : "hover:bg-[#F5F5F5]"

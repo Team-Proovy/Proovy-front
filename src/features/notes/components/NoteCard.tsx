@@ -114,7 +114,9 @@ export const NoteCard = ({
       return;
     }
 
-    navigate(`/app/chat/${note.noteId}`);
+    navigate(`/app/chat/${note.noteId}`, {
+      state: { chatEntrySource: "notes-page-card" },
+    });
   };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

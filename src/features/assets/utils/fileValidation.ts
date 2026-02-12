@@ -16,8 +16,8 @@ const EXTENSION_TO_MIME: Record<string, string> = {
   webp: "image/webp",
 };
 
-/** 최대 파일 크기: 30MB */
-export const MAX_FILE_SIZE = 30 * 1024 * 1024;
+/** 최대 파일 크기: 100MB (Pro 플랜 기준) */
+export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 /** <input accept>에 쓸 수 있는 문자열 */
 export const FILE_ACCEPT = ALLOWED_EXTENSIONS.join(",");
@@ -26,11 +26,23 @@ export const FILE_ACCEPT = ALLOWED_EXTENSIONS.join(",");
  * 파일이 허용된 형식/크기인지 boolean 반환 (UI 필터링용)
  * - 드래그앤드롭, 첨부 전 검증 등에 사용
  */
-export const isFileAllowed = (file: File): boolean => {
-  if (file.size > MAX_FILE_SIZE) return false;
+/**
+ * 파일 형식이 허용된 확장자/MIME인지 검사 (크기 제외)
+ */
+export const isValidFileType = (file: File): boolean => {
   if (file.type && ALLOWED_MIME_TYPES.includes(file.type)) return true;
   const ext = file.name.toLowerCase().split(".").pop();
   return ext ? ALLOWED_EXTENSIONS.includes(`.${ext}`) : false;
+};
+
+/**
+ * 파일이 허용된 형식/크기인지 boolean 반환 (UI 필터링용)
+ * - 드래그앤드롭, 첨부 전 검증 등에 사용
+ * - @deprecated: Use isValidFileType() && check size manually for plan-based limits
+ */
+export const isFileAllowed = (file: File): boolean => {
+  if (file.size > MAX_FILE_SIZE) return false;
+  return isValidFileType(file);
 };
 
 /**
@@ -54,7 +66,7 @@ export const resolveUploadMimeType = (file: File): string | null => {
 export const validateFile = (file: File) => {
   // 1. 파일 크기 체크
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error("파일 크기가 30MB를 초과합니다.");
+    throw new Error("파일 크기가 100MB를 초과합니다.");
   }
 
   // 2. 파일 형식 체크 (MIME → 확장자 폴백)
