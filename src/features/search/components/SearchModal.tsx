@@ -117,18 +117,24 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
   const searchGroups = useMemo(() => {
     if (!searchData?.conversations) return [];
     return groupItemsByDate(
-      searchData.conversations.map((conv) => ({
-        dateStr: conv.createdAt,
-        item: {
-          id: String(conv.conversationId),
-          title: conv.noteTitle,
-          noteId: conv.noteId,
-          preview:
-            conv.userMessage.content.length > 80
-              ? conv.userMessage.content.slice(0, 80) + "…"
-              : conv.userMessage.content,
-        },
-      })),
+      searchData.conversations.map((conv) => {
+        const userMessageText = conv.userMessage?.content ?? "";
+        const assistantMessageText = conv.assistantMessage?.content ?? "";
+        const previewText = userMessageText || assistantMessageText;
+
+        return {
+          dateStr: conv.createdAt,
+          item: {
+            id: String(conv.conversationId),
+            title: conv.noteTitle,
+            noteId: conv.noteId,
+            preview:
+              previewText.length > 80
+                ? previewText.slice(0, 80) + "…"
+                : previewText,
+          },
+        };
+      }),
     );
   }, [searchData]);
 

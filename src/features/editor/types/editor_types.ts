@@ -241,8 +241,8 @@ export interface ConversationSearchItem {
   conversationId: number;
   noteId: number;
   noteTitle: string;
-  userMessage: SearchMessageInfo;
-  assistantMessage: SearchMessageInfo;
+  userMessage: SearchMessageInfo | null;
+  assistantMessage: SearchMessageInfo | null;
   mentionedFiles: MentionedFile[];
   mentionedTools: string[];
   relevance: number;
