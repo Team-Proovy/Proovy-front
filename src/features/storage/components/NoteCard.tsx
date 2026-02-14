@@ -47,6 +47,11 @@ export const NoteCard = ({
   const badgeColor = getBadgeColor(type);
 
   const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
+  const [hasThumbnailError, setHasThumbnailError] = useState(false);
+
+  useEffect(() => {
+    setHasThumbnailError(false);
+  }, [thumbnailUrl, label, id]);
 
   // 업로드된 PDF의 경우, 썸네일 URL이 깨질 수 있으므로 원본 다운로드 URL을 받아와서 미리보기를 띄운다.
   useEffect(() => {
@@ -70,7 +75,7 @@ export const NoteCard = ({
       return (
         <div className="flex flex-col items-center gap-2">
           <LoadingSpinner size={40} />
-          <p className="text-[12px] font-medium text-blue-600">분석 중...</p>
+          <p className="text-[12px] font-medium text-blue-600">로딩중...</p>
         </div>
       );
     }
@@ -96,17 +101,14 @@ export const NoteCard = ({
     }
 
     // 썸네일 URL이 있을 때 (이미지 등)
-    if (thumbnailUrl) {
+    if (thumbnailUrl && !hasThumbnailError) {
       return (
         <img
           src={thumbnailUrl}
           alt={label}
           className="h-full w-full object-contain"
-          onError={(e) => {
-            // 이미지 로드 실패 시 fallback
-            e.currentTarget.style.display = "none";
-            e.currentTarget.parentElement!.innerHTML =
-              '<p class="text-[13px] text-gray-400">썸네일 없음</p>';
+          onError={() => {
+            setHasThumbnailError(true);
           }}
         />
       );
