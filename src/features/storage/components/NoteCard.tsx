@@ -75,7 +75,7 @@ export const NoteCard = ({
       return (
         <div className="flex flex-col items-center gap-2">
           <LoadingSpinner size={40} />
-          <p className="text-[12px] font-medium text-blue-600">로딩중...</p>
+          <p className="text-[12px] font-medium text-blue-600">로딩 중...</p>
         </div>
       );
     }

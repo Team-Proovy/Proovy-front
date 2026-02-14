@@ -84,8 +84,9 @@ export const StorageContent = ({
     const isProcessing =
       noteDetail?.assets?.some(
         (asset) =>
-          (!!asset && normalizeOcrStatus(asset.ocrStatus) === "pending") ||
-          normalizeOcrStatus(asset.ocrStatus) === "processing",
+          !!asset &&
+          (normalizeOcrStatus(asset.ocrStatus) === "pending" ||
+            normalizeOcrStatus(asset.ocrStatus) === "processing"),
       ) ?? false;
     setHasProcessingAssets(isProcessing);
 
