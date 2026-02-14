@@ -21,18 +21,38 @@ type PendingAttachment = ChatSendData["attachments"][number];
 const convertConversations = (
   conversations: ConversationInfo[],
 ): ChatMessage[] =>
-  conversations.flatMap((conv) => [
-    {
+  conversations.flatMap((conv) => {
+    const messages: ChatMessage[] = [];
+
+    // 사용자 메시지
+    messages.push({
       id: `msg-${conv.userMessage.messageId}`,
       role: "user" as const,
       content: conv.userMessage.content,
-    },
-    {
-      id: `msg-${conv.assistantMessage.messageId}`,
-      role: "assistant" as const,
-      content: conv.assistantMessage.content,
-    },
-  ]);
+    });
+
+    // AI 메시지 (빈 내용이면 건너뛰기)
+    const assistantContent = conv.assistantMessage.content || "";
+    if (assistantContent.trim()) {
+      messages.push({
+        id: `msg-${conv.assistantMessage.messageId}`,
+        role: "assistant" as const,
+        content: assistantContent,
+      });
+    } else {
+      // 빈 응답인 경우 에러 메시지 표시
+      console.warn(
+        `[ChatHistory] Assistant 메시지가 비어있음 - messageId: ${conv.assistantMessage.messageId}`,
+      );
+      messages.push({
+        id: `msg-${conv.assistantMessage.messageId}`,
+        role: "assistant" as const,
+        content: "응답을 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.",
+      });
+    }
+
+    return messages;
+  });
 
 /**
  * 채팅 메시지 상태 관리 훅
