@@ -218,6 +218,7 @@ export const ChatInput = ({
           });
       } catch (error) {
         console.error("Home send failed:", error);
+        alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       } finally {
         setIsProcessing(false);
       }
@@ -242,8 +243,11 @@ export const ChatInput = ({
 
     try {
       // 부모 콜백 호출
-      onSend?.(sendPayload);
+      await onSend?.(sendPayload);
       resetInputState();
+    } catch (error) {
+      console.error("Send failed:", error);
+      alert("메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsProcessing(false);
     }
