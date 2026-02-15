@@ -253,17 +253,24 @@ export const useChatMessages = () => {
                 ),
               );
             } else if (event.content.type === "ai") {
-              // 최종 응답 — 기존 내용 밑에 추가 (교체 X)
+              // 최종 응답 — 서버 응답과 클라이언트 누적이 다를 경우에만 교체 (정합성 보장)
+              // 같으면 깜빡임 방지를 위해 유지 (statusText만 제거)
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === tempAssistantMsgId
-                    ? {
-                        ...m,
-                        content: m.content + (m.content ? "\n\n" : "") + event.content.content,
-                        statusText: undefined,
-                      }
-                    : m,
-                ),
+                prev.map((m) => {
+                  if (m.id !== tempAssistantMsgId) return m;
+
+                  // 내용이 다르면 교체, 같으면 유지
+                  if (m.content !== event.content.content) {
+                    return {
+                      ...m,
+                      content: event.content.content,
+                      statusText: undefined,
+                    };
+                  }
+
+                  // 내용이 같으면 statusText만 제거
+                  return { ...m, statusText: undefined };
+                }),
               );
             }
             break;
