@@ -188,21 +188,34 @@ export const ChatInput = ({
 
     // 홈에서는 이동을 막지 않도록 먼저 전송(onSend) 후 크레딧 차감은 백그라운드 처리
     if (isHomeSend) {
-      try {
-        const sendResult = await onSend?.(sendPayload);
+      if (!onSend) {
+        console.error("[HomeSend] onSend 콜백이 없어 전송을 중단합니다.");
+        setIsProcessing(false);
+        return;
+      }
 
-        if (sendResult === false) {
+      try {
+        const sendResult = await onSend(sendPayload);
+
+        if (sendResult !== true) {
           setIsProcessing(false);
           return;
         }
 
         resetInputState();
 
-        void deductCredit(creditPayload).then((creditResponse) => {
-          if (!creditResponse.result.success) {
-            console.warn("[HomeSend] 크레딧 차감 실패", creditResponse.result);
-          }
-        });
+        void deductCredit(creditPayload)
+          .then((creditResponse) => {
+            if (!creditResponse.result.success) {
+              console.warn(
+                "[HomeSend] 크레딧 차감 실패",
+                creditResponse.result,
+              );
+            }
+          })
+          .catch((error) => {
+            console.error("[HomeSend] 크레딧 차감 요청 실패:", error);
+          });
       } catch (error) {
         console.error("Home send failed:", error);
       } finally {

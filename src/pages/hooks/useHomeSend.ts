@@ -74,7 +74,7 @@ export const useHomeSend = () => {
 
   const clearError = () => setUploadError(null);
 
-  const handleSend = (data: ChatSendData): boolean => {
+  const handleSend = async (data: ChatSendData): Promise<boolean> => {
     const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
     const resolvedPlan = profile?.subscription?.plan ?? authUser?.plan;
     const shouldCheckLimit = !isProfileLoading || !!resolvedPlan;
@@ -90,64 +90,67 @@ export const useHomeSend = () => {
       }
     }
 
-    // 노트만 생성 (title은 서버가 자동 생성)
-    createNote(
-      {},
-      {
-        onSuccess: (response) => {
-          const newNoteId = response.result.noteId;
-          setUploadError(null);
+    return new Promise<boolean>((resolve) => {
+      // 노트만 생성 (title은 서버가 자동 생성)
+      createNote(
+        {},
+        {
+          onSuccess: (response) => {
+            const newNoteId = response.result.noteId;
+            setUploadError(null);
 
-          // 첨부파일 정보 → ChatPage 전달
-          const attachmentInfos: MessageAttachment[] = data.attachments.map(
-            (a) => ({
-              name: a.name,
-              mimeType: a.mimeType,
-              size: a.size,
-              previewUrl: createPersistentPreviewUrl(a),
-            }),
-          );
+            // 첨부파일 정보 → ChatPage 전달
+            const attachmentInfos: MessageAttachment[] = data.attachments.map(
+              (a) => ({
+                name: a.name,
+                mimeType: a.mimeType,
+                size: a.size,
+                previewUrl: createPersistentPreviewUrl(a),
+              }),
+            );
 
-          const viewerFileInfo = viewerFileRef.current
-            ? {
-                name: viewerFileRef.current.name,
-                mimeType: viewerFileRef.current.type,
-                size: viewerFileRef.current.size,
-              }
-            : undefined;
+            const viewerFileInfo = viewerFileRef.current
+              ? {
+                  name: viewerFileRef.current.name,
+                  mimeType: viewerFileRef.current.type,
+                  size: viewerFileRef.current.size,
+                }
+              : undefined;
 
-          // 첫 메시지 데이터를 state로 전달 → ChatPage에서 conversations API 호출
-          const firstMessage: FirstMessageState = {
-            text: data.message,
-            latex: data.latex,
-            mentionedAssetIds: data.mentionedAssetIds,
-            chosenFeatures: data.mentionedToolCodes,
-            canvasImageIds: [],
-            attachments: attachmentInfos,
-            pendingAttachments: data.attachments,
-            viewerFile: viewerFileInfo,
-            pendingViewerFile: viewerFileRef.current ?? undefined,
-          };
+            // 첫 메시지 데이터를 state로 전달 → ChatPage에서 conversations API 호출
+            const firstMessage: FirstMessageState = {
+              text: data.message,
+              latex: data.latex,
+              mentionedAssetIds: data.mentionedAssetIds,
+              chosenFeatures: data.mentionedToolCodes,
+              canvasImageIds: [],
+              attachments: attachmentInfos,
+              pendingAttachments: data.attachments,
+              viewerFile: viewerFileInfo,
+              pendingViewerFile: viewerFileRef.current ?? undefined,
+            };
 
-          navigate(`/app/chat/${newNoteId}`, {
-            state: { firstMessage },
-          });
+            navigate(`/app/chat/${newNoteId}`, {
+              state: { firstMessage },
+            });
 
-          // 저장소/노트 캐시는 네비게이션을 막지 않도록 백그라운드에서 무효화
-          void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
-          void queryClient.invalidateQueries({
-            queryKey: noteKeys.detail(String(newNoteId)),
-          });
-          void queryClient.invalidateQueries({ queryKey: assetKeys.storage });
+            // 저장소/노트 캐시는 네비게이션을 막지 않도록 백그라운드에서 무효화
+            void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+            void queryClient.invalidateQueries({
+              queryKey: noteKeys.detail(String(newNoteId)),
+            });
+            void queryClient.invalidateQueries({ queryKey: assetKeys.storage });
+
+            resolve(true);
+          },
+          onError: (error) => {
+            console.error("노트 생성 실패:", error);
+            setUploadError("노트 생성에 실패했습니다. 다시 시도해주세요.");
+            resolve(false);
+          },
         },
-        onError: (error) => {
-          console.error("노트 생성 실패:", error);
-          setUploadError("노트 생성에 실패했습니다. 다시 시도해주세요.");
-        },
-      },
-    );
-
-    return true;
+      );
+    });
   };
 
   return {
