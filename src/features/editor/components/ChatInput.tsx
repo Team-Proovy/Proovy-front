@@ -342,6 +342,7 @@ export const ChatInput = ({
         onContentChange={setHasContent}
         onSubmit={handleSend}
         onKeyDown={handleKeyDown}
+        disabled={isSending}
       />
 
       {/* 툴바 */}
@@ -358,6 +359,7 @@ export const ChatInput = ({
         activeToolName={selectedTool}
         hasContent={!isSending && (hasContent || attachments.length > 0)}
         onClipClick={openFilePicker}
+        isSending={isSending}
       />
 
       {/* Canvas Overlay - Lazy loaded */}
