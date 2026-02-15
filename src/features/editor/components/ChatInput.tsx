@@ -143,10 +143,12 @@ export const ChatInput = ({
 
   // 크레딧 사용 뮤테이션
   const { mutateAsync: deductCredit } = useUseCredit();
+  const isHomeSend = noteId == null;
+  const isToolbarSending = !isHomeSend && isSending;
 
   // 전송 핸들러
   const handleSend = async () => {
-    if (isSending || isProcessing) return;
+    if (isToolbarSending || isProcessing) return;
     if (!hasContent && attachments.length === 0) return;
 
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
@@ -183,8 +185,6 @@ export const ChatInput = ({
       clearAttachments();
       handleToolSelect(""); // 선택된 도구 초기화
     };
-
-    const isHomeSend = noteId == null;
 
     // 홈에서는 이동을 막지 않도록 먼저 전송(onSend) 후 크레딧 차감은 백그라운드 처리
     if (isHomeSend) {
@@ -243,8 +243,8 @@ export const ChatInput = ({
 
     try {
       // 부모 콜백 호출
-      await onSend?.(sendPayload);
       resetInputState();
+      await onSend?.(sendPayload);
     } catch (error) {
       console.error("Send failed:", error);
       alert("메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
@@ -342,7 +342,6 @@ export const ChatInput = ({
         onContentChange={setHasContent}
         onSubmit={handleSend}
         onKeyDown={handleKeyDown}
-        disabled={isSending}
       />
 
       {/* 툴바 */}
@@ -357,9 +356,9 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={!isSending && (hasContent || attachments.length > 0)}
+        hasContent={hasContent || attachments.length > 0}
         onClipClick={openFilePicker}
-        isSending={isSending}
+        isSending={isToolbarSending}
       />
 
       {/* Canvas Overlay - Lazy loaded */}
