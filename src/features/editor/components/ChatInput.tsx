@@ -52,7 +52,7 @@ interface ChatInputProps {
   /** 현재 노트 ID (#파일 멘션에 사용) */
   noteId?: number | null;
   /** 메시지 전송 콜백 */
-  onSend?: (data: ChatSendData) => void;
+  onSend?: (data: ChatSendData) => void | boolean | Promise<void | boolean>;
   /** 전송 중 여부 (true이면 전송 버튼 비활성화) */
   isSending?: boolean;
 }
@@ -149,8 +149,6 @@ export const ChatInput = ({
     if (isSending || isProcessing) return;
     if (!hasContent && attachments.length === 0) return;
 
-    setIsProcessing(true);
-
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
     const extracted = inputRef.current
       ? extractInputContent(inputRef.current)
@@ -158,14 +156,64 @@ export const ChatInput = ({
 
     if (!extracted.text && attachments.length === 0) return;
 
+    setIsProcessing(true);
+
+    const creditPayload = {
+      eventType: "LLM_QUERY" as const,
+      difficulty: "medium" as const,
+      featureName: "Chat",
+      description: "AI 채팅 질문",
+    };
+
+    const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
+    const sendPayload: ChatSendData = {
+      message: extracted.text,
+      latex: extracted.latex,
+      mentionedAssetIds: extracted.mentionedAssetIds,
+      mentionedToolCodes,
+      attachments: [...attachments],
+    };
+
+    const resetInputState = () => {
+      if (inputRef.current) {
+        inputRef.current.innerHTML = "";
+      }
+      setHasContent(false);
+      clearMentionedAssets();
+      clearAttachments();
+      handleToolSelect(""); // 선택된 도구 초기화
+    };
+
+    const isHomeSend = noteId == null;
+
+    // 홈에서는 이동을 막지 않도록 먼저 전송(onSend) 후 크레딧 차감은 백그라운드 처리
+    if (isHomeSend) {
+      try {
+        const sendResult = await onSend?.(sendPayload);
+
+        if (sendResult === false) {
+          setIsProcessing(false);
+          return;
+        }
+
+        resetInputState();
+
+        void deductCredit(creditPayload).then((creditResponse) => {
+          if (!creditResponse.result.success) {
+            console.warn("[HomeSend] 크레딧 차감 실패", creditResponse.result);
+          }
+        });
+      } catch (error) {
+        console.error("Home send failed:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
+
     // 크레딧 차감 시도
     try {
-      const creditResponse = await deductCredit({
-        eventType: "LLM_QUERY",
-        difficulty: "medium",
-        featureName: "Chat",
-        description: "AI 채팅 질문",
-      });
+      const creditResponse = await deductCredit(creditPayload);
 
       if (!creditResponse.result.success) {
         setShowCreditModal(true);
@@ -180,26 +228,9 @@ export const ChatInput = ({
     }
 
     try {
-      // 도구 코드 수집
-      const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
-
       // 부모 콜백 호출
-      onSend?.({
-        message: extracted.text,
-        latex: extracted.latex,
-        mentionedAssetIds: extracted.mentionedAssetIds,
-        mentionedToolCodes,
-        attachments: [...attachments],
-      });
-
-      // 입력 상태 초기화
-      if (inputRef.current) {
-        inputRef.current.innerHTML = "";
-      }
-      setHasContent(false);
-      clearMentionedAssets();
-      clearAttachments();
-      handleToolSelect(""); // 선택된 도구 초기화
+      onSend?.(sendPayload);
+      resetInputState();
     } finally {
       setIsProcessing(false);
     }

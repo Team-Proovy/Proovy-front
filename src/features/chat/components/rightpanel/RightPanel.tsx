@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/shared/components/loading-spinner";
 interface RightPanelProps {
   messages: ChatMessage[];
   noteId?: number | null;
-  onSend?: (data: ChatSendData) => void;
+  onSend?: (data: ChatSendData) => void | boolean | Promise<void | boolean>;
   isSending?: boolean;
   /** 대화 히스토리 로딩 중 여부 */
   isLoading?: boolean;

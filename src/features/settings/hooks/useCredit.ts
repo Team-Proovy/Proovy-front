@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCreditHistory, useCredit } from "../api/credit_api";
-import type { GetCreditHistoryParams } from "../api/credit_types";
+import type {
+  CreditUsageRequest,
+  GetCreditHistoryParams,
+} from "../api/credit_types";
 import { tokenUtils } from "@/shared/api/client";
 import { userKeys } from "./useUser";
 
@@ -29,6 +32,52 @@ export const useUseCredit = () => {
 
   return useMutation({
     mutationFn: useCredit,
+    onMutate: async (variables: CreditUsageRequest) => {
+      await queryClient.cancelQueries({ queryKey: userKeys.profile() });
+
+      const previousProfile = queryClient.getQueryData<MyProfileResponse>(
+        userKeys.profile(),
+      );
+
+      if (!previousProfile) {
+        return { previousProfile };
+      }
+
+      const optimisticAmount = Math.max(variables.amount ?? 15, 0);
+
+      const currentDaily = previousProfile.credit.dailyCredit.balance;
+      const currentMonthly = previousProfile.credit.monthlyCredit.balance;
+
+      const nextDaily = Math.max(currentDaily - optimisticAmount, 0);
+      const remainingAmount = Math.max(optimisticAmount - currentDaily, 0);
+      const nextMonthly = Math.max(currentMonthly - remainingAmount, 0);
+
+      queryClient.setQueryData<MyProfileResponse>(userKeys.profile(), {
+        ...previousProfile,
+        credit: {
+          ...previousProfile.credit,
+          dailyCredit: {
+            ...previousProfile.credit.dailyCredit,
+            balance: nextDaily,
+          },
+          monthlyCredit: {
+            ...previousProfile.credit.monthlyCredit,
+            balance: nextMonthly,
+          },
+          totalAvailable: Math.max(
+            previousProfile.credit.totalAvailable - optimisticAmount,
+            0,
+          ),
+        },
+      });
+
+      return { previousProfile };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousProfile) {
+        queryClient.setQueryData(userKeys.profile(), context.previousProfile);
+      }
+    },
     onSuccess: (data) => {
       if (data.result.success) {
         const newBalance = data.result.balance;
