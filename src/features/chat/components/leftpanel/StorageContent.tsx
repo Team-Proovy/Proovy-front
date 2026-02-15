@@ -84,8 +84,9 @@ export const StorageContent = ({
     const isProcessing =
       noteDetail?.assets?.some(
         (asset) =>
-          normalizeOcrStatus(asset.ocrStatus) === "pending" ||
-          normalizeOcrStatus(asset.ocrStatus) === "processing",
+          !!asset &&
+          (normalizeOcrStatus(asset.ocrStatus) === "pending" ||
+            normalizeOcrStatus(asset.ocrStatus) === "processing"),
       ) ?? false;
     setHasProcessingAssets(isProcessing);
 
@@ -98,29 +99,51 @@ export const StorageContent = ({
   // BOX 파일 목록 (업로드된 자산)
   const boxFiles = useMemo<StorageFile[]>(() => {
     if (!noteDetail?.assets) return [];
-    return noteDetail.assets.map((asset) => ({
-      id: asset.assetId,
-      label: asset.fileName,
-      type: "upload",
-      fileUrl: asset.thumbnailUrl ?? undefined,
-      mimeType: getMimeType(asset.fileType), // fileType -> mimeType 변환 적용
-      ocrStatus: normalizeOcrStatus(asset.ocrStatus),
-    }));
+    return noteDetail.assets.flatMap((asset) => {
+      if (!asset || typeof asset.assetId !== "number") {
+        return [];
+      }
+
+      return [
+        {
+          id: asset.assetId,
+          label: asset.fileName,
+          type: "upload" as const,
+          fileUrl: asset.thumbnailUrl ?? undefined,
+          mimeType: getMimeType(asset.fileType), // fileType -> mimeType 변환 적용
+          ocrStatus: normalizeOcrStatus(asset.ocrStatus),
+        },
+      ];
+    });
   }, [noteDetail]);
 
   // THREAD 파일 목록 (AI 생성 파일)
   const threadFiles = useMemo<StorageFile[]>(() => {
     if (!noteDetail?.conversations) return [];
-    return noteDetail.conversations.flatMap((conv) =>
-      conv.assistantMessage.generatedFiles.map((file) => ({
-        id: file.fileId,
-        label: file.fileName,
-        type: "ai",
-        fileUrl: file.downloadUrl,
-        mimeType: getMimeType(file.fileType), // fileType -> mimeType 변환 적용
-        ocrStatus: "completed", // 생성된 파일은 OCR 완료 상태로 간주
-      })),
-    );
+    return noteDetail.conversations.flatMap((conv) => {
+      const generatedFiles = Array.isArray(
+        conv?.assistantMessage?.generatedFiles,
+      )
+        ? conv.assistantMessage.generatedFiles
+        : [];
+
+      return generatedFiles.flatMap((file) => {
+        if (!file || typeof file.fileId !== "number") {
+          return [];
+        }
+
+        return [
+          {
+            id: file.fileId,
+            label: file.fileName,
+            type: "ai" as const,
+            fileUrl: file.downloadUrl,
+            mimeType: getMimeType(file.fileType), // fileType -> mimeType 변환 적용
+            ocrStatus: "completed" as const, // 생성된 파일은 OCR 완료 상태로 간주
+          },
+        ];
+      });
+    });
   }, [noteDetail]);
 
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -282,7 +305,10 @@ export const StorageContent = ({
   const totalLimitMB = 512;
 
   const usedBytes =
-    noteDetail?.assets?.reduce((acc, asset) => acc + asset.fileSize, 0) ?? 0;
+    noteDetail?.assets?.reduce(
+      (acc, asset) => acc + (asset?.fileSize ?? 0),
+      0,
+    ) ?? 0;
 
   const usedMB = usedBytes / 1024 / 1024;
 

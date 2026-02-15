@@ -1,9 +1,11 @@
 import { http, HttpResponse } from "msw";
 import type { CreditHistoryResultDto } from "../../features/settings/api/credit_types";
 
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 export const creditHandlers = [
   // 크레딧 히스토리 조회
-  http.get("/api/credits/history", () => {
+  http.get(`${BASE_URL}/api/credits/history`, () => {
     const mockData: CreditHistoryResultDto = {
       creditSummary: {
         dailyFreeCredit: {
@@ -69,7 +71,7 @@ export const creditHandlers = [
   }),
 
   // 크레딧 사용
-  http.post("/api/credits/use", async () => {
+  http.post(`${BASE_URL}/api/credits/use`, async () => {
     return HttpResponse.json({
       isSuccess: true,
       code: "COMMON200",
@@ -90,7 +92,7 @@ export const creditHandlers = [
   }),
 
   // 크레딧 비용 조회
-  http.get("/api/credits/costs", () => {
+  http.get(`${BASE_URL}/api/credits/costs`, () => {
     return HttpResponse.json({
       isSuccess: true,
       code: "COMMON200",
@@ -142,7 +144,7 @@ export const creditHandlers = [
   }),
 
   // 크레딧 잔액 조회
-  http.get("/api/credits/balance", ({ request }) => {
+  http.get(`${BASE_URL}/api/credits/balance`, ({ request }) => {
     const url = new URL(request.url);
     const checkCost = url.searchParams.get("checkCost");
 
@@ -165,7 +167,7 @@ export const creditHandlers = [
   }),
 
   // 예상 비용 조회
-  http.get("/api/credits/estimate", async () => {
+  http.get(`${BASE_URL}/api/credits/estimate`, async () => {
     return HttpResponse.json({
       isSuccess: true,
       code: "COMMON200",

@@ -112,7 +112,14 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       try {
         const response = await getDownloadUrl(activeFileId);
         if (cancelled) return;
-        const { downloadUrl, fileName: fetchedFileName } = response.result;
+        const downloadResult = response?.result;
+
+        if (!downloadResult?.downloadUrl || !downloadResult?.fileName) {
+          setError("파일 정보를 불러오는 데 실패했습니다. 다시 시도해주세요.");
+          return;
+        }
+
+        const { downloadUrl, fileName: fetchedFileName } = downloadResult;
 
         setPdfUrl(downloadUrl);
         setFileName(fetchedFileName);
