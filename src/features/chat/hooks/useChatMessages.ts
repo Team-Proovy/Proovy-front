@@ -253,13 +253,13 @@ export const useChatMessages = () => {
                 ),
               );
             } else if (event.content.type === "ai") {
-              // 최종 응답 — token 누적분을 서버 최종 텍스트로 교체 (정합성 보장)
+              // 최종 응답 — 기존 내용 밑에 추가 (교체 X)
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === tempAssistantMsgId
                     ? {
                         ...m,
-                        content: event.content.content,
+                        content: m.content + (m.content ? "\n\n" : "") + event.content.content,
                         statusText: undefined,
                       }
                     : m,
