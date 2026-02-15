@@ -84,6 +84,7 @@ export const ChatInput = ({
     attachments,
     addFiles,
     addCanvasImage,
+    restoreAttachments,
     removeAttachment,
     clearAttachments,
     openFilePicker,
@@ -176,6 +177,12 @@ export const ChatInput = ({
       attachments: [...attachments],
     };
 
+    const restoreSnapshot = {
+      text: sendPayload.message,
+      attachments: [...attachments],
+      selectedToolName: selectedTool,
+    };
+
     const resetInputState = () => {
       if (inputRef.current) {
         inputRef.current.innerHTML = "";
@@ -184,6 +191,16 @@ export const ChatInput = ({
       clearMentionedAssets();
       clearAttachments();
       handleToolSelect(""); // 선택된 도구 초기화
+    };
+
+    const restoreInputState = () => {
+      if (inputRef.current) {
+        inputRef.current.innerText = restoreSnapshot.text;
+      }
+      setHasContent(restoreSnapshot.text.trim().length > 0);
+      restoreAttachments(restoreSnapshot.attachments);
+      clearMentionedAssets();
+      handleToolSelect(restoreSnapshot.selectedToolName || "");
     };
 
     // 홈에서는 이동을 막지 않도록 먼저 전송(onSend) 후 크레딧 차감은 백그라운드 처리
@@ -246,6 +263,7 @@ export const ChatInput = ({
       resetInputState();
       await onSend?.(sendPayload);
     } catch (error) {
+      restoreInputState();
       console.error("Send failed:", error);
       alert("메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } finally {

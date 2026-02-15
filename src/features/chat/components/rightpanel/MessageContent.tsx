@@ -1,3 +1,4 @@
+import { Children, cloneElement, isValidElement, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -7,7 +8,52 @@ import "katex/dist/katex.min.css";
 interface MessageContentProps {
   content: string;
   className?: string;
+  enableFileMentionChip?: boolean;
 }
+
+const FILE_MENTION_REGEX =
+  /#([\w\d가-힣ㄱ-ㅎㅏ-ㅣ\s()\-_.]+?\.(?:pdf|png|jpe?g|webp|gif|bmp|svg|txt|docx?|pptx?|xlsx?|csv|hwp|hwpx))/gi;
+
+const renderMentionChipsInText = (text: string): ReactNode => {
+  const parts = text.split(FILE_MENTION_REGEX);
+
+  if (parts.length === 1) {
+    return text;
+  }
+
+  return parts.map((part, index) => {
+    if (index % 2 === 1) {
+      return (
+        <span
+          key={`mention-chip-${index}-${part}`}
+          className="inline-flex rounded-[6px] bg-[#DDE7FA] px-1.5 py-0.5 align-middle text-[#3A5BA9]"
+        >
+          #{part}
+        </span>
+      );
+    }
+
+    return part;
+  });
+};
+
+const applyMentionChipToChildren = (children: ReactNode): ReactNode =>
+  Children.map(children, (child) => {
+    if (typeof child === "string") {
+      return renderMentionChipsInText(child);
+    }
+
+    if (
+      isValidElement<{ children?: ReactNode }>(child) &&
+      child.props.children !== undefined
+    ) {
+      return cloneElement(child, {
+        children: applyMentionChipToChildren(child.props.children),
+      });
+    }
+
+    return child;
+  });
 
 /**
  * MessageContent - 메시지 내용 렌더링 컴포넌트
@@ -17,7 +63,11 @@ interface MessageContentProps {
 export const MessageContent = ({
   content,
   className = "",
+  enableFileMentionChip = false,
 }: MessageContentProps) => {
+  const renderContent = (children: ReactNode) =>
+    enableFileMentionChip ? applyMentionChipToChildren(children) : children;
+
   return (
     <div className={className}>
       <ReactMarkdown
@@ -25,26 +75,38 @@ export const MessageContent = ({
         rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ children }) => (
-            <h1 className="my-2 text-[18px] font-semibold">{children}</h1>
+            <h1 className="my-2 text-[18px] font-semibold">
+              {renderContent(children)}
+            </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="my-2 text-[16px] font-semibold">{children}</h2>
+            <h2 className="my-2 text-[16px] font-semibold">
+              {renderContent(children)}
+            </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="my-2 text-[15px] font-semibold">{children}</h3>
+            <h3 className="my-2 text-[15px] font-semibold">
+              {renderContent(children)}
+            </h3>
           ),
-          p: ({ children }) => <p className="my-1">{children}</p>,
+          p: ({ children }) => (
+            <p className="my-1">{renderContent(children)}</p>
+          ),
           br: () => <br />,
           ul: ({ children }) => (
-            <ul className="my-2 list-disc pl-5">{children}</ul>
+            <ul className="my-2 list-disc pl-5">{renderContent(children)}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="my-2 list-decimal pl-5">{children}</ol>
+            <ol className="my-2 list-decimal pl-5">
+              {renderContent(children)}
+            </ol>
           ),
-          li: ({ children }) => <li className="my-1">{children}</li>,
+          li: ({ children }) => (
+            <li className="my-1">{renderContent(children)}</li>
+          ),
           blockquote: ({ children }) => (
             <blockquote className="my-2 border-l-2 border-gray-300 pl-3 text-gray-600">
-              {children}
+              {renderContent(children)}
             </blockquote>
           ),
           code: ({ className: codeClassName, children }) => (
@@ -66,7 +128,7 @@ export const MessageContent = ({
               rel="noreferrer"
               className="text-blue-600 underline"
             >
-              {children}
+              {renderContent(children)}
             </a>
           ),
           table: ({ children }) => (
@@ -78,11 +140,13 @@ export const MessageContent = ({
           ),
           th: ({ children }) => (
             <th className="border border-gray-200 bg-gray-50 px-2 py-1 text-left">
-              {children}
+              {renderContent(children)}
             </th>
           ),
           td: ({ children }) => (
-            <td className="border border-gray-200 px-2 py-1">{children}</td>
+            <td className="border border-gray-200 px-2 py-1">
+              {renderContent(children)}
+            </td>
           ),
         }}
       >

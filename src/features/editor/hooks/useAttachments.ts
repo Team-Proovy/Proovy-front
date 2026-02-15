@@ -37,6 +37,7 @@ interface UseAttachmentsReturn {
   attachments: Attachment[];
   addFiles: (files: FileList | File[]) => void;
   addCanvasImage: (blob: Blob) => void;
+  restoreAttachments: (attachments: Attachment[]) => void;
   removeAttachment: (id: string) => void;
   clearAttachments: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -155,6 +156,36 @@ export const useAttachments = (): UseAttachmentsReturn => {
     });
   }, []);
 
+  /** 실패 복구용 첨부 재설정 */
+  const restoreAttachments = useCallback((nextAttachments: Attachment[]) => {
+    setAttachments((prev) => {
+      prev.forEach((item) => {
+        if (item.previewUrl) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      });
+
+      return nextAttachments.map((attachment) => {
+        let previewUrl: string | undefined;
+
+        if (attachment.type === "canvas" && attachment.blob) {
+          previewUrl = URL.createObjectURL(attachment.blob);
+        } else if (
+          attachment.mimeType.startsWith("image/") &&
+          attachment.file
+        ) {
+          previewUrl = URL.createObjectURL(attachment.file);
+        }
+
+        return {
+          ...attachment,
+          id: generateId(),
+          previewUrl,
+        };
+      });
+    });
+  }, []);
+
   /** 드래그앤드롭 핸들러 */
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -215,6 +246,7 @@ export const useAttachments = (): UseAttachmentsReturn => {
     attachments,
     addFiles,
     addCanvasImage,
+    restoreAttachments,
     removeAttachment,
     clearAttachments,
     fileInputRef,

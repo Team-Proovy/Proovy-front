@@ -12,40 +12,6 @@ interface ChatMessagesProps {
   messages: ChatMessage[];
 }
 
-const FILE_MENTION_REGEX =
-  /#([\w\d가-힣ㄱ-ㅎㅏ-ㅣ\s()\-_.]+?\.(?:pdf|png|jpe?g|webp|gif|bmp|svg|txt|docx?|pptx?|xlsx?|csv|hwp|hwpx))/gi;
-
-const UserMessageContent = ({ content }: { content: string }) => {
-  const lines = content.split("\n");
-
-  return (
-    <>
-      {lines.map((line, lineIndex) => {
-        const parts = line.split(FILE_MENTION_REGEX);
-
-        return (
-          <div key={`line-${lineIndex}`}>
-            {parts.map((part, partIndex) => {
-              if (partIndex % 2 === 1) {
-                return (
-                  <span
-                    key={`chip-${lineIndex}-${partIndex}`}
-                    className="inline-flex rounded-[6px] bg-[#DDE7FA] px-1.5 py-0.5 align-middle text-[#3A5BA9]"
-                  >
-                    #{part}
-                  </span>
-                );
-              }
-
-              return <span key={`text-${lineIndex}-${partIndex}`}>{part}</span>;
-            })}
-          </div>
-        );
-      })}
-    </>
-  );
-};
-
 // 사용자 메시지 컴포넌트
 const UserMessage = ({ message }: { message: ChatMessage }) => (
   <div className="flex flex-col items-end">
@@ -57,7 +23,10 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
     <div className="flex items-start justify-end gap-[12px]">
       <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
-          <UserMessageContent content={message.content} />
+          <MessageContent
+            content={message.content}
+            enableFileMentionChip={true}
+          />
         </div>
       </div>
       <div className="shrink-0">
