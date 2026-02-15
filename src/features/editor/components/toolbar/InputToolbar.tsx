@@ -326,10 +326,10 @@ export const InputToolbar = ({
       {/* 전송 버튼 */}
       <ToolButton
         onClick={hasContent && !isSending ? onSend : undefined}
-        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed opacity-50" : ""}`}
+        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed" : ""}`}
       >
         {isSending ? (
-          <LoadingSpinner size={16} />
+          <LoadingSpinner size={20} />
         ) : (
           <SendIcon className="h-[16px] w-[14px] shrink-0" />
         )}
