@@ -94,19 +94,17 @@ export const MessageContent = ({
           ),
           br: () => <br />,
           ul: ({ children }) => (
-            <ul className="my-2 list-disc pl-5">{renderContent(children)}</ul>
+            <ul className="my-2 list-disc pl-5">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="my-2 list-decimal pl-5">
-              {renderContent(children)}
-            </ol>
+            <ol className="my-2 list-decimal pl-5">{children}</ol>
           ),
           li: ({ children }) => (
             <li className="my-1">{renderContent(children)}</li>
           ),
           blockquote: ({ children }) => (
             <blockquote className="my-2 border-l-2 border-gray-300 pl-3 text-gray-600">
-              {renderContent(children)}
+              {children}
             </blockquote>
           ),
           code: ({ className: codeClassName, children }) => (
