@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import {
   ProfileIcon,
   SubscriptionIcon,
@@ -71,22 +71,98 @@ const AssistantMessage = ({
 export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastUserMsgRef = useRef<HTMLDivElement>(null);
-  const prevMessageCountRef = useRef(0);
+  const spacerRef = useRef<HTMLDivElement>(null);
+  const lastAnchoredUserMessageIdRef = useRef<string | null>(null);
+  const hasMountedRef = useRef(false);
+  const spacerHeightRef = useRef(0);
 
-  // 새 메시지 전송 시 → 마지막 사용자 메시지를 뷰포트 상단으로 스크롤
-  // (Gemini/ChatGPT 스타일: 사용자 메시지가 위에, 아래 빈 공간에 AI 응답이 채워짐)
-  useEffect(() => {
-    const prevCount = prevMessageCountRef.current;
-    prevMessageCountRef.current = messages.length;
+  // ── 조정 가능한 상수 ──
+  // USER_MESSAGE_TOP_GAP: 사용자 메시지가 스크롤 컨테이너 상단에서 떨어지는 간격(px)
+  // MIN_BOTTOM_SPACER: 콘텐츠와 입력창 사이의 최소 여백(px)
+  const USER_MESSAGE_TOP_GAP = 32;
+  const MIN_BOTTOM_SPACER = 32;
 
-    // 메시지가 새로 추가된 경우에만 스크롤
-    if (messages.length > prevCount && lastUserMsgRef.current) {
-      lastUserMsgRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+  /** spacer 높이를 DOM에 직접 반영 (React 리렌더 없이) */
+  const setSpacerHeight = (h: number) => {
+    spacerHeightRef.current = h;
+    if (spacerRef.current) spacerRef.current.style.height = `${h}px`;
+  };
+
+  useLayoutEffect(() => {
+    if (!scrollRef.current) return;
+
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((m) => m.role === "user");
+    if (!lastUserMessage || !lastUserMsgRef.current) return;
+
+    const hasStreamingAssistant = messages.some(
+      (m) => m.role === "assistant" && !!m.isStreaming,
+    );
+
+    // 첫 마운트에서 기존 히스토리만 있는 경우에는 자동 점프를 막고,
+    // 첫 전송(assistant isStreaming) 시에는 아래 신규 사용자 메시지 분기로 진행
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      setSpacerHeight(MIN_BOTTOM_SPACER);
+      if (!hasStreamingAssistant) {
+        lastAnchoredUserMessageIdRef.current = lastUserMessage.id;
+        return;
+      }
     }
-  }, [messages.length]);
+
+    const container = scrollRef.current;
+    const isNewUserMessage =
+      lastAnchoredUserMessageIdRef.current !== lastUserMessage.id;
+
+    // 사용자 메시지를 상단 32px 위치에 놓기 위해 필요한 scrollTop
+    const targetScrollTop = Math.max(
+      lastUserMsgRef.current.offsetTop - USER_MESSAGE_TOP_GAP,
+      0,
+    );
+    // 현재 spacer를 제외한 순수 콘텐츠 높이
+    const contentHeight = container.scrollHeight - spacerHeightRef.current;
+
+    if (isNewUserMessage) {
+      // ── 새 사용자 메시지: 상단 앵커 ──
+      // 올바른 공식: targetScrollTop까지 스크롤하려면
+      // scrollHeight - clientHeight >= targetScrollTop 이어야 하므로
+      // spacer >= targetScrollTop + clientHeight - contentHeight
+      lastAnchoredUserMessageIdRef.current = lastUserMessage.id;
+      const neededSpacer = Math.max(
+        targetScrollTop + container.clientHeight - contentHeight,
+        MIN_BOTTOM_SPACER,
+      );
+
+      setSpacerHeight(neededSpacer);
+
+      // DOM 직접 변경 → reflow → scrollHeight 즉시 반영
+      const maxScrollTop = Math.max(
+        container.scrollHeight - container.clientHeight,
+        0,
+      );
+      container.scrollTo({
+        top: Math.min(targetScrollTop, maxScrollTop),
+        behavior: "smooth",
+      });
+    } else if (hasStreamingAssistant) {
+      // ── AI 스트리밍 중: spacer 자동 축소 + 하단 따라가기 ──
+      // 콘텐츠가 늘어남에 따라 spacer를 줄여 과도한 여백 제거
+      const optimalSpacer = Math.max(
+        targetScrollTop + container.clientHeight - contentHeight,
+        MIN_BOTTOM_SPACER,
+      );
+
+      setSpacerHeight(optimalSpacer);
+    }
+  }, [messages]);
+
+  // 대화 초기화 시 spacer 리셋
+  useEffect(() => {
+    if (messages.length === 0) {
+      setSpacerHeight(MIN_BOTTOM_SPACER);
+    }
+  }, [messages]);
 
   if (messages.length === 0) {
     return (
@@ -108,13 +184,12 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <div
       ref={scrollRef}
-      className="flex flex-1 justify-center overflow-x-hidden overflow-y-auto"
+      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto"
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
       <div className="w-full max-w-[660px] min-w-[270px] px-[16px] pt-[40px]">
         {messages.map((message, index) => {
           const prevMessage = messages[index - 1];
-          // 이전 메시지가 AI이고 현재가 사용자면 묶음 간 간격 (20px), 아니면 기본 간격 (12px)
           const isNewGroup =
             prevMessage?.role === "assistant" && message.role === "user";
           const marginTop =
@@ -139,8 +214,10 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
             </div>
           );
         })}
-        {/* 하단 여백 — 사용자 메시지가 상단에 위치할 수 있도록 충분한 빈 공간 확보 */}
-        <div className="min-h-[80vh] shrink-0" />
+        <div
+          ref={spacerRef}
+          className="shrink-0"
+        />
       </div>
     </div>
   );
