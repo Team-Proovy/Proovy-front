@@ -220,20 +220,11 @@ export interface MentionedFile {
   fileName: string;
 }
 
-/** 검색 결과 메시지 정보 (NoteDetail의 MessageInfo와 동일 구조) */
+/** 검색 결과 메시지 정보 (백엔드 MessageInfo 구조) */
 export interface SearchMessageInfo {
-  messageId: number;
-  content: string;
-  mentionedAssets: { assetId: number; fileName: string }[];
-  mentionedTools: string[];
-  usedTools: string[];
-  generatedFiles: {
-    fileId: number;
-    fileName: string;
-    fileType: string;
-    downloadUrl: string;
-  }[];
-  createdAt: string;
+  text: string;
+  preview: string;
+  highlight: string;
 }
 
 /** 대화 검색 결과 항목 */
