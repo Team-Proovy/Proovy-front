@@ -8,6 +8,7 @@ import {
   MathIcon,
   CanvasIcon,
 } from "../../../../shared/components/icons/ChatInputIcons";
+import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
 import { useTools } from "../../hooks/useEditorQueries";
@@ -202,16 +203,8 @@ export const InputToolbar = ({
       ref={containerRef}
       className="flex w-full items-end gap-[12px]"
     >
-      {/* 생성 중 표시 */}
-      {isSending && (
-        <div className="flex items-center gap-2 text-sm text-[#9CA4B0]">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#9CA4B0] border-t-transparent" />
-          <span>생성 중...</span>
-        </div>
-      )}
-
       {/* 왼쪽 버튼 그룹 - 각 버튼 사이 간격은 개별 margin으로 처리 */}
-      <div className={`flex flex-1 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${isSending ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className="flex flex-1 items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* 클립 버튼 */}
         <ToolButton
           onClick={onClipClick}
@@ -333,9 +326,13 @@ export const InputToolbar = ({
       {/* 전송 버튼 */}
       <ToolButton
         onClick={hasContent && !isSending ? onSend : undefined}
-        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed" : ""}`}
       >
-        <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        {isSending ? (
+          <LoadingSpinner size={20} />
+        ) : (
+          <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        )}
       </ToolButton>
     </div>
   );

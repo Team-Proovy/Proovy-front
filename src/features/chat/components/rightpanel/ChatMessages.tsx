@@ -23,7 +23,10 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
     <div className="flex items-start justify-end gap-[12px]">
       <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
-          <MessageContent content={message.content} />
+          <MessageContent
+            content={message.content}
+            enableFileMentionChip={true}
+          />
         </div>
       </div>
       <div className="shrink-0">
