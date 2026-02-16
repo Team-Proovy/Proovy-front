@@ -149,6 +149,32 @@ export const assetsHandlers = [
               : ("document" as const),
           })) ?? [],
       },
+      {
+        noteId: 4,
+        title: "테스트용 빈 노트",
+        storageUsed: 0,
+        storageLimit: 262144000,
+        storageUsedDisplay: "0MB",
+        storageLimitDisplay: "250MB",
+        assets:
+          mockNoteAssets[4]?.map((a) => ({
+            assetId: a.assetId,
+            source: a.source as "upload" | "ai_generated",
+            fileName: a.fileName,
+            fileSize: a.fileSize,
+            mimeType: a.mimeType,
+            ocrStatus: a.ocrStatus as
+              | "pending"
+              | "processing"
+              | "completed"
+              | "failed",
+            createdAt: a.createdAt,
+            thumbnailUrl: a.thumbnailUrl ?? null,
+            fileCategory: a.mimeType.startsWith("image/")
+              ? ("image" as const)
+              : ("document" as const),
+          })) ?? [],
+      },
     ];
 
     const filteredNotes =

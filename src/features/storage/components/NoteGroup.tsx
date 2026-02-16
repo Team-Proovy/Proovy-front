@@ -55,6 +55,11 @@ export const NoteGroup = ({
           >
             {title}
           </span>
+          {notes.length === 0 && (
+            <span className="ml-[12px] font-['Pretendard'] text-[13px] font-medium text-[#FF3B30]">
+              저장된 파일이 없습니다
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-[10px] font-['Pretendard']">
           <span
