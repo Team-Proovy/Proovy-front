@@ -14,7 +14,7 @@ import {
 } from "@/features/assets/api/assetApi";
 import { resolveUploadMimeType } from "@/features/assets/utils/fileValidation";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
-import type { ConversationInfo } from "@/features/notes/api/notes_types";
+import type { ConversationInfo, AssetInfo } from "@/features/notes/api/notes_types";
 import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 import { creditKeys } from "@/features/settings/hooks/useCredit";
@@ -26,15 +26,39 @@ type PendingAttachment = ChatSendData["attachments"][number];
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
   conversations: ConversationInfo[],
-): ChatMessage[] =>
-  conversations.flatMap((conv) => {
+  assets: AssetInfo[],
+): ChatMessage[] => {
+  const assetMap = new Map(assets.map((a) => [a.assetId, a]));
+
+  return conversations.flatMap((conv) => {
     const messages: ChatMessage[] = [];
+
+    // mentionedAssets → MessageAttachment[] 복원
+    const mentioned = conv.userMessage.mentionedAssets ?? [];
+    const attachments: MessageAttachment[] | undefined =
+      mentioned.length > 0
+        ? mentioned
+            .map((ma) => {
+              const asset = assetMap.get(ma.assetId);
+              const isImage = asset?.fileType?.toUpperCase() === "IMAGE";
+              const mimeType = isImage ? "image/png" : (asset?.fileType ?? "application/octet-stream");
+              return {
+                name: ma.fileName,
+                mimeType,
+                size: asset?.fileSize ?? 0,
+                previewUrl: isImage
+                  ? (asset?.thumbnailUrl ?? undefined)
+                  : undefined,
+              };
+            })
+        : undefined;
 
     // 사용자 메시지
     messages.push({
       id: `msg-${conv.userMessage.messageId}`,
       role: "user" as const,
       content: conv.userMessage.content,
+      attachments,
     });
 
     // AI 메시지 (빈 내용이면 건너뛰기)
@@ -59,6 +83,7 @@ const convertConversations = (
 
     return messages;
   });
+};
 
 /**
  * 채팅 메시지 상태 관리 훅
@@ -167,7 +192,7 @@ export const useChatMessages = () => {
   useEffect(() => {
     if (noteDetail?.conversations && !hasFirstMessage) {
       const reversed = [...noteDetail.conversations].reverse();
-      const serverMessages = convertConversations(reversed);
+      const serverMessages = convertConversations(reversed, noteDetail.assets ?? []);
 
       setMessages((prev) => {
         const serverIds = new Set(serverMessages.map((m) => m.id));
