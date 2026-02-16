@@ -1,4 +1,4 @@
-import { useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import {
   ProfileIcon,
   SubscriptionIcon,
@@ -11,6 +11,12 @@ import type { ChatMessage } from "../../types/chat_types";
 interface ChatMessagesProps {
   messages: ChatMessage[];
 }
+
+// ── 조정 가능한 상수 ──
+// USER_MESSAGE_TOP_GAP: 사용자 메시지가 스크롤 컨테이너 상단에서 떨어지는 간격(px)
+// MIN_BOTTOM_SPACER: 콘텐츠와 입력창 사이의 최소 여백(px)
+const USER_MESSAGE_TOP_GAP = 32;
+const MIN_BOTTOM_SPACER = 32;
 
 // 사용자 메시지 컴포넌트
 const UserMessage = ({ message }: { message: ChatMessage }) => (
@@ -76,24 +82,23 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   const hasMountedRef = useRef(false);
   const spacerHeightRef = useRef(0);
 
-  // ── 조정 가능한 상수 ──
-  // USER_MESSAGE_TOP_GAP: 사용자 메시지가 스크롤 컨테이너 상단에서 떨어지는 간격(px)
-  // MIN_BOTTOM_SPACER: 콘텐츠와 입력창 사이의 최소 여백(px)
-  const USER_MESSAGE_TOP_GAP = 32;
-  const MIN_BOTTOM_SPACER = 32;
-
   /** spacer 높이를 DOM에 직접 반영 (React 리렌더 없이) */
-  const setSpacerHeight = (h: number) => {
+  const setSpacerHeight = useCallback((h: number) => {
     spacerHeightRef.current = h;
     if (spacerRef.current) spacerRef.current.style.height = `${h}px`;
-  };
+  }, []);
 
   useLayoutEffect(() => {
     if (!scrollRef.current) return;
 
-    const lastUserMessage = [...messages]
-      .reverse()
-      .find((m) => m.role === "user");
+    let lastUserMessage: ChatMessage | undefined;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "user") {
+        lastUserMessage = messages[i];
+        break;
+      }
+    }
+
     if (!lastUserMessage || !lastUserMsgRef.current) return;
 
     const hasStreamingAssistant = messages.some(
@@ -146,7 +151,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
         behavior: "smooth",
       });
     } else if (hasStreamingAssistant) {
-      // ── AI 스트리밍 중: spacer 자동 축소 + 하단 따라가기 ──
+      // ── AI 스트리밍 중: spacer 자동 축소 ──
       // 콘텐츠가 늘어남에 따라 spacer를 줄여 과도한 여백 제거
       const optimalSpacer = Math.max(
         targetScrollTop + container.clientHeight - contentHeight,
@@ -155,14 +160,17 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
 
       setSpacerHeight(optimalSpacer);
     }
-  }, [messages]);
+  }, [messages, setSpacerHeight]);
 
-  // 대화 초기화 시 spacer 리셋
+  // 대화 초기화 시: mount/anchor/spacer 상태를 모두 리셋
   useEffect(() => {
-    if (messages.length === 0) {
-      setSpacerHeight(MIN_BOTTOM_SPACER);
-    }
-  }, [messages]);
+    if (messages.length !== 0) return;
+
+    hasMountedRef.current = false;
+    lastAnchoredUserMessageIdRef.current = null;
+    spacerHeightRef.current = MIN_BOTTOM_SPACER;
+    setSpacerHeight(MIN_BOTTOM_SPACER);
+  }, [messages.length, setSpacerHeight]);
 
   if (messages.length === 0) {
     return (
