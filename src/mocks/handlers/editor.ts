@@ -95,6 +95,19 @@ export const mockNoteAssets: Record<number, ChatAssetDto[]> = {
       createdAt: "2025-01-01T14:30:00",
     },
   ],
+  4: [
+    {
+      assetId: 401,
+      fileName: "linear_algebra_exam.pdf",
+      fileSize: 1_800_000,
+      mimeType: "application/pdf",
+      fileType: "pdf",
+      source: "upload",
+      ocrStatus: "completed",
+      thumbnailUrl: "https://placehold.co/240x140/e2e8f0/475569?text=PDF",
+      createdAt: "2025-01-01T14:30:00",
+    },
+  ],
 };
 
 const mockTools: ToolDto[] = [

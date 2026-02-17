@@ -16,6 +16,7 @@ import { NoteGroup } from "../components/NoteGroup";
 import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
 import { useStorageInfo } from "../hooks/useAssets";
+import { EmptyState } from "@/shared/components/EmptyState";
 
 const getNearCapacityMessage = (planType?: string) => {
   const normalized = (planType ?? "").toLowerCase();
@@ -101,7 +102,13 @@ export const StoragePage = () => {
                 />
               ))
             ) : (
-              <p className="text-gray-500">저장된 파일이 없습니다.</p>
+              <EmptyState
+                message="업로드된 파일이 없습니다"
+                description="새로운 파일을 업로드하여 저장소를 채워보세요."
+                // TODO: Add upload action when available
+                // actionLabel="파일 업로드하기"
+                // onAction={() => {}}
+              />
             )}
           </div>
 
