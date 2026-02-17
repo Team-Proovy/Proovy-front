@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { deleteAssets } from "@/features/assets/api/assetApi";
+import { showErrorToast } from "@/shared/lib/toast";
 
 export interface Note {
   id: number;
@@ -84,7 +85,7 @@ export const useStorageStore = create<StorageState>((set) => ({
       });
     } catch (error) {
       console.error("파일 삭제 실패:", error);
-      alert("파일 삭제에 실패했습니다.");
+      showErrorToast("파일 삭제에 실패했습니다.");
       set({ isDeleteModalOpen: false });
     }
   },

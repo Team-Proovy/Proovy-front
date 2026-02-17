@@ -41,10 +41,8 @@ export const HomePage = () => {
         <Toast
           message={uploadError}
           onClose={clearError}
-          variant="success"
-          autoClose={true}
+          variant="error"
           duration={3000}
-          showCloseButton={false}
         />
       )}
 

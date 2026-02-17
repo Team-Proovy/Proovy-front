@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 // @ts-ignore - tldraw types
 import { Editor } from "tldraw";
 import { CanvasBoard } from "./CanvasBoard";
+import { showErrorToast, showInfoToast } from "@/shared/lib/toast";
 
 interface CanvasOverlayProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export const CanvasOverlay = ({
     try {
       const shapeIds = editor.getCurrentPageShapeIds();
       if (shapeIds.size === 0) {
-        alert("캔버스에 아무것도 없어요!");
+        showInfoToast("캔버스에 아무것도 없어요!");
         return;
       }
 
@@ -42,7 +43,7 @@ export const CanvasOverlay = ({
       }
     } catch (e) {
       console.error("Canvas capture error:", e);
-      alert("캡처 중 오류가 발생했습니다.");
+      showErrorToast("캡처 중 오류가 발생했습니다.");
     }
   };
 

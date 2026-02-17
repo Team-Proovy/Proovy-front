@@ -11,6 +11,7 @@ import {
   normalizePlanType,
 } from "@/features/subscription/types/plan_types";
 import { parseSize } from "@/shared/utils/file-utils";
+import { showErrorToast } from "@/shared/lib/toast";
 
 // 파일 표시 유틸 re-export (기존 import 경로 호환)
 export { formatFileSize, getFileTypeLabel, getFileIconColor };
@@ -88,13 +89,13 @@ export const useAttachments = (): UseAttachmentsReturn => {
       const validFiles = Array.from(files).filter((file) => {
         // 1. 형식 체크
         if (!isValidFileType(file)) {
-          alert("허용되지 않은 파일 형식입니다.");
+          showErrorToast("허용되지 않은 파일 형식입니다.");
           return false;
         }
 
         // 2. 용량 체크 (플랜 기반)
         if (file.size > maxSizeBytes) {
-          alert(
+          showErrorToast(
             `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
           );
           return false;

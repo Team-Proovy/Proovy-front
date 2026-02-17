@@ -2,6 +2,7 @@ import { useRef, lazy, Suspense, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MathfieldElement } from "mathlive";
 import "mathlive";
+import { showErrorToast } from "@/shared/lib/toast";
 
 // Configure MathLive fonts to use local assets (copied to public/fonts)
 MathfieldElement.fontsDirectory = "/fonts";
@@ -235,7 +236,9 @@ export const ChatInput = ({
           });
       } catch (error) {
         console.error("Home send failed:", error);
-        alert("전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        showErrorToast(
+          "전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        );
       } finally {
         setIsProcessing(false);
       }
@@ -253,7 +256,9 @@ export const ChatInput = ({
       }
     } catch (error) {
       console.error("Credit deduction failed:", error);
-      alert("크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      showErrorToast(
+        "크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      );
       setIsProcessing(false);
       return;
     }
@@ -265,7 +270,9 @@ export const ChatInput = ({
     } catch (error) {
       restoreInputState();
       console.error("Send failed:", error);
-      alert("메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      showErrorToast(
+        "메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      );
     } finally {
       setIsProcessing(false);
     }
