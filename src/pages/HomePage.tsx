@@ -2,7 +2,7 @@ import { ChatInput } from "../features/editor/components/ChatInput";
 import { useHomeSend } from "./hooks/useHomeSend";
 import { useViewerFile } from "./hooks/useViewerFile";
 import { ViewerUploadCard } from "./components/ViewerUploadCard";
-import { ErrorBanner } from "./components/ErrorBanner";
+import { Toast } from "@/shared/components/ui/Toast";
 import { FeatureSection } from "../features/landing/components/FeatureSection";
 import { FeatureGrid } from "../features/landing/components/FeatureGrid";
 import { CTASection } from "../features/landing/components/CTASection";
@@ -36,11 +36,15 @@ export const HomePage = () => {
 
   return (
     <div className="w-full bg-white">
-      {/* 에러 배너 */}
+      {/* 에러 토스트 */}
       {uploadError && (
-        <ErrorBanner
+        <Toast
           message={uploadError}
           onClose={clearError}
+          variant="success"
+          autoClose={true}
+          duration={3000}
+          showCloseButton={false}
         />
       )}
 
