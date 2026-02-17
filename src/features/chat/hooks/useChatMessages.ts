@@ -23,6 +23,7 @@ import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 import { creditKeys } from "@/features/settings/hooks/useCredit";
 import { userKeys } from "@/features/settings/hooks/useUser";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
+import { showErrorToast } from "@/shared/lib/toast";
 
 type PendingAttachment = ChatSendData["attachments"][number];
 
@@ -493,6 +494,9 @@ export const useChatMessages = () => {
       } catch (error) {
         if (signal.aborted) return;
         console.error("첫 대화 생성 실패:", error);
+        showErrorToast(
+          "첫 대화 생성에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
         firstMessageSentRef.current = false;
 
         setMessages((prev) => {
@@ -632,6 +636,7 @@ export const useChatMessages = () => {
       } catch (error) {
         if (signal.aborted) return;
         console.error("대화 생성 실패:", error);
+        showErrorToast("대화 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
 
         setMessages((prev) => {
           const hasContent = prev.find((m) => m.isStreaming && m.content);

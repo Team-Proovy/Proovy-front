@@ -225,6 +225,7 @@ export const ChatInput = ({
         void deductCredit(creditPayload)
           .then((creditResponse) => {
             if (!creditResponse.result.success) {
+              showErrorToast("크레딧이 부족하여 채팅을 보낼 수 없습니다.");
               console.warn(
                 "[HomeSend] 크레딧 차감 실패",
                 creditResponse.result,
@@ -250,6 +251,7 @@ export const ChatInput = ({
       const creditResponse = await deductCredit(creditPayload);
 
       if (!creditResponse.result.success) {
+        showErrorToast("크레딧이 부족하여 채팅을 보낼 수 없습니다.");
         setShowCreditModal(true);
         setIsProcessing(false);
         return;

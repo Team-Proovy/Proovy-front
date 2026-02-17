@@ -2,7 +2,6 @@ import { ChatInput } from "../features/editor/components/ChatInput";
 import { useHomeSend } from "./hooks/useHomeSend";
 import { useViewerFile } from "./hooks/useViewerFile";
 import { ViewerUploadCard } from "./components/ViewerUploadCard";
-import { Toast } from "@/shared/components/ui/Toast";
 import { FeatureSection } from "../features/landing/components/FeatureSection";
 import { FeatureGrid } from "../features/landing/components/FeatureGrid";
 import { CTASection } from "../features/landing/components/CTASection";
@@ -13,8 +12,7 @@ import { ChevronDown } from "lucide-react";
  * HomePage - 새 노트 시작점
  */
 export const HomePage = () => {
-  const { viewerFileRef, isSending, uploadError, clearError, handleSend } =
-    useHomeSend();
+  const { viewerFileRef, isSending, handleSend } = useHomeSend();
 
   const {
     pdfUrl,
@@ -36,16 +34,6 @@ export const HomePage = () => {
 
   return (
     <div className="w-full bg-white">
-      {/* 에러 토스트 */}
-      {uploadError && (
-        <Toast
-          message={uploadError}
-          onClose={clearError}
-          variant="error"
-          duration={3000}
-        />
-      )}
-
       {/* 메인 홈 화면 - 한 화면을 꽉 채우는 구성 */}
       <div className="flex min-h-screen w-full flex-col items-center">
         <div className="flex w-full flex-1 flex-col justify-center px-5 pt-[100px]">
