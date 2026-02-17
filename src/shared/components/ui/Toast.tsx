@@ -52,7 +52,7 @@ export const Toast = ({
   }[variant];
 
   return (
-    <div className="pointer-events-none fixed top-5 right-7 z-50 max-w-[660px] px-4">
+    <div className="pointer-events-none fixed top-5 right-7 z-[10010] max-w-[660px] px-4">
       <div
         className={cn(
           "pointer-events-auto flex items-center justify-between gap-3 rounded-[12px] border p-5 shadow-sm transition-all duration-200",
