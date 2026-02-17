@@ -14,7 +14,10 @@ import {
 } from "@/features/assets/api/assetApi";
 import { resolveUploadMimeType } from "@/features/assets/utils/fileValidation";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
-import type { ConversationInfo, AssetInfo } from "@/features/notes/api/notes_types";
+import type {
+  ConversationInfo,
+  AssetInfo,
+} from "@/features/notes/api/notes_types";
 import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 import { creditKeys } from "@/features/settings/hooks/useCredit";
@@ -37,20 +40,21 @@ const convertConversations = (
     const mentioned = conv.userMessage.mentionedAssets ?? [];
     const attachments: MessageAttachment[] | undefined =
       mentioned.length > 0
-        ? mentioned
-            .map((ma) => {
-              const asset = assetMap.get(ma.assetId);
-              const isImage = asset?.fileType?.toUpperCase() === "IMAGE";
-              const mimeType = isImage ? "image/png" : (asset?.fileType ?? "application/octet-stream");
-              return {
-                name: ma.fileName,
-                mimeType,
-                size: asset?.fileSize ?? 0,
-                previewUrl: isImage
-                  ? (asset?.thumbnailUrl ?? undefined)
-                  : undefined,
-              };
-            })
+        ? mentioned.map((ma) => {
+            const asset = assetMap.get(ma.assetId);
+            const isImage = asset?.fileType?.toUpperCase() === "IMAGE";
+            const mimeType = isImage
+              ? "image/png"
+              : (asset?.fileType ?? "application/octet-stream");
+            return {
+              name: ma.fileName,
+              mimeType,
+              size: asset?.fileSize ?? 0,
+              previewUrl: isImage
+                ? (asset?.thumbnailUrl ?? undefined)
+                : undefined,
+            };
+          })
         : undefined;
 
     // 사용자 메시지
@@ -192,7 +196,10 @@ export const useChatMessages = () => {
   useEffect(() => {
     if (noteDetail?.conversations && !hasFirstMessage) {
       const reversed = [...noteDetail.conversations].reverse();
-      const serverMessages = convertConversations(reversed, noteDetail.assets ?? []);
+      const serverMessages = convertConversations(
+        reversed,
+        noteDetail.assets ?? [],
+      );
 
       setMessages((prev) => {
         const serverIds = new Set(serverMessages.map((m) => m.id));
