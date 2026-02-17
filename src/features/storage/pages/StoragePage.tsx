@@ -105,9 +105,6 @@ export const StoragePage = () => {
               <EmptyState
                 message="업로드된 파일이 없습니다"
                 description="새로운 파일을 업로드하여 저장소를 채워보세요."
-                // TODO: Add upload action when available
-                // actionLabel="파일 업로드하기"
-                // onAction={() => {}}
               />
             )}
           </div>
