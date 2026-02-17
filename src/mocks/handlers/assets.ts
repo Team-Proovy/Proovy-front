@@ -157,6 +157,32 @@ export const assetsHandlers = [
         storageUsedDisplay: "0MB",
         storageLimitDisplay: "250MB",
         assets:
+          mockNoteAssets[5]?.map((a) => ({
+            assetId: a.assetId,
+            source: a.source as "upload" | "ai_generated",
+            fileName: a.fileName,
+            fileSize: a.fileSize,
+            mimeType: a.mimeType,
+            ocrStatus: a.ocrStatus as
+              | "pending"
+              | "processing"
+              | "completed"
+              | "failed",
+            createdAt: a.createdAt,
+            thumbnailUrl: a.thumbnailUrl ?? null,
+            fileCategory: a.mimeType.startsWith("image/")
+              ? ("image" as const)
+              : ("document" as const),
+          })) ?? [],
+      },
+      {
+        noteId: 5,
+        title: "선형대수학 (MATH205)",
+        storageUsed: 18874368,
+        storageLimit: 262144000,
+        storageUsedDisplay: "18MB",
+        storageLimitDisplay: "250MB",
+        assets:
           mockNoteAssets[4]?.map((a) => ({
             assetId: a.assetId,
             source: a.source as "upload" | "ai_generated",

@@ -55,11 +55,6 @@ export const NoteGroup = ({
           >
             {title}
           </span>
-          {notes.length === 0 && (
-            <span className="ml-[12px] font-['Pretendard'] text-[13px] font-medium text-[#FF3B30]">
-              저장된 파일이 없습니다
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-[10px] font-['Pretendard']">
           <span
@@ -100,6 +95,11 @@ export const NoteGroup = ({
 
       {isOpen && (
         <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
+          {notes.length === 0 && (
+            <span className="ml-[68px] font-['Pretendard'] text-[13px] font-medium text-[#FF3B30]">
+              저장된 파일이 없습니다
+            </span>
+          )}
           {notes.map((asset) => (
             <NoteCard
               key={asset.assetId}
