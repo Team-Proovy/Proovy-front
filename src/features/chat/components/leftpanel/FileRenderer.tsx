@@ -140,6 +140,7 @@ export const FileRenderer = ({
             src={fileUrl}
             alt={fileName}
             className="h-full w-full object-contain"
+            draggable={false}
           />
         </div>
       </div>
@@ -183,6 +184,7 @@ export const FileRenderer = ({
             <canvas
               ref={canvasRef}
               className="block bg-white"
+              draggable={false}
             />
           </div>
         </div>
