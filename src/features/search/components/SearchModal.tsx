@@ -118,9 +118,10 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
     if (!searchData?.conversations) return [];
     return groupItemsByDate(
       searchData.conversations.map((conv) => {
-        const userMessageText = conv.userMessage?.content ?? "";
-        const assistantMessageText = conv.assistantMessage?.content ?? "";
-        const previewText = userMessageText || assistantMessageText;
+        // highlight가 있으면 우선 사용 (검색어 주변 ...텍스트... 형태)
+        const userHighlight = conv.userMessage?.highlight;
+        const assistantHighlight = conv.assistantMessage?.highlight;
+        const previewText = userHighlight || assistantHighlight || "";
 
         return {
           dateStr: conv.createdAt,
@@ -128,10 +129,7 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
             id: String(conv.conversationId),
             title: conv.noteTitle,
             noteId: conv.noteId,
-            preview:
-              previewText.length > 80
-                ? previewText.slice(0, 80) + "…"
-                : previewText,
+            preview: previewText || undefined,
           },
         };
       }),
