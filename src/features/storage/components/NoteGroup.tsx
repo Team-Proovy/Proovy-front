@@ -93,30 +93,32 @@ export const NoteGroup = ({
         </div>
       </button>
 
-      {isOpen && (
-        <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
-          {notes.length === 0 && (
-            <span className="ml-[68px] font-['Pretendard'] text-[13px] font-medium text-[#FF3B30]">
-              저장된 파일이 없습니다
+      {isOpen &&
+        (notes.length > 0 ? (
+          <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
+            {notes.map((asset) => (
+              <NoteCard
+                key={asset.assetId}
+                id={asset.assetId}
+                label={asset.fileName}
+                type={mapAssetSource(asset.source)}
+                thumbnailUrl={asset.thumbnailUrl}
+                mimeType={asset.mimeType}
+                fileCategory={mapAssetCategory(asset.fileCategory)}
+                ocrStatus={mapOcrStatus(asset.ocrStatus)}
+                isSelected={selectedIds.includes(asset.assetId)}
+                isSelectMode={isSelectMode}
+                onSelect={() => toggleIdSelection(asset.assetId)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mx-auto mt-[12px] flex h-[60px] w-full items-center justify-center rounded-[12px] border border-[#E0E0E0] bg-white">
+            <span className="font-['Pretendard'] text-[13px] font-medium text-[#AEAEAE]">
+              저장된 파일이 없습니다.
             </span>
-          )}
-          {notes.map((asset) => (
-            <NoteCard
-              key={asset.assetId}
-              id={asset.assetId}
-              label={asset.fileName}
-              type={mapAssetSource(asset.source)}
-              thumbnailUrl={asset.thumbnailUrl}
-              mimeType={asset.mimeType}
-              fileCategory={mapAssetCategory(asset.fileCategory)}
-              ocrStatus={mapOcrStatus(asset.ocrStatus)}
-              isSelected={selectedIds.includes(asset.assetId)}
-              isSelectMode={isSelectMode}
-              onSelect={() => toggleIdSelection(asset.assetId)}
-            />
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
     </div>
   );
 };
