@@ -101,7 +101,7 @@ export const useHomeSend = () => {
     return new Promise<boolean>((resolve) => {
       // 노트만 생성 (title은 서버가 자동 생성)
       createNote(
-        {},
+        { suppressRedirect: true },
         {
           onSuccess: (response) => {
             const newNoteId = response.result.noteId;

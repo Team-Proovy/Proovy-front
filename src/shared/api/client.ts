@@ -7,6 +7,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // 토큰 저장 키
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
+const SHOULD_ENABLE_ERROR_REDIRECT =
+  import.meta.env.VITE_ENABLE_ERROR_REDIRECT === "true" || !import.meta.env.DEV;
 
 const ERROR_ROUTE_BY_CODE: Record<string, string> = {
   TOKEN401: "/error/401",
@@ -31,9 +33,13 @@ const ERROR_ROUTE_BY_STATUS: Record<number, string> = {
 };
 
 const redirectToErrorRoute = (route: string) => {
+  if (!SHOULD_ENABLE_ERROR_REDIRECT) return;
+
   const currentPath = window.location.pathname;
   if (currentPath === route || currentPath.startsWith("/error/")) return;
-  window.location.href = route;
+
+  window.history.replaceState(window.history.state, "", route);
+  window.dispatchEvent(new PopStateEvent("popstate"));
 };
 
 const resolveErrorRoute = (error: AxiosError) => {
@@ -125,7 +131,15 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      skipErrorRedirect?: boolean;
+      meta?: {
+        suppressRedirect?: boolean;
+      };
     };
+    const shouldSuppressRedirect = Boolean(
+      originalRequest?.skipErrorRedirect ||
+      originalRequest?.meta?.suppressRedirect,
+    );
 
     // 401 에러이고 재시도하지 않은 요청인 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -148,7 +162,9 @@ apiClient.interceptors.response.use(
 
       if (!refreshToken) {
         tokenUtils.clearTokens();
-        redirectToErrorRoute("/error/401");
+        if (!shouldSuppressRedirect) {
+          redirectToErrorRoute("/error/401");
+        }
         return Promise.reject(error);
       }
 
@@ -169,16 +185,20 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null);
         tokenUtils.clearTokens();
-        redirectToErrorRoute("/error/401");
+        if (!shouldSuppressRedirect) {
+          redirectToErrorRoute("/error/401");
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    const errorRoute = resolveErrorRoute(error);
-    if (errorRoute) {
-      redirectToErrorRoute(errorRoute);
+    if (!shouldSuppressRedirect) {
+      const errorRoute = resolveErrorRoute(error);
+      if (errorRoute) {
+        redirectToErrorRoute(errorRoute);
+      }
     }
 
     return Promise.reject(error);

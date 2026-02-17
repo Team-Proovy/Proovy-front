@@ -46,10 +46,18 @@ export const getNoteList = async (
 // 노트 생성
 export const createNote = async (
   data: CreateNoteRequest,
+  options?: {
+    suppressRedirect?: boolean;
+  },
 ): Promise<ApiResponse<CreateNoteResponse>> => {
   const response = await apiClient.post<ApiResponse<CreateNoteResponse>>(
     NOTES_BASE,
     data,
+    {
+      meta: {
+        suppressRedirect: options?.suppressRedirect,
+      },
+    },
   );
   return response.data;
 };

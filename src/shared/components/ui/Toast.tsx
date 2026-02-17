@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ToastVariant } from "@/shared/lib/toast";
 import { cn } from "@/shared/lib/utils";
 
 interface ToastProps {
   message: string;
   onClose?: () => void;
-  variant?: "error" | "success" | "info";
+  variant?: ToastVariant;
   duration?: number;
   className?: string;
 }
@@ -19,6 +20,9 @@ export const Toast = ({
   className,
 }: ToastProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const onCloseRef = useRef(onClose);
+
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -36,14 +40,14 @@ export const Toast = ({
     }, duration);
 
     const closeTimer = window.setTimeout(() => {
-      onClose?.();
+      onCloseRef.current?.();
     }, duration + TOAST_EXIT_DURATION_MS);
 
     return () => {
       window.clearTimeout(hideTimer);
       window.clearTimeout(closeTimer);
     };
-  }, [duration, onClose, message]);
+  }, [duration, message]);
 
   const variantClassName = {
     error: "border-red-200 bg-red-50 text-red-700",
