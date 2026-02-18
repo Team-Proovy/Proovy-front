@@ -7,6 +7,7 @@ import type {
   CreateNoteResponse,
   UpdateNoteTitleRequest,
   UpdateNoteTitleResponse,
+  GenerateTitleRequest,
   NoteDetailParams,
   NoteDetailResponse,
   DeleteNotesBulkResult,
@@ -69,6 +70,18 @@ export const updateNoteTitle = async (
 ): Promise<ApiResponse<UpdateNoteTitleResponse>> => {
   const response = await apiClient.patch<ApiResponse<UpdateNoteTitleResponse>>(
     `${NOTES_BASE}/${noteId}`,
+    data,
+  );
+  return response.data;
+};
+
+// 첫 질문 기반 AI 노트 제목 생성
+export const generateNoteTitle = async (
+  noteId: number,
+  data: GenerateTitleRequest,
+): Promise<ApiResponse<UpdateNoteTitleResponse>> => {
+  const response = await apiClient.post<ApiResponse<UpdateNoteTitleResponse>>(
+    `${NOTES_BASE}/${noteId}/generate-title`,
     data,
   );
   return response.data;
