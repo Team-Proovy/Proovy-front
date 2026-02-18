@@ -1,38 +1,94 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
   createConversation as createConversationApi,
   parseSSEStream,
 } from "@/features/editor/api/editor_api";
 import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
+import {
+  getUploadUrl,
+  uploadToS3,
+  confirmUpload,
+} from "@/features/assets/api/assetApi";
+import { resolveUploadMimeType } from "@/features/assets/utils/fileValidation";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
-import type { ConversationInfo } from "@/features/notes/api/notes_types";
+import type {
+  ConversationInfo,
+  AssetInfo,
+} from "@/features/notes/api/notes_types";
 import type { FirstMessageState } from "@/pages/hooks/useHomeSend";
 import type { ChatMessage, MessageAttachment } from "../types/chat_types";
 import { creditKeys } from "@/features/settings/hooks/useCredit";
 import { userKeys } from "@/features/settings/hooks/useUser";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
+import { showErrorToast } from "@/shared/lib/toast";
 
 type PendingAttachment = ChatSendData["attachments"][number];
 
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
   conversations: ConversationInfo[],
-): ChatMessage[] =>
-  conversations.flatMap((conv) => [
-    {
+  assets: AssetInfo[],
+): ChatMessage[] => {
+  const assetMap = new Map(assets.map((a) => [a.assetId, a]));
+
+  return conversations.flatMap((conv) => {
+    const messages: ChatMessage[] = [];
+
+    // mentionedAssets → MessageAttachment[] 복원
+    const mentioned = conv.userMessage.mentionedAssets ?? [];
+    const attachments: MessageAttachment[] | undefined =
+      mentioned.length > 0
+        ? mentioned.map((ma) => {
+            const asset = assetMap.get(ma.assetId);
+            const isImage = asset?.fileType?.toUpperCase() === "IMAGE";
+            const mimeType = isImage
+              ? "image/png"
+              : (asset?.fileType ?? "application/octet-stream");
+            return {
+              name: ma.fileName,
+              mimeType,
+              size: asset?.fileSize ?? 0,
+              previewUrl: isImage
+                ? (asset?.thumbnailUrl ?? undefined)
+                : undefined,
+            };
+          })
+        : undefined;
+
+    // 사용자 메시지
+    messages.push({
       id: `msg-${conv.userMessage.messageId}`,
       role: "user" as const,
       content: conv.userMessage.content,
-    },
-    {
-      id: `msg-${conv.assistantMessage.messageId}`,
-      role: "assistant" as const,
-      content: conv.assistantMessage.content,
-    },
-  ]);
+      attachments,
+    });
+
+    // AI 메시지 (빈 내용이면 건너뛰기)
+    const assistantContent = conv.assistantMessage.content || "";
+    if (assistantContent.trim()) {
+      messages.push({
+        id: `msg-${conv.assistantMessage.messageId}`,
+        role: "assistant" as const,
+        content: assistantContent,
+      });
+    } else {
+      // 빈 응답인 경우 에러 메시지 표시
+      console.warn(
+        `[ChatHistory] Assistant 메시지가 비어있음 - messageId: ${conv.assistantMessage.messageId}`,
+      );
+      messages.push({
+        id: `msg-${conv.assistantMessage.messageId}`,
+        role: "assistant" as const,
+        content: "응답을 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.",
+      });
+    }
+
+    return messages;
+  });
+};
 
 /**
  * 채팅 메시지 상태 관리 훅
@@ -45,6 +101,7 @@ const convertConversations = (
 export const useChatMessages = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
   // ─── location.state에서 초기 데이터 추출 (ref로 보존) ───
@@ -140,7 +197,10 @@ export const useChatMessages = () => {
   useEffect(() => {
     if (noteDetail?.conversations && !hasFirstMessage) {
       const reversed = [...noteDetail.conversations].reverse();
-      const serverMessages = convertConversations(reversed);
+      const serverMessages = convertConversations(
+        reversed,
+        noteDetail.assets ?? [],
+      );
 
       setMessages((prev) => {
         const serverIds = new Set(serverMessages.map((m) => m.id));
@@ -226,17 +286,24 @@ export const useChatMessages = () => {
                 ),
               );
             } else if (event.content.type === "ai") {
-              // 최종 응답 — token 누적분을 서버 최종 텍스트로 교체 (정합성 보장)
+              // 최종 응답 — 서버 응답과 클라이언트 누적이 다를 경우에만 교체 (정합성 보장)
+              // 같으면 깜빡임 방지를 위해 유지 (statusText만 제거)
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === tempAssistantMsgId
-                    ? {
-                        ...m,
-                        content: event.content.content,
-                        statusText: undefined,
-                      }
-                    : m,
-                ),
+                prev.map((m) => {
+                  if (m.id !== tempAssistantMsgId) return m;
+
+                  // 내용이 다르면 교체, 같으면 유지
+                  if (m.content !== event.content.content) {
+                    return {
+                      ...m,
+                      content: event.content.content,
+                      statusText: undefined,
+                    };
+                  }
+
+                  // 내용이 같으면 statusText만 제거
+                  return { ...m, statusText: undefined };
+                }),
               );
             }
             break;
@@ -341,28 +408,77 @@ export const useChatMessages = () => {
       const signal = abortControllerRef.current!.signal;
 
       try {
+        let uploadedViewerAssetId: number | undefined;
+        let uploadedFileAssetIds: number[] = [];
+        let uploadedCanvasImageIds: number[] = [];
+
+        if (firstMessageData.pendingViewerFile) {
+          const file = firstMessageData.pendingViewerFile;
+          const mimeType = resolveUploadMimeType(file);
+          if (!mimeType) {
+            throw new Error("지원하지 않는 뷰어 파일 형식입니다.");
+          }
+
+          const { result } = await getUploadUrl({
+            noteId: Number(noteId),
+            fileName: file.name,
+            mimeType,
+            fileSize: file.size,
+          });
+
+          await uploadToS3(result.uploadUrl, file, mimeType);
+          await confirmUpload(result.assetId);
+          uploadedViewerAssetId = result.assetId;
+        }
+
+        if (firstMessageData.pendingAttachments?.length) {
+          setIsUploading(true);
+          const uploadResult = await uploadAttachments(
+            Number(noteId),
+            firstMessageData.pendingAttachments,
+          );
+          uploadedFileAssetIds = uploadResult.fileAssetIds;
+          uploadedCanvasImageIds = uploadResult.canvasAssetIds;
+          setIsUploading(false);
+        }
+
         const response = await createConversationApi(
           {
             noteId: Number(noteId),
             text: firstMessageData.text,
             latex: firstMessageData.latex,
             mentionedAssetIds:
-              firstMessageData.mentionedAssetIds.length > 0
-                ? firstMessageData.mentionedAssetIds
+              [...firstMessageData.mentionedAssetIds, ...uploadedFileAssetIds]
+                .length > 0
+                ? [
+                    ...firstMessageData.mentionedAssetIds,
+                    ...uploadedFileAssetIds,
+                  ]
                 : undefined,
             chosenFeatures:
               firstMessageData.chosenFeatures.length > 0
                 ? firstMessageData.chosenFeatures
                 : undefined,
             canvasImageIds:
-              firstMessageData.canvasImageIds.length > 0
-                ? firstMessageData.canvasImageIds
+              [...firstMessageData.canvasImageIds, ...uploadedCanvasImageIds]
+                .length > 0
+                ? [
+                    ...firstMessageData.canvasImageIds,
+                    ...uploadedCanvasImageIds,
+                  ]
                 : undefined,
           },
           { isStream: true, signal },
         );
 
         await processStream(response, tempAssistantMsgId, signal);
+
+        if (uploadedViewerAssetId) {
+          const nextSearchParams = new URLSearchParams(searchParams);
+          nextSearchParams.set("panel", "viewer");
+          nextSearchParams.set("file", String(uploadedViewerAssetId));
+          setSearchParams(nextSearchParams, { replace: true });
+        }
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
         queryClient.invalidateQueries({
@@ -371,9 +487,16 @@ export const useChatMessages = () => {
         // 크레딧 잔액 최신화 (대화 생성 시 서버에서 자동 차감)
         queryClient.invalidateQueries({ queryKey: creditKeys.all });
         queryClient.invalidateQueries({ queryKey: userKeys.profile() });
+        queryClient.invalidateQueries({
+          queryKey: noteKeys.detail(String(noteId)),
+        });
+        queryClient.invalidateQueries({ queryKey: assetKeys.storage });
       } catch (error) {
         if (signal.aborted) return;
         console.error("첫 대화 생성 실패:", error);
+        showErrorToast(
+          "첫 대화 생성에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
         firstMessageSentRef.current = false;
 
         setMessages((prev) => {
@@ -394,6 +517,7 @@ export const useChatMessages = () => {
           ];
         });
       } finally {
+        setIsUploading(false);
         setIsFirstMessageSending(false);
       }
     };
@@ -405,6 +529,8 @@ export const useChatMessages = () => {
     processStream,
     queryClient,
     registerPreviewUrl,
+    searchParams,
+    setSearchParams,
   ]);
 
   // ─── 후속 대화 전송 핸들러 ───
@@ -510,6 +636,7 @@ export const useChatMessages = () => {
       } catch (error) {
         if (signal.aborted) return;
         console.error("대화 생성 실패:", error);
+        showErrorToast("대화 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
 
         setMessages((prev) => {
           const hasContent = prev.find((m) => m.isStreaming && m.content);

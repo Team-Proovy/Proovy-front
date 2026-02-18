@@ -13,6 +13,7 @@ import { useAuthStore } from "../../../auth/store/auth_store";
 import { deleteAccount } from "../../api/user_api";
 import { useMyProfile, useMySubscription } from "../../hooks/useUser";
 import { logout as logoutApi } from "../../../auth/api/auth_api";
+import { showErrorToast } from "@/shared/lib/toast";
 
 /**
  * ProfileTabContent - 내 프로필 탭
@@ -108,7 +109,9 @@ export const ProfileTabContent = () => {
 
     if (currentPlan !== "Free") {
       if (subscription === undefined) {
-        alert("구독 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+        showErrorToast(
+          "구독 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+        );
         return;
       }
 

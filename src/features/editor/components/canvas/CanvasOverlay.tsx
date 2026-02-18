@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 // @ts-ignore - tldraw types
 import { Editor } from "tldraw";
 import { CanvasBoard } from "./CanvasBoard";
+import { showErrorToast } from "@/shared/lib/toast";
 
 interface CanvasOverlayProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export const CanvasOverlay = ({
     try {
       const shapeIds = editor.getCurrentPageShapeIds();
       if (shapeIds.size === 0) {
-        alert("캔버스에 아무것도 없어요!");
+        showErrorToast("캔버스에 아무것도 없어요!");
         return;
       }
 
@@ -42,7 +43,7 @@ export const CanvasOverlay = ({
       }
     } catch (e) {
       console.error("Canvas capture error:", e);
-      alert("캡처 중 오류가 발생했습니다.");
+      showErrorToast("캡처 중 오류가 발생했습니다.");
     }
   };
 
@@ -62,9 +63,9 @@ export const CanvasOverlay = ({
           {/* Cancel 버튼 */}
           <button
             onClick={handleCancel}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
           >
-            Cancel
+            닫기
           </button>
 
           {/* Add 버튼 */}
@@ -72,7 +73,7 @@ export const CanvasOverlay = ({
             onClick={handleAdd}
             className="rounded-lg bg-[#2A6AFF] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#1E5AE8]"
           >
-            Add
+            추가
           </button>
         </div>
       </div>

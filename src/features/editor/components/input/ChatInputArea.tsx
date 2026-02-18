@@ -6,6 +6,7 @@ interface ChatInputAreaProps {
   onContentChange?: (hasContent: boolean) => void;
   onSubmit?: () => void;
   className?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -25,7 +26,14 @@ const SCROLLBAR_STYLES = `
 
 export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
   (
-    { onContentClick, onKeyDown, onContentChange, onSubmit, className },
+    {
+      onContentClick,
+      onKeyDown,
+      onContentChange,
+      onSubmit,
+      className,
+      disabled = false,
+    },
     ref,
   ) => {
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -59,10 +67,11 @@ export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
         {/* 채팅 입력 영역 (위로 확장) */}
         <div
           ref={ref}
-          contentEditable
-          className={`min-h-[50px] w-full flex-1 cursor-text overflow-x-hidden overflow-y-auto pr-2 text-[18px] leading-[28px] tracking-[-0.01em] break-words whitespace-pre-wrap text-gray-800 empty:before:text-[#9CA4B0] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${SCROLLBAR_STYLES}`}
-          onClick={onContentClick}
+          contentEditable={!disabled}
+          className={`min-h-[50px] w-full flex-1 cursor-text overflow-x-hidden overflow-y-auto pr-2 text-[18px] leading-[28px] tracking-[-0.01em] break-words whitespace-pre-wrap text-gray-800 empty:before:text-[#9CA4B0] empty:before:content-['@을_통해_도구를_선택하거나,_요청을_입력하세요.'] focus:outline-none ${SCROLLBAR_STYLES} ${disabled ? "pointer-events-none cursor-not-allowed opacity-50" : ""}`}
+          onClick={disabled ? undefined : onContentClick}
           onInput={(e) => {
+            if (disabled) return;
             // 브라우저가 다 지워도 <br>을 남기는 경우 처리 (placeholder 보이게 하기 위함)
             if (e.currentTarget.innerHTML === "<br>") {
               e.currentTarget.innerHTML = "";
@@ -71,8 +80,8 @@ export const ChatInputArea = forwardRef<HTMLDivElement, ChatInputAreaProps>(
             const text = e.currentTarget.textContent?.trim() || "";
             onContentChange?.(text.length > 0);
           }}
-          onKeyDown={handleKeyDown}
-          onPaste={handlePaste}
+          onKeyDown={disabled ? undefined : handleKeyDown}
+          onPaste={disabled ? undefined : handlePaste}
         />
       </div>
     );

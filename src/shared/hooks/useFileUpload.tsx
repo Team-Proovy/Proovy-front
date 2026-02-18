@@ -38,6 +38,12 @@ export const useFileUpload = (
   const onDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 파일 드래그가 아니면 무시 (텍스트 선택, 내부 이미지 드래그 등)
+    if (!e.dataTransfer.types.includes("Files")) {
+      return;
+    }
+
     dragCounter.current += 1;
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
       setIsDragging(true);
@@ -47,6 +53,12 @@ export const useFileUpload = (
   const onDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // 파일 드래그가 아니면 무시 (Enter와 대칭 유지)
+    if (!e.dataTransfer.types.includes("Files")) {
+      return;
+    }
+
     dragCounter.current -= 1;
     if (dragCounter.current === 0) {
       setIsDragging(false);

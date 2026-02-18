@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface LoadingSpinnerProps {
   /** 스피너 크기 (기본: 160px) */
   size?: number;
@@ -14,6 +16,7 @@ export const LoadingSpinner = ({
   size = 160,
   className = "",
 }: LoadingSpinnerProps) => {
+  const gradientId = `spinnerGradient-${useId().replace(/:/g, "")}`;
   const strokeWidth = size * 0.1; // 스트로크 두께 (크기의 10%)
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -33,7 +36,7 @@ export const LoadingSpinner = ({
         <defs>
           {/* 그라데이션 정의 */}
           <linearGradient
-            id="spinnerGradient"
+            id={gradientId}
             x1="0%"
             y1="0%"
             x2="100%"
@@ -74,7 +77,7 @@ export const LoadingSpinner = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="url(#spinnerGradient)"
+          stroke={`url(#${gradientId})`}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           strokeDasharray={circumference}

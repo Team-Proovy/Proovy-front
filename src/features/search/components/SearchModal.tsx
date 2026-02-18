@@ -117,18 +117,22 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
   const searchGroups = useMemo(() => {
     if (!searchData?.conversations) return [];
     return groupItemsByDate(
-      searchData.conversations.map((conv) => ({
-        dateStr: conv.createdAt,
-        item: {
-          id: String(conv.conversationId),
-          title: conv.noteTitle,
-          noteId: conv.noteId,
-          preview:
-            conv.userMessage.content.length > 80
-              ? conv.userMessage.content.slice(0, 80) + "…"
-              : conv.userMessage.content,
-        },
-      })),
+      searchData.conversations.map((conv) => {
+        // highlight가 있으면 우선 사용 (검색어 주변 ...텍스트... 형태)
+        const userHighlight = conv.userMessage?.highlight;
+        const assistantHighlight = conv.assistantMessage?.highlight;
+        const previewText = userHighlight || assistantHighlight || "";
+
+        return {
+          dateStr: conv.createdAt,
+          item: {
+            id: String(conv.conversationId),
+            title: conv.noteTitle,
+            noteId: conv.noteId,
+            preview: previewText || undefined,
+          },
+        };
+      }),
     );
   }, [searchData]);
 

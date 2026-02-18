@@ -33,6 +33,7 @@ export const AppLayout = () => {
   };
 
   const isHomePage = location.pathname === "/app/home";
+  const isChatPage = location.pathname.startsWith("/app/chat");
 
   const handleHomeClick = () => {
     if (isHomePage) {
@@ -60,7 +61,11 @@ export const AppLayout = () => {
       />
 
       {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
-      <main className="relative flex flex-1 flex-col overflow-y-auto transition-all duration-300">
+      <main
+        className={`relative flex min-h-0 flex-1 flex-col transition-all duration-300 ${
+          isChatPage ? "overflow-hidden" : "overflow-y-auto"
+        }`}
+      >
         <Outlet />
       </main>
 

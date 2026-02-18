@@ -8,6 +8,7 @@ import {
   MathIcon,
   CanvasIcon,
 } from "../../../../shared/components/icons/ChatInputIcons";
+import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
 import { useTools } from "../../hooks/useEditorQueries";
@@ -32,6 +33,7 @@ interface InputToolbarProps {
   activeToolName?: string | null;
   hasContent?: boolean;
   onClipClick?: () => void;
+  isSending?: boolean;
 }
 
 export const InputToolbar = ({
@@ -44,6 +46,7 @@ export const InputToolbar = ({
   activeToolName,
   hasContent = false,
   onClipClick,
+  isSending = false,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
   const { data: toolList = [] } = useTools();
@@ -322,10 +325,14 @@ export const InputToolbar = ({
 
       {/* 전송 버튼 */}
       <ToolButton
-        onClick={hasContent ? onSend : undefined}
-        className={getSendButtonClass(hasContent)}
+        onClick={hasContent && !isSending ? onSend : undefined}
+        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed" : ""}`}
       >
-        <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        {isSending ? (
+          <LoadingSpinner size={20} />
+        ) : (
+          <SendIcon className="h-[16px] w-[14px] shrink-0" />
+        )}
       </ToolButton>
     </div>
   );

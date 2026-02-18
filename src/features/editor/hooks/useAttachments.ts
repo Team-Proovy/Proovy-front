@@ -11,6 +11,7 @@ import {
   normalizePlanType,
 } from "@/features/subscription/types/plan_types";
 import { parseSize } from "@/shared/utils/file-utils";
+import { showErrorToast } from "@/shared/lib/toast";
 
 // 파일 표시 유틸 re-export (기존 import 경로 호환)
 export { formatFileSize, getFileTypeLabel, getFileIconColor };
@@ -37,6 +38,7 @@ interface UseAttachmentsReturn {
   attachments: Attachment[];
   addFiles: (files: FileList | File[]) => void;
   addCanvasImage: (blob: Blob) => void;
+  restoreAttachments: (attachments: Attachment[]) => void;
   removeAttachment: (id: string) => void;
   clearAttachments: () => void;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -87,13 +89,13 @@ export const useAttachments = (): UseAttachmentsReturn => {
       const validFiles = Array.from(files).filter((file) => {
         // 1. 형식 체크
         if (!isValidFileType(file)) {
-          alert("허용되지 않은 파일 형식입니다.");
+          showErrorToast("허용되지 않은 파일 형식입니다.");
           return false;
         }
 
         // 2. 용량 체크 (플랜 기반)
         if (file.size > maxSizeBytes) {
-          alert(
+          showErrorToast(
             `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
           );
           return false;
@@ -152,6 +154,36 @@ export const useAttachments = (): UseAttachmentsReturn => {
         if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
       });
       return [];
+    });
+  }, []);
+
+  /** 실패 복구용 첨부 재설정 */
+  const restoreAttachments = useCallback((nextAttachments: Attachment[]) => {
+    setAttachments((prev) => {
+      prev.forEach((item) => {
+        if (item.previewUrl) {
+          URL.revokeObjectURL(item.previewUrl);
+        }
+      });
+
+      return nextAttachments.map((attachment) => {
+        let previewUrl: string | undefined;
+
+        if (attachment.type === "canvas" && attachment.blob) {
+          previewUrl = URL.createObjectURL(attachment.blob);
+        } else if (
+          attachment.mimeType.startsWith("image/") &&
+          attachment.file
+        ) {
+          previewUrl = URL.createObjectURL(attachment.file);
+        }
+
+        return {
+          ...attachment,
+          id: generateId(),
+          previewUrl,
+        };
+      });
     });
   }, []);
 
@@ -215,6 +247,7 @@ export const useAttachments = (): UseAttachmentsReturn => {
     attachments,
     addFiles,
     addCanvasImage,
+    restoreAttachments,
     removeAttachment,
     clearAttachments,
     fileInputRef,

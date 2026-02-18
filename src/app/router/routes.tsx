@@ -3,6 +3,10 @@ import { createBrowserRouter } from "react-router-dom";
 // Pages (특정 feature에 속하지 않는 독립 페이지)
 import { LandingPage } from "../../pages/LandingPage";
 import { HomePage } from "../../pages/HomePage";
+import { UnauthorizedPage } from "../../pages/error/UnauthorizedPage";
+import { ForbiddenPage } from "../../pages/error/ForbiddenPage";
+import { NotFoundPage } from "../../pages/error/NotFoundPage";
+import { ServerErrorPage } from "../../pages/error/ServerErrorPage";
 
 // Features - Auth
 import { LoginPage } from "../../features/auth/pages/LoginPage";
@@ -104,5 +108,25 @@ export const router = createBrowserRouter([
   {
     path: "/pricing",
     element: <PricingPage />,
+  },
+  {
+    path: "/error/401",
+    element: <UnauthorizedPage />,
+  },
+  {
+    path: "/error/403",
+    element: <ForbiddenPage />,
+  },
+  {
+    path: "/error/404",
+    element: <NotFoundPage />,
+  },
+  {
+    path: "/error/500",
+    element: <ServerErrorPage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
