@@ -48,7 +48,7 @@ export const AppLayout = () => {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F8F9FA]">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-[#F8F9FA]">
       {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 */}
       <Sidebar
         isCollapsed={isCollapsed}

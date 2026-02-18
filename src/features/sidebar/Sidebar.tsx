@@ -31,7 +31,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   return (
     <div
-      className={`relative z-10 h-full min-h-[600px] shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`relative z-10 h-full shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
         isCollapsed ? "w-[80px]" : "-mr-[20px] w-[260px]"
       }`}
     >
