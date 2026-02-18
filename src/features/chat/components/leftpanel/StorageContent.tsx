@@ -19,6 +19,7 @@ import {
 } from "@/features/assets/utils/fileValidation";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { parseSize } from "@/shared/utils/file-utils";
+import { showErrorToast } from "@/shared/lib/toast";
 import {
   PLAN_DETAILS,
   normalizePlanType,
@@ -199,11 +200,11 @@ export const StorageContent = ({
         setIsSuccessModalOpen(true);
       } else {
         console.error("파일 삭제 실패:", response.message);
-        alert("파일 삭제에 실패했습니다.");
+        showErrorToast("파일 삭제에 실패했습니다.");
       }
     } catch (error) {
       console.error("파일 삭제 중 오류 발생:", error);
-      alert("파일 삭제 중 오류가 발생했습니다.");
+      showErrorToast("파일 삭제 중 오류가 발생했습니다.");
     }
   };
 
@@ -216,7 +217,7 @@ export const StorageContent = ({
     if (!file) return;
 
     if (!isValidFileType(file)) {
-      alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+      showErrorToast("PDF 또는 이미지 파일만 업로드 가능합니다.");
       return;
     }
 
@@ -225,7 +226,7 @@ export const StorageContent = ({
     const maxSizeBytes = parseSize(maxUploadSizeStr);
 
     if (file.size > maxSizeBytes) {
-      alert(
+      showErrorToast(
         `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
       );
       return;
@@ -236,7 +237,9 @@ export const StorageContent = ({
 
       if (!noteId) {
         console.error("noteId가 없습니다.");
-        alert("노트 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.");
+        showErrorToast(
+          "노트 정보를 찾을 수 없습니다. 페이지를 새로고침 해주세요.",
+        );
         setIsUploading(false);
         return;
       }
@@ -244,7 +247,7 @@ export const StorageContent = ({
       const parsed = Number(noteId);
       if (isNaN(parsed) || parsed <= 0) {
         console.error(`유효하지 않은 noteId: ${noteId}`);
-        alert("유효하지 않은 노트입니다. 노트를 다시 열어주세요.");
+        showErrorToast("유효하지 않은 노트입니다. 노트를 다시 열어주세요.");
         setIsUploading(false);
         return;
       }
@@ -259,7 +262,7 @@ export const StorageContent = ({
       }
     } catch (err) {
       console.error("파일 업로드 실패:", err);
-      alert("파일 업로드에 실패했습니다.");
+      showErrorToast("파일 업로드에 실패했습니다.");
     } finally {
       setIsUploading(false);
     }

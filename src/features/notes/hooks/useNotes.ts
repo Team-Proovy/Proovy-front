@@ -70,7 +70,12 @@ export const useCreateNote = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateNoteRequest) => createNote(data),
+    mutationFn: (
+      variables: CreateNoteRequest & { suppressRedirect?: boolean },
+    ) => {
+      const { suppressRedirect, ...data } = variables;
+      return createNote(data, { suppressRedirect });
+    },
     onSuccess: () => {
       // 노트 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });

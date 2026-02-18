@@ -7,6 +7,67 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 // 토큰 저장 키
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
+const SHOULD_ENABLE_ERROR_REDIRECT =
+  import.meta.env.VITE_ENABLE_ERROR_REDIRECT === "true" || !import.meta.env.DEV;
+
+const ERROR_ROUTE_BY_CODE: Record<string, string> = {
+  TOKEN401: "/error/401",
+  TOKEN402: "/error/401",
+  AUTH403: "/error/403",
+  COMMON404: "/error/404",
+  SERVER500: "/error/500",
+};
+
+const ERROR_CODE_PATTERNS: Array<{ pattern: RegExp; route: string }> = [
+  { pattern: /^[A-Z]+401\d*$/, route: "/error/401" },
+  { pattern: /^[A-Z]+403\d*$/, route: "/error/403" },
+  { pattern: /^[A-Z]+404\d*$/, route: "/error/404" },
+  { pattern: /^[A-Z]+5\d{2}\d*$/, route: "/error/500" },
+];
+
+const ERROR_ROUTE_BY_STATUS: Record<number, string> = {
+  401: "/error/401",
+  403: "/error/403",
+  404: "/error/404",
+  500: "/error/500",
+};
+
+const redirectToErrorRoute = (route: string) => {
+  if (!SHOULD_ENABLE_ERROR_REDIRECT) return;
+
+  const currentPath = window.location.pathname;
+  if (currentPath === route || currentPath.startsWith("/error/")) return;
+
+  window.history.replaceState(window.history.state, "", route);
+  window.dispatchEvent(new PopStateEvent("popstate"));
+};
+
+const resolveErrorRoute = (error: AxiosError) => {
+  const status = error.response?.status;
+  const responseData = error.response?.data as
+    | Partial<ApiResponse<unknown>>
+    | undefined;
+  const code = responseData?.code?.toString().trim().toUpperCase();
+
+  if (code && ERROR_ROUTE_BY_CODE[code]) {
+    return ERROR_ROUTE_BY_CODE[code];
+  }
+
+  if (code) {
+    const matchedPattern = ERROR_CODE_PATTERNS.find(({ pattern }) =>
+      pattern.test(code),
+    );
+    if (matchedPattern) {
+      return matchedPattern.route;
+    }
+  }
+
+  if (status && ERROR_ROUTE_BY_STATUS[status]) {
+    return ERROR_ROUTE_BY_STATUS[status];
+  }
+
+  return null;
+};
 
 // 토큰 관리 유틸
 export const tokenUtils = {
@@ -70,7 +131,15 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
+      skipErrorRedirect?: boolean;
+      meta?: {
+        suppressRedirect?: boolean;
+      };
     };
+    const shouldSuppressRedirect = Boolean(
+      originalRequest?.skipErrorRedirect ||
+      originalRequest?.meta?.suppressRedirect,
+    );
 
     // 401 에러이고 재시도하지 않은 요청인 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -92,13 +161,10 @@ apiClient.interceptors.response.use(
       const refreshToken = tokenUtils.getRefreshToken();
 
       if (!refreshToken) {
-        // 개발 환경에서는 리다이렉트하지 않음 (MSW 사용)
-        if (import.meta.env.DEV) {
-          console.warn("[Auth] 토큰 없음 - 개발 환경에서는 리다이렉트 스킵");
-          return Promise.reject(error);
-        }
         tokenUtils.clearTokens();
-        window.location.href = "/login";
+        if (!shouldSuppressRedirect) {
+          redirectToErrorRoute("/error/401");
+        }
         return Promise.reject(error);
       }
 
@@ -118,14 +184,20 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError as AxiosError, null);
-        // 개발 환경에서는 리다이렉트하지 않음 (MSW 사용)
-        if (!import.meta.env.DEV) {
-          tokenUtils.clearTokens();
-          window.location.href = "/login";
+        tokenUtils.clearTokens();
+        if (!shouldSuppressRedirect) {
+          redirectToErrorRoute("/error/401");
         }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
+      }
+    }
+
+    if (!shouldSuppressRedirect) {
+      const errorRoute = resolveErrorRoute(error);
+      if (errorRoute) {
+        redirectToErrorRoute(errorRoute);
       }
     }
 

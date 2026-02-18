@@ -26,6 +26,10 @@ export const useCredit = async (
 ): Promise<ApiResponse<import("./credit_types").CreditUsageResult>> => {
   const response = await apiClient.post<
     ApiResponse<import("./credit_types").CreditUsageResult>
-  >(`${CREDIT_BASE}/use`, data);
+  >(`${CREDIT_BASE}/use`, data, {
+    meta: {
+      suppressRedirect: true,
+    },
+  });
   return response.data;
 };

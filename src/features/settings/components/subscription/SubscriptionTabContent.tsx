@@ -14,6 +14,7 @@ import {
   useCancelSubscription,
   useResumeSubscription,
 } from "../../hooks/useUser";
+import { showErrorToast } from "@/shared/lib/toast";
 
 /**
  * SubscriptionTabContent - 구독 정보 탭
@@ -95,11 +96,11 @@ export const SubscriptionTabContent = () => {
         setCancelInfo(info);
         setShowCancelSuccessModal(true);
       } else {
-        alert(response.message || "구독 취소에 실패했습니다.");
+        showErrorToast(response.message || "구독 취소에 실패했습니다.");
       }
     } catch (error) {
       console.error("Cancel failed:", error);
-      alert("구독 취소 중 오류가 발생했습니다.");
+      showErrorToast("구독 취소 중 오류가 발생했습니다.");
     }
   };
 
@@ -115,13 +116,17 @@ export const SubscriptionTabContent = () => {
         const message = response.message;
 
         if (code === "USER4004") {
-          alert(`구독 재개 실패: ${message} (Free 플랜은 재개할 수 없습니다)`);
+          showErrorToast(
+            `구독 재개 실패: ${message} (Free 플랜은 재개할 수 없습니다)`,
+          );
         } else if (code === "USER4007") {
-          alert(`구독 재개 실패: ${message}`);
+          showErrorToast(`구독 재개 실패: ${message}`);
         } else if (code === "USER4042") {
-          alert(`구독 재개 실패: ${message} (활성화된 구독이 없습니다)`);
+          showErrorToast(
+            `구독 재개 실패: ${message} (활성화된 구독이 없습니다)`,
+          );
         } else {
-          alert(message || "구독 재개에 실패했습니다.");
+          showErrorToast(message || "구독 재개에 실패했습니다.");
         }
       }
     } catch (error) {
@@ -130,11 +135,11 @@ export const SubscriptionTabContent = () => {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message;
         if (message) {
-          alert(message);
+          showErrorToast(message);
           return;
         }
       }
-      alert("구독 재개 중 오류가 발생했습니다.");
+      showErrorToast("구독 재개 중 오류가 발생했습니다.");
     }
   };
 

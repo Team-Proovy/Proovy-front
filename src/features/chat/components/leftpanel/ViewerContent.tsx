@@ -16,6 +16,7 @@ import { DragDropOverlay } from "@/features/editor/components/input/DragDropOver
 import { ViewerEmpty } from "./ViewerEmpty";
 import { FileRenderer } from "./FileRenderer";
 import { parseSize } from "@/shared/utils/file-utils";
+import { showErrorToast } from "@/shared/lib/toast";
 
 interface ViewerContentProps {
   noteId: string;
@@ -45,7 +46,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
       file.type === "application/pdf" || file.type.startsWith("image/");
 
     if (!isValidType) {
-      alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+      showErrorToast("PDF 또는 이미지 파일만 업로드 가능합니다.");
       return;
     }
 
@@ -54,7 +55,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     const maxSizeBytes = parseSize(maxUploadSizeStr);
 
     if (file.size > maxSizeBytes) {
-      alert(
+      showErrorToast(
         `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
       );
       return;
