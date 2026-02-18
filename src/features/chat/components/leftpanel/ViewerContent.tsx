@@ -98,11 +98,17 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
   // 2. 파일 데이터 가져오기 (Controller Logic)
   useEffect(() => {
-    console.log("🔄fetch 시도: activeFileId", activeFileId);
     let cancelled = false;
 
     const fetchUrlData = async () => {
-      if (!activeFileId) return;
+      if (!activeFileId) {
+        setPdfUrl(null);
+        setFileType(null);
+        setFileName("");
+        setIsLoading(false);
+        setError(null);
+        return;
+      }
 
       setIsLoading(true);
       setError(null);
@@ -159,17 +165,17 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
   // 3. 노트 변경 시 뷰어 상태 초기화 (Stale State 방지)
   useEffect(() => {
-    console.log("🧹노트 변경 감지 -> 초기화 작업 진행: noteId", noteId);
-    // 로컬 상태 초기화
-    setPdfUrl(null);
-    setFileType(null);
-    setFileName("");
-    setIsLoading(false);
-    setError(null);
-
-    // 전역 스토어 초기화 (이전 노트의 파일 ID 제거)
-    setViewerFileId(null);
-  }, [noteId, setViewerFileId]);
+    // 새 노트에 파일이 없을때만 전체 초기화 수행
+    // 파일이 있는 경우 Effect 2의 activeFileId 변경이 상태를 처리함
+    if (!fileId) {
+      setPdfUrl(null);
+      setFileType(null);
+      setFileName("");
+      setIsLoading(false);
+      setError(null);
+      setViewerFileId(null);
+    }
+  }, [noteId, fileId, setViewerFileId]);
 
   const renderContent = () => {
     // Case 1: 파일이 선택되지 않음 -> 업로드 UI (Empty State)
