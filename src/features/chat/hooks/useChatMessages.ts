@@ -6,6 +6,7 @@ import {
   parseSSEStream,
 } from "@/features/editor/api/editor_api";
 import { useNoteDetail, noteKeys } from "@/features/notes/hooks/useNotes";
+import { generateNoteTitle } from "@/features/notes/api/notes_api";
 import { uploadAttachments } from "@/features/assets/utils/upload_attachments";
 import {
   getUploadUrl,
@@ -471,6 +472,19 @@ export const useChatMessages = () => {
           { isStream: true, signal },
         );
 
+        // 제목 생성을 스트리밍과 병렬로 백그라운드 실행 (실패해도 기존 제목 유지)
+        void generateNoteTitle(Number(noteId), { text: firstMessageData.text })
+          .then((response) => {
+            if (!response.isSuccess) return;
+            void queryClient.invalidateQueries({
+              queryKey: noteKeys.detail(String(noteId)),
+            });
+            void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+          })
+          .catch(() => {
+            // 실패 시 날짜/시간 제목 유지, 에러 표시 안함
+          });
+
         await processStream(response, tempAssistantMsgId, signal);
 
         if (uploadedViewerAssetId) {
@@ -481,9 +495,6 @@ export const useChatMessages = () => {
         }
 
         // 첫 대화 성공 후 노트 상세 refetch → AI가 갱신한 제목 반영
-        queryClient.invalidateQueries({
-          queryKey: ["notes", "detail", noteId],
-        });
         // 크레딧 잔액 최신화 (대화 생성 시 서버에서 자동 차감)
         queryClient.invalidateQueries({ queryKey: creditKeys.all });
         queryClient.invalidateQueries({ queryKey: userKeys.profile() });
@@ -628,7 +639,7 @@ export const useChatMessages = () => {
         await processStream(response, tempAssistantMsgId, signal);
 
         queryClient.invalidateQueries({
-          queryKey: ["notes", "detail", noteId],
+          queryKey: noteKeys.detail(String(nId)),
         });
         // 크레딧 잔액 최신화 (대화 생성 시 서버에서 자동 차감)
         queryClient.invalidateQueries({ queryKey: creditKeys.all });

@@ -22,6 +22,11 @@ export interface UpdateNoteTitleRequest {
   title: string;
 }
 
+/** AI 노트 제목 생성 요청 */
+export interface GenerateTitleRequest {
+  text: string;
+}
+
 // ============================================================
 // 응답 (Response) 타입
 // ============================================================
