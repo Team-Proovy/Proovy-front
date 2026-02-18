@@ -1,16 +1,12 @@
 import type { SVGProps } from "react";
 
-export const NoteEditIcon = ({
-  className,
-  ...props
-}: SVGProps<SVGSVGElement>) => (
+export const NoteEditIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg
     width="18"
     height="18"
     viewBox="0 0 16 16"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className={`text-[#6B7280] transition-colors hover:text-[#2A6AFF] ${className ?? ""}`}
     {...props}
   >
     <path
