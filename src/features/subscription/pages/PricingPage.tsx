@@ -69,7 +69,6 @@ export const PricingPage = () => {
   const { user, updateUser } = useAuthStore();
   const { data: subscription } = useMySubscription();
 
-  // 최신 구독 정보로 동기화
   useEffect(() => {
     if (subscription && user) {
       const serverPlan = normalizePlanType(subscription.currentPlan.name);
@@ -92,7 +91,6 @@ export const PricingPage = () => {
   };
 
   const handlePlanClick = (planName: PlanType) => {
-    // 로그인 확인
     if (!user) {
       navigate("/login");
       return;
@@ -102,13 +100,11 @@ export const PricingPage = () => {
     const targetLevel = planLevels[planName] || 0;
 
     if (targetLevel > currentLevel) {
-      // 업그레이드 -> 확인 모달 표시
       setTargetPlanForUpgrade(planName);
       setShowUpgradeConfirmModal(true);
     }
   };
 
-  // useUpgradeSubscription 훅
   const { mutateAsync: upgrade } = useUpgradeSubscription();
 
   const confirmUpgrade = async () => {

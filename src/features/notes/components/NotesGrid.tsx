@@ -1,8 +1,3 @@
-/**
- * NotesGrid - 노트 목록 그리드 영역
- * - 노트 추가 카드, 노트 카드들, 로딩/빈 상태
- */
-
 import { NotesAddCard } from "./NotesAddCard";
 import { NoteCard } from "./NoteCard";
 import { LoadingSpinner } from "../../../shared/components/loading-spinner";

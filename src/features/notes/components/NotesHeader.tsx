@@ -1,8 +1,3 @@
-/**
- * NotesHeader - 노트 목록 페이지 헤더영역
- * - 제목, 정렬 버튼, 선택 버튼, 노트 개수
- */
-
 import { useEffect, useRef } from "react";
 import { DropdownIcon } from "../../../shared/components/icons/ChatInputIcons";
 import { SORT_OPTIONS } from "../constants/sort_options";
@@ -57,20 +52,18 @@ export const NotesHeader = ({
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isSortDropdownOpen, onToggleSortDropdown]);
+
   return (
     <div className="w-full">
-      {/* 제목 */}
       <div className="mb-[16px]">
         <h1 className="text-[40px] leading-[52px] font-semibold tracking-[-0.008px] text-black">
           노트 목록
         </h1>
       </div>
 
-      {/* 정렬 버튼 + 선택 버튼 + 노트 개수 */}
       <div className="w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[8px]">
-            {/* 정렬 드롭다운 */}
             <div
               className="relative"
               ref={dropdownRef}
@@ -79,7 +72,7 @@ export const NotesHeader = ({
                 ref={toggleRef}
                 type="button"
                 onClick={() => onToggleSortDropdown(!isSortDropdownOpen)}
-                className="flex h-[28px] w-[140px] cursor-pointer items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
+                className="flex w-[140px] cursor-pointer items-center justify-between overflow-hidden rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[12px] py-[10px] transition-colors hover:bg-gray-50"
               >
                 <span className="font-['Noto_Sans_KR',sans-serif] text-[14px] leading-[15px] font-normal whitespace-nowrap text-[#2F3440]">
                   {SORT_OPTIONS.find((option) => option.value === sortOrder)
@@ -114,7 +107,6 @@ export const NotesHeader = ({
               )}
             </div>
 
-            {/* 선택/취소 + 삭제 버튼 */}
             {isSelectMode ? (
               <div className="flex items-center gap-[8px]">
                 <button
@@ -144,7 +136,6 @@ export const NotesHeader = ({
             )}
           </div>
 
-          {/* 노트 개수 */}
           <div className="flex items-center gap-[8px]">
             <span className="text-[16px] leading-[20px] font-medium text-black">
               노트 개수

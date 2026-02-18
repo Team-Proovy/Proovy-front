@@ -1,14 +1,3 @@
-/**
- * NotesPage - 노트 목록 페이지
- *
- * URL: /app/notes
- *
- * 기능:
- * - 전체 노트 목록 표시 (페이지네이션)
- * - 노트 카드 클릭 → /app/chat/:noteId 로 이동
- * - "노트 추가하기" 클릭 → /app/home 으로 이동
- */
-
 import { useNoteListPage } from "../hooks";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
 import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
@@ -69,7 +58,6 @@ export const NotesPage = () => {
   return (
     <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
       <div className="3xl:max-w-[1360px] mx-auto w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
-        {/* 헤더 영역 */}
         <NotesHeader
           sortOrder={sortOrder}
           isSortDropdownOpen={isSortDropdownOpen}
@@ -84,7 +72,6 @@ export const NotesPage = () => {
           onDeleteClick={handleDeleteClick}
         />
 
-        {/* 노트 그리드 + 페이지네이션 */}
         <NotesGrid
           notes={notes}
           isLoading={isLoading}
@@ -104,7 +91,6 @@ export const NotesPage = () => {
         />
       </div>
 
-      {/* 모달 영역 */}
       {isDeleteModalOpen && (
         <DeleteNotesModal
           selectedIds={selectedIds}
