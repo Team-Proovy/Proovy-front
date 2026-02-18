@@ -7,6 +7,7 @@ import { signupComplete } from "../api/auth_api";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth_store";
+import { showErrorToast } from "@/shared/lib/toast";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
@@ -79,12 +80,12 @@ export const SignupPage = () => {
 
         navigate("/app/home");
       } else {
-        alert(`회원가입 실패: ${response.message}`);
+        showErrorToast(`회원가입 실패: ${response.message}`);
       }
     } catch (error) {
       console.error("회원가입 에러:", error);
       const axiosError = error as AxiosError<{ message?: string }>;
-      alert(
+      showErrorToast(
         axiosError.response?.data?.message ||
           "회원가입 중 오류가 발생했습니다.",
       );

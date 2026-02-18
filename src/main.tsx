@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { AppQueryProvider } from "./app/providers/query_provider";
 import { router } from "./app/router/routes";
+import { ToastHost } from "@/shared/components/ui/ToastHost";
 import "./app/styles/global.css";
 
 const enableMocking = async () => {
@@ -21,6 +22,7 @@ enableMocking().then(() => {
     <StrictMode>
       <AppQueryProvider>
         <RouterProvider router={router} />
+        <ToastHost />
       </AppQueryProvider>
     </StrictMode>,
   );

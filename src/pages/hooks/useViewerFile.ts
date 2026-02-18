@@ -7,6 +7,7 @@ import {
   normalizePlanType,
 } from "@/features/subscription/types/plan_types";
 import { parseSize } from "@/shared/utils/file-utils";
+import { showErrorToast } from "@/shared/lib/toast";
 
 /**
  * 뷰어 파일 미리보기 관리 훅
@@ -45,7 +46,7 @@ export const useViewerFile = (
     if (!file) return;
 
     if (!isValidFileType(file)) {
-      alert("PDF 또는 이미지 파일만 업로드 가능합니다.");
+      showErrorToast("PDF 또는 이미지 파일만 업로드 가능합니다.");
       return;
     }
 
@@ -54,7 +55,7 @@ export const useViewerFile = (
     const maxSizeBytes = parseSize(maxUploadSizeStr);
 
     if (file.size > maxSizeBytes) {
-      alert(
+      showErrorToast(
         `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
       );
       return;

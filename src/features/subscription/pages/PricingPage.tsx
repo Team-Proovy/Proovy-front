@@ -6,6 +6,7 @@ import {
   useUpgradeSubscription,
   useMySubscription,
 } from "../../settings/hooks/useUser";
+import { showErrorToast } from "@/shared/lib/toast";
 
 import { type PlanType, normalizePlanType } from "../types/plan_types";
 
@@ -126,11 +127,11 @@ export const PricingPage = () => {
           setShowUpgradeConfirmModal(false);
           setShowUpgradeSuccessModal(true);
         } else {
-          alert(response.message || "업그레이드에 실패했습니다.");
+          showErrorToast(response.message || "업그레이드에 실패했습니다.");
         }
       } catch (error) {
         console.error("Upgrade failed:", error);
-        alert("업그레이드 중 오류가 발생했습니다.");
+        showErrorToast("업그레이드 중 오류가 발생했습니다.");
       }
     }
   };

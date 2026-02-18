@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,11 +7,15 @@ import {
   noteKeys,
 } from "@/features/notes/hooks/useNotes";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
-import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
+import {
+  getPlanMaxNotes,
+  normalizePlanType,
+} from "@/features/subscription/types/plan_types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
+import { showErrorToast } from "@/shared/lib/toast";
 
 const createPersistentPreviewUrl = (
   attachment: ChatSendData["attachments"][number],
@@ -65,14 +69,11 @@ export const useHomeSend = () => {
     page: 0,
     size: 1,
   });
-  const [uploadError, setUploadError] = useState<string | null>(null);
 
   /** 뷰어용 File 객체 참조 (노트 생성 후 업로드) */
   const viewerFileRef = useRef<File | null>(null);
 
   const isSending = isCreatingNote;
-
-  const clearError = () => setUploadError(null);
 
   const handleSend = async (data: ChatSendData): Promise<boolean> => {
     const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
@@ -81,11 +82,18 @@ export const useHomeSend = () => {
 
     if (shouldCheckLimit) {
       const maxNotes = getPlanMaxNotes(resolvedPlan);
+      const currentPlanType = normalizePlanType(resolvedPlan);
 
       if (totalNotes >= maxNotes) {
-        setUploadError(
-          "노트 생성 개수가 초과하였습니다. 플랜을 업그레이드 해주세요.",
-        );
+        if (currentPlanType === "Pro") {
+          showErrorToast(
+            "최대 노트를 모두 생성하여 더 이상 노트를 만들 수 없습니다.",
+          );
+        } else {
+          showErrorToast(
+            "노트 생성 개수가 초과하였습니다. 플랜을 업그레이드 해주세요.",
+          );
+        }
         return false;
       }
     }
@@ -93,11 +101,10 @@ export const useHomeSend = () => {
     return new Promise<boolean>((resolve) => {
       // 노트만 생성 (title은 서버가 자동 생성)
       createNote(
-        {},
+        { suppressRedirect: true },
         {
           onSuccess: (response) => {
             const newNoteId = response.result.noteId;
-            setUploadError(null);
 
             // 첨부파일 정보 → ChatPage 전달
             const attachmentInfos: MessageAttachment[] = data.attachments.map(
@@ -145,7 +152,7 @@ export const useHomeSend = () => {
           },
           onError: (error) => {
             console.error("노트 생성 실패:", error);
-            setUploadError("노트 생성에 실패했습니다. 다시 시도해주세요.");
+            showErrorToast("노트 생성에 실패했습니다. 다시 시도해주세요.");
             resolve(false);
           },
         },
@@ -156,8 +163,6 @@ export const useHomeSend = () => {
   return {
     viewerFileRef,
     isSending,
-    uploadError,
-    clearError,
     handleSend,
   };
 };
