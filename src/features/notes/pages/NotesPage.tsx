@@ -57,7 +57,7 @@ export const NotesPage = () => {
 
   return (
     <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
-      <div className="3xl:max-w-[1360px] mx-auto w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+      <div className="mx-auto w-full max-w-[1680px]">
         <NotesHeader
           sortOrder={sortOrder}
           isSortDropdownOpen={isSortDropdownOpen}
@@ -72,23 +72,27 @@ export const NotesPage = () => {
           onDeleteClick={handleDeleteClick}
         />
 
-        <NotesGrid
-          notes={notes}
-          isLoading={isLoading}
-          isSelectMode={isSelectMode}
-          selectedIds={selectedIds}
-          onToggleSelection={toggleIdSelection}
-          showAddCard={currentPage === 0}
-          totalSlots={6}
-        />
+        <div className="flex justify-center">
+          <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+            <NotesGrid
+              notes={notes}
+              isLoading={isLoading}
+              isSelectMode={isSelectMode}
+              selectedIds={selectedIds}
+              onToggleSelection={toggleIdSelection}
+              showAddCard={currentPage === 0}
+              totalSlots={6}
+            />
 
-        <NotesPagination
-          pageInfo={pageInfo}
-          currentPage={currentPage}
-          onPreviousPage={handlePreviousPage}
-          onNextPage={handleNextPage}
-          onPageChange={setCurrentPage}
-        />
+            <NotesPagination
+              pageInfo={pageInfo}
+              currentPage={currentPage}
+              onPreviousPage={handlePreviousPage}
+              onNextPage={handleNextPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        </div>
       </div>
 
       {isDeleteModalOpen && (
