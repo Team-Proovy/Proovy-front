@@ -87,18 +87,18 @@ export const SidebarProfile = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (authUser?.plan !== "Pro") {
+              if (planType !== "Pro") {
                 onUpgradeClick();
               }
             }}
             className={`flex h-[24px] w-[70px] cursor-pointer items-center justify-center rounded bg-[#2A6AFF] text-[12px] leading-none text-white transition-colors ${
-              authUser?.plan === "Pro"
+              planType === "Pro"
                 ? "cursor-default opacity-50"
                 : "hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
             }`}
-            disabled={authUser?.plan === "Pro"}
+            disabled={planType === "Pro"}
           >
-            {authUser?.plan === "Pro" ? "최고 플랜" : "업그레이드"}
+            {planType === "Pro" ? "최고 플랜" : "업그레이드"}
           </button>
         </div>
         <div className="flex items-center justify-between text-gray-500">

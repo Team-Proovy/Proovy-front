@@ -51,7 +51,7 @@ export const ViewerUploadCard = ({
     )}
 
     {pdfUrl ? (
-      <div className="group relative flex h-[160px] w-[220px] shrink-0 flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all">
+      <div className="group relative flex h-[160px] w-full shrink-0 flex-col items-center overflow-hidden rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-all lg:w-[220px]">
         {/* 닫기 버튼 */}
         <button
           onClick={onRemove}
@@ -64,7 +64,7 @@ export const ViewerUploadCard = ({
         </button>
 
         {/* PDF/이미지 썸네일 */}
-        <div className="relative flex w-[160px] flex-1 items-center justify-center overflow-hidden">
+        <div className="relative flex w-full flex-1 items-center justify-center overflow-hidden lg:w-[160px]">
           <div className="flex h-full w-full items-center justify-center">
             {fileName.toLowerCase().endsWith(".pdf") ? (
               <PdfPreview
@@ -96,7 +96,7 @@ export const ViewerUploadCard = ({
       <button
         onClick={onOpenExplorer}
         type="button"
-        className="group flex h-[160px] w-[220px] shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33]"
+        className="group flex h-[160px] w-full shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33] lg:w-[220px]"
       >
         <div>
           <PdfIcon size={56} />

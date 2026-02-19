@@ -26,8 +26,8 @@ export const NotesGrid = ({
   const placeholderCount = Math.max(0, totalSlots - usedSlots);
 
   return (
-    <div className="mt-[21px]">
-      <div className="grid grid-cols-[repeat(2,271px)] gap-[40px] min-[1340px]:grid-cols-[repeat(3,271px)]">
+    <div className="mt-[21px] flex justify-center">
+      <div className="3xl:grid-cols-5 grid w-full grid-cols-2 gap-[20px] lg:grid-cols-3 2xl:grid-cols-4">
         {showAddCard && <NotesAddCard />}
 
         {isLoading ? (
@@ -49,7 +49,7 @@ export const NotesGrid = ({
               <div
                 key={`placeholder-${index}`}
                 aria-hidden="true"
-                className="h-[229px] w-[271px] rounded-[12px] border-[0.5px] border-transparent bg-transparent"
+                className="h-[204px] w-full rounded-[12px] border-[0.5px] border-transparent bg-transparent"
               />
             ))}
           </>

@@ -55,14 +55,16 @@ export const NotesHeader = ({
 
   return (
     <div className="w-full">
-      <div className="w-[582px] min-[1340px]:w-[893px]">
-        <div className="mb-[16px]">
-          <h1 className="text-[40px] leading-[52px] font-semibold tracking-[-0.008px] text-black">
+      <div className="mb-[23px] flex justify-center">
+        <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+          <h1 className="font-['Pretendard'] text-[40px] leading-[52px] font-semibold text-black">
             노트 목록
           </h1>
         </div>
+      </div>
 
-        <div className="w-full">
+      <div className="flex justify-center">
+        <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-[8px]">
               <div

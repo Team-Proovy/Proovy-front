@@ -161,7 +161,7 @@ export const NoteCard = ({
         aria-label={`${note.title} ${isSelected ? "선택됨" : "선택 안됨"}`}
         role="button"
         tabIndex={0}
-        className={`group relative flex h-[229px] w-[271px] cursor-pointer flex-col rounded-[12px] text-left transition-colors transition-transform hover:scale-[1.02] ${
+        className={`group relative flex h-[204px] w-full cursor-pointer flex-col rounded-[12px] text-left transition-colors transition-transform hover:scale-[1.02] ${
           isSelected
             ? "border-[1.5px] border-[#2A6AFF] bg-[#F1F4F8]"
             : "border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] hover:bg-[#E8ECF1]"
@@ -192,7 +192,7 @@ export const NoteCard = ({
       role="link"
       tabIndex={0}
       aria-label={`${note.title} 노트로 이동`}
-      className="group flex h-[229px] w-[271px] cursor-pointer flex-col rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] transition-colors transition-transform hover:scale-[1.02] hover:bg-[#E8ECF1]"
+      className="group flex h-[204px] w-full cursor-pointer flex-col rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] transition-colors transition-transform hover:scale-[1.02] hover:bg-[#E8ECF1]"
     >
       {noteContent}
     </div>
@@ -207,15 +207,15 @@ function NoteThumbnail({
   title: string;
 }) {
   return (
-    <div className="h-[149px] w-full overflow-hidden rounded-t-[12px] bg-[#E8ECF1]">
+    <div className="h-[131px] w-full overflow-hidden rounded-t-[12px] bg-[#E8ECF1]">
       {thumbnailUrl ? (
         <img
           src={thumbnailUrl}
           alt={title}
           loading="lazy"
           decoding="async"
-          width={271}
-          height={149}
+          width={240}
+          height={131}
           className="h-full w-full object-cover"
         />
       ) : (
@@ -255,7 +255,7 @@ function NoteInfo({
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className="flex h-[80px] w-full flex-col items-start justify-center rounded-b-[12px] border-t-[0.5px] border-[#D1D6DE] bg-white px-[16px] py-[8px]">
+    <div className="flex h-[73px] w-full flex-col items-start justify-center rounded-b-[12px] border-t-[0.5px] border-[#D1D6DE] bg-white px-[16px] py-[8px]">
       <div className="flex w-full flex-col gap-[8px]">
         <div className="flex w-full items-center justify-between gap-[8px]">
           {isEditing ? (
