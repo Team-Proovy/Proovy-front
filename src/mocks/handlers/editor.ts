@@ -156,6 +156,141 @@ let conversationIdCounter = 100;
 let messageIdCounter = 200;
 let canvasAssetIdCounter = 500;
 
+type MockTokenScenario = {
+  tokens: string[];
+  finalMessage: string;
+};
+
+const buildMockTokenScenario = (userText: string): MockTokenScenario | null => {
+  const normalizedText = userText.toLowerCase();
+
+  if (normalizedText.includes("mock-v1-latex")) {
+    const finalMessage = [
+      "# v1 토큰 수식 테스트",
+      "인라인 수식은 $x^2 + y^2 = z^2$로 보여야 합니다.",
+      "브래킷 수식은 $n^2 \\leq 40$로 정규화되어야 합니다.",
+      "블록 수식:",
+      "$$\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}$$",
+    ].join("\n");
+
+    return {
+      tokens: [
+        "# v1",
+        " 토큰",
+        " 수식",
+        " 테스트",
+        "\\n",
+        "인라인",
+        " 수식은",
+        " $",
+        "x^2 + y^2 = z^2",
+        "$",
+        "로",
+        " 보여야",
+        " 합니다.",
+        "\\n",
+        "브래킷",
+        " 수식은",
+        " [",
+        "n^2 \\leq 40",
+        "]",
+        "로",
+        " 정규화",
+        "되어야",
+        " 합니다.",
+        "\\n",
+        "블록",
+        " 수식:",
+        "\\n",
+        "$$",
+        "\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}",
+        "$$",
+      ],
+      finalMessage,
+    };
+  }
+
+  if (normalizedText.includes("mock-v1-html")) {
+    const finalMessage = [
+      "# v1 HTML 엔티티 테스트",
+      "비교식: $a &lt; b$ 와 $c &gt; d$",
+      "엔티티 수식: $n^2 &lt;= 40$",
+      "줄바꿈 태그 테스트:<br>다음 줄에서도 수식 $e^{i\\pi}+1=0$",
+    ].join("\n");
+
+    return {
+      tokens: [
+        "# v1",
+        " HTML",
+        " 엔티티",
+        " 테스트",
+        "\\n",
+        "비교식:",
+        " $a &lt; b$",
+        " 와",
+        " $c &gt; d$",
+        "\\n",
+        "엔티티",
+        " 수식:",
+        " $n^2 &lt;= 40$",
+        "\\n",
+        "줄바꿈",
+        " 태그",
+        " 테스트:<br>",
+        "다음",
+        " 줄에서도",
+        " 수식",
+        " $e^{i\\pi}+1=0$",
+      ],
+      finalMessage,
+    };
+  }
+
+  if (normalizedText.includes("mock-v1-list")) {
+    const finalMessage = [
+      "# v1 리스트 번호 테스트",
+      "1. 첫 번째 핵심",
+      "2. 두 번째 핵심",
+      "3. 세 번째 핵심",
+      "[n^2 \\leq 40] 조건도 함께 확인",
+    ].join("\n");
+
+    return {
+      tokens: [
+        "# v1",
+        " 리스트",
+        " 번호",
+        " 테스트",
+        "\\n",
+        "1.",
+        " 첫",
+        " 번째",
+        " 핵심",
+        "\\n",
+        "1.",
+        " 두",
+        " 번째",
+        " 핵심",
+        "\\n",
+        "1.",
+        " 세",
+        " 번째",
+        " 핵심",
+        "\\n",
+        "[",
+        "n^2 \\leq 40",
+        "]",
+        " 조건도",
+        " 함께",
+        " 확인",
+      ],
+      finalMessage,
+    };
+  }
+
+  return null;
+};
+
 // ============================================================
 // 핸들러
 // ============================================================
@@ -198,37 +333,40 @@ export const editorHandlers = [
       const assistantMsgId = ++messageIdCounter;
 
       const userText = body.text || "";
+      const mockTokenScenario = buildMockTokenScenario(userText);
 
       // Mock AI 응답 생성
-      const aiContent = [
-        `# 풀이 요약`,
-        `"${userText.slice(0, 30)}..."에 대한 마크다운 스트리밍 테스트입니다.`,
-        ``,
-        `## 핵심 포인트`,
-        `- 조건을 정리하고`,
-        `- 적절한 공식을 적용한 다음`,
-        `- 결과를 검산합니다.`,
-        ``,
-        `## 수식`,
-        `인라인 수식: $a^2 + b^2 = c^2$`,
-        `블록 수식:`,
-        `$$\\int_0^1 x^2\\,dx = \\frac{1}{3}$$`,
-        ``,
-        `## 코드 블록`,
-        "```ts",
-        "const add = (a: number, b: number) => a + b;",
-        "console.log(add(1, 2));",
-        "```",
-        ``,
-        `## 테이블`,
-        `| 단계 | 설명 |`,
-        `| --- | --- |`,
-        `| 1 | 조건 정리 |`,
-        `| 2 | 공식 적용 |`,
-        `| 3 | 결과 검산 |`,
-        ``,
-        `> 추가 질문이 있으면 언제든 알려주세요.`,
-      ].join("\n");
+      const aiContent =
+        mockTokenScenario?.finalMessage ??
+        [
+          `# 풀이 요약`,
+          `"${userText.slice(0, 30)}..."에 대한 마크다운 스트리밍 테스트입니다.`,
+          ``,
+          `## 핵심 포인트`,
+          `- 조건을 정리하고`,
+          `- 적절한 공식을 적용한 다음`,
+          `- 결과를 검산합니다.`,
+          ``,
+          `## 수식`,
+          `인라인 수식: $a^2 + b^2 = c^2$`,
+          `블록 수식:`,
+          `$$\\int_0^1 x^2\\,dx = \\frac{1}{3}$$`,
+          ``,
+          `## 코드 블록`,
+          "```ts",
+          "const add = (a: number, b: number) => a + b;",
+          "console.log(add(1, 2));",
+          "```",
+          ``,
+          `## 테이블`,
+          `| 단계 | 설명 |`,
+          `| --- | --- |`,
+          `| 1 | 조건 정리 |`,
+          `| 2 | 공식 적용 |`,
+          `| 3 | 결과 검산 |`,
+          ``,
+          `> 추가 질문이 있으면 언제든 알려주세요.`,
+        ].join("\n");
 
       // 비-스트리밍: 기존 JSON 응답
       if (!isStream) {
@@ -325,11 +463,13 @@ export const editorHandlers = [
           }
 
           // 3. token 이벤트 — AI 응답을 한 글자씩 전송
-          for (const char of aiContent) {
+          const tokenStream =
+            mockTokenScenario?.tokens ?? Array.from(aiContent);
+          for (const token of tokenStream) {
             await new Promise((r) => setTimeout(r, 20));
             controller.enqueue(
               encoder.encode(
-                `data: ${JSON.stringify({ type: "token", content: char })}\n\n`,
+                `data: ${JSON.stringify({ type: "token", content: token })}\n\n`,
               ),
             );
           }
