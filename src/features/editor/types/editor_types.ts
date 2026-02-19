@@ -279,64 +279,149 @@ export interface CanvasImageUploadResponse {
 }
 
 // ============================================================
-// SSE 스트리밍 이벤트 타입 (POST /api/conversations?isStream=true)
+// SSE 스트리밍 이벤트 타입 v2 (POST /api/conversations?isStream=true)
+// AI 서버 /stream/v2 프로토콜 — SSE event: 헤더로 이벤트 구분
 // ============================================================
 
-/** thread_id 이벤트 — 스트리밍 시작, 대화 스레드 ID 수신 */
-export interface SSEThreadIdEvent {
-  type: "thread_id";
-  thread_id: string;
+/** SSE v2 공통 envelope (모든 이벤트에 포함) */
+export interface SSEv2Envelope {
+  v: string;
+  ts: string;
+  seq: number;
   run_id: string;
+  thread_id: string;
 }
 
-/** 진행 상황용 custom_data */
-export interface SSECustomData {
+/** session.metadata — 스트리밍 세션 시작 */
+export interface SSEv2SessionMetadata extends SSEv2Envelope {
+  event: "session.metadata";
+  agent_id?: string;
+}
+
+/** run.started — 에이전트 실행 시작 */
+export interface SSEv2RunStarted extends SSEv2Envelope {
+  event: "run.started";
+  stream_tokens?: boolean;
+}
+
+/** node.started — 노드 실행 시작 */
+export interface SSEv2NodeStarted extends SSEv2Envelope {
+  event: "node.started";
+  node: string;
+  node_path?: string;
+}
+
+/** node.progress — 노드 진행 상황 (ThinkingBar에 표시) */
+export interface SSEv2NodeProgress extends SSEv2Envelope {
+  event: "node.progress";
+  node: string;
+  message: string;
+}
+
+/** node.completed — 노드 실행 완료 */
+export interface SSEv2NodeCompleted extends SSEv2Envelope {
+  event: "node.completed";
+  node: string;
+  status: string;
+  duration_ms: number;
+}
+
+/** llm.message.started — LLM 호출 시작 */
+export interface SSEv2LLMMessageStarted extends SSEv2Envelope {
+  event: "llm.message.started";
+  message_id: string;
+  node: string;
+  role: string;
+}
+
+/** llm.token.delta — LLM 실시간 토큰 스트리밍 */
+export interface SSEv2LLMTokenDelta extends SSEv2Envelope {
+  event: "llm.token.delta";
+  message_id: string;
+  node: string;
+  delta: string;
+  index: number;
+}
+
+/** llm.message.completed — LLM 호출 완료 */
+export interface SSEv2LLMMessageCompleted extends SSEv2Envelope {
+  event: "llm.message.completed";
+  message_id: string;
+  finish_reason: string;
+}
+
+/** chat.message — 완성된 메시지 (최종 응답 확정) */
+export interface SSEv2ChatMessage extends SSEv2Envelope {
+  event: "chat.message";
+  message_id: string;
+  role: string;
+  kind:
+    | "status"
+    | "assistant_partial"
+    | "assistant_final"
+    | "tool_result"
+    | "review"
+    | "suggestion"
+    | "system_notice";
+  content: unknown;
   node?: string;
-  status?: string;
-  final_output?: unknown;
 }
 
-/** SSE ChatMessage 구조 (message 이벤트의 content) */
-export interface SSEChatMessageContent {
-  type: "human" | "ai" | "tool" | "custom";
-  content: string;
-  tool_calls: unknown[];
-  tool_call_id: string | null;
-  run_id: string | null;
-  response_metadata: Record<string, unknown>;
-  custom_data: SSECustomData;
+/** artifact.ready — PDF 등 생성물 준비 완료 */
+export interface SSEv2ArtifactReady extends SSEv2Envelope {
+  event: "artifact.ready";
+  artifact_id: string;
+  name: string;
+  mime: string;
+  path: string;
+  size: number;
 }
 
-/** message 이벤트 — 진행 상황(custom) 또는 최종 응답(ai) */
-export interface SSEMessageEvent {
-  type: "message";
-  content: SSEChatMessageContent;
+/** credit.updated — 크레딧 잔액 업데이트 */
+export interface SSEv2CreditUpdated extends SSEv2Envelope {
+  event: "credit.updated";
+  balance: number;
+  total_cost: number;
+  remaining: number;
 }
 
-/** token 이벤트 — LLM 토큰 스트리밍 (실시간 텍스트 조각) */
-export interface SSETokenEvent {
-  type: "token";
-  content: string;
+/** heartbeat — 연결 유지 */
+export interface SSEv2Heartbeat extends SSEv2Envelope {
+  event: "heartbeat";
+  alive: boolean;
 }
 
-/** DONE 이벤트 — 스트림 종료 */
-export interface SSEDoneEvent {
-  type: "DONE";
+/** run.completed — 스트리밍 완료 */
+export interface SSEv2RunCompleted extends SSEv2Envelope {
+  event: "run.completed";
+  duration_ms: number;
+  final_message_id?: string;
 }
 
-/** error 이벤트 — 서버 에러 */
-export interface SSEErrorEvent {
-  type: "error";
-  content: string;
+/** run.failed — 스트리밍 실패 */
+export interface SSEv2RunFailed extends SSEv2Envelope {
+  event: "run.failed";
+  code: string;
+  message: string;
+  retryable: boolean;
 }
 
-/** SSE 이벤트 유니온 타입 */
+/** SSE v2 이벤트 유니온 타입 */
 export type SSEEvent =
-  | SSEThreadIdEvent
-  | SSEMessageEvent
-  | SSETokenEvent
-  | SSEDoneEvent
-  | SSEErrorEvent;
+  | SSEv2SessionMetadata
+  | SSEv2RunStarted
+  | SSEv2NodeStarted
+  | SSEv2NodeProgress
+  | SSEv2NodeCompleted
+  | SSEv2LLMMessageStarted
+  | SSEv2LLMTokenDelta
+  | SSEv2LLMMessageCompleted
+  | SSEv2ChatMessage
+  | SSEv2ArtifactReady
+  | SSEv2CreditUpdated
+  | SSEv2Heartbeat
+  | SSEv2RunCompleted
+  | SSEv2RunFailed;
 
 // ============================================================
 // API 응답 타입 별칭

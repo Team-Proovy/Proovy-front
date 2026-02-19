@@ -1,8 +1,9 @@
-import { useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
 import {
   ProfileIcon,
   SubscriptionIcon,
 } from "@/shared/components/icons/SettingsIcons";
+import { SparkleIcon } from "@/shared/components/icons/SparkleIcon";
 import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
 import { ThinkingBar } from "./ThinkingBar";
@@ -11,6 +12,53 @@ import type { ChatMessage } from "../../types/chat_types";
 interface ChatMessagesProps {
   messages: ChatMessage[];
 }
+
+// FinalResponse 말풍선 대기 중 순환 메시지
+const FINAL_LOADING_MESSAGES = [
+  "마지막 요약정리중...",
+  "생각정리중...",
+  "진짜 답변 나오는중...",
+  "진짜 최종 답변 나오는중...",
+  "진짜 진짜 최종 답변 나오는중...",
+  "Proove it 하는중...",
+  "두쫀쿠 만드는중...",
+  "카다이프 구해오는중...",
+];
+
+/** FinalResponse 토큰 대기 중 로딩 바 (3초마다 메시지 순환) */
+const FinalResponseLoadingBar = () => {
+  const [index, setIndex] = useState(0);
+  const [isBlue, setIsBlue] = useState(true);
+
+  useEffect(() => {
+    const msgTimer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % FINAL_LOADING_MESSAGES.length);
+    }, 3000);
+    const iconTimer = setInterval(() => {
+      setIsBlue((prev) => !prev);
+    }, 800);
+    return () => {
+      clearInterval(msgTimer);
+      clearInterval(iconTimer);
+    };
+  }, []);
+
+  return (
+    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
+      <SparkleIcon
+        size={24}
+        color={isBlue ? "#2A6AFF" : "#6B7280"}
+        className="shrink-0 transition-colors duration-300"
+      />
+      <div
+        key={index}
+        className="min-w-0 animate-in fade-in slide-in-from-bottom-1 fill-mode-both text-[14px] leading-[20px] font-medium text-[#6B7280] duration-300"
+      >
+        {FINAL_LOADING_MESSAGES[index]}
+      </div>
+    </div>
+  );
+};
 
 // ── 조정 가능한 상수 ──
 // USER_MESSAGE_TOP_GAP: 사용자 메시지가 스크롤 컨테이너 상단에서 떨어지는 간격(px)
@@ -63,7 +111,11 @@ const AssistantMessage = ({
       />
     </div>
     {isStreaming && !content ? (
-      <ThinkingBar statusText={statusText} />
+      statusText ? (
+        <ThinkingBar statusText={statusText} />
+      ) : (
+        <FinalResponseLoadingBar />
+      )
     ) : (
       <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-sm leading-5 break-words text-gray-900">

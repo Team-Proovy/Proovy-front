@@ -258,107 +258,176 @@ export const useChatMessages = () => {
     };
   }, []);
 
-  /** SSE 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
+  /** SSE v2 스트림을 파싱하여 메시지 상태를 실시간 업데이트 */
   const processStream = useCallback(
     async (
       response: Response,
       tempAssistantMsgId: string,
       signal: AbortSignal,
     ) => {
+      // FinalResponse LLM의 message_id (이 ID의 토큰만 최종 말풍선에 표시)
+      let finalLLMMsgId: string | null = null;
+      // FinalResponse 전용 말풍선 ID (처음 토큰이 오면 동적 생성)
+      let finalRespMsgId: string | null = null;
+
+      // FinalResponse 또는 단순 응답 노드
+      const FINAL_NODES = new Set(["FinalResponse", "Simple_response", "Fallback"]);
+
       for await (const event of parseSSEStream(response)) {
         if (signal.aborted) return;
 
-        switch (event.type) {
-          case "thread_id":
-            // 스레드 ID 수신 — 필요 시 저장 가능
-            break;
-
-          case "message":
-            if (
-              event.content.type === "custom" &&
-              event.content.custom_data?.status
-            ) {
-              // 진행 상황 업데이트 (ThinkingBar에 표시)
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === tempAssistantMsgId
-                    ? { ...m, statusText: event.content.custom_data.status }
-                    : m,
-                ),
-              );
-            } else if (event.content.type === "ai") {
-              // 최종 응답 — 서버 응답과 클라이언트 누적이 다를 경우에만 교체 (정합성 보장)
-              // 같으면 깜빡임 방지를 위해 유지 (statusText만 제거)
-              setMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id !== tempAssistantMsgId) return m;
-
-                  // 내용이 다르면 교체, 같으면 유지
-                  if (m.content !== event.content.content) {
-                    return {
-                      ...m,
-                      content: event.content.content,
-                      statusText: undefined,
-                    };
-                  }
-
-                  // 내용이 같으면 statusText만 제거
-                  return { ...m, statusText: undefined };
-                }),
-              );
-            }
-            break;
-
-          case "token":
-            // LLM 토큰 실시간 누적 (사용자에게 보이는 텍스트)
+        switch (event.event) {
+          // ── 진행 상황 → ThinkingBar ──────────────────────────────
+          case "node.progress": {
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === tempAssistantMsgId
-                  ? {
-                      ...m,
-                      content: m.content + event.content,
-                      statusText: undefined,
-                    }
+                m.id === tempAssistantMsgId && m.isStreaming
+                  ? { ...m, statusText: event.message }
                   : m,
               ),
             );
             break;
+          }
 
-          case "DONE":
+          // ── FinalResponse LLM 시작 → 새 말풍선 생성 ────────────
+          case "llm.message.started": {
+            if (FINAL_NODES.has(event.node) && !finalLLMMsgId) {
+              finalLLMMsgId = event.message_id;
+              const newId = `final-${Date.now()}`;
+              finalRespMsgId = newId;
+
+              setMessages((prev) => {
+                // 기존 생각 말풍선 닫기
+                const updated = prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? { ...m, isStreaming: false, statusText: undefined }
+                    : m,
+                );
+                // FinalResponse 전용 말풍선 추가
+                return [
+                  ...updated,
+                  {
+                    id: newId,
+                    role: "assistant" as const,
+                    content: "",
+                    isStreaming: true,
+                  },
+                ];
+              });
+            }
+            break;
+          }
+
+          // ── 실시간 토큰 → FinalResponse 말풍선에 누적 ──────────
+          case "llm.token.delta": {
+            if (
+              finalLLMMsgId &&
+              event.message_id === finalLLMMsgId &&
+              finalRespMsgId
+            ) {
+              const targetId = finalRespMsgId;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === targetId
+                    ? { ...m, content: m.content + event.delta }
+                    : m,
+                ),
+              );
+            }
+            break;
+          }
+
+          // ── 완성된 메시지 확정 ───────────────────────────────────
+          case "chat.message": {
+            if (
+              event.kind === "assistant_final" ||
+              event.kind === "assistant_partial"
+            ) {
+              const content =
+                typeof event.content === "string"
+                  ? event.content
+                  : String(event.content ?? "");
+
+              // 토큰 스트리밍이 있었으면 finalRespMsgId, 없었으면 tempAssistantMsgId에 확정
+              const targetId = finalRespMsgId ?? tempAssistantMsgId;
+              setMessages((prev) =>
+                prev.map((m) => {
+                  if (m.id !== targetId) return m;
+                  if (m.content !== content) {
+                    return { ...m, content, statusText: undefined };
+                  }
+                  return { ...m, statusText: undefined };
+                }),
+              );
+
+              if (!finalRespMsgId) {
+                // 토큰 스트리밍 없이 chat.message만 온 경우
+                finalRespMsgId = tempAssistantMsgId;
+              }
+            } else if (event.kind === "system_notice") {
+              // 크레딧 부족 등 시스템 알림 → 별도 말풍선
+              const content =
+                typeof event.content === "string"
+                  ? event.content
+                  : "시스템 알림";
+              const noticeId = `notice-${Date.now()}`;
+              setMessages((prev) => [
+                ...prev,
+                {
+                  id: noticeId,
+                  role: "assistant" as const,
+                  content,
+                  isStreaming: false,
+                },
+              ]);
+            }
+            break;
+          }
+
+          // ── 스트리밍 완료 ────────────────────────────────────────
+          case "run.completed": {
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === tempAssistantMsgId
+                m.isStreaming
                   ? { ...m, isStreaming: false, statusText: undefined }
                   : m,
               ),
             );
             break;
+          }
 
-          case "error":
-            console.error("[SSE] 서버 에러:", event.content);
+          // ── 스트리밍 실패 ────────────────────────────────────────
+          case "run.failed": {
+            console.error("[SSE v2] run.failed:", event.message);
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === tempAssistantMsgId
+                m.isStreaming
                   ? {
                       ...m,
                       isStreaming: false,
                       statusText: undefined,
                       content:
-                        typeof event.content === "string"
-                          ? event.content
-                          : "응답 중 오류가 발생했어요.",
+                        m.content ||
+                        event.message ||
+                        "응답 중 오류가 발생했어요.",
                     }
                   : m,
               ),
             );
             return;
+          }
+
+          // heartbeat, session.metadata, node.started/completed,
+          // llm.message.completed, tool.call.*, credit.updated, artifact.ready
+          default:
+            break;
         }
       }
 
-      // DONE 이벤트 없이 스트림 종료된 경우 안전하게 처리
+      // 스트림이 run.completed 없이 종료된 경우 안전하게 처리
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === tempAssistantMsgId && m.isStreaming
+          m.isStreaming
             ? { ...m, isStreaming: false, statusText: undefined }
             : m,
         ),
