@@ -281,7 +281,7 @@ export const useChatMessages = () => {
           case "node.progress": {
             setMessages((prev) =>
               prev.map((m) =>
-                m.id === tempAssistantMsgId
+                m.id === tempAssistantMsgId && m.isStreaming
                   ? { ...m, statusText: event.message }
                   : m,
               ),
@@ -291,7 +291,7 @@ export const useChatMessages = () => {
 
           // ── FinalResponse LLM 시작 → 새 말풍선 생성 ────────────
           case "llm.message.started": {
-            if (FINAL_NODES.has(event.node)) {
+            if (FINAL_NODES.has(event.node) && !finalLLMMsgId) {
               finalLLMMsgId = event.message_id;
               const newId = `final-${Date.now()}`;
               finalRespMsgId = newId;
