@@ -155,8 +155,9 @@ export const SidebarProfile = ({
           {creditTotal}
         </span>
       </div>
-      <div
-        className="cursor-pointer"
+      <button
+        type="button"
+        className="cursor-pointer border-none bg-transparent p-0"
         onMouseEnter={() => setIsUserIconHovered(true)}
         onMouseLeave={() => setIsUserIconHovered(false)}
         onClick={(e) => {
@@ -168,7 +169,7 @@ export const SidebarProfile = ({
           size={40}
           color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
         />
-      </div>
+      </button>
     </div>
   );
 };
