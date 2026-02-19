@@ -6,6 +6,7 @@ import {
   PaperIcon,
 } from "../../../shared/components/icons/SidebarIcons";
 
+import { useState } from "react";
 import { useAuthStore } from "../../auth/store/auth_store";
 import { useNoteList } from "@/features/notes/hooks/useNotes";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
@@ -27,6 +28,7 @@ export const SidebarProfile = ({
   onUpgradeClick,
   onSettingsClick,
 }: SidebarProfileProps) => {
+  const [isUserIconHovered, setIsUserIconHovered] = useState(false);
   const authUser = useAuthStore((state) => state.user);
   const { data: profile } = useMyProfile();
   const { data: noteListData } = useNoteList({
@@ -153,15 +155,20 @@ export const SidebarProfile = ({
           {creditTotal}
         </span>
       </div>
-      <UserIcon
+      <div
+        className="cursor-pointer"
+        onMouseEnter={() => setIsUserIconHovered(true)}
+        onMouseLeave={() => setIsUserIconHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
           onSettingsClick();
         }}
-        size={40}
-        color="currentColor"
-        className="cursor-pointer text-[#2A6AFF] transition-colors hover:text-[#85B0FF]"
-      />
+      >
+        <UserIcon
+          size={40}
+          color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
+        />
+      </div>
     </div>
   );
 };
