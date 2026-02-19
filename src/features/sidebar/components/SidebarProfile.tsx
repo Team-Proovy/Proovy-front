@@ -159,7 +159,8 @@ export const SidebarProfile = ({
           onSettingsClick();
         }}
         size={40}
-        className="cursor-pointer"
+        color="currentColor"
+        className="cursor-pointer text-[#2A6AFF] transition-colors hover:text-[#85B0FF]"
       />
     </div>
   );
