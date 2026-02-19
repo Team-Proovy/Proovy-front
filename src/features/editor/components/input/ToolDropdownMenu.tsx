@@ -1,6 +1,149 @@
 import { ToolButton } from "../toolbar/ToolButton";
 import type { ToolDto } from "../../types/editor_types";
 
+/** 도구별 아이콘 렌더링 (iconType 기반) */
+const ToolItemIcon = ({ iconType }: { iconType: string }) => {
+  const iconClass = "h-4 w-4 shrink-0";
+
+  switch (iconType) {
+    // 문제 해결 - 전구 아이콘
+    case "chart_line":
+      return (
+        <svg
+          className={iconClass}
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M10 2V3.2"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M15.66 4.34L14.81 5.19"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M18 10H16.8"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M4.34 4.34L5.19 5.19"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M2 10H3.2"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M7.5 15V14.2C7.5 13.5 7 12.9 6.5 12.3C5.8 11.5 5.2 10.5 5.2 9.3C5.2 6.7 7.4 4.6 10 4.6C12.6 4.6 14.8 6.7 14.8 9.3C14.8 10.5 14.2 11.5 13.5 12.3C13 12.9 12.5 13.5 12.5 14.2V15"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M8 17.5H12"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    // 해설지 생성하기 - 문서 아이콘
+    case "file_text":
+      return (
+        <svg
+          className={iconClass}
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 2H5C4.45 2 4 2.45 4 3V17C4 17.55 4.45 18 5 18H15C15.55 18 16 17.55 16 17V6L12 2Z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 2V6H16"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M7 10H13"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M7 13H13"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M7 16H10"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    // 개념 설명 - 말풍선 아이콘
+    case "copy_plus":
+      return (
+        <svg
+          className={iconClass}
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 3.5C3 2.95 3.45 2.5 4 2.5H16C16.55 2.5 17 2.95 17 3.5V12.5C17 13.05 16.55 13.5 16 13.5H11L7 17V13.5H4C3.45 13.5 3 13.05 3 12.5V3.5Z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M6.5 6.5H13.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M6.5 9.5H11.5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    // 기본 폴백 - 원형 점
+    default:
+      return (
+        <div className="h-3 w-3 shrink-0 rounded-full bg-current opacity-40" />
+      );
+  }
+};
+
 interface ToolDropdownMenuProps {
   tools: ToolDto[];
   onSelect: (toolName: string) => void;
@@ -60,7 +203,7 @@ export const ToolDropdownMenu = ({
                 onClose();
               }}
             >
-              <div className="h-4 w-4 shrink-0 rounded bg-[#C7C7C7]" />
+              <ToolItemIcon iconType={tool.iconType} />
               <span>{tool.name}</span>
             </ToolButton>
           );
