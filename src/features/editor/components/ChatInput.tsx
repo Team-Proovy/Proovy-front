@@ -151,14 +151,14 @@ export const ChatInput = ({
   // 전송 핸들러
   const handleSend = async () => {
     if (isToolbarSending || isProcessing) return;
-    if (!hasContent && attachments.length === 0) return;
+    if (!hasContent) return;
 
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
     const extracted = inputRef.current
       ? extractInputContent(inputRef.current)
       : { text: "", latex: undefined, mentionedAssetIds: [] as number[] };
 
-    if (!extracted.text && attachments.length === 0) return;
+    if (!extracted.text.trim()) return;
 
     setIsProcessing(true);
 
@@ -383,7 +383,7 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={hasContent || attachments.length > 0}
+        hasContent={hasContent}
         onClipClick={openFilePicker}
         isSending={isToolbarSending}
       />
