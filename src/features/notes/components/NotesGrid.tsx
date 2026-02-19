@@ -27,7 +27,7 @@ export const NotesGrid = ({
 
   return (
     <div className="mt-[21px] flex justify-center">
-      <div className="grid w-full grid-cols-2 gap-[20px] lg:grid-cols-3">
+      <div className="3xl:grid-cols-5 grid w-full grid-cols-2 gap-[20px] lg:grid-cols-3 2xl:grid-cols-4">
         {showAddCard && <NotesAddCard />}
 
         {isLoading ? (
