@@ -11,6 +11,121 @@ interface MessageContentProps {
   enableFileMentionChip?: boolean;
 }
 
+const isMathLikeBracketExpression = (expression: string) => {
+  const trimmedExpression = expression.trim();
+  if (!trimmedExpression) return false;
+
+  const hasMathOperator = /[=<>≤≥+\-*/^_]/.test(trimmedExpression);
+  const hasMathCommand = /\\[a-zA-Z]+/.test(trimmedExpression);
+  const hasVariableAndNumber = /[a-zA-Z]\d|\d[a-zA-Z]/.test(trimmedExpression);
+
+  return hasMathOperator || hasMathCommand || hasVariableAndNumber;
+};
+
+const decodeCommonHtmlEntities = (text: string) =>
+  text.replace(/&(lt|gt|amp|quot|#39);/g, (entity) => {
+    switch (entity) {
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
+      case "&amp;":
+        return "&";
+      case "&quot;":
+        return '"';
+      case "&#39;":
+        return "'";
+      default:
+        return entity;
+    }
+  });
+
+const isWordLikeChar = (char: string | undefined) =>
+  !!char && /[A-Za-z0-9가-힣ㄱ-ㅎㅏ-ㅣ]/.test(char);
+
+const normalizeInlineMathBoundarySpacing = (text: string) => {
+  const inlineMathRegex = /\$[^$\n]+\$/g;
+  let lastIndex = 0;
+  let result = "";
+
+  for (const match of text.matchAll(inlineMathRegex)) {
+    const mathSegment = match[0];
+    const start = match.index ?? 0;
+    const end = start + mathSegment.length;
+
+    result += text.slice(lastIndex, start);
+
+    const prevChar = start > 0 ? text[start - 1] : undefined;
+    const nextChar = end < text.length ? text[end] : undefined;
+
+    if (isWordLikeChar(prevChar)) {
+      result += " ";
+    }
+
+    result += mathSegment;
+
+    if (isWordLikeChar(nextChar)) {
+      result += " ";
+    }
+
+    lastIndex = end;
+  }
+
+  result += text.slice(lastIndex);
+  return result;
+};
+
+const normalizeMessageMarkdown = (rawContent: string) => {
+  const withDecodedEntities = decodeCommonHtmlEntities(rawContent);
+  const withLineBreaks = withDecodedEntities.replace(/<br\s*\/?>/gi, "  \n");
+
+  const withMathDelimiters = withLineBreaks
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, expression: string) => {
+      const trimmedExpression = expression.trim();
+      return trimmedExpression ? `$${trimmedExpression}$` : "";
+    })
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, expression: string) => {
+      const trimmedExpression = expression.trim();
+      return trimmedExpression ? `$$${trimmedExpression}$$` : "";
+    });
+
+  const withCanonicalLatexDelimiters = withMathDelimiters
+    .replace(/\$\$\s+([\s\S]*?)\s+\$\$/g, (_match, expression: string) => {
+      const trimmedExpression = expression.trim();
+      return trimmedExpression ? `$$${trimmedExpression}$$` : "";
+    })
+    .replace(/\$\s+([^\n$]+?)\s+\$/g, (_match, expression: string) => {
+      const trimmedExpression = expression.trim();
+      return trimmedExpression ? `$${trimmedExpression}$` : "";
+    });
+
+  const withBracketMathNormalized = withCanonicalLatexDelimiters.replace(
+    /\[([^\]\n]+)\](?!\()/g,
+    (match, expression: string) => {
+      const trimmedExpression = expression.trim();
+      if (!isMathLikeBracketExpression(trimmedExpression)) {
+        return match;
+      }
+      return `$${trimmedExpression}$`;
+    },
+  );
+
+  const withInlineMathSpacing = normalizeInlineMathBoundarySpacing(
+    withBracketMathNormalized,
+  );
+
+  let orderedIndex = 0;
+  const normalizedLines = withInlineMathSpacing.split("\n").map((line) => {
+    if (/^\s*\d+\.\s+/.test(line)) {
+      orderedIndex += 1;
+      return line.replace(/^(\s*)\d+\.\s+/, `$1${orderedIndex}. `);
+    }
+    return line;
+  });
+
+  return normalizedLines.join("\n");
+};
+
 const FILE_MENTION_REGEX =
   /#([\w\d가-힣ㄱ-ㅎㅏ-ㅣ\s()\-_.]+?\.(?:pdf|png|jpe?g|webp|gif|bmp|svg|txt|docx?|pptx?|xlsx?|csv|hwp|hwpx))/gi;
 
@@ -65,6 +180,8 @@ export const MessageContent = ({
   className = "",
   enableFileMentionChip = false,
 }: MessageContentProps) => {
+  const normalizedContent = normalizeMessageMarkdown(content);
+
   const renderContent = (children: ReactNode) =>
     enableFileMentionChip ? applyMentionChipToChildren(children) : children;
 
@@ -148,7 +265,7 @@ export const MessageContent = ({
           ),
         }}
       >
-        {content}
+        {normalizedContent}
       </ReactMarkdown>
     </div>
   );
