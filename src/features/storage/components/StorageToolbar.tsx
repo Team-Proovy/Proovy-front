@@ -105,7 +105,7 @@ export const StorageToolbar = ({
             fontStyle: "normal",
             fontWeight: 500,
             lineHeight: "20px",
-            alignSelf: "stretch",
+            alignSelf: "flex-end",
           }}
         >
           전체 용량
