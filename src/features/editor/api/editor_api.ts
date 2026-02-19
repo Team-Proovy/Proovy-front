@@ -36,21 +36,35 @@ export const createConversation = async (
   params?: CreateConversationParams,
 ): Promise<Response> => {
   const isStream = params?.isStream ?? true;
+  const streamTokens = params?.streamTokens ?? true;
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const streamV2Path = import.meta.env.VITE_SSE_V2_ENDPOINT ?? "/stream/v2";
+  const normalizedStreamV2Path = streamV2Path.startsWith("/")
+    ? streamV2Path
+    : `/${streamV2Path}`;
   const token = tokenUtils.getAccessToken();
 
-  const response = await fetch(
-    `${baseUrl}/api/conversations?isStream=${isStream}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(request),
-      signal: params?.signal,
+  const requestUrl = isStream
+    ? `${baseUrl}${normalizedStreamV2Path}`
+    : `${baseUrl}/api/conversations?isStream=${isStream}`;
+
+  const streamRequestBody = isStream
+    ? {
+        ...request,
+        message: request.text,
+        streamTokens,
+      }
+    : request;
+
+  const response = await fetch(requestUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-  );
+    body: JSON.stringify(streamRequestBody),
+    signal: params?.signal,
+  });
 
   if (!response.ok) {
     throw new Error(`대화 생성 실패: ${response.status}`);
@@ -121,12 +135,10 @@ export const uploadCanvasImage = async (
  * SSE 스트림 파서
  * fetch Response에서 SSE 이벤트를 비동기 제너레이터로 파싱합니다.
  *
- * 지원 형식:
- * - data: {"type":"thread_id",...}  → JSON 파싱
- * - data: {"type":"message",...}    → JSON 파싱 (진행 상황 / 최종 응답)
- * - data: {"type":"token",...}      → JSON 파싱 (실시간 텍스트)
- * - data: {"type":"error",...}      → JSON 파싱
- * - data: [DONE]                     → 스트림 종료
+ * 지원 형식(v2):
+ * id: <run_id>:<seq>
+ * event: <event_name>
+ * data: <json>
  */
 export const parseSSEStream = async function* (
   response: Response,
@@ -138,6 +150,39 @@ export const parseSSEStream = async function* (
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
+  let frameId: string | undefined;
+  let frameEvent: string | undefined;
+  let frameDataLines: string[] = [];
+
+  const flushFrame = (): SSEEvent | null => {
+    if (!frameEvent && frameDataLines.length === 0) {
+      return null;
+    }
+
+    const rawId = frameId;
+    const rawEvent = frameEvent;
+    const rawData = frameDataLines.join("\n").trim();
+
+    frameId = undefined;
+    frameEvent = undefined;
+    frameDataLines = [];
+
+    if (!rawData) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(rawData) as SSEEvent["data"];
+
+      return {
+        id: rawId,
+        event: rawEvent ?? "message",
+        data: parsed,
+      };
+    } catch {
+      return null;
+    }
+  };
 
   try {
     while (true) {
@@ -145,42 +190,60 @@ export const parseSSEStream = async function* (
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
+      const lines = buffer.split(/\r?\n/);
       buffer = lines.pop() || "";
 
       for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith(":")) continue;
+        if (!line) {
+          const event = flushFrame();
+          if (event) {
+            yield event;
+          }
+          continue;
+        }
 
-        if (trimmed.startsWith("data:")) {
-          const data = trimmed.slice(5).trim();
-          if (data === "[DONE]") {
-            yield { type: "DONE" };
-            return;
-          }
-          try {
-            yield JSON.parse(data) as SSEEvent;
-          } catch {
-            // JSON 파싱 실패 시 token 이벤트로 래핑
-            yield { type: "token", content: data } as SSEEvent;
-          }
+        if (line.startsWith(":")) {
+          continue;
+        }
+
+        if (line.startsWith("id:")) {
+          frameId = line.slice(3).trim();
+          continue;
+        }
+
+        if (line.startsWith("event:")) {
+          frameEvent = line.slice(6).trim();
+          continue;
+        }
+
+        if (line.startsWith("data:")) {
+          frameDataLines.push(line.slice(5).trim());
         }
       }
     }
-    // 스트림 종료 후 잔여 버퍼 처리
-    buffer += decoder.decode(); // flush decoder
-    const remaining = buffer.trim();
-    if (remaining && remaining.startsWith("data:")) {
-      const data = remaining.slice(5).trim();
-      if (data === "[DONE]") {
-        yield { type: "DONE" };
-      } else {
-        try {
-          yield JSON.parse(data) as SSEEvent;
-        } catch {
-          yield { type: "token", content: data } as SSEEvent;
+
+    buffer += decoder.decode();
+    const trailing = buffer.trim();
+    if (trailing) {
+      const trailingLines = trailing.split(/\r?\n/);
+      for (const line of trailingLines) {
+        if (line.startsWith("id:")) {
+          frameId = line.slice(3).trim();
+          continue;
+        }
+        if (line.startsWith("event:")) {
+          frameEvent = line.slice(6).trim();
+          continue;
+        }
+        if (line.startsWith("data:")) {
+          frameDataLines.push(line.slice(5).trim());
         }
       }
+    }
+
+    const lastEvent = flushFrame();
+    if (lastEvent) {
+      yield lastEvent;
     }
   } finally {
     reader.releaseLock();

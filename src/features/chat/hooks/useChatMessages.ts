@@ -267,63 +267,81 @@ export const useChatMessages = () => {
       for await (const event of parseSSEStream(response)) {
         if (signal.aborted) return;
 
-        switch (event.type) {
-          case "thread_id":
-            // 스레드 ID 수신 — 필요 시 저장 가능
+        switch (event.event) {
+          case "node.progress": {
+            const statusText =
+              typeof event.data.message === "string"
+                ? event.data.message
+                : undefined;
+
+            if (!statusText) break;
+
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === tempAssistantMsgId ? { ...m, statusText } : m,
+              ),
+            );
             break;
+          }
 
-          case "message":
-            if (
-              event.content.type === "custom" &&
-              event.content.custom_data?.status
-            ) {
-              // 진행 상황 업데이트 (ThinkingBar에 표시)
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === tempAssistantMsgId
-                    ? { ...m, statusText: event.content.custom_data.status }
-                    : m,
-                ),
-              );
-            } else if (event.content.type === "ai") {
-              // 최종 응답 — 서버 응답과 클라이언트 누적이 다를 경우에만 교체 (정합성 보장)
-              // 같으면 깜빡임 방지를 위해 유지 (statusText만 제거)
-              setMessages((prev) =>
-                prev.map((m) => {
-                  if (m.id !== tempAssistantMsgId) return m;
+          case "llm.token.delta": {
+            const delta =
+              typeof event.data.delta === "string" ? event.data.delta : "";
 
-                  // 내용이 다르면 교체, 같으면 유지
-                  if (m.content !== event.content.content) {
-                    return {
-                      ...m,
-                      content: event.content.content,
-                      statusText: undefined,
-                    };
-                  }
+            if (!delta) break;
 
-                  // 내용이 같으면 statusText만 제거
-                  return { ...m, statusText: undefined };
-                }),
-              );
-            }
-            break;
-
-          case "token":
-            // LLM 토큰 실시간 누적 (사용자에게 보이는 텍스트)
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === tempAssistantMsgId
                   ? {
                       ...m,
-                      content: m.content + event.content,
+                      content: m.content + delta,
                       statusText: undefined,
                     }
                   : m,
               ),
             );
             break;
+          }
 
-          case "DONE":
+          case "chat.message": {
+            const messageKind =
+              typeof event.data.kind === "string" ? event.data.kind : "";
+            const messageContent =
+              typeof event.data.content === "string" ? event.data.content : "";
+
+            if (!messageContent) break;
+
+            if (messageKind === "status") {
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? { ...m, statusText: messageContent }
+                    : m,
+                ),
+              );
+              break;
+            }
+
+            setMessages((prev) =>
+              prev.map((m) => {
+                if (m.id !== tempAssistantMsgId) return m;
+
+                if (m.content !== messageContent) {
+                  return {
+                    ...m,
+                    content: messageContent,
+                    statusText: undefined,
+                  };
+                }
+
+                return { ...m, statusText: undefined };
+              }),
+            );
+            break;
+          }
+
+          case "run.completed":
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === tempAssistantMsgId
@@ -333,8 +351,15 @@ export const useChatMessages = () => {
             );
             break;
 
-          case "error":
-            console.error("[SSE] 서버 에러:", event.content);
+          case "run.failed": {
+            const errorMessage =
+              typeof event.data.message === "string"
+                ? event.data.message
+                : "응답 중 오류가 발생했어요.";
+
+            console.error("[SSE v2] 서버 에러:", event.data);
+            showErrorToast(errorMessage);
+
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === tempAssistantMsgId
@@ -342,19 +367,20 @@ export const useChatMessages = () => {
                       ...m,
                       isStreaming: false,
                       statusText: undefined,
-                      content:
-                        typeof event.content === "string"
-                          ? event.content
-                          : "응답 중 오류가 발생했어요.",
+                      content: errorMessage,
                     }
                   : m,
               ),
             );
             return;
+          }
+
+          default:
+            break;
         }
       }
 
-      // DONE 이벤트 없이 스트림 종료된 경우 안전하게 처리
+      // terminal 이벤트 없이 스트림 종료된 경우 안전하게 처리
       setMessages((prev) =>
         prev.map((m) =>
           m.id === tempAssistantMsgId && m.isStreaming

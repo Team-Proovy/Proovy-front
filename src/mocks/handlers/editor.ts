@@ -359,6 +359,129 @@ export const editorHandlers = [
     },
   ),
 
+  /** POST /stream/v2 - SSE v2 이벤트 스트리밍 */
+  http.post<never, { message?: string; text?: string; streamTokens?: boolean }>(
+    `${BASE_URL}/stream/v2`,
+    async ({ request }) => {
+      const body = await request.json();
+      const userText = body.message ?? body.text ?? "";
+      const streamTokens = body.streamTokens !== false;
+
+      const aiContent = [
+        `# 풀이 요약`,
+        `"${userText.slice(0, 30)}..."에 대한 v2 스트리밍 테스트입니다.`,
+        ``,
+        `## 핵심 포인트`,
+        `- 조건 정리`,
+        `- 공식 적용`,
+        `- 결과 검산`,
+      ].join("\n");
+
+      const statusSteps = [
+        { node: "Intent", message: "질문의 의도를 분석하고 있습니다." },
+        {
+          node: "Solve",
+          message: "문제를 분석하고 필요한 정보를 정리하고 있습니다.",
+        },
+        {
+          node: "Check",
+          message: "답이 올바른지 검산하고 있습니다.",
+        },
+      ];
+
+      const encoder = new TextEncoder();
+      const runId = crypto.randomUUID();
+      const threadId = crypto.randomUUID();
+      let seq = 0;
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          const emit = (event: string, payload: Record<string, unknown>) => {
+            seq += 1;
+            const data = {
+              v: "2.0",
+              ts: new Date().toISOString(),
+              seq,
+              run_id: runId,
+              thread_id: threadId,
+              ...payload,
+            };
+
+            controller.enqueue(
+              encoder.encode(
+                `id: ${runId}:${seq}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
+              ),
+            );
+          };
+
+          emit("session.metadata", {
+            agent_id: "tutor",
+            capabilities: {
+              token_stream: true,
+              heartbeat: true,
+              terminal_event: true,
+            },
+          });
+          emit("run.started", { stream_tokens: streamTokens });
+
+          for (const step of statusSteps) {
+            await new Promise((r) => setTimeout(r, 450));
+            emit("node.progress", step);
+          }
+
+          const llmMessageId = "m_llm_1";
+          if (streamTokens) {
+            emit("llm.message.started", {
+              message_id: llmMessageId,
+              node: "FinalResponse",
+              role: "assistant",
+            });
+
+            let index = 0;
+            for (const delta of aiContent) {
+              await new Promise((r) => setTimeout(r, 15));
+              emit("llm.token.delta", {
+                message_id: llmMessageId,
+                node: "FinalResponse",
+                delta,
+                index,
+              });
+              index += 1;
+            }
+
+            emit("llm.message.completed", {
+              message_id: llmMessageId,
+              finish_reason: "stop",
+            });
+          }
+
+          emit("chat.message", {
+            message_id: "m_chat_1",
+            role: "assistant",
+            kind: "assistant_final",
+            content: aiContent,
+            node: "FinalResponse",
+          });
+
+          emit("run.completed", {
+            duration_ms: 3200,
+            final_message_id: "m_chat_1",
+          });
+
+          controller.close();
+        },
+      });
+
+      return new HttpResponse(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    },
+  ),
+
   /** GET /api/conversations/search - 대화 검색 */
   http.get(`${BASE_URL}/api/conversations/search`, async ({ request }) => {
     await delay(400);
