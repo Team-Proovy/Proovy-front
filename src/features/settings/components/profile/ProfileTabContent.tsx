@@ -54,7 +54,7 @@ export const ProfileTabContent = () => {
     }
   }, [profile, updateUser, user?.nickname, user?.profileImageUrl, user?.plan]);
 
-  const loginProvider = user?.provider?.toLowerCase() as
+  const loginProvider = (profile?.provider || user?.provider)?.toLowerCase() as
     | LoginProvider
     | undefined;
 
