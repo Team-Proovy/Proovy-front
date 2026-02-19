@@ -12,10 +12,8 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUpdateNoteTitle } from "../hooks/useNotes";
-import {
-  NoteEditIcon,
-  NoteCheckboxIcon,
-} from "@/shared/components/icons/NotesIcons";
+import { SquarePen } from "lucide-react";
+import { NoteCheckboxIcon } from "@/shared/components/icons/NotesIcons";
 import type { NoteDto } from "../api/notes_types";
 
 interface NoteCardProps {
@@ -255,7 +253,7 @@ function NoteInfo({
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
-    <div className="flex h-[73px] w-full flex-col items-start justify-center rounded-b-[12px] border-t-[0.5px] border-[#D1D6DE] bg-white px-[16px] py-[8px]">
+    <div className="flex h-[73px] w-full flex-col items-start justify-center rounded-b-[12px] border-t-[0.5px] border-[#D1D6DE] bg-white py-[8px] pr-[10px] pl-[16px]">
       <div className="flex w-full flex-col gap-[8px]">
         <div className="flex w-full items-center justify-between gap-[8px]">
           {isEditing ? (
@@ -279,10 +277,10 @@ function NoteInfo({
             <button
               type="button"
               onClick={onStartEdit}
-              className="flex h-[24px] w-[24px] cursor-pointer items-center justify-center rounded-[6px] text-[#9CA4B0] transition-colors hover:bg-[#E8ECF1] hover:text-[#2A6AFF]"
+              className="-mr-[6px] flex h-[24px] w-[24px] cursor-pointer items-center justify-center rounded-[6px] text-[#9CA4B0] transition-colors hover:bg-[#E8ECF1] hover:text-[#2A6AFF]"
               aria-label="노트 제목 수정"
             >
-              <NoteEditIcon className="h-[18px] w-[18px]" />
+              <SquarePen className="h-[15px] w-[15px]" />
             </button>
           )}
         </div>
