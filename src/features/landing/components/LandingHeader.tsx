@@ -5,7 +5,7 @@ export const LandingHeader = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="fixed top-0 left-0 z-50 flex h-[80px] w-full items-center justify-between bg-white/80 px-[40px] backdrop-blur-md md:px-[92px]">
+    <header className="fixed top-0 left-0 z-50 flex h-[80px] w-full items-center justify-between bg-white/80 px-[20px] backdrop-blur-md md:px-[92px]">
       <div className="flex items-center gap-[40px]">
         <Link
           to="/"
@@ -38,7 +38,7 @@ export const LandingHeader = () => {
       <div className="flex items-center gap-[16px]">
         <button
           onClick={() => navigate("/login")}
-          className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#F1F4F8] px-[34px] font-['Pretendard'] text-[14px] font-medium text-black transition-colors hover:bg-[#E3E7ED] active:bg-[#D1D6DE]"
+          className="flex h-[40px] items-center justify-center rounded-[10px] bg-[#F1F4F8] px-[16px] font-['Pretendard'] text-[14px] font-medium text-black transition-colors hover:bg-[#E3E7ED] active:bg-[#D1D6DE] md:px-[34px]"
         >
           로그인
         </button>

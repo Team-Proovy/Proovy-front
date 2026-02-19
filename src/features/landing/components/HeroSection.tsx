@@ -4,8 +4,7 @@ export const HeroSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="relative flex min-h-[800px] w-full flex-col items-center justify-center pt-[120px] pb-[100px] md:pt-[160px] md:pb-[180px]">
-      {/* Background Gradient Blur - Optimized for performance */}
+    <section className="relative flex min-h-[100svh] w-full flex-col items-center justify-center pt-[120px] pb-[100px] md:pt-[160px] md:pb-[180px]">
       <div className="absolute top-[200px] left-1/2 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-[#2A6AFF]/8 blur-[80px]" />
 
       <div className="text-center">
@@ -18,17 +17,16 @@ export const HeroSection = () => {
         <div className="mt-[48px] flex justify-center">
           <button
             onClick={() => navigate("/login")}
-            className="flex h-[52px] w-[280px] items-center justify-center rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[20px] font-semibold text-black shadow-sm transition-all hover:bg-gray-50 active:bg-gray-100"
+            className="flex h-[52px] w-full max-w-[280px] items-center justify-center rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[20px] font-semibold text-black shadow-sm transition-all hover:bg-gray-50 active:bg-gray-100"
           >
             Proovy 시작하기
           </button>
         </div>
       </div>
 
-      {/* Down Arrow / Indicator */}
       <a
         href="#intro"
-        className="absolute bottom-[40px] flex flex-col items-center gap-2 transition-all hover:translate-y-1 hover:opacity-80 active:opacity-60"
+        className="absolute bottom-[24px] flex flex-col items-center gap-2 transition-all hover:translate-y-1 hover:opacity-80 active:opacity-60 md:bottom-[48px]"
       >
         <span className="font-['Pretendard'] text-[18px] font-semibold text-[#6B7280]">
           내려서 확인하기
