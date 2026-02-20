@@ -172,7 +172,14 @@ export const parseSSEStream = async function* (
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      let done: boolean;
+      let value: Uint8Array | undefined;
+      try {
+        ({ done, value } = await reader.read());
+      } catch {
+        // 서버가 run.completed 후 연결을 닫을 때 발생하는 네트워크 에러 → 정상 종료로 처리
+        break;
+      }
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });

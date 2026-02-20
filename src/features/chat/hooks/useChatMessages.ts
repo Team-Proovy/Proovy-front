@@ -265,9 +265,11 @@ export const useChatMessages = () => {
       tempAssistantMsgId: string,
       signal: AbortSignal,
     ) => {
-      // FinalResponse LLM의 message_id (이 ID의 토큰만 최종 말풍선에 표시)
+      // 현재 활성 LLM message_id (중간 노드) → tempAssistantMsgId에 토큰 스트리밍
+      let activeLLMMsgId: string | null = null;
+      // FinalResponse LLM의 message_id
       let finalLLMMsgId: string | null = null;
-      // FinalResponse 전용 말풍선 ID (처음 토큰이 오면 동적 생성)
+      // FinalResponse 전용 말풍선 ID
       let finalRespMsgId: string | null = null;
 
       // FinalResponse 또는 단순 응답 노드
@@ -289,23 +291,30 @@ export const useChatMessages = () => {
             break;
           }
 
-          // ── FinalResponse LLM 시작 → 새 말풍선 생성 ────────────
+          // ── LLM 시작 ────────────────────────────────────────────
           case "llm.message.started": {
             if (FINAL_NODES.has(event.node) && !finalLLMMsgId) {
+              // ── FinalResponse 시작 → 새 말풍선 생성 ──────────────
               finalLLMMsgId = event.message_id;
+              activeLLMMsgId = null;
               const newId = `final-${Date.now()}`;
               finalRespMsgId = newId;
 
               setMessages((prev) => {
-                // 기존 생각 말풍선 닫기
-                const updated = prev.map((m) =>
-                  m.id === tempAssistantMsgId
-                    ? { ...m, isStreaming: false, statusText: undefined }
-                    : m,
-                );
-                // FinalResponse 전용 말풍선 추가
+                // 기존 생각 말풍선: content 있으면 freeze, 없으면 제거
+                const thinkingMsg = prev.find((m) => m.id === tempAssistantMsgId);
+                const hasThinkingContent = !!thinkingMsg?.content?.trim();
+
+                const base = hasThinkingContent
+                  ? prev.map((m) =>
+                      m.id === tempAssistantMsgId
+                        ? { ...m, isStreaming: false, statusText: undefined }
+                        : m,
+                    )
+                  : prev.filter((m) => m.id !== tempAssistantMsgId);
+
                 return [
-                  ...updated,
+                  ...base,
                   {
                     id: newId,
                     role: "assistant" as const,
@@ -314,22 +323,31 @@ export const useChatMessages = () => {
                   },
                 ];
               });
+            } else if (!FINAL_NODES.has(event.node) && !finalLLMMsgId) {
+              // ── 중간 노드 LLM 시작 → tempAssistantMsgId에 스트리밍 ──
+              activeLLMMsgId = event.message_id;
             }
             break;
           }
 
-          // ── 실시간 토큰 → FinalResponse 말풍선에 누적 ──────────
+          // ── 실시간 토큰 ──────────────────────────────────────────
           case "llm.token.delta": {
-            if (
-              finalLLMMsgId &&
-              event.message_id === finalLLMMsgId &&
-              finalRespMsgId
-            ) {
+            if (finalLLMMsgId && event.message_id === finalLLMMsgId && finalRespMsgId) {
+              // FinalResponse 토큰 → FinalResponse 말풍선에 누적
               const targetId = finalRespMsgId;
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === targetId
                     ? { ...m, content: m.content + event.delta }
+                    : m,
+                ),
+              );
+            } else if (!finalLLMMsgId && activeLLMMsgId && event.message_id === activeLLMMsgId) {
+              // 중간 노드 토큰 → ThinkingBar 말풍선에 누적 (statusText 제거로 content 전환)
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === tempAssistantMsgId
+                    ? { ...m, content: m.content + event.delta, statusText: undefined }
                     : m,
                 ),
               );
@@ -353,7 +371,8 @@ export const useChatMessages = () => {
               setMessages((prev) =>
                 prev.map((m) => {
                   if (m.id !== targetId) return m;
-                  if (m.content !== content) {
+                  // 빈 content로 이미 스트리밍된 토큰을 덮어쓰지 않도록 방지
+                  if (content && m.content !== content) {
                     return { ...m, content, statusText: undefined };
                   }
                   return { ...m, statusText: undefined };
@@ -361,7 +380,6 @@ export const useChatMessages = () => {
               );
 
               if (!finalRespMsgId) {
-                // 토큰 스트리밍 없이 chat.message만 온 경우
                 finalRespMsgId = tempAssistantMsgId;
               }
             } else if (event.kind === "system_notice") {
@@ -417,8 +435,6 @@ export const useChatMessages = () => {
             return;
           }
 
-          // heartbeat, session.metadata, node.started/completed,
-          // llm.message.completed, tool.call.*, credit.updated, artifact.ready
           default:
             break;
         }
@@ -556,6 +572,21 @@ export const useChatMessages = () => {
 
         await processStream(response, tempAssistantMsgId, signal);
 
+        // 성공 후 navigation state의 firstMessage를 제거해 새로고침 시 재전송 방지
+        // React Router v6은 history.state.usr에 state를 저장함
+        try {
+          const hs = window.history.state as Record<string, unknown> | null;
+          if (hs?.usr !== undefined) {
+            const usr = hs.usr as Record<string, unknown>;
+            window.history.replaceState(
+              { ...hs, usr: { ...usr, firstMessage: undefined } },
+              "",
+            );
+          }
+        } catch {
+          // history 조작 실패는 무시
+        }
+
         if (uploadedViewerAssetId) {
           const nextSearchParams = new URLSearchParams(searchParams);
           nextSearchParams.set("panel", "viewer");
@@ -577,7 +608,6 @@ export const useChatMessages = () => {
         showErrorToast(
           "첫 대화 생성에 실패했습니다. 잠시 후 다시 시도해주세요.",
         );
-        firstMessageSentRef.current = false;
 
         setMessages((prev) => {
           const hasContent = prev.find((m) => m.isStreaming && m.content);
