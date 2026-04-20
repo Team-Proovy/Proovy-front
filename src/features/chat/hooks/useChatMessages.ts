@@ -273,7 +273,11 @@ export const useChatMessages = () => {
       let finalRespMsgId: string | null = null;
 
       // FinalResponse 또는 단순 응답 노드
-      const FINAL_NODES = new Set(["FinalResponse", "Simple_response", "Fallback"]);
+      const FINAL_NODES = new Set([
+        "FinalResponse",
+        "Simple_response",
+        "Fallback",
+      ]);
 
       for await (const event of parseSSEStream(response)) {
         if (signal.aborted) return;
@@ -302,7 +306,9 @@ export const useChatMessages = () => {
 
               setMessages((prev) => {
                 // 기존 생각 말풍선: content 있으면 freeze, 없으면 제거
-                const thinkingMsg = prev.find((m) => m.id === tempAssistantMsgId);
+                const thinkingMsg = prev.find(
+                  (m) => m.id === tempAssistantMsgId,
+                );
                 const hasThinkingContent = !!thinkingMsg?.content?.trim();
 
                 const base = hasThinkingContent
@@ -332,7 +338,11 @@ export const useChatMessages = () => {
 
           // ── 실시간 토큰 ──────────────────────────────────────────
           case "llm.token.delta": {
-            if (finalLLMMsgId && event.message_id === finalLLMMsgId && finalRespMsgId) {
+            if (
+              finalLLMMsgId &&
+              event.message_id === finalLLMMsgId &&
+              finalRespMsgId
+            ) {
               // FinalResponse 토큰 → FinalResponse 말풍선에 누적
               const targetId = finalRespMsgId;
               setMessages((prev) =>
@@ -342,12 +352,20 @@ export const useChatMessages = () => {
                     : m,
                 ),
               );
-            } else if (!finalLLMMsgId && activeLLMMsgId && event.message_id === activeLLMMsgId) {
+            } else if (
+              !finalLLMMsgId &&
+              activeLLMMsgId &&
+              event.message_id === activeLLMMsgId
+            ) {
               // 중간 노드 토큰 → ThinkingBar 말풍선에 누적 (statusText 제거로 content 전환)
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === tempAssistantMsgId
-                    ? { ...m, content: m.content + event.delta, statusText: undefined }
+                    ? {
+                        ...m,
+                        content: m.content + event.delta,
+                        statusText: undefined,
+                      }
                     : m,
                 ),
               );
