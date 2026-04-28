@@ -1,4 +1,10 @@
-import { useRef, useEffect, useLayoutEffect, useCallback, useState } from "react";
+import {
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useState,
+} from "react";
 import {
   ProfileIcon,
   SubscriptionIcon,
@@ -52,7 +58,7 @@ const FinalResponseLoadingBar = () => {
       />
       <div
         key={index}
-        className="min-w-0 animate-in fade-in slide-in-from-bottom-1 fill-mode-both text-[14px] leading-[20px] font-medium text-[#6B7280] duration-300"
+        className="animate-in fade-in slide-in-from-bottom-1 fill-mode-both min-w-0 text-[14px] leading-[20px] font-medium text-[#6B7280] duration-300"
       >
         {FINAL_LOADING_MESSAGES[index]}
       </div>
