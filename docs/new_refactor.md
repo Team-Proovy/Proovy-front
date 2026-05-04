@@ -99,12 +99,13 @@ features/subscription/pages/ ← PricingPage
 
 ```
 [관리 주체 1] features/auth/store/auth_store.ts (Zustand)
-  - user, isAuthenticated 저장 (localStorage persist)
-  - token은 저장하지 않음
+  - user, isAuthenticated, token 필드 모두 존재 (line 6~9)
+  - 단, persist의 partialize 옵션에서 token은 제외됨 (line 44~47)
+  - 즉, 새로고침 후 token은 null로 초기화됨 (user, isAuthenticated만 유지)
 
 [관리 주체 2] shared/api/client.ts
-  - accessToken, refreshToken을 localStorage에 직접 저장/읽기
-  - Zustand 상태와 무관하게 독립 동작
+  - accessToken, refreshToken을 별도 localStorage key로 직접 영속 저장
+  - Zustand의 partialize와 무관하게 독립적으로 유지됨
 ```
 
 **왜 문제인가?**  
@@ -399,20 +400,20 @@ feature 전용 타입(특정 feature에서만 쓰는 UI 상태 타입 등)은 �
 
 1. HTTP 요청/응답 처리 (본래 역할)
 2. localStorage에서 토큰 직접 읽기/쓰기 (부수 효과)
-3. 에러 발생 시 `window.location.href`로 DOM 라우팅 직접 수행 (안티패턴)
+3. 에러 발생 시 `window.history.replaceState` + `popstate` dispatch로 라우팅 우회 (안티패턴)
 4. 401 발생 시 토큰 갱신 로직 실행 및 큐 관리 (복합 로직)
 
 **문제점**:
 
-**[문제 1] `window.location.href` 직접 조작**  
-`client.ts` 인터셉터 안에서 에러 코드를 분석해 `window.location.href = '/error/404'` 처럼 직접 라우팅합니다. 이 방식은 React Router의 히스토리 스택을 우회하므로 "뒤로 가기" 동작이 깨질 수 있고, 인터셉터를 테스트하기가 불가능합니다. 또한 Axios 계층이 React Router에 직접 의존하는 강결합 구조입니다.
+**[문제 1] `window.history.replaceState` 기반 라우팅 우회**  
+`client.ts`의 `redirectToErrorRoute` 함수(line 35~43)는 `window.history.replaceState`로 URL을 바꾼 뒤 `window.dispatchEvent(new PopStateEvent("popstate"))`를 강제로 발생시켜 React Router를 우회 조작합니다. `window.location.href` 직접 이동은 아니지만, API 계층이 브라우저 히스토리를 직접 건드리는 구조이므로 문제의 본질은 동일합니다. React Router의 히스토리 스택과 상태 관리를 우회하므로 "뒤로 가기" 동작이 깨질 수 있고, 인터셉터를 단독으로 테스트하기가 불가능합니다.
 
 **[문제 2] 토큰 이중 저장**  
 `client.ts`가 직접 `localStorage.setItem('accessToken', ...)`을 호출합니다. 동시에 `auth_store.ts`도 `zustand/persist`로 `auth-storage`라는 키에 인증 상태를 저장합니다. 두 저장소가 독립적으로 관리되므로 하나가 갱신되어도 다른 하나가 갱신되지 않는 불일치가 발생합니다.
 
 **해야 할 작업**:
 
-- `window.location.href` 라우팅 → React Router의 `navigate` 함수를 주입받거나, Custom Event를 통해 간접 호출하는 방식으로 교체
+- `window.history.replaceState` + `popstate` dispatch 라우팅 → React Router의 `navigate` 함수를 주입받거나, Custom Event를 통해 간접 호출하는 방식으로 교체
 - 토큰 저장 로직을 `auth_store.ts`의 액션으로 단일화 (Phase 4와 연계)
 
 ---
@@ -495,7 +496,7 @@ StorageActionIcons.tsx, StorageIcons.tsx
 <Icon name="chevron-right" size={16} className="text-primary-main" />
 ```
 
-SVG 파일을 별도 `.svg` 파일로 분리하거나, `lucide-react` 같은 라이브러리 도입도 검토 가능합니다. (팀 결정 사항)
+**`lucide-react`가 이미 설치되어 있습니다** (`^0.562.0`). 별도 패키지 설치 없이 바로 활용 가능합니다. 기존 인라인 SVG 중 lucide에 동일한 아이콘이 있는 것부터 대체하고, 브랜드 고유 아이콘(Proovy 로고 등 lucide에 없는 것)만 커스텀 컴포넌트로 유지합니다. "lucide 도입 검토"가 아니라 "기존 인라인 SVG를 lucide로 단계적 대체"가 올바른 방향입니다.
 
 ---
 
@@ -647,10 +648,10 @@ Phase 2에서 만든 공용 `Button`, `Input` 컴포넌트를 `LoginPage`, `Sign
 **작업 대상 파일**: `src/features/assets/hooks/useAssetPolling.ts`
 
 **현재 상태**:  
-파일 업로드 후 처리 상태를 확인하기 위해 `useAssetPolling.ts` 훅이 존재합니다. 내부에서 `while`문 또는 반복 타이머를 사용해 서버 상태를 동기적으로 폴링할 가능성이 있습니다.
+파일 업로드 후 처리 상태(OCR 진행 여부)를 확인하기 위해 `useAssetPolling.ts` 훅이 존재합니다. 내부에서 `while`문이 아닌 **`setTimeout` 재귀 호출** 방식으로 폴링합니다(line 25: `setTimeout(fetchStatus, interval)`). `ocrStatus`가 `completed` 또는 `failed`가 될 때까지 매 `interval`(기본 3000ms)마다 API를 재호출합니다.
 
 **문제점**:  
-동기 폴링은 렌더링을 블로킹합니다. 파일이 많을수록 첫 화면 표시까지 시간이 오래 걸리고, 사용자는 빈 화면을 봐야 합니다.
+`setTimeout` 재귀는 비동기이므로 렌더링을 직접 블로킹하지는 않습니다. 그러나 컴포넌트가 언마운트되어도 진행 중인 `setTimeout`이 취소되지 않아 **메모리 누수** 위험이 있습니다. 또한 React Query의 캐시·재시도·devtools 등 기능을 전혀 활용하지 못합니다.
 
 **해야 할 작업**:  
 `while`문 폴링이 확인되면 React Query의 `refetchInterval` 기반 비동기 폴링으로 교체합니다. 파일 처리 중에는 스켈레톤 UI를 보여주고, 완료 시 자동 갱신하는 방식으로 UX를 개선합니다.
@@ -665,22 +666,39 @@ Phase 2에서 만든 공용 `Button`, `Input` 컴포넌트를 `LoginPage`, `Sign
 Notes 목록을 표시하기 위해 여러 개의 쿼리가 동시에 실행될 가능성이 있습니다 (예: 목록 쿼리 + 총 개수 쿼리 + 최근 노트 쿼리 동시 호출).
 
 **해야 할 작업**:  
-무한 스크롤 방식이 필요한 경우 `useInfiniteQuery` 단일 쿼리로 통합합니다. 페이지네이션을 유지한다면 `keepPreviousData: true` 옵션을 활성화해 페이지 전환 시 깜빡임을 제거합니다.
+무한 스크롤 방식이 필요한 경우 `useInfiniteQuery` 단일 쿼리로 통합합니다. 페이지네이션을 유지한다면 페이지 전환 시 깜빡임을 제거하기 위해 아래 방식을 사용합니다.
+
+```ts
+// ⚠️ React Query v5 기준 — keepPreviousData: true 옵션은 v5에서 제거됨
+// v5에서는 placeholderData 옵션을 사용
+import { keepPreviousData } from "@tanstack/react-query";
+
+useQuery({
+  queryKey,
+  queryFn,
+  placeholderData: keepPreviousData, // 이전 페이지 데이터를 새 데이터 로딩 중에 유지
+});
+```
+
+**추가 발견 — `getNoteDetailWithAllConversations`의 `while` 루프**:  
+`notes_api.ts` line 107~156에 `while (hasNext)` 루프로 전체 대화 내역을 동기적으로 순차 풀링하는 함수가 있습니다. 페이지가 많을수록 채팅방 진입 시간이 선형으로 늘어납니다. 이 함수를 사용하는 훅을 파악하여 `useInfiniteQuery` 기반으로 교체하는 것이 Phase 5의 핵심 작업 중 하나입니다.
 
 ---
 
-### 8-3. Chunk 단위 삭제 N+1 문제
+### 8-3. Notes 삭제 N+1 문제
 
-**작업 대상**: Notes 또는 Storage의 대량 삭제 로직
+**작업 대상**: `src/features/notes/api/notes_api.ts` — `deleteNotesBulk` 함수
 
 **현재 상태**:  
-여러 노트/파일을 동시에 삭제할 때 선택된 항목 수만큼 DELETE API를 개별 호출하는 방식(N+1 HTTP 요청)이 존재할 가능성이 있습니다.
+`deleteNotesBulk`는 이름과 달리 실제 백엔드 Bulk API를 호출하지 않습니다. 내부에서 노트 ID 배열을 `MAX_CONCURRENT_NOTE_DELETES(5)` 단위로 청크 분할 후, 청크마다 `deleteNote(noteId)`를 `Promise.allSettled`로 병렬 호출합니다(line 166~186). 즉 N개를 삭제하면 최대 N번의 DELETE 요청이 발생합니다.
+
+반면 **Storage/Assets는 이미 해결된 상태**입니다. `assets_api.ts`의 `deleteAssetsBulk`는 ID 배열을 request body에 담아 `/api/storage/assets`로 단 1번 호출합니다(line 69~77).
 
 **왜 문제인가?**  
-10개를 삭제하면 10번의 HTTP 요청이 발생합니다. 각 요청은 독립적인 네트워크 왕복 시간이 필요하므로 100ms 짜리 API가 10번 호출되면 1000ms가 소요됩니다. 서버에도 불필요한 부하를 줍니다.
+10개 노트 삭제 시 HTTP 요청이 10번 발생합니다. 100ms API 기준 최소 200ms(청크 2회 × 병렬)이지만, 각 청크가 순차 실행(`for...of`)되므로 네트워크 지연이 누적됩니다. 서버에도 불필요한 부하를 줍니다.
 
 **해야 할 작업**:  
-백엔드에 배열 ID를 한 번에 보내는 Bulk Delete API가 있다면 이를 사용하도록 교체합니다. 없다면 백엔드 팀에 Bulk API 추가를 요청합니다.
+백엔드에 Notes Bulk Delete API(`DELETE /api/notes` with body `{ noteIds: number[] }`)를 추가 요청합니다. API가 생기면 Storage처럼 단일 호출로 교체합니다. 백엔드 협의 전까지는 현재 청크 방식 유지.
 
 ---
 
@@ -718,23 +736,23 @@ lg: prefix (Desktop, 1024px~):
 
 ## 10. 작업 우선순위 및 예상 난이도
 
-| Phase | 작업                      | 우선순위 | 난이도 | 의존성                 |
-| ----- | ------------------------- | -------- | ------ | ---------------------- |
-| 1     | Design Token @theme 등록  | 🔴 최상  | 낮음   | 없음                   |
-| 1     | 브레이크포인트 표준화     | 🔴 최상  | 낮음   | 없음                   |
-| 1     | Type 중앙화               | 🟠 높음  | 중간   | 없음                   |
-| 1     | client.ts 라우팅 제거     | 🟠 높음  | 중간   | Phase 4와 연계         |
-| 2     | CVA Button/Input 컴포넌트 | 🟠 높음  | 낮음   | Phase 1 Design Token   |
-| 2     | Icon 시스템               | 🟡 중간  | 중간   | 없음                   |
-| 3     | pages 폴더 정리           | 🟡 중간  | 낮음   | 없음                   |
-| 3     | ProtectedRoute 강화       | 🟠 높음  | 낮음   | Phase 4 토큰 단일화    |
-| 4     | 토큰 관리 단일화          | 🔴 최상  | 높음   | Phase 1 client.ts 정비 |
-| 4     | auth_api 부수효과 분리    | 🟠 높음  | 중간   | 토큰 단일화            |
-| 4     | LoginPage Dumb 컴포넌트화 | 🟡 중간  | 낮음   | Phase 2 Button/Input   |
-| 5     | Polling 최적화            | 🟡 중간  | 중간   | 없음                   |
-| 5     | Notes 쿼리 최적화         | 🟡 중간  | 중간   | 없음                   |
-| 5     | N+1 삭제 API 개선         | 🟡 중간  | 중간   | 백엔드 협의 필요       |
-| 5     | 인라인 스타일 최종 정리   | 🟢 낮음  | 낮음   | Phase 1~4 완료 후      |
+| Phase | 작업                      | 우선순위 | 난이도 | 의존성                                          |
+| ----- | ------------------------- | -------- | ------ | ----------------------------------------------- |
+| 1     | Design Token @theme 등록  | 🔴 최상  | 낮음   | 없음                                            |
+| 1     | 브레이크포인트 표준화     | 🔴 최상  | 낮음   | 없음                                            |
+| 1     | Type 중앙화               | 🟠 높음  | 중간   | 없음                                            |
+| 1     | client.ts 라우팅 제거     | 🟠 높음  | 중간   | Phase 4와 연계                                  |
+| 2     | CVA Button/Input 컴포넌트 | 🟠 높음  | 낮음   | Phase 1 Design Token                            |
+| 2     | Icon 시스템               | 🟡 중간  | 중간   | 없음                                            |
+| 3     | pages 폴더 정리           | 🟡 중간  | 낮음   | 없음                                            |
+| 3     | ProtectedRoute 강화       | 🟠 높음  | 낮음   | Phase 4 토큰 단일화                             |
+| 4     | 토큰 관리 단일화          | 🔴 최상  | 높음   | Phase 1 client.ts 정비                          |
+| 4     | auth_api 부수효과 분리    | 🟠 높음  | 중간   | 토큰 단일화                                     |
+| 4     | LoginPage Dumb 컴포넌트화 | 🟡 중간  | 낮음   | Phase 2 Button/Input                            |
+| 5     | Polling 최적화            | 🟡 중간  | 중간   | 없음                                            |
+| 5     | Notes 쿼리 최적화         | 🟡 중간  | 중간   | 없음                                            |
+| 5     | Notes N+1 삭제 → Bulk API | 🟡 중간  | 낮음   | 백엔드 Bulk API 추가 필요 (Storage는 이미 해결) |
+| 5     | 인라인 스타일 최종 정리   | 🟢 낮음  | 낮음   | Phase 1~4 완료 후                               |
 
 ---
 
