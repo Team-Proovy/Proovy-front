@@ -70,7 +70,7 @@ src/app/styles/global.css의 @theme 블록에 CSS 변수로 정의
 현재 `global.css`의 `@theme` 블록에는 폰트(`--font-sans`)와 브레이크포인트(`--breakpoint-3xl`) 만 정의되어 있고, 색상·폰트 사이즈·border-radius 등 디자인 토큰이 전혀 없습니다.
 
 **왜 문제인가?**  
-디자인 토큰이 전역으로 등록되어 있지 않으면, 모든 컴포넌트에서 색상값을 하드코딩하거나(`#2046FF`, `#F1F4F8` 등) 파일별로 정의한 상수(`toolbar_styles.ts`)에 의존해야 합니다. 이는 색상 하나를 바꿀 때 수십 개의 파일을 수동으로 찾아 고쳐야 하는 구조를 만듭니다.
+디자인 토큰이 전역으로 등록되어 있지 않으면, 모든 컴포넌트에서 색상값을 하드코딩하거나(`#2A6AFF`, `#F1F4F8` 등) 파일별로 정의한 상수(`toolbar_styles.ts`)에 의존해야 합니다. 이는 색상 하나를 바꿀 때 수십 개의 파일을 수동으로 찾아 고쳐야 하는 구조를 만듭니다.
 
 ---
 
@@ -192,7 +192,7 @@ src/
 /* 이렇게 추가해야 합니다 (v4 방식, 공식 문서 기준) */
 @theme {
   /* 색상 — --color-* 네임스페이스 */
-  --color-primary-main: #2046ff;
+  --color-primary-main: #2a6aff; /* ✅ 확정: 기존 코드 기준값 */
   --color-primary-dark: #1428a0;
   --color-primary-darker: #002f6c;
   --color-point-light: #2549c6;
@@ -264,6 +264,7 @@ src/
   --radius-md: 8px; /* Tailwind 기본 6px — 덮어씀 */
   --radius-lg: 12px; /* Tailwind 기본 8px — 덮어씀 */
   --radius-xl: 16px; /* Tailwind 기본 12px — 덮어씀 */
+  --radius-full: 9999px;
 }
 ```
 
@@ -306,44 +307,37 @@ Tailwind v4 공식 문서는 기본 브레이크포인트가 rem 기반이므로
 **⚠️ "강제"가 아닌 "팀 컨벤션 명시"**:  
 `@theme`에 `--breakpoint-md`와 `--breakpoint-lg`를 추가해도 Tailwind 기본값인 `sm:`, `xl:`, `2xl:` prefix는 자동으로 사라지지 않습니다. 기본 브레이크포인트를 완전히 제거하려면 `initial` 키워드로 명시적으로 비활성화해야 합니다.
 
-**해야 할 작업**:  
-아래 세 가지 선택지 중 팀이 결정합니다.
-
-**[선택지 A] 팀 컨벤션만 명시 (느슨한 강제)**  
-기본 브레이크포인트는 유지하되 `@theme`에 우리 기준값을 명시해 코드 리뷰 기준으로 사용합니다.  
-`sm:`, `xl:` 등 기본 prefix가 여전히 동작하므로 컨벤션 위반 방지 효과는 낮습니다.
-
-```css
-@theme {
-  --breakpoint-md: 48rem; /* 768px */
-  --breakpoint-lg: 64rem; /* 1024px */
-  --breakpoint-3xl: 85rem; /* 1360px, 기존 1360px → rem 변환 */
-}
-```
-
-**[선택지 B] 불필요한 기본 브레이크포인트 제거 (강한 강제)**  
-우리가 쓰지 않기로 한 `sm:`, `xl:`, `2xl:` prefix를 `initial`로 비활성화합니다.  
+**적용 방향 — Option B 확정**:  
+불필요한 `sm:`, `xl:`, `2xl:` prefix를 `initial`로 비활성화합니다.  
 코드에서 `xl:` 같은 클래스를 쓰면 아무 효과가 없으므로 컨벤션 위반이 즉시 드러납니다.
 
+> ⚠️ **사전 작업 필수**: `initial` 적용 전 기존 코드에서 `sm:`, `xl:`, `2xl:` 사용 현황을 전수 조사하고 `md:` 또는 `lg:`로 교체해야 합니다.
+>
+> ```bash
+> rg "sm:|xl:|2xl:" src/ -l
+> ```
+
 ```css
 @theme {
-  --breakpoint-sm: initial; /* 기본 sm(640px) 제거 */
-  --breakpoint-xl: initial; /* 기본 xl(1280px) 제거 */
-  --breakpoint-2xl: initial; /* 기본 2xl(1536px) 제거 */
+  /* ① 제거 — initial 선언은 새 값 정의보다 먼저 위치해야 함 */
+  --breakpoint-sm: initial; /* 기본 640px 제거 — sm: prefix 사용 금지 */
+  --breakpoint-xl: initial; /* 기본 1280px 제거 — xl: prefix 사용 금지 */
+  --breakpoint-2xl: initial; /* 기본 1536px 제거 — 2xl: prefix 사용 금지 */
 
+  /* ② 팀 컨벤션 브레이크포인트 (rem 단위 통일) */
   --breakpoint-md: 48rem; /* 768px — Tablet */
   --breakpoint-lg: 64rem; /* 1024px — Desktop */
   --breakpoint-3xl: 85rem; /* 1360px — Wide */
 }
 ```
 
-**권장: 선택지 B.** 허용하지 않는 prefix를 명시적으로 제거해야 팀 컨벤션이 실제로 강제됩니다. 단, 기존 코드에서 `sm:`, `xl:` 클래스를 이미 사용 중인 곳이 있다면 교체 작업이 필요합니다.
-
 ```
-팀 컨벤션 기준 (결정 후 이 문서에 반영):
-Mobile  (기본, 0px ~ 767px):    별도 prefix 없음, 모바일 퍼스트
+✅ 확정된 팀 컨벤션:
 Tablet  (md:, 768px ~ 1023px):  md: prefix
 Desktop (lg:, 1024px ~):        lg: prefix
+Wide    (3xl:, 1360px ~):       3xl: prefix (특수 케이스에만 사용)
+
+금지: sm:, xl:, 2xl: prefix (initial로 비활성화됨)
 ```
 
 ---
@@ -710,27 +704,37 @@ Phase 1~4를 거치면서 교체되지 않은 인라인 스타일과 하드코�
 
 ## 9. 반응형 디자인 표준화 가이드
 
-모든 컴포넌트는 **모바일 퍼스트(Mobile-First)** 원칙으로 작성합니다.
+### 지원 환경 및 전략
+
+> **이 프로젝트는 태블릿(768px~)과 데스크탑(1024px~) 환경만 지원합니다. 모바일(~767px)은 지원 대상이 아닙니다.**
+
+CSS 작성 방식은 **최소 너비(min-width) 기반 상향 확장** 방식을 따릅니다. prefix 없는 기본 클래스는 태블릿 미만 환경을 포함하지만, **모바일 화면에서의 레이아웃 완성도는 보장하지 않습니다.**
 
 ```
-기본 클래스 (Mobile, 0px~767px):
-  → 최소 폭 375px 기준 작성
-  → 예시: w-full px-4 text-base
+기본 클래스 (태블릿 미만 포함, 768px 미만):
+  → 태블릿 레이아웃의 기반값으로 작성
+  → 예시: w-full px-6 text-base
 
 md: prefix (Tablet, 768px~1023px):
-  → 태블릿 세로 모드 대응, 2단 그리드 전환
+  → 태블릿 환경 레이아웃 분기점, 2단 그리드 전환 등
   → 예시: md:px-8 md:grid-cols-2
 
 lg: prefix (Desktop, 1024px~):
   → PC 환경, 최대 너비 제한 + 중앙 정렬
   → 예시: lg:max-w-[1200px] mx-auto
+
+3xl: prefix (Wide, 1360px~):
+  → 와이드 모니터 대응이 필요한 특수 케이스에만 사용
+  → 팀 논의 후 적용
 ```
 
 **금지 사항**:
 
-- `sm:` prefix 사용 지양 (모바일 퍼스트에서 불필요)
-- `xl:`, `2xl:` prefix는 특수 케이스에만 사용하고 팀 논의 후 적용
+- `sm:`, `xl:`, `2xl:` prefix 사용 금지 (`@theme`에서 `initial`로 비활성화됨)
 - 반응형 없는 고정 px 너비 (`w-[500px]` 등) 사용 금지
+
+**참고 — "모바일 퍼스트"와의 차이**:  
+"모바일 퍼스트(Mobile-First)"는 CSS 방법론 용어로, 기본값을 가장 좁은 화면에 맞추고 `min-width`로 확장하는 방식입니다. 이 프로젝트는 이 방법론을 CSS 작성 패턴으로 따르되, 실제 **모바일 화면 지원은 비즈니스 요구사항이 아닙니다**. 두 개념을 혼동하지 않도록 합니다.
 
 ---
 

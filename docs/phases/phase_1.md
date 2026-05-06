@@ -40,7 +40,7 @@
 ```css
 @theme {
   /* ── 색상 (--color-* 네임스페이스) ─────────────────────────── */
-  --color-primary-main: #2046ff;
+  --color-primary-main: #2a6aff; /* ✅ 확정: 기존 코드 기준값 */
   --color-primary-dark: #1428a0;
   --color-primary-darker: #002f6c;
   --color-point-light: #2549c6;
@@ -117,6 +117,7 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-full: 9999px;
 }
 ```
 
@@ -139,29 +140,21 @@
 | 현행 유지   | `text-text-main`  | 디자인 시스템 네이밍 그대로             |
 | 시맨틱 변경 | `text-foreground` | `--color-foreground: #414141` 으로 변경 |
 
-### ⚠️ 팀 결정 필요 — `#2046FF` vs `#2A6AFF` 색상 충돌
+### ✅ 색상 확정 — `primary-main: #2A6AFF`
 
-디자인 시스템(`design_system.md`)의 `primary-main`은 `#2046FF`이지만,  
-실제 코드에는 `#2A6AFF`가 광범위하게 사용되고 있다.
+기존 코드베이스 전반에서 `#2A6AFF`가 사용되고 있었으므로 이 값으로 확정한다.  
+`design_system.md`의 원래 값(`#2046FF`)은 이 문서 업데이트와 함께 `#2A6AFF`로 일괄 수정 완료.
 
 ```
-확인된 사용 파일:
+✅ 확정: --color-primary-main: #2a6aff
+확인된 교체 대상 파일 (토큰 적용 시 기존 하드코딩 제거):
   - src/features/auth/pages/LoginPage.tsx
   - src/features/auth/pages/SignupPage.tsx (focus:border-[#2A6AFF] 다수)
   - src/features/editor/constants/toolbar_styles.ts (active 색상)
   - 기타 다수
 ```
 
-토큰 등록 전 아래 두 방향 중 하나를 팀이 결정해야 한다.  
-**결정 없이 `#2046FF`로 토큰을 등록하면 UI 전체 색감이 바뀐다.**
-
-| 방향                       | 내용                                                                  | 영향                                      |
-| -------------------------- | --------------------------------------------------------------------- | ----------------------------------------- |
-| A. 디자인 시스템 기준 적용 | `--color-primary-main: #2046ff` 등록 후 기존 `#2A6AFF` 전량 교체      | UI 색상 변경됨 — 디자이너 확인 필요       |
-| B. 기존 코드 색상 반영     | `--color-primary-main: #2A6AFF`로 토큰 등록                           | 디자인 시스템과 불일치 — 피그마 수정 필요 |
-| C. 별도 토큰 추가          | `--color-primary-main: #2046ff` + `--color-interactive: #2A6AFF` 분리 | 토큰 체계 복잡해짐                        |
-
-**이 결정이 내려지기 전까지 1-A 작업을 시작하지 않는다.**
+토큰 등록 후 위 파일들의 `#2A6AFF` 하드코딩을 `primary-main` 토큰 클래스로 교체한다.
 
 ### ⚠️ 완료 후 해야 할 것
 
@@ -187,64 +180,45 @@
 Tailwind v4는 기본 브레이크포인트가 `rem` 기반이므로 **단위 혼재 시 미디어쿼리 순서가 어긋날 수 있다**.  
 또한 팀 컨벤션 3단계(Mobile/Tablet/Desktop)가 코드에 강제되지 않아 컴포넌트마다 기준이 다를 수 있다.
 
-### 팀 결정 필요 — 선택지 A vs B
+### ✅ 확정 — Option B (불필요한 prefix 제거)
 
-**[선택지 A] 컨벤션만 명시 (느슨)**  
-기본 `sm:`, `xl:`, `2xl:` prefix가 살아있어 컨벤션 위반을 막기 어렵다.
+`sm:`, `xl:`, `2xl:`을 `initial`로 비활성화해 컨벤션 위반을 코드 레벨에서 차단한다.
 
-```css
-@theme {
-  --breakpoint-md: 48rem; /* 768px  — Tablet */
-  --breakpoint-lg: 64rem; /* 1024px — Desktop */
-  --breakpoint-3xl: 85rem; /* 1360px — Wide (기존 1360px → rem 변환) */
-}
-```
-
-**[선택지 B] 불필요한 prefix 제거 (강한 강제) — 권장**  
-`sm:`, `xl:`, `2xl:`을 `initial`로 비활성화해 실수를 코드 레벨에서 차단한다.  
-단, 기존 코드에서 `sm:`, `xl:`, `2xl:`, `3xl:`을 사용하는 곳을 먼저 파악하고 교체해야 한다.
+> ⚠️ **사전 작업 필수 (1-B 시작 전)**: 기존 코드의 `sm:`, `xl:`, `2xl:` 사용 현황을 전수 조사하고 `md:` 또는 `lg:`로 교체해야 한다.
+>
+> ```bash
+> rg "sm:|xl:|2xl:" src/ -l
+> ```
 
 ```css
 @theme {
-  --breakpoint-sm: initial; /* 640px  제거 */
-  --breakpoint-xl: initial; /* 1280px 제거 */
-  --breakpoint-2xl: initial; /* 1536px 제거 */
+  /* ① 제거 — initial 선언은 새 값 정의보다 먼저 위치 */
+  --breakpoint-sm: initial; /* 640px  제거 — sm: prefix 사용 금지 */
+  --breakpoint-xl: initial; /* 1280px 제거 — xl: prefix 사용 금지 */
+  --breakpoint-2xl: initial; /* 1536px 제거 — 2xl: prefix 사용 금지 */
 
+  /* ② 팀 컨벤션 브레이크포인트 (rem 단위 통일) */
   --breakpoint-md: 48rem; /* 768px  — Tablet */
   --breakpoint-lg: 64rem; /* 1024px — Desktop */
   --breakpoint-3xl: 85rem; /* 1360px — Wide */
 }
 ```
 
-### 선택지 B 진행 시 사전 작업
-
-아래 명령으로 기존 코드의 `sm:`, `xl:`, `2xl:`, `3xl:` 사용 현황을 파악한다.
-
-```bash
-# sm: 사용 파일 목록
-rg "sm:" src/ -l
-
-# xl:, 2xl:, 3xl: 사용 파일 목록
-rg "xl:|2xl:|3xl:" src/ -l
-```
-
-파악된 파일들에서 `md:` 또는 `lg:`로 대체하거나 팀 논의 후 처리한다.
-
-### 팀 컨벤션 기준 (결정 후 모든 신규 코드에 적용)
+### ✅ 확정된 팀 컨벤션
 
 ```
-Mobile  (기본, 0~767px):     prefix 없음  — 모바일 퍼스트 기본값
-Tablet  (md:, 768~1023px):  md: prefix
-Desktop (lg:, 1024px~):     lg: prefix
-```
+Tablet  (md:, 768px~1023px):  md: prefix
+Desktop (lg:, 1024px~):       lg: prefix
+Wide    (3xl:, 1360px~):      3xl: prefix (특수 케이스에만 사용)
 
-**금지**: `sm:`, `xl:`, `2xl:` (팀 컨벤션 외 prefix) / 고정 px 너비 (`w-[500px]`)
+금지: sm:, xl:, 2xl: prefix / 고정 px 너비 (w-[500px])
+```
 
 ### 완료 기준
 
-- `--breakpoint-3xl: 1360px` → `85rem` 으로 수정 완료
-- 선택지 A/B 팀 결정 후 `@theme` 반영 완료
-- 선택지 B 선택 시 기존 `sm:`/`xl:` 사용 코드 전량 교체 완료
+- `--breakpoint-3xl: 1360px` → `85rem` 수정 완료
+- `sm:`, `xl:`, `2xl:` initial 비활성화 반영 완료
+- 기존 `sm:`/`xl:`/`2xl:` 사용 코드 전량 `md:` 또는 `lg:`로 교체 완료
 
 ---
 
