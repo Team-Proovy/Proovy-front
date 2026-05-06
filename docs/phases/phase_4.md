@@ -573,9 +573,12 @@ Phase 2의 Button, Input 컴포넌트 완료 필요.
 
 ## 완료 기준 (Phase 4 전체)
 
+> ⚠️ `NavigationEventBridge.tsx`는 **Phase 1-D**에서 생성·등록하는 파일이다.  
+> Phase 4 시작 전에 이미 존재해야 한다. Phase 4에서 다시 생성하지 않는다.
+
+- [ ] **전제 확인**: `src/shared/router/NavigationEventBridge.tsx` 파일 존재 (Phase 1-D 산출물)
 - [ ] `src/shared/auth/token_storage.ts` 파일 존재
 - [ ] `src/shared/auth/AuthEventBridge.tsx` 파일 존재 + `main.tsx` 렌더 트리에 등록됨
-- [ ] `src/shared/router/NavigationEventBridge.tsx` 파일 존재 + router 최상단에 등록됨 (Phase 1-D)
 - [ ] 로그아웃 후 `localStorage`에 `accessToken`, `refreshToken` 잔존하지 않음
 - [ ] 새로고침 후 로그인 세션 유지 정상 동작
 - [ ] 401 자동 갱신 → `proovy:token-refreshed` 이벤트 발생 → `setToken()` 호출 → 재시도 플로우 정상 동작
