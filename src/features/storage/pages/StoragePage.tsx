@@ -17,6 +17,7 @@ import { DeleteNotesModal } from "../components/DeleteNotesModal";
 import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
 import { useStorageInfo } from "../hooks/useAssets";
 import { EmptyState } from "@/shared/components/EmptyState";
+import { PageContainer } from "@/shared/layout/PageContainer";
 
 const getNearCapacityMessage = (planType?: string) => {
   const normalized = (planType ?? "").toLowerCase();
@@ -56,68 +57,55 @@ export const StoragePage = () => {
 
   return (
     <>
-      <div className="flex h-screen w-full flex-col overflow-y-auto bg-white pt-[97px] pb-20">
-        <div className="mx-auto w-full max-w-[1680px]">
-          {/* Header Section */}
-          <div className="mb-[23px] flex justify-center">
-            <div className="3xl:max-w-[1360px] w-full max-w-[520px] lg:max-w-[800px] 2xl:max-w-[1080px]">
-              <h1 className="font-['Pretendard'] text-[40px] leading-[52px] font-semibold text-black">
-                저장소
-              </h1>
-            </div>
-          </div>
+      <PageContainer>
+        <h1 className="mb-[23px] font-['Pretendard'] text-[40px] leading-[52px] font-semibold text-black">
+          저장소
+        </h1>
 
-          {/* Toolbar Row */}
-          <div className="flex justify-center">
-            <StorageToolbar
-              usagePercent={data?.usagePercent ?? 0}
-              totalUsedDisplay={data?.totalUsedDisplay ?? "0MB"}
-              totalLimitDisplay={data?.totalLimitDisplay ?? "0MB"}
-              onSearch={handleSearch}
-            />
-          </div>
+        <StorageToolbar
+          usagePercent={data?.usagePercent ?? 0}
+          totalUsedDisplay={data?.totalUsedDisplay ?? "0MB"}
+          totalLimitDisplay={data?.totalLimitDisplay ?? "0MB"}
+          onSearch={handleSearch}
+        />
 
-          {/* Note Groups Section */}
-          <div className="mt-[24px] flex flex-col items-center justify-center gap-[20px]">
-            {isLoading ? (
-              <p>데이터를 불러오는 중입니다...</p>
-            ) : error ? (
-              <p className="text-red-500">
-                데이터를 불러오는 중 오류가 발생했습니다.
-              </p>
-            ) : data?.notes && data.notes.length > 0 ? (
-              data.notes.map((note) => (
-                <NoteGroup
-                  key={note.noteId}
-                  title={note.title}
-                  storageUsedDisplay={note.storageUsedDisplay}
-                  storageLimitDisplay={note.storageLimitDisplay}
-                  usagePercent={Math.min(
-                    (note.storageUsed / note.storageLimit) * 100,
-                    100,
-                  )}
-                  notes={note.assets}
-                  isOpen={openNoteIds.includes(note.noteId)}
-                  onToggle={() => handleToggle(note.noteId)}
-                />
-              ))
-            ) : (
-              <EmptyState
-                message="업로드된 파일이 없습니다"
-                description="새로운 파일을 업로드하여 저장소를 채워보세요."
+        <div className="mt-[24px] flex flex-col gap-[20px]">
+          {isLoading ? (
+            <p>데이터를 불러오는 중입니다...</p>
+          ) : error ? (
+            <p className="text-red-500">
+              데이터를 불러오는 중 오류가 발생했습니다.
+            </p>
+          ) : data?.notes && data.notes.length > 0 ? (
+            data.notes.map((note) => (
+              <NoteGroup
+                key={note.noteId}
+                title={note.title}
+                storageUsedDisplay={note.storageUsedDisplay}
+                storageLimitDisplay={note.storageLimitDisplay}
+                usagePercent={Math.min(
+                  (note.storageUsed / note.storageLimit) * 100,
+                  100,
+                )}
+                notes={note.assets}
+                isOpen={openNoteIds.includes(note.noteId)}
+                onToggle={() => handleToggle(note.noteId)}
               />
-            )}
-          </div>
-
-          {showNearCapacityWarning && (
-            <div className="mt-6 flex justify-center">
-              <p className="font-['Pretendard'] text-[14px] font-medium text-[#FF3B30]">
-                {nearCapacityMessage}
-              </p>
-            </div>
+            ))
+          ) : (
+            <EmptyState
+              message="업로드된 파일이 없습니다"
+              description="새로운 파일을 업로드하여 저장소를 채워보세요."
+            />
           )}
         </div>
-      </div>
+
+        {showNearCapacityWarning && (
+          <p className="mt-6 font-['Pretendard'] text-[14px] font-medium text-[#FF3B30]">
+            {nearCapacityMessage}
+          </p>
+        )}
+      </PageContainer>
       {isDeleteModalOpen && <DeleteNotesModal />}
       {isSuccessModalOpen && <DeletionSuccessModal />}
     </>

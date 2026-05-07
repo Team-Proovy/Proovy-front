@@ -3,7 +3,9 @@
 @import "tailwindcss";
 
 @theme {
-  --breakpoint-3xl: 1360px;
+  --breakpoint-sm: initial; /* 640px 제거 — 모바일 미지원 */
+  --breakpoint-2xl: initial; /* 1536px 제거 — 3xl로 통합 */
+  --breakpoint-3xl: 1360px; /* 와이드 데스크탑 */
 
   /* 2. 테일윈드의 기본 'sans' 폰트 변수를 Pretendard로 덮어쓰기 */
   /* 이렇게 하면 별도로 font-pretendard를 선언하지 않아도 모든 기본 텍스트에 적용된다. */

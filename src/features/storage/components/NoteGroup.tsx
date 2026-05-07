@@ -7,6 +7,7 @@ import {
   mapAssetCategory,
   mapOcrStatus,
 } from "../utils/asset-mapper";
+import { ContentGrid } from "@/shared/layout/ContentGrid";
 
 interface NoteGroupProps {
   title: string;
@@ -30,7 +31,7 @@ export const NoteGroup = ({
   const { isSelectMode, selectedIds, toggleIdSelection } = useStorageStore();
 
   return (
-    <div className="3xl:max-w-[1360px] mx-auto flex w-full max-w-[520px] flex-col lg:max-w-[800px] 2xl:max-w-[1080px]">
+    <div className="flex w-full flex-col">
       <button
         onClick={onToggle}
         className="mx-auto flex w-full cursor-pointer items-center justify-between rounded-[12px] border border-[#D1D6DE] bg-[#F1F4F8] px-[20px] py-[8px] transition-colors"
@@ -95,7 +96,10 @@ export const NoteGroup = ({
 
       {isOpen &&
         (notes.length > 0 ? (
-          <div className="3xl:grid-cols-5 mx-auto mt-[20px] grid w-full grid-cols-2 justify-center gap-x-[40px] gap-y-[20px] lg:grid-cols-3 2xl:grid-cols-4">
+          <ContentGrid
+            className="mt-[20px]"
+            gapClass="gap-[20px]"
+          >
             {notes.map((asset) => (
               <NoteCard
                 key={asset.assetId}
@@ -111,7 +115,7 @@ export const NoteGroup = ({
                 onSelect={() => toggleIdSelection(asset.assetId)}
               />
             ))}
-          </div>
+          </ContentGrid>
         ) : (
           <div className="mx-auto mt-[12px] flex h-[60px] w-full items-center justify-center rounded-[12px] border border-[#E0E0E0] bg-white">
             <span className="font-['Pretendard'] text-[13px] font-medium text-[#AEAEAE]">
