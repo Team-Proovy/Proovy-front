@@ -38,8 +38,9 @@ const redirectToErrorRoute = (route: string) => {
   const currentPath = window.location.pathname;
   if (currentPath === route || currentPath.startsWith("/error/")) return;
 
-  window.history.replaceState(window.history.state, "", route);
-  window.dispatchEvent(new PopStateEvent("popstate"));
+  window.dispatchEvent(
+    new CustomEvent("proovy:navigate", { detail: { route } }),
+  );
 };
 
 const resolveErrorRoute = (error: AxiosError) => {
