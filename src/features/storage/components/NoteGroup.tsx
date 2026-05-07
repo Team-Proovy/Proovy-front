@@ -99,6 +99,7 @@ export const NoteGroup = ({
           <ContentGrid
             className="mt-[20px]"
             gapClass="gap-[20px]"
+            cols={{ base: 2, xl: 3, xl3: 4 }}
           >
             {notes.map((asset) => (
               <NoteCard
