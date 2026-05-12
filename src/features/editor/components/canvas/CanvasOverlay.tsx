@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-// @ts-ignore - tldraw types
-import { Editor } from "tldraw";
-import { CanvasBoard } from "./CanvasBoard";
+import { CanvasBoard } from ".";
 import { showErrorToast } from "@/shared/lib/toast";
+
+type CanvasApi = {
+  hasContent: () => boolean;
+  exportBlob: () => Promise<Blob | null>;
+};
 
 interface CanvasOverlayProps {
   isOpen: boolean;
@@ -16,31 +19,27 @@ export const CanvasOverlay = ({
   onClose,
   onAdd,
 }: CanvasOverlayProps) => {
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [canvasApi, setCanvasApi] = useState<CanvasApi | null>(null);
 
   // 캔버스 캡처 후 채팅창에 추가
   const handleAdd = async () => {
-    if (!editor) return;
+    if (!canvasApi) return;
 
     try {
-      const shapeIds = editor.getCurrentPageShapeIds();
-      if (shapeIds.size === 0) {
+      if (!canvasApi.hasContent()) {
         showErrorToast("캔버스에 아무것도 없어요!");
         return;
       }
 
-      // @ts-ignore - toImage exists in tldraw
-      const result = await editor.toImage([...shapeIds], {
-        format: "png",
-        quality: 1,
-        scale: 2,
-        background: false,
-      });
+      const blob = await canvasApi.exportBlob();
 
-      if (result?.blob) {
-        onAdd(result.blob);
+      if (blob) {
+        onAdd(blob);
         onClose();
+        return;
       }
+
+      showErrorToast("캡처된 이미지가 없습니다.");
     } catch (e) {
       console.error("Canvas capture error:", e);
       showErrorToast("캡처 중 오류가 발생했습니다.");
@@ -55,7 +54,7 @@ export const CanvasOverlay = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9998] flex flex-col bg-white">
+    <div className="fixed inset-0 z-9998 flex flex-col bg-white">
       {/* 상단 툴바 */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2">
         <div className="flex items-center gap-2" />
@@ -82,14 +81,7 @@ export const CanvasOverlay = ({
       <div className="relative flex-1">
         <CanvasBoard
           className="h-full w-full"
-          hideUi={false}
-          onMount={(app) => {
-            setEditor(app);
-            // 줌 제한 설정
-            app.setCameraOptions({
-              zoomSteps: [0.5, 1, 1.25, 1.5, 2, 2.5, 3, 4],
-            });
-          }}
+          onMount={(api: CanvasApi) => setCanvasApi(api)}
         />
       </div>
     </div>,
