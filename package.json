@@ -31,7 +31,6 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "tailwind-merge": "^3.4.0",
-    "use-image": "^1.1.4",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

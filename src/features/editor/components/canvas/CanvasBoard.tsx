@@ -371,7 +371,8 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
       transformer.getLayer()?.batchDraw();
     }
 
-    const blob = (await stage.toBlob({ pixelRatio: 2 })) as Blob;
+    const blob = (await stage.toBlob({ pixelRatio: 2 })) as Blob | null;
+    if (!blob) return null;
 
     if (transformer) {
       transformer.visible(true);

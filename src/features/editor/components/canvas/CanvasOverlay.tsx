@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { CanvasBoard } from ".";
 import { showErrorToast } from "@/shared/lib/toast";
@@ -20,6 +20,10 @@ export const CanvasOverlay = ({
   onAdd,
 }: CanvasOverlayProps) => {
   const [canvasApi, setCanvasApi] = useState<CanvasApi | null>(null);
+
+  const handleCanvasMount = useCallback((api: CanvasApi) => {
+    setCanvasApi(api);
+  }, []);
 
   // 캔버스 캡처 후 채팅창에 추가
   const handleAdd = async () => {
@@ -81,7 +85,7 @@ export const CanvasOverlay = ({
       <div className="relative flex-1">
         <CanvasBoard
           className="h-full w-full"
-          onMount={(api: CanvasApi) => setCanvasApi(api)}
+          onMount={handleCanvasMount}
         />
       </div>
     </div>,
