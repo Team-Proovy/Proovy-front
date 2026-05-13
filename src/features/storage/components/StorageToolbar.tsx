@@ -35,7 +35,7 @@ export const StorageToolbar = ({
   };
 
   return (
-    <div className="3xl:max-w-[1360px] mx-auto mb-[8px] grid w-full max-w-[520px] [grid-template-columns:1fr_auto] items-center gap-x-[32px] lg:max-w-[800px] 2xl:max-w-[1080px]">
+    <div className="mb-[8px] grid w-full [grid-template-columns:1fr_auto] items-center gap-x-[32px]">
       <div className="flex items-center gap-[20px]">
         <div
           className="relative w-[220px] lg:w-[440px]"

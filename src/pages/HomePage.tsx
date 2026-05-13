@@ -36,11 +36,11 @@ export const HomePage = () => {
     <div className="w-full bg-white">
       {/* 메인 홈 화면 - 한 화면을 꽉 채우는 구성 */}
       <div className="flex min-h-screen w-full flex-col items-center">
-        <div className="flex w-full flex-1 flex-col justify-center px-5 pt-[100px]">
+        <div className="flex w-full flex-1 flex-col justify-center px-5 pt-[97px]">
           <div className="mx-auto flex w-full max-w-[920px] flex-col items-center lg:items-start">
             {/* 타이틀 */}
             <div className="mb-8 w-full text-center lg:text-left">
-              <h1 className="text-[32px] leading-[42px] font-semibold tracking-[-0.008px] text-black sm:text-[40px] sm:leading-[52px]">
+              <h1 className="text-[40px] leading-[52px] font-semibold tracking-[-0.008px] text-black">
                 파일을 업로드하고 완벽한 해설을,
               </h1>
             </div>
