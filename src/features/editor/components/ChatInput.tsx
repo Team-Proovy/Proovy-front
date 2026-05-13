@@ -32,7 +32,7 @@ import { useUseCredit } from "../../settings/hooks/useCredit";
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
 
-// Lazy load CanvasOverlay (tldraw is heavy - ~2MB)
+// Lazy load CanvasOverlay (canvas libraries are relatively heavy)
 const CanvasOverlay = lazy(() =>
   import("./canvas/CanvasOverlay").then((m) => ({ default: m.CanvasOverlay })),
 );
