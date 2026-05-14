@@ -2,15 +2,15 @@ import {
   LogoIcon,
   KakaoIcon,
   NaverIcon,
-} from "../../../shared/components/icons/LoginIcons";
-import { SocialLoginButton } from "../components/SocialLoginButton";
-import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
+} from "@/shared/components/icons/LoginIcons";
+import { SocialLoginButton } from "@/features/auth/components/SocialLoginButton";
+import loginBgImage from "@/shared/assets/images/img_login_bg.png";
 import {
   KAKAO_CLIENT_ID,
   KAKAO_REDIRECT_URI,
   NAVER_CLIENT_ID,
   NAVER_REDIRECT_URI,
-} from "../api/auth_api";
+} from "@/features/auth/api/auth_api";
 
 export const LoginPage = () => {
   const handleSocialLogin = (provider: string) => {

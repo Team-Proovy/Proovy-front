@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { LogoIcon } from "../../../shared/components/icons/LoginIcons";
-import loginBgImage from "../../../shared/assets/images/img_login_bg.png";
-import type { SocialInfo } from "../api/auth_types";
-import { signupComplete } from "../api/auth_api";
+import { LogoIcon } from "@/shared/components/icons/LoginIcons";
+import loginBgImage from "@/shared/assets/images/img_login_bg.png";
+import type { SocialInfo } from "@/features/auth/api/auth_types";
+import { signupComplete } from "@/features/auth/api/auth_api";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
-import { useAuthStore } from "../store/auth_store";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import { showErrorToast } from "@/shared/lib/toast";
 
 export const SignupPage = () => {
   const navigate = useNavigate();
-  const location = useLocation(); // To get passed state from callback
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
 
   // KakaoCallbackPage에서 전달받은 signupToken
@@ -45,7 +45,6 @@ export const SignupPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // signupToken check handled in useEffect, but for TS safety:
     if (!signupToken) return;
 
     setIsLoading(true);
@@ -60,11 +59,9 @@ export const SignupPage = () => {
       });
 
       if (response.isSuccess) {
-        // 토큰 저장 (Client Storage)
         const { token, user: signupUser } = response.result;
         tokenUtils.setTokens(token.accessToken, token.refreshToken);
 
-        // Auth Store 상태 업데이트 (강제 로그인 처리)
         useAuthStore.getState().login({
           loginType: "LOGIN",
           token: token,

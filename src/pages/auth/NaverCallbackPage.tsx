@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loginWithNaver } from "../api/auth_api";
+import { loginWithNaver } from "@/features/auth/api/auth_api";
 import { AxiosError } from "axios";
-import { useAuthStore } from "../store/auth_store";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
-import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
+import { SocialCallbackLayout } from "@/features/auth/components/SocialCallbackLayout";
 
 export const NaverCallbackPage = () => {
   const [searchParams] = useSearchParams();

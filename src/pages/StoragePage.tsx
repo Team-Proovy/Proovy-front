@@ -10,12 +10,12 @@
  */
 
 import { useState } from "react";
-import { useStorageStore } from "../store/useStorageStore";
-import { StorageToolbar } from "../components/StorageToolbar";
-import { NoteGroup } from "../components/NoteGroup";
-import { DeleteNotesModal } from "../components/DeleteNotesModal";
-import { DeletionSuccessModal } from "../components/DeletionSuccessModal";
-import { useStorageInfo } from "../hooks/useAssets";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
+import { StorageToolbar } from "@/features/storage/components/StorageToolbar";
+import { NoteGroup } from "@/features/storage/components/NoteGroup";
+import { DeleteNotesModal } from "@/features/storage/components/DeleteNotesModal";
+import { DeletionSuccessModal } from "@/features/storage/components/DeletionSuccessModal";
+import { useStorageInfo } from "@/features/storage/hooks/useAssets";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { PageContainer } from "@/shared/layout/PageContainer";
 
@@ -36,10 +36,8 @@ export const StoragePage = () => {
 
   const { isDeleteModalOpen, isSuccessModalOpen } = useStorageStore();
 
-  // API를 통한 스토리지 정보 조회
   const { data, isLoading, error } = useStorageInfo(keyword);
 
-  // 노트 그룹 토글 핸들러
   const handleToggle = (noteId: number) => {
     setOpenNoteIds((prev) =>
       prev.includes(noteId)
