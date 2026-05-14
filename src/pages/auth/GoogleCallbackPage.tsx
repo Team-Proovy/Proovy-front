@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loginWithGoogle } from "../api/auth_api";
+import { loginWithGoogle } from "@/features/auth/api/auth_api";
 import { AxiosError } from "axios";
-import { useAuthStore } from "../store/auth_store";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
-import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
+import { SocialCallbackLayout } from "@/features/auth/components/SocialCallbackLayout";
 
 export const GoogleCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -17,17 +17,14 @@ export const GoogleCallbackPage = () => {
   });
 
   useEffect(() => {
-    // 이미 API 요청을 보냈다면 중단
     if (initialized.current) return;
 
     const code = searchParams.get("code");
 
     if (!code) {
-      // 코드가 없으면 아직 처리하지 않음 (혹은 에러 표시 유지)
       return;
     }
 
-    // 코드가 있으면 처리 시작 및 중복 방지 설정
     initialized.current = true;
 
     const processLogin = async () => {
@@ -45,7 +42,6 @@ export const GoogleCallbackPage = () => {
               },
             });
           } else {
-            // 로그인 성공 시 홈으로 이동
             if (data.result.token) {
               tokenUtils.setTokens(
                 data.result.token.accessToken,
