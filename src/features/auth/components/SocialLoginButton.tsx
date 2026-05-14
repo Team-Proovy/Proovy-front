@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 interface SocialLoginButtonProps {
   icon: ReactNode;
   label: string;
-  provider: "kakao" | "naver" | "google";
+  provider: "kakao" | "naver";
   onClick?: () => void;
 }
 
@@ -17,14 +17,11 @@ export const SocialLoginButton = ({
   const baseStyles = {
     kakao: "bg-[#FEE500] text-[#000000] border-none",
     naver: "bg-[#03C75A] text-[#FFFFFF] border-none",
-    google: "bg-white text-[#0000008A] border border-[#E2E8F0]",
   };
 
-  // 프로바이더별 gap 스타일 설정
   const gapStyles = {
     kakao: "gap-[16px]",
     naver: "gap-[15px]",
-    google: "gap-[24px]",
   };
 
   return (
