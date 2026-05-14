@@ -132,6 +132,9 @@ const TOOL_BUTTON_BASE =
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 4;
 const ZOOM_FACTOR = 1.08;
+const PEN_SIZE = 5.8;
+const ERASER_SIZE = 22;
+const MIN_POINT_DISTANCE = 0.18;
 
 const createId = () =>
   `canvas_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -143,27 +146,73 @@ const getPointerPressure = (evt: unknown) => {
   if (evt && typeof evt === "object" && "pressure" in evt) {
     const pressure = Number((evt as { pressure: number }).pressure);
     if (Number.isFinite(pressure) && pressure >= 0 && pressure <= 1) {
-      return pressure;
+      return clamp(pressure, 0.12, 1);
     }
   }
-  return 0.5;
+  return 0.62;
 };
 
-const getStrokePolygon = (points: StrokePoint[], size: number) => {
-  if (points.length < 2) {
+const getStrokePolygon = (
+  points: StrokePoint[],
+  size: number,
+  eraser: boolean,
+) => {
+  if (points.length === 0) {
     return [];
   }
 
+  const normalizedPoints =
+    points.length === 1
+      ? [
+          points[0],
+          {
+            ...points[0],
+            x: points[0].x + 0.01,
+          },
+        ]
+      : points;
+
+  const options = eraser
+    ? {
+        size,
+        thinning: 0.08,
+        smoothing: 0.55,
+        streamline: 0.28,
+        simulatePressure: false,
+        last: true,
+      }
+    : {
+        size,
+        thinning: 0.42,
+        smoothing: 0.58,
+        streamline: 0.32,
+        simulatePressure: false,
+        last: true,
+      };
+
   return getStroke(
-    points.map((point) => [point.x, point.y, point.pressure] as const),
-    {
-      size,
-      thinning: 0.72,
-      smoothing: 0.78,
-      streamline: 0.62,
-      simulatePressure: false,
-      last: true,
-    },
+    normalizedPoints.map(
+      (point) => [point.x, point.y, point.pressure] as const,
+    ),
+    options,
+  );
+};
+
+const DotShape = ({ item }: { item: StrokeItem }) => {
+  const point = item.points[0];
+  if (!point) {
+    return null;
+  }
+
+  return (
+    <Circle
+      x={point.x}
+      y={point.y}
+      radius={Math.max(1.2, (item.size * point.pressure) / 2)}
+      fill={item.eraser ? "#000" : item.color}
+      globalCompositeOperation={item.eraser ? "destination-out" : "source-over"}
+      listening={false}
+    />
   );
 };
 
@@ -188,13 +237,13 @@ const getTouchPoint = (stage: KonvaStage, touch: Touch) => {
 
 const StrokeShape = ({ item }: { item: StrokeItem }) => {
   const polygon = useMemo(
-    () => getStrokePolygon(item.points, item.size),
-    [item.points, item.size],
+    () => getStrokePolygon(item.points, item.size, item.eraser),
+    [item.eraser, item.points, item.size],
   );
   const linePoints = polygon.flatMap((point) => [point[0], point[1]]);
 
   if (linePoints.length < 6) {
-    return null;
+    return <DotShape item={item} />;
   }
 
   return (
@@ -309,7 +358,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
           point.y - prevPoint.y,
         );
 
-        if (distance < 0.28) {
+        if (distance < MIN_POINT_DISTANCE) {
           prevPoint.pressure = (prevPoint.pressure + point.pressure) / 2;
           return;
         }
@@ -474,7 +523,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
           id: createId(),
           kind: "stroke",
           color: "#111827",
-          size: tool === "eraser" ? 22 : 7.6,
+          size: tool === "eraser" ? ERASER_SIZE : PEN_SIZE,
           eraser: tool === "eraser",
           points: [
             {
@@ -554,7 +603,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
 
     const stroke = activeStrokeRef.current;
     if (stroke) {
-      if (stroke.points.length > 1) {
+      if (stroke.points.length > 0) {
         commitItems((prevItems) => [...prevItems, stroke]);
       }
       activeStrokeRef.current = null;
