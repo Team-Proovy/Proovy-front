@@ -6,7 +6,6 @@ import type {
   NaverAuthUrlResponse,
   KakaoLoginRequest,
   NaverLoginRequest,
-  GoogleLoginRequest,
   SignupCompleteRequest,
   TokenRefreshRequest,
 } from "../../features/auth/api/auth_types";
@@ -144,31 +143,6 @@ export const authHandlers = [
             id: "naver_12345",
             email: "user@naver.com",
             name: "네이버유저",
-          },
-        },
-      });
-    },
-  ),
-
-  // 구글 로그인
-  http.post<never, GoogleLoginRequest>(
-    `${BASE_URL}/api/auth/login/google`,
-    async ({ request }) => {
-      await delay(500);
-
-      const body = await request.json();
-      console.log("[MSW] 구글 로그인 요청:", body);
-
-      return HttpResponse.json<ApiResponse<LoginResult>>({
-        isSuccess: true,
-        code: "AUTH2000",
-        message: "로그인 성공",
-        result: {
-          ...mockLoginResult,
-          googleInfo: {
-            id: "google_12345",
-            email: "user@gmail.com",
-            name: "구글유저",
           },
         },
       });

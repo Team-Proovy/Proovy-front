@@ -14,8 +14,6 @@ export const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
 export const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 export const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID;
 export const NAVER_REDIRECT_URI = import.meta.env.VITE_NAVER_REDIRECT_URI;
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-export const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
@@ -23,31 +21,6 @@ if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
     "필수 환경변수가 누락되었습니다: VITE_KAKAO_CLIENT_ID, VITE_KAKAO_REDIRECT_URI",
   );
 }
-
-// ... existing code ...
-
-export const loginWithGoogle = async (
-  code: string,
-): Promise<ApiResponse<LoginResult>> => {
-  const response = await axios.post<ApiResponse<LoginResult>>(
-    `${BASE_URL}${AUTH_BASE}/login/google`,
-    {
-      authorizationCode: code,
-      redirectUri: GOOGLE_REDIRECT_URI,
-    },
-  );
-
-  const result = response.data.result;
-  if (response.data.isSuccess && result && result.token) {
-    const { accessToken, refreshToken } = result.token;
-    if (accessToken && refreshToken) {
-      tokenUtils.setTokens(accessToken, refreshToken);
-    }
-  }
-  return response.data;
-};
-
-// ... existing code ...
 
 const AUTH_BASE = "/api/auth";
 
@@ -96,9 +69,9 @@ export const loginWithNaver = async (
   return response.data;
 };
 
-// 소셜 로그인 (통합) - kakao, naver, google 지원 (토큰 없이 호출)
+// 소셜 로그인 (통합) - kakao, naver 지원 (토큰 없이 호출)
 export const socialLogin = async (
-  provider: "kakao" | "naver" | "google",
+  provider: "kakao" | "naver",
   data: SocialLoginRequest,
 ): Promise<ApiResponse<LoginResult>> => {
   const response = await axios.post<ApiResponse<LoginResult>>(

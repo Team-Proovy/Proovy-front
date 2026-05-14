@@ -28,7 +28,6 @@ export const SignupPage = () => {
   const initialName =
     (location.state?.kakaoInfo as SocialInfo)?.name ||
     (location.state?.naverInfo as SocialInfo)?.name ||
-    (location.state?.googleInfo as SocialInfo)?.name ||
     "";
 
   const [formData, setFormData] = useState({

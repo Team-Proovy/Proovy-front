@@ -13,7 +13,7 @@ export const authKeys = {
 };
 
 // 소셜 로그인 Hook
-export const useSocialLogin = (provider: "kakao" | "naver" | "google") => {
+export const useSocialLogin = (provider: "kakao" | "naver") => {
   const queryClient = useQueryClient();
 
   return useMutation({

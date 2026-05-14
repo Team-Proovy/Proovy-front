@@ -7,7 +7,6 @@ import { LoginPage } from "@/pages/auth/LoginPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { KakaoCallbackPage } from "@/pages/auth/KakaoCallbackPage";
 import { NaverCallbackPage } from "@/pages/auth/NaverCallbackPage";
-import { GoogleCallbackPage } from "@/pages/auth/GoogleCallbackPage";
 import { ChatPage } from "@/pages/ChatPage";
 import { NotesPage } from "@/pages/NotesPage";
 import { StoragePage } from "@/pages/StoragePage";
@@ -58,11 +57,6 @@ export const router = createBrowserRouter([
         path: "/oauth/naver/callback",
         element: <NaverCallbackPage />,
       },
-      {
-        path: "/oauth/google/callback",
-        element: <GoogleCallbackPage />,
-      },
-
       // ========================================
       // 🔒 Protected Routes (인증 필요)
       // ========================================

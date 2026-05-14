@@ -50,13 +50,6 @@ export interface NaverUserInfo {
   name: string;
 }
 
-/** 구글 사용자 정보 */
-export interface GoogleUserInfo {
-  id: string;
-  email: string;
-  name: string;
-}
-
 // ============================================================
 // 요청 (Request) 타입
 // ============================================================
@@ -71,12 +64,6 @@ export interface KakaoLoginRequest {
 export interface NaverLoginRequest {
   code: string;
   state: string;
-  redirectUri?: string;
-}
-
-/** 구글 로그인 요청 */
-export interface GoogleLoginRequest {
-  authorizationCode: string;
   redirectUri?: string;
 }
 
@@ -111,7 +98,6 @@ export interface LoginResult {
   signupToken?: string;
   kakaoInfo?: SocialInfo;
   naverInfo?: SocialInfo;
-  googleInfo?: SocialInfo;
 }
 
 /** 회원가입 완료 응답 */
@@ -132,7 +118,4 @@ export interface NaverAuthUrlResponse {
 // ============================================================
 
 /** 소셜 로그인 요청 (통합) */
-export type SocialLoginRequest =
-  | KakaoLoginRequest
-  | NaverLoginRequest
-  | GoogleLoginRequest;
+export type SocialLoginRequest = KakaoLoginRequest | NaverLoginRequest;

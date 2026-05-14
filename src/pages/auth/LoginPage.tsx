@@ -2,7 +2,6 @@ import {
   LogoIcon,
   KakaoIcon,
   NaverIcon,
-  GoogleIcon,
 } from "@/shared/components/icons/LoginIcons";
 import { SocialLoginButton } from "@/features/auth/components/SocialLoginButton";
 import loginBgImage from "@/shared/assets/images/img_login_bg.png";
@@ -11,8 +10,6 @@ import {
   KAKAO_REDIRECT_URI,
   NAVER_CLIENT_ID,
   NAVER_REDIRECT_URI,
-  GOOGLE_CLIENT_ID,
-  GOOGLE_REDIRECT_URI,
 } from "@/features/auth/api/auth_api";
 
 export const LoginPage = () => {
@@ -31,9 +28,6 @@ export const LoginPage = () => {
       sessionStorage.setItem("naver_oauth_state", state);
       const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${NAVER_REDIRECT_URI}&state=${state}`;
       window.location.href = naverAuthUrl;
-    } else if (provider === "google") {
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&response_type=code&scope=email profile`;
-      window.location.href = googleAuthUrl;
     }
   };
 
@@ -84,12 +78,6 @@ export const LoginPage = () => {
                   icon={<NaverIcon className="h-[16px] w-[16px]" />}
                   label="네이버 로그인"
                   onClick={() => handleSocialLogin("naver")}
-                />
-                <SocialLoginButton
-                  provider="google"
-                  icon={<GoogleIcon className="h-[24px] w-[24px]" />}
-                  label="구글 로그인"
-                  onClick={() => handleSocialLogin("google")}
                 />
               </div>
             </div>
