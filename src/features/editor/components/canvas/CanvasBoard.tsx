@@ -175,6 +175,9 @@ const getStrokePolygon = (
           },
         ]
       : points;
+  // A single point needs this tiny normalizedPoints offset so getStroke can emit
+  // a minimal polygon from points; StrokeShape still guards linePoints.length < 6
+  // and the normal flow renders it as a DotShape.
 
   const options = eraser
     ? {
@@ -289,6 +292,13 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
 
   const isDrawingRef = useRef(false);
   const activePointerIdRef = useRef<number | null>(null);
+  const documentPointerMoveRef = useRef<((event: PointerEvent) => void) | null>(
+    null,
+  );
+  const documentPointerEndRef = useRef<((event: PointerEvent) => void) | null>(
+    null,
+  );
+  const documentListenersAttachedRef = useRef(false);
   const pinchStateRef = useRef<PinchState | null>(null);
   const [allowFingerDrawing, setAllowFingerDrawing] = useState(false);
   const isStrokeTool = tool === "pen" || tool === "eraser";
@@ -534,6 +544,45 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
     transformer.getLayer()?.batchDraw();
   }, [items, selectedImageId, tool]);
 
+  const removeStrokeDocumentListeners = useCallback(() => {
+    if (!documentListenersAttachedRef.current) {
+      return;
+    }
+
+    const moveHandler = documentPointerMoveRef.current;
+    const endHandler = documentPointerEndRef.current;
+    if (moveHandler) {
+      document.removeEventListener("pointermove", moveHandler);
+    }
+    if (endHandler) {
+      document.removeEventListener("pointerup", endHandler);
+      document.removeEventListener("pointercancel", endHandler);
+    }
+    documentListenersAttachedRef.current = false;
+  }, []);
+
+  const addStrokeDocumentListeners = useCallback(() => {
+    if (documentListenersAttachedRef.current) {
+      return;
+    }
+
+    const moveHandler = documentPointerMoveRef.current;
+    const endHandler = documentPointerEndRef.current;
+    if (!moveHandler || !endHandler) {
+      return;
+    }
+    document.addEventListener("pointermove", moveHandler, {
+      passive: false,
+    });
+    document.addEventListener("pointerup", endHandler, {
+      passive: false,
+    });
+    document.addEventListener("pointercancel", endHandler, {
+      passive: false,
+    });
+    documentListenersAttachedRef.current = true;
+  }, []);
+
   const handlePointerDown = useCallback(
     (event: KonvaEvent<PointerEvent>) => {
       const stage = event.target.getStage();
@@ -572,6 +621,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
             // Some browsers can reject capture for stylus/touch transitions.
           }
         }
+        addStrokeDocumentListeners();
 
         const pressure = getPointerPressure(event.evt);
         const stroke: StrokeItem = {
@@ -602,7 +652,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
         y2: scenePoint.y,
       });
     },
-    [allowFingerDrawing, eraserSize, penSize, tool],
+    [addStrokeDocumentListeners, allowFingerDrawing, eraserSize, penSize, tool],
   );
 
   const handlePointerMove = useCallback(
@@ -632,100 +682,112 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
     [tool],
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (!isDrawingRef.current) return;
-    isDrawingRef.current = false;
-    const stageContainer = stageRef.current?.container();
-    const activePointerId = activePointerIdRef.current;
-    if (
-      stageContainer &&
-      activePointerId !== null &&
-      typeof stageContainer.releasePointerCapture === "function"
-    ) {
-      try {
-        stageContainer.releasePointerCapture(activePointerId);
-      } catch {
-        // Pointer capture may already be released by the browser.
+  const handlePointerUp = useCallback(
+    (event?: PointerEvent) => {
+      if (
+        event &&
+        activePointerIdRef.current !== null &&
+        event.pointerId !== activePointerIdRef.current
+      ) {
+        return;
       }
-    }
-    activePointerIdRef.current = null;
 
-    const stroke = activeStrokeRef.current;
-    if (stroke) {
-      if (stroke.points.length > 0) {
-        commitItems((prevItems) => [...prevItems, stroke]);
-      }
-      activeStrokeRef.current = null;
-      setActiveStroke(null);
-    }
-
-    if (draftShape) {
-      const { x1, y1, x2, y2, kind } = draftShape;
-      const color = "#1F2937";
-
-      if (kind === "rect") {
-        const rectItem: RectItem = {
-          id: createId(),
-          kind: "rect",
-          x: Math.min(x1, x2),
-          y: Math.min(y1, y2),
-          width: Math.abs(x2 - x1),
-          height: Math.abs(y2 - y1),
-          color,
-        };
-        if (rectItem.width > 2 && rectItem.height > 2) {
-          commitItems((prevItems) => [...prevItems, rectItem]);
+      if (!isDrawingRef.current) return;
+      isDrawingRef.current = false;
+      removeStrokeDocumentListeners();
+      const stageContainer = stageRef.current?.container();
+      const activePointerId = activePointerIdRef.current;
+      if (
+        stageContainer &&
+        activePointerId !== null &&
+        typeof stageContainer.releasePointerCapture === "function"
+      ) {
+        try {
+          stageContainer.releasePointerCapture(activePointerId);
+        } catch {
+          // Pointer capture may already be released by the browser.
         }
       }
+      activePointerIdRef.current = null;
 
-      if (kind === "circle") {
-        const radius = Math.hypot(x2 - x1, y2 - y1);
-        if (radius > 2) {
-          const circleItem: CircleItem = {
+      const stroke = activeStrokeRef.current;
+      if (stroke) {
+        if (stroke.points.length > 0) {
+          commitItems((prevItems) => [...prevItems, stroke]);
+        }
+        activeStrokeRef.current = null;
+        setActiveStroke(null);
+      }
+
+      if (draftShape) {
+        const { x1, y1, x2, y2, kind } = draftShape;
+        const color = "#1F2937";
+
+        if (kind === "rect") {
+          const rectItem: RectItem = {
             id: createId(),
-            kind: "circle",
-            x: x1,
-            y: y1,
-            radius,
+            kind: "rect",
+            x: Math.min(x1, x2),
+            y: Math.min(y1, y2),
+            width: Math.abs(x2 - x1),
+            height: Math.abs(y2 - y1),
             color,
           };
-          commitItems((prevItems) => [...prevItems, circleItem]);
+          if (rectItem.width > 2 && rectItem.height > 2) {
+            commitItems((prevItems) => [...prevItems, rectItem]);
+          }
         }
-      }
 
-      if (kind === "line") {
-        if (Math.hypot(x2 - x1, y2 - y1) > 2) {
-          const lineItem: LineItem = {
-            id: createId(),
-            kind: "line",
-            x1,
-            y1,
-            x2,
-            y2,
-            color,
-          };
-          commitItems((prevItems) => [...prevItems, lineItem]);
+        if (kind === "circle") {
+          const radius = Math.hypot(x2 - x1, y2 - y1);
+          if (radius > 2) {
+            const circleItem: CircleItem = {
+              id: createId(),
+              kind: "circle",
+              x: x1,
+              y: y1,
+              radius,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, circleItem]);
+          }
         }
-      }
 
-      if (kind === "arrow") {
-        if (Math.hypot(x2 - x1, y2 - y1) > 2) {
-          const arrowItem: ArrowItem = {
-            id: createId(),
-            kind: "arrow",
-            x1,
-            y1,
-            x2,
-            y2,
-            color,
-          };
-          commitItems((prevItems) => [...prevItems, arrowItem]);
+        if (kind === "line") {
+          if (Math.hypot(x2 - x1, y2 - y1) > 2) {
+            const lineItem: LineItem = {
+              id: createId(),
+              kind: "line",
+              x1,
+              y1,
+              x2,
+              y2,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, lineItem]);
+          }
         }
-      }
 
-      setDraftShape(null);
-    }
-  }, [commitItems, draftShape]);
+        if (kind === "arrow") {
+          if (Math.hypot(x2 - x1, y2 - y1) > 2) {
+            const arrowItem: ArrowItem = {
+              id: createId(),
+              kind: "arrow",
+              x1,
+              y1,
+              x2,
+              y2,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, arrowItem]);
+          }
+        }
+
+        setDraftShape(null);
+      }
+    },
+    [commitItems, draftShape, removeStrokeDocumentListeners],
+  );
 
   const handleDocumentPointerMove = useCallback(
     (event: PointerEvent) => {
@@ -761,22 +823,17 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
   );
 
   useEffect(() => {
-    document.addEventListener("pointermove", handleDocumentPointerMove, {
-      passive: false,
-    });
-    document.addEventListener("pointerup", handleDocumentPointerEnd, {
-      passive: false,
-    });
-    document.addEventListener("pointercancel", handleDocumentPointerEnd, {
-      passive: false,
-    });
+    documentPointerMoveRef.current = handleDocumentPointerMove;
+    documentPointerEndRef.current = handleDocumentPointerEnd;
 
     return () => {
-      document.removeEventListener("pointermove", handleDocumentPointerMove);
-      document.removeEventListener("pointerup", handleDocumentPointerEnd);
-      document.removeEventListener("pointercancel", handleDocumentPointerEnd);
+      removeStrokeDocumentListeners();
     };
-  }, [handleDocumentPointerEnd, handleDocumentPointerMove]);
+  }, [
+    handleDocumentPointerEnd,
+    handleDocumentPointerMove,
+    removeStrokeDocumentListeners,
+  ]);
 
   const handleImageFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1080,7 +1137,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
               className="w-[96px] accent-blue-600"
             />
             <span className="w-[28px] text-right tabular-nums">
-              {Math.round(activeToolSize)}
+              {activeToolSize.toFixed(1)}
             </span>
           </label>
         )}
@@ -1156,8 +1213,8 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
         onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerUp={(event) => handlePointerUp(event.evt)}
+        onPointerCancel={(event) => handlePointerUp(event.evt)}
       >
         <Layer>
           {items.map((item) => {

@@ -27,6 +27,7 @@ export const useResizable = ({
   const widthRef = useRef(width);
   const rafRef = useRef<number | null>(null); // requestAnimationFrame ID
   const pendingClientXRef = useRef<number | null>(null);
+  const activeTouchIdRef = useRef<number | null>(null);
 
   // width 변경 시 ref 업데이트
   useEffect(() => {
@@ -66,6 +67,9 @@ export const useResizable = ({
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    activeTouchIdRef.current = touch.identifier;
     setIsDragging(true);
   }, []);
 
@@ -110,7 +114,16 @@ export const useResizable = ({
     (e: TouchEvent) => {
       if (!isDragging) return;
       e.preventDefault(); // 드래그 중 스크롤 방지
-      const touch = e.touches[0];
+      const activeTouchId = activeTouchIdRef.current;
+      if (activeTouchId === null) return;
+
+      const touch =
+        Array.from(e.touches).find(
+          (candidate) => candidate.identifier === activeTouchId,
+        ) ??
+        Array.from(e.changedTouches).find(
+          (candidate) => candidate.identifier === activeTouchId,
+        );
       if (!touch) return;
       calcNewWidth(touch.clientX);
     },
@@ -130,6 +143,7 @@ export const useResizable = ({
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+    activeTouchIdRef.current = null;
     setIsDragging(false);
   }, []);
 
@@ -147,6 +161,10 @@ export const useResizable = ({
     }
 
     return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener("touchmove", handleTouchMove);

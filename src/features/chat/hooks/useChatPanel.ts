@@ -45,10 +45,24 @@ export const useChatPanel = ({
     rightMinPx: 302,
   });
 
-  const handleTabChange = useCallback((tab: PanelTab) => {
-    setFallbackTab(tab);
-    setViewerOpenOverride(true);
-  }, []);
+  const handleTabChange = useCallback(
+    (tab: PanelTab) => {
+      setFallbackTab(tab);
+      setViewerOpenOverride(true);
+      setSearchParams(
+        (sp) => {
+          if (tab === "viewer") {
+            sp.delete("panel");
+          } else {
+            sp.set("panel", tab);
+          }
+          return sp;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const handleToggleViewer = useCallback(() => {
     if (isViewerOpen) {
