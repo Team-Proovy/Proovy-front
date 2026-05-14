@@ -1,10 +1,10 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loginWithKakao } from "../api/auth_api";
-import { useAuthStore } from "../store/auth_store";
+import { loginWithKakao } from "@/features/auth/api/auth_api";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
 import { useEffect, useRef, useState } from "react";
-import { SocialCallbackLayout } from "../components/SocialCallbackLayout";
+import { SocialCallbackLayout } from "@/features/auth/components/SocialCallbackLayout";
 
 export const KakaoCallbackPage = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +30,6 @@ export const KakaoCallbackPage = () => {
     }
 
     const processLogin = async () => {
-      // code logging removed for security
       tokenUtils.clearTokens();
 
       try {
@@ -58,7 +57,6 @@ export const KakaoCallbackPage = () => {
           setErrorMsg(`로그인 실패: ${data.message}`);
         }
       } catch (error) {
-        // Safe typing for error handling
         const axiosError = error as AxiosError<{
           message?: string;
           code?: string;

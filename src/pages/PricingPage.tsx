@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
-import { useAuthStore } from "../../auth/store/auth_store";
+import { ProovyLogo } from "@/shared/components/icons/ProovyLogo";
+import { useAuthStore } from "@/features/auth/store/auth_store";
 import {
   useUpgradeSubscription,
   useMySubscription,
-} from "../../settings/hooks/useUser";
+} from "@/features/settings/hooks/useUser";
 import { showErrorToast } from "@/shared/lib/toast";
 
-import { type PlanType, normalizePlanType } from "../types/plan_types";
+import {
+  type PlanType,
+  normalizePlanType,
+} from "@/features/subscription/types/plan_types";
 
 export const PricingPage = () => {
   const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);

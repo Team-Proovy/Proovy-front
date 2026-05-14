@@ -1,39 +1,29 @@
 import { createBrowserRouter } from "react-router-dom";
 
-// Pages (특정 feature에 속하지 않는 독립 페이지)
-import { LandingPage } from "../../pages/LandingPage";
-import { HomePage } from "../../pages/HomePage";
-import { UnauthorizedPage } from "../../pages/error/UnauthorizedPage";
-import { ForbiddenPage } from "../../pages/error/ForbiddenPage";
-import { NotFoundPage } from "../../pages/error/NotFoundPage";
-import { ServerErrorPage } from "../../pages/error/ServerErrorPage";
-
-// Features - Auth
-import { LoginPage } from "../../features/auth/pages/LoginPage";
-import { SignupPage } from "../../features/auth/pages/SignupPage";
-import { KakaoCallbackPage } from "../../features/auth/pages/KakaoCallbackPage";
-import { NaverCallbackPage } from "../../features/auth/pages/NaverCallbackPage";
-import { GoogleCallbackPage } from "../../features/auth/pages/GoogleCallbackPage";
+// Pages
+import { LandingPage } from "@/pages/LandingPage";
+import { HomePage } from "@/pages/HomePage";
+import { LoginPage } from "@/pages/auth/LoginPage";
+import { SignupPage } from "@/pages/auth/SignupPage";
+import { KakaoCallbackPage } from "@/pages/auth/KakaoCallbackPage";
+import { NaverCallbackPage } from "@/pages/auth/NaverCallbackPage";
+import { GoogleCallbackPage } from "@/pages/auth/GoogleCallbackPage";
+import { ChatPage } from "@/pages/ChatPage";
+import { NotesPage } from "@/pages/NotesPage";
+import { StoragePage } from "@/pages/StoragePage";
+import { PricingPage } from "@/pages/PricingPage";
+import { UnauthorizedPage } from "@/pages/error/UnauthorizedPage";
+import { ForbiddenPage } from "@/pages/error/ForbiddenPage";
+import { NotFoundPage } from "@/pages/error/NotFoundPage";
+import { ServerErrorPage } from "@/pages/error/ServerErrorPage";
 
 // Layouts
-import { AppLayout } from "../../shared/layout/AppLayout";
+import { AppLayout } from "@/shared/layout/AppLayout";
 import {
   ProtectedRoute,
   PublicRoute,
-} from "../../shared/router/components/RouteGuards";
-import { RootRoute } from "../../shared/router/RootRoute";
-
-// Features - Chat
-import { ChatPage } from "../../features/chat/pages/ChatPage";
-
-// Features - Notes
-import { NotesPage } from "../../features/notes/pages/NotesPage";
-
-// Features - Storage
-import { StoragePage } from "../../features/storage/pages/StoragePage";
-
-// Features - Subscription
-import { PricingPage } from "../../features/subscription/pages/PricingPage";
+} from "@/shared/router/components/RouteGuards";
+import { RootRoute } from "@/shared/router/RootRoute";
 
 export const router = createBrowserRouter([
   {

@@ -1,4 +1,4 @@
-import { useNoteListPage } from "../hooks";
+import { useNoteListPage } from "@/features/notes/hooks";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
 import { getPlanMaxNotes } from "@/features/subscription/types/plan_types";
 import {
@@ -7,7 +7,7 @@ import {
   NotesPagination,
   DeleteNotesModal,
   DeletionSuccessModal,
-} from "../components";
+} from "@/features/notes/components";
 import { PageContainer } from "@/shared/layout/PageContainer";
 
 export const NotesPage = () => {

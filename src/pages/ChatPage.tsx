@@ -18,9 +18,14 @@
  */
 
 import { useParams } from "react-router-dom";
-import { LeftPanel, RightPanel, Divider, ChatHeader } from "../components";
-import { useChatMessages } from "../hooks/useChatMessages";
-import { useChatPanel } from "../hooks/useChatPanel";
+import {
+  LeftPanel,
+  RightPanel,
+  Divider,
+  ChatHeader,
+} from "@/features/chat/components";
+import { useChatMessages } from "@/features/chat/hooks/useChatMessages";
+import { useChatPanel } from "@/features/chat/hooks/useChatPanel";
 
 /**
  * noteId가 변경될 때 전체 컴포넌트 리마운트를 강제하는 래퍼.
