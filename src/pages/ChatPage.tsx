@@ -56,6 +56,7 @@ const ChatPageContent = () => {
     leftPanelWidth,
     isDragging,
     handleMouseDown,
+    handleTouchStart,
     handleTabChange,
     handleToggleViewer,
   } = useChatPanel({
@@ -90,6 +91,7 @@ const ChatPageContent = () => {
             </div>
             <Divider
               onMouseDown={handleMouseDown}
+              onTouchStart={handleTouchStart}
               isDragging={isDragging}
             />
           </>

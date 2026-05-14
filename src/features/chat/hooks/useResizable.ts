@@ -12,6 +12,7 @@ interface UseResizableReturn {
   width: number;
   isDragging: boolean;
   handleMouseDown: (e: React.MouseEvent) => void;
+  handleTouchStart: (e: React.TouchEvent) => void;
 }
 
 export const useResizable = ({
@@ -24,6 +25,8 @@ export const useResizable = ({
   const [width, setWidth] = useState(initialWidth);
   const [isDragging, setIsDragging] = useState(false);
   const widthRef = useRef(width);
+  const rafRef = useRef<number | null>(null); // requestAnimationFrame ID
+  const pendingClientXRef = useRef<number | null>(null);
 
   // width 변경 시 ref 업데이트
   useEffect(() => {
@@ -61,32 +64,72 @@ export const useResizable = ({
     setIsDragging(true);
   }, []);
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const calcNewWidth = useCallback(
+    (clientX: number) => {
+      pendingClientXRef.current = clientX;
+
+      // 이미 RAF가 예약된 경우 스킵 — 프레임당 1번만 setWidth 호출
+      if (rafRef.current !== null) return;
+
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        const latestClientX = pendingClientXRef.current;
+        pendingClientXRef.current = null;
+        if (latestClientX === null) return;
+
+        const container = document.getElementById("chat-container");
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        if (containerWidth === 0) return;
+
+        const newWidth =
+          ((latestClientX - containerRect.left) / containerWidth) * 100;
+        const { min, max } = getEffectiveBounds(containerWidth);
+        setWidth(Math.min(Math.max(newWidth, min), max));
+      });
+    },
+    [getEffectiveBounds],
+  );
+
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!isDragging) return;
-
-      const container = document.getElementById("chat-container");
-      if (!container) return;
-
-      const containerRect = container.getBoundingClientRect();
-      const containerWidth = containerRect.width;
-
-      // division by zero 방지
-      if (containerWidth === 0) return;
-
-      const newWidth =
-        ((e.clientX - containerRect.left) / containerWidth) * 100;
-
-      const { min, max } = getEffectiveBounds(containerWidth);
-
-      // 최소/최대 범위 제한
-      const clampedWidth = Math.min(Math.max(newWidth, min), max);
-      setWidth(clampedWidth);
+      calcNewWidth(e.clientX);
     },
-    [isDragging, getEffectiveBounds],
+    [isDragging, calcNewWidth],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging) return;
+      e.preventDefault(); // 드래그 중 스크롤 방지
+      const touch = e.touches[0];
+      if (!touch) return;
+      calcNewWidth(touch.clientX);
+    },
+    [isDragging, calcNewWidth],
   );
 
   const handleMouseUp = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    setIsDragging(false);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
     setIsDragging(false);
   }, []);
 
@@ -94,6 +137,11 @@ export const useResizable = ({
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false, // preventDefault 허용
+      });
+      document.addEventListener("touchend", handleTouchEnd);
+      document.addEventListener("touchcancel", handleTouchEnd);
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
     }
@@ -101,10 +149,19 @@ export const useResizable = ({
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchcancel", handleTouchEnd);
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [
+    isDragging,
+    handleMouseMove,
+    handleMouseUp,
+    handleTouchMove,
+    handleTouchEnd,
+  ]);
 
   // 컨테이너 크기 변화 감지 (사이드바 열림/닫힘 등)
   useEffect(() => {
@@ -154,5 +211,5 @@ export const useResizable = ({
     }
   }, [getEffectiveBounds]);
 
-  return { width, isDragging, handleMouseDown };
+  return { width, isDragging, handleMouseDown, handleTouchStart };
 };
