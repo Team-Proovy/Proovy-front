@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
-import { CanvasBoard } from ".";
+import { CanvasBoard } from "./CanvasBoard";
 import { showErrorToast } from "@/shared/lib/toast";
 
 type CanvasApi = {
