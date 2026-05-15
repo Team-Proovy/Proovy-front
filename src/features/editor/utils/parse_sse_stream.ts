@@ -24,18 +24,19 @@ export const parseSSEStream = async function* (
     if (!block.trim()) return;
 
     let eventType = "";
-    let dataStr = "";
+    const dataLines: string[] = [];
 
-    for (const line of block.split("\n")) {
+    for (const line of block.split(/\r?\n/)) {
       const trimmed = line.trim();
       if (trimmed.startsWith("event:")) {
         eventType = trimmed.slice(6).trim();
       } else if (trimmed.startsWith("data:")) {
-        dataStr = trimmed.slice(5).trim();
+        dataLines.push(trimmed.slice(5).trim());
       }
       // id: 와 주석(:)은 무시
     }
 
+    const dataStr = dataLines.join("\n");
     if (!dataStr || !eventType) return;
 
     try {
@@ -60,8 +61,8 @@ export const parseSSEStream = async function* (
 
       buffer += decoder.decode(value, { stream: true });
 
-      // SSE 이벤트 블록은 빈 줄(\n\n)로 구분
-      const blocks = buffer.split("\n\n");
+      // SSE 이벤트 블록은 빈 줄(LF/CRLF 모두 허용)로 구분
+      const blocks = buffer.split(/\r?\n\r?\n/);
       buffer = blocks.pop() ?? "";
 
       for (const block of blocks) {
