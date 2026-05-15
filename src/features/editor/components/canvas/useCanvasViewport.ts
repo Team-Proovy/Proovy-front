@@ -138,6 +138,7 @@ export const useCanvasViewport = ({
       y: (pointA.y + pointB.y) / 2,
     };
     const distance = Math.hypot(pointB.x - pointA.x, pointB.y - pointA.y);
+    if (pinchState.startDistance < 1) return;
     const ratio = distance / pinchState.startDistance;
     const nextScale = clamp(
       viewportRef.current.scale * ratio,
