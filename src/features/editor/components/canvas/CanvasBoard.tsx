@@ -132,6 +132,13 @@ const TOOL_BUTTON_BASE =
 const MIN_SCALE = 0.35;
 const MAX_SCALE = 4;
 const ZOOM_FACTOR = 1.08;
+const DEFAULT_PEN_SIZE = 5.8;
+const DEFAULT_ERASER_SIZE = 22;
+const MIN_PEN_SIZE = 2;
+const MAX_PEN_SIZE = 14;
+const MIN_ERASER_SIZE = 8;
+const MAX_ERASER_SIZE = 44;
+const MIN_POINT_DISTANCE = 2.0;
 
 const createId = () =>
   `canvas_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -143,27 +150,76 @@ const getPointerPressure = (evt: unknown) => {
   if (evt && typeof evt === "object" && "pressure" in evt) {
     const pressure = Number((evt as { pressure: number }).pressure);
     if (Number.isFinite(pressure) && pressure >= 0 && pressure <= 1) {
-      return pressure;
+      return clamp(pressure, 0.12, 1);
     }
   }
-  return 0.5;
+  return 0.62;
 };
 
-const getStrokePolygon = (points: StrokePoint[], size: number) => {
-  if (points.length < 2) {
+const getStrokePolygon = (
+  points: StrokePoint[],
+  size: number,
+  eraser: boolean,
+) => {
+  if (points.length === 0) {
     return [];
   }
 
+  const normalizedPoints =
+    points.length === 1
+      ? [
+          points[0],
+          {
+            ...points[0],
+            x: points[0].x + 0.01,
+          },
+        ]
+      : points;
+  // A single point needs this tiny normalizedPoints offset so getStroke can emit
+  // a minimal polygon from points; StrokeShape still guards linePoints.length < 6
+  // and the normal flow renders it as a DotShape.
+
+  const options = eraser
+    ? {
+        size,
+        thinning: 0.05,
+        smoothing: 0.6,
+        streamline: 0.4,
+        simulatePressure: false,
+        last: true,
+      }
+    : {
+        size,
+        thinning: 0.15,
+        smoothing: 0.72,
+        streamline: 0.38, // 너무 높으면 커밋 시 선이 수축해 보임
+        simulatePressure: false,
+        last: true,
+      };
+
   return getStroke(
-    points.map((point) => [point.x, point.y, point.pressure] as const),
-    {
-      size,
-      thinning: 0.72,
-      smoothing: 0.78,
-      streamline: 0.62,
-      simulatePressure: false,
-      last: true,
-    },
+    normalizedPoints.map(
+      (point) => [point.x, point.y, point.pressure] as const,
+    ),
+    options,
+  );
+};
+
+const DotShape = ({ item }: { item: StrokeItem }) => {
+  const point = item.points[0];
+  if (!point) {
+    return null;
+  }
+
+  return (
+    <Circle
+      x={point.x}
+      y={point.y}
+      radius={Math.max(1.2, (item.size * point.pressure) / 2)}
+      fill={item.eraser ? "#000" : item.color}
+      globalCompositeOperation={item.eraser ? "destination-out" : "source-over"}
+      listening={false}
+    />
   );
 };
 
@@ -188,13 +244,13 @@ const getTouchPoint = (stage: KonvaStage, touch: Touch) => {
 
 const StrokeShape = ({ item }: { item: StrokeItem }) => {
   const polygon = useMemo(
-    () => getStrokePolygon(item.points, item.size),
-    [item.points, item.size],
+    () => getStrokePolygon(item.points, item.size, item.eraser),
+    [item.eraser, item.points, item.size],
   );
   const linePoints = polygon.flatMap((point) => [point[0], point[1]]);
 
   if (linePoints.length < 6) {
-    return null;
+    return <DotShape item={item} />;
   }
 
   return (
@@ -231,10 +287,24 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
   const strokeRafRef = useRef<number | null>(null);
   const [draftShape, setDraftShape] = useState<DraftShape | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
+  const [penSize, setPenSize] = useState(DEFAULT_PEN_SIZE);
+  const [eraserSize, setEraserSize] = useState(DEFAULT_ERASER_SIZE);
 
   const isDrawingRef = useRef(false);
+  const activePointerIdRef = useRef<number | null>(null);
+  const documentPointerMoveRef = useRef<((event: PointerEvent) => void) | null>(
+    null,
+  );
+  const documentPointerEndRef = useRef<((event: PointerEvent) => void) | null>(
+    null,
+  );
+  const documentListenersAttachedRef = useRef(false);
   const pinchStateRef = useRef<PinchState | null>(null);
   const [allowFingerDrawing, setAllowFingerDrawing] = useState(false);
+  const isStrokeTool = tool === "pen" || tool === "eraser";
+  const activeToolSize = tool === "eraser" ? eraserSize : penSize;
+  const activeToolMinSize = tool === "eraser" ? MIN_ERASER_SIZE : MIN_PEN_SIZE;
+  const activeToolMaxSize = tool === "eraser" ? MAX_ERASER_SIZE : MAX_PEN_SIZE;
 
   useEffect(() => {
     viewportRef.current = viewport;
@@ -309,7 +379,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
           point.y - prevPoint.y,
         );
 
-        if (distance < 0.28) {
+        if (distance < MIN_POINT_DISTANCE) {
           prevPoint.pressure = (prevPoint.pressure + point.pressure) / 2;
           return;
         }
@@ -319,6 +389,40 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
       scheduleStrokeRender();
     },
     [scheduleStrokeRender],
+  );
+
+  const pushStrokePointerEvent = useCallback(
+    (nativeEvent: PointerEvent) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+
+      stage.setPointersPositions(nativeEvent);
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
+
+      const scenePoint = getScenePointFromStage(stage, pointer);
+      const pressure = getPointerPressure(nativeEvent);
+      pushStrokePoint({
+        x: scenePoint.x,
+        y: scenePoint.y,
+        pressure,
+      });
+    },
+    [pushStrokePoint],
+  );
+
+  const pushStrokePointerEvents = useCallback(
+    (nativeEvent: PointerEvent) => {
+      const nativeEvents =
+        typeof nativeEvent.getCoalescedEvents === "function"
+          ? nativeEvent.getCoalescedEvents()
+          : [nativeEvent];
+
+      for (const event of nativeEvents) {
+        pushStrokePointerEvent(event);
+      }
+    },
+    [pushStrokePointerEvent],
   );
 
   const handleUndo = useCallback(() => {
@@ -440,6 +544,45 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
     transformer.getLayer()?.batchDraw();
   }, [items, selectedImageId, tool]);
 
+  const removeStrokeDocumentListeners = useCallback(() => {
+    if (!documentListenersAttachedRef.current) {
+      return;
+    }
+
+    const moveHandler = documentPointerMoveRef.current;
+    const endHandler = documentPointerEndRef.current;
+    if (moveHandler) {
+      document.removeEventListener("pointermove", moveHandler);
+    }
+    if (endHandler) {
+      document.removeEventListener("pointerup", endHandler);
+      document.removeEventListener("pointercancel", endHandler);
+    }
+    documentListenersAttachedRef.current = false;
+  }, []);
+
+  const addStrokeDocumentListeners = useCallback(() => {
+    if (documentListenersAttachedRef.current) {
+      return;
+    }
+
+    const moveHandler = documentPointerMoveRef.current;
+    const endHandler = documentPointerEndRef.current;
+    if (!moveHandler || !endHandler) {
+      return;
+    }
+    document.addEventListener("pointermove", moveHandler, {
+      passive: false,
+    });
+    document.addEventListener("pointerup", endHandler, {
+      passive: false,
+    });
+    document.addEventListener("pointercancel", endHandler, {
+      passive: false,
+    });
+    documentListenersAttachedRef.current = true;
+  }, []);
+
   const handlePointerDown = useCallback(
     (event: KonvaEvent<PointerEvent>) => {
       const stage = event.target.getStage();
@@ -469,12 +612,23 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
       setSelectedImageId(null);
 
       if (tool === "pen" || tool === "eraser") {
+        activePointerIdRef.current = event.evt.pointerId;
+        const stageContainer = stage.container();
+        if (typeof stageContainer.setPointerCapture === "function") {
+          try {
+            stageContainer.setPointerCapture(event.evt.pointerId);
+          } catch {
+            // Some browsers can reject capture for stylus/touch transitions.
+          }
+        }
+        addStrokeDocumentListeners();
+
         const pressure = getPointerPressure(event.evt);
         const stroke: StrokeItem = {
           id: createId(),
           kind: "stroke",
           color: "#111827",
-          size: tool === "eraser" ? 22 : 7.6,
+          size: tool === "eraser" ? eraserSize : penSize,
           eraser: tool === "eraser",
           points: [
             {
@@ -498,7 +652,7 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
         y2: scenePoint.y,
       });
     },
-    [allowFingerDrawing, tool],
+    [addStrokeDocumentListeners, allowFingerDrawing, eraserSize, penSize, tool],
   );
 
   const handlePointerMove = useCallback(
@@ -509,26 +663,6 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
       if (!stage) return;
 
       if (tool === "pen" || tool === "eraser") {
-        const nativeEvents =
-          typeof event.evt.getCoalescedEvents === "function"
-            ? event.evt.getCoalescedEvents()
-            : [event.evt];
-
-        for (const nativeEvent of nativeEvents) {
-          stage.setPointersPositions(nativeEvent);
-          const pointer = stage.getPointerPosition();
-          if (!pointer) continue;
-
-          const scenePoint = getScenePointFromStage(stage, pointer);
-          const pressure = clamp(getPointerPressure(nativeEvent), 0.05, 1);
-          pushStrokePoint({
-            x: scenePoint.x,
-            y: scenePoint.y,
-            pressure,
-          });
-        }
-
-        stage.setPointersPositions(event.evt);
         return;
       }
 
@@ -545,89 +679,161 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
         };
       });
     },
-    [pushStrokePoint, tool],
+    [tool],
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (!isDrawingRef.current) return;
-    isDrawingRef.current = false;
-
-    const stroke = activeStrokeRef.current;
-    if (stroke) {
-      if (stroke.points.length > 1) {
-        commitItems((prevItems) => [...prevItems, stroke]);
+  const handlePointerUp = useCallback(
+    (event?: PointerEvent) => {
+      if (
+        event &&
+        activePointerIdRef.current !== null &&
+        event.pointerId !== activePointerIdRef.current
+      ) {
+        return;
       }
-      activeStrokeRef.current = null;
-      setActiveStroke(null);
-    }
 
-    if (draftShape) {
-      const { x1, y1, x2, y2, kind } = draftShape;
-      const color = "#1F2937";
-
-      if (kind === "rect") {
-        const rectItem: RectItem = {
-          id: createId(),
-          kind: "rect",
-          x: Math.min(x1, x2),
-          y: Math.min(y1, y2),
-          width: Math.abs(x2 - x1),
-          height: Math.abs(y2 - y1),
-          color,
-        };
-        if (rectItem.width > 2 && rectItem.height > 2) {
-          commitItems((prevItems) => [...prevItems, rectItem]);
+      if (!isDrawingRef.current) return;
+      isDrawingRef.current = false;
+      removeStrokeDocumentListeners();
+      const stageContainer = stageRef.current?.container();
+      const activePointerId = activePointerIdRef.current;
+      if (
+        stageContainer &&
+        activePointerId !== null &&
+        typeof stageContainer.releasePointerCapture === "function"
+      ) {
+        try {
+          stageContainer.releasePointerCapture(activePointerId);
+        } catch {
+          // Pointer capture may already be released by the browser.
         }
       }
+      activePointerIdRef.current = null;
 
-      if (kind === "circle") {
-        const radius = Math.hypot(x2 - x1, y2 - y1);
-        if (radius > 2) {
-          const circleItem: CircleItem = {
+      const stroke = activeStrokeRef.current;
+      if (stroke) {
+        if (stroke.points.length > 0) {
+          commitItems((prevItems) => [...prevItems, stroke]);
+        }
+        activeStrokeRef.current = null;
+        setActiveStroke(null);
+      }
+
+      if (draftShape) {
+        const { x1, y1, x2, y2, kind } = draftShape;
+        const color = "#1F2937";
+
+        if (kind === "rect") {
+          const rectItem: RectItem = {
             id: createId(),
-            kind: "circle",
-            x: x1,
-            y: y1,
-            radius,
+            kind: "rect",
+            x: Math.min(x1, x2),
+            y: Math.min(y1, y2),
+            width: Math.abs(x2 - x1),
+            height: Math.abs(y2 - y1),
             color,
           };
-          commitItems((prevItems) => [...prevItems, circleItem]);
+          if (rectItem.width > 2 && rectItem.height > 2) {
+            commitItems((prevItems) => [...prevItems, rectItem]);
+          }
         }
+
+        if (kind === "circle") {
+          const radius = Math.hypot(x2 - x1, y2 - y1);
+          if (radius > 2) {
+            const circleItem: CircleItem = {
+              id: createId(),
+              kind: "circle",
+              x: x1,
+              y: y1,
+              radius,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, circleItem]);
+          }
+        }
+
+        if (kind === "line") {
+          if (Math.hypot(x2 - x1, y2 - y1) > 2) {
+            const lineItem: LineItem = {
+              id: createId(),
+              kind: "line",
+              x1,
+              y1,
+              x2,
+              y2,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, lineItem]);
+          }
+        }
+
+        if (kind === "arrow") {
+          if (Math.hypot(x2 - x1, y2 - y1) > 2) {
+            const arrowItem: ArrowItem = {
+              id: createId(),
+              kind: "arrow",
+              x1,
+              y1,
+              x2,
+              y2,
+              color,
+            };
+            commitItems((prevItems) => [...prevItems, arrowItem]);
+          }
+        }
+
+        setDraftShape(null);
+      }
+    },
+    [commitItems, draftShape, removeStrokeDocumentListeners],
+  );
+
+  const handleDocumentPointerMove = useCallback(
+    (event: PointerEvent) => {
+      if (
+        activePointerIdRef.current !== event.pointerId ||
+        !isDrawingRef.current ||
+        (tool !== "pen" && tool !== "eraser")
+      ) {
+        return;
       }
 
-      if (kind === "line") {
-        if (Math.hypot(x2 - x1, y2 - y1) > 2) {
-          const lineItem: LineItem = {
-            id: createId(),
-            kind: "line",
-            x1,
-            y1,
-            x2,
-            y2,
-            color,
-          };
-          commitItems((prevItems) => [...prevItems, lineItem]);
-        }
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+      pushStrokePointerEvents(event);
+    },
+    [pushStrokePointerEvents, tool],
+  );
+
+  const handleDocumentPointerEnd = useCallback(
+    (event: PointerEvent) => {
+      if (activePointerIdRef.current !== event.pointerId) {
+        return;
       }
 
-      if (kind === "arrow") {
-        if (Math.hypot(x2 - x1, y2 - y1) > 2) {
-          const arrowItem: ArrowItem = {
-            id: createId(),
-            kind: "arrow",
-            x1,
-            y1,
-            x2,
-            y2,
-            color,
-          };
-          commitItems((prevItems) => [...prevItems, arrowItem]);
-        }
+      if (event.cancelable) {
+        event.preventDefault();
       }
+      pushStrokePointerEvents(event);
+      handlePointerUp();
+    },
+    [handlePointerUp, pushStrokePointerEvents],
+  );
 
-      setDraftShape(null);
-    }
-  }, [commitItems, draftShape]);
+  useEffect(() => {
+    documentPointerMoveRef.current = handleDocumentPointerMove;
+    documentPointerEndRef.current = handleDocumentPointerEnd;
+
+    return () => {
+      removeStrokeDocumentListeners();
+    };
+  }, [
+    handleDocumentPointerEnd,
+    handleDocumentPointerMove,
+    removeStrokeDocumentListeners,
+  ]);
 
   const handleImageFileChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -911,6 +1117,31 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
           Clear
         </button>
 
+        {isStrokeTool && (
+          <label className="ml-1 flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600">
+            <span className="min-w-[28px]">Size</span>
+            <input
+              type="range"
+              min={activeToolMinSize}
+              max={activeToolMaxSize}
+              step={0.2}
+              value={activeToolSize}
+              onChange={(event) => {
+                const nextSize = Number(event.target.value);
+                if (tool === "eraser") {
+                  setEraserSize(nextSize);
+                } else {
+                  setPenSize(nextSize);
+                }
+              }}
+              className="w-[96px] accent-blue-600"
+            />
+            <span className="w-[28px] text-right tabular-nums">
+              {activeToolSize.toFixed(1)}
+            </span>
+          </label>
+        )}
+
         <label className="ml-1 flex cursor-pointer items-center gap-1 text-xs text-gray-600">
           <input
             type="checkbox"
@@ -982,8 +1213,8 @@ export const CanvasBoard = ({ className = "", onMount }: CanvasBoardProps) => {
         onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        onPointerUp={(event) => handlePointerUp(event.evt)}
+        onPointerCancel={(event) => handlePointerUp(event.evt)}
       >
         <Layer>
           {items.map((item) => {

@@ -5,16 +5,22 @@ import {
 
 interface DividerProps {
   onMouseDown: (e: React.MouseEvent) => void;
+  onTouchStart: (e: React.TouchEvent) => void;
   isDragging: boolean;
 }
 
-export const Divider = ({ onMouseDown, isDragging }: DividerProps) => {
+export const Divider = ({
+  onMouseDown,
+  onTouchStart,
+  isDragging,
+}: DividerProps) => {
   return (
     <div className="relative z-10 flex w-0 items-center justify-center">
       {/* 드래그 핸들 버튼 - 경계선 중심에 떠있는 형태 */}
       <div
         onMouseDown={onMouseDown}
-        className={`absolute flex h-[56px] w-[24px] cursor-col-resize flex-col items-center justify-center gap-[3px] rounded-[20px] border-[0.5px] border-[#D1D6DE] bg-white shadow-[4px_4px_15px_0px_rgba(0,0,0,0.1)] transition-all hover:scale-105 ${
+        onTouchStart={onTouchStart}
+        className={`absolute flex h-[56px] w-[24px] cursor-col-resize touch-none flex-col items-center justify-center gap-[3px] rounded-[20px] border-[0.5px] border-[#D1D6DE] bg-white shadow-[4px_4px_15px_0px_rgba(0,0,0,0.1)] transition-all hover:scale-105 ${
           isDragging ? "scale-105" : ""
         }`}
       >
