@@ -59,10 +59,11 @@ export const getScenePointFromStage = (
   stage: KonvaStage,
   pointer: { x: number; y: number },
 ) => {
-  const scale = stage.scaleX() || 1;
+  const scaleX = stage.scaleX() || 1;
+  const scaleY = stage.scaleY() || 1;
   return {
-    x: (pointer.x - stage.x()) / scale,
-    y: (pointer.y - stage.y()) / scale,
+    x: (pointer.x - stage.x()) / scaleX,
+    y: (pointer.y - stage.y()) / scaleY,
   };
 };
 
