@@ -54,7 +54,7 @@ export const SidebarNoteItem = ({
   };
 
   return (
-    <li className="group relative">
+    <li className="group relative z-0 hover:z-10">
       {isRenaming ? (
         <div className="flex items-center rounded-lg px-[12px] py-[6px]">
           <input
@@ -124,7 +124,7 @@ export const SidebarNoteItem = ({
           </button>
 
           {isMenuOpen && (
-            <div className="absolute top-full right-0 z-20 mt-1 w-[120px] rounded-lg border border-[#E3E7ED] bg-white py-1 shadow-lg">
+            <div className="absolute top-full right-0 z-50 mt-1 w-[120px] rounded-lg border border-[#E3E7ED] bg-white py-1 shadow-lg">
               <button
                 onClick={() => {
                   setTitleInput(note.title);

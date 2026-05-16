@@ -5,6 +5,7 @@ import {
   useDeleteNote,
 } from "@/features/notes/hooks/useNotes";
 import { SidebarNoteItem } from "./SidebarNoteItem";
+import { StorageChevronIcon } from "@/shared/components/icons/StorageIcons";
 import type { NoteListParams } from "@/features/notes/api/notes_types";
 
 type SortValue = NonNullable<NoteListParams["sort"]>;
@@ -120,22 +121,9 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
               className="flex items-center gap-1 text-[12px] font-medium text-[#454545] hover:text-[#2A6AFF]"
             >
               <span>최근 노트 목록</span>
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className={`transition-transform duration-200 ${isSortOpen ? "rotate-180" : ""}`}
-              >
-                <path
-                  d="M2 3.5L5 6.5L8 3.5"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <span className="flex h-3 w-3 items-center justify-center overflow-hidden">
+                <StorageChevronIcon isOpen={isSortOpen} />
+              </span>
             </button>
 
             {isSortOpen && (

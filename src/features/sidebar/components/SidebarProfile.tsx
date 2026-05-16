@@ -3,17 +3,12 @@ import {
   UserIcon,
   SettingIcon,
   CreditIcon,
-  PaperIcon,
 } from "../../../shared/components/icons/SidebarIcons";
 
 import { useState } from "react";
 import { useAuthStore } from "../../auth/store/auth_store";
-import { useNoteList } from "@/features/notes/hooks/useNotes";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
-import {
-  getPlanMaxNotes,
-  normalizePlanType,
-} from "@/features/subscription/types/plan_types";
+import { normalizePlanType } from "@/features/subscription/types/plan_types";
 
 interface SidebarProfileProps {
   isCollapsed: boolean;
@@ -31,17 +26,16 @@ export const SidebarProfile = ({
   const [isUserIconHovered, setIsUserIconHovered] = useState(false);
   const authUser = useAuthStore((state) => state.user);
   const { data: profile } = useMyProfile();
-  const { data: noteListData } = useNoteList({
-    page: 0,
-    size: 1,
-  });
 
   const planType = normalizePlanType(
     profile?.subscription?.plan ?? authUser?.plan,
   );
-  const maxNotes = getPlanMaxNotes(planType);
-  const totalNotes = noteListData?.pageInfo.totalElements ?? 0;
   const creditTotal = profile?.credit.totalAvailable ?? 0;
+  const creditMax =
+    (profile?.credit.dailyCredit.limit ?? 0) +
+    (profile?.credit.monthlyCredit.limit ?? 0);
+  const creditPercent =
+    creditMax > 0 ? Math.min((creditTotal / creditMax) * 100, 100) : 0;
 
   // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
   const formatNickname = (nickname?: string) => {
@@ -55,66 +49,38 @@ export const SidebarProfile = ({
     }
     return nickname;
   };
-  // 플랜별 인디케이터 색상 (가입완료 버튼 색상: Free -> Standard -> Pro 순으로 진하게)
-  const getPlanIndicatorColor = (plan: string) => {
-    switch (plan) {
-      case "Pro":
-        return "bg-[#003880]"; // Active (Darkest)
-      case "Standard":
-        return "bg-[#1a5ae8]"; // Hover (Darker)
-      case "Free":
-      default:
-        return "bg-[#85B0FF]"; // Lighter Base
-    }
-  };
-
   return !isCollapsed ? (
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="space-y-4 rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 text-xs select-none">
+      <div className="rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 select-none">
+        {/* 크레딧 수치 */}
+        <div className="mb-2 flex items-center gap-1.5">
+          <CreditIcon size={18} />
+          <span className="text-[13px] font-medium text-[#333333]">
+            크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
+            <span className="text-[#9CA4B0]">/{creditMax}</span>
+          </span>
+        </div>
+
+        {/* 프로그레스 바 */}
+        <div className="mb-3 h-[5px] w-full overflow-hidden rounded-full bg-[#E8ECF5]">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-[#2A6AFF] to-[#85B0FF] transition-all duration-300"
+            style={{ width: `${creditPercent}%` }}
+          />
+        </div>
+
+        {/* 플랜 뱃지 + 업그레이드 버튼 */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-0.5">
-            <div className="flex w-[24px] justify-center">
-              <div
-                className={`h-[8px] w-[8px] rounded-full ${getPlanIndicatorColor(
-                  planType,
-                )}`}
-              />
-            </div>
-            <span className="text-[14px] leading-[20px] font-medium text-[#333333]">
-              {planType}
-            </span>
-          </div>
+          <PlanBadge plan={planType} />
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (planType !== "Pro") {
-                onUpgradeClick();
-              }
+              onUpgradeClick();
             }}
-            className={`flex h-[24px] w-[70px] cursor-pointer items-center justify-center rounded bg-[#2A6AFF] text-[12px] leading-none text-white transition-colors ${
-              planType === "Pro"
-                ? "cursor-default opacity-50"
-                : "hover:bg-[#2A6AFF]/50 active:bg-white active:text-black"
-            }`}
-            disabled={planType === "Pro"}
+            className="flex h-[24px] items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white px-2.5 text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
           >
-            {planType === "Pro" ? "최고 플랜" : "업그레이드"}
+            업그레이드
           </button>
-        </div>
-        <div className="flex items-center justify-between text-gray-500">
-          <div className="flex items-center gap-1.5">
-            <CreditIcon />
-            <span className="text-[14px] font-medium text-[#333333]">
-              {creditTotal}
-            </span>
-          </div>
-          <div className="flex w-[70px] items-center gap-1.5">
-            <PaperIcon />
-            <div className="text-[14px] font-medium">
-              <span className="text-[#333333]">{totalNotes}</span>
-              <span className="text-[#9CA4B0]">/{maxNotes}</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -171,5 +137,29 @@ export const SidebarProfile = ({
         />
       </button>
     </div>
+  );
+};
+
+const PlanBadge = ({ plan }: { plan: string }) => {
+  if (plan === "Pro") {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-[#003880] px-2.5 py-[3px] text-[11px] font-semibold text-white">
+        <CreditIcon size={12} />
+        Pro
+      </span>
+    );
+  }
+  if (plan === "Standard") {
+    return (
+      <span className="flex items-center gap-1 rounded-full bg-[#2A6AFF] px-2.5 py-[3px] text-[11px] font-semibold text-white">
+        <CreditIcon size={12} />
+        Std
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center rounded-full border border-[#D1D6DE] bg-white px-2.5 py-[3px] text-[11px] font-semibold text-[#2F3440]">
+      Free
+    </span>
   );
 };
