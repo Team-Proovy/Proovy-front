@@ -51,9 +51,9 @@ export const SidebarProfile = ({
   };
   return !isCollapsed ? (
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white p-3 select-none">
+      <div className="flex h-[80px] w-full flex-col items-center justify-center gap-[10px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white px-[11px] py-[6px] select-none">
         {/* 크레딧 수치 */}
-        <div className="mb-2 flex items-center gap-1.5">
+        <div className="flex w-full items-center gap-1.5">
           <CreditIcon size={18} />
           <span className="text-[13px] font-medium text-[#333333]">
             크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
@@ -62,7 +62,7 @@ export const SidebarProfile = ({
         </div>
 
         {/* 프로그레스 바 */}
-        <div className="mb-3 h-[5px] w-full overflow-hidden rounded-full bg-[#E8ECF5]">
+        <div className="h-[5px] w-full overflow-hidden rounded-full bg-[#E8ECF5]">
           <div
             className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
             style={{ width: `${creditPercent}%` }}
@@ -70,14 +70,14 @@ export const SidebarProfile = ({
         </div>
 
         {/* 플랜 뱃지 + 업그레이드 버튼 */}
-        <div className="flex items-center justify-between">
+        <div className="flex w-full items-center justify-between">
           <PlanBadge plan={planType} />
           <button
             onClick={(e) => {
               e.stopPropagation();
               onUpgradeClick();
             }}
-            className="flex h-[24px] w-[70px] shrink-0 items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
+            className="flex h-[24px] w-[115px] shrink-0 items-center justify-center rounded-[4px] border-[0.5px] border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
           >
             업그레이드
           </button>
@@ -143,22 +143,60 @@ export const SidebarProfile = ({
 const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Pro") {
     return (
-      <span className="flex items-center gap-[5px] rounded-full bg-[#003880] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-white/60" />
+      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full bg-[#003880] px-2 text-[11px] font-semibold text-white">
+        <svg
+          width="6"
+          height="6"
+          viewBox="0 0 6 6"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient
+              id="paint0_linear_447_8059"
+              x1="3"
+              y1="0"
+              x2="3"
+              y2="6"
+              gradientUnits="userSpaceOnUse"
+            >
+              <stop stopColor="white" />
+              <stop
+                offset="1"
+                stopColor="#2A6AFF"
+              />
+            </linearGradient>
+          </defs>
+          <path
+            d="M3 0L0 3L3 6L6 3L3 0Z"
+            fill="url(#paint0_linear_447_8059)"
+          />
+        </svg>
         Pro
       </span>
     );
   }
   if (plan === "Standard") {
     return (
-      <span className="flex items-center gap-[5px] rounded-full bg-[#2A6AFF] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-white/60" />
+      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full border border-[#2A6AFF] bg-[#2A6AFF] px-2 text-[11px] font-semibold text-white">
+        <svg
+          width="6"
+          height="6"
+          viewBox="0 0 6 6"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 0L0 3L3 6L6 3L3 0Z"
+            fill="white"
+          />
+        </svg>
         Std
       </span>
     );
   }
   return (
-    <span className="flex items-center rounded-full border border-[#D1D6DE] bg-white px-2.5 py-[3px] text-[11px] font-semibold text-[#2F3440]">
+    <span className="inline-flex h-[20px] items-center rounded-full border border-[rgba(42,106,255,0.20)] px-2 text-[11px] font-semibold text-[#2F3440]">
       Free
     </span>
   );
