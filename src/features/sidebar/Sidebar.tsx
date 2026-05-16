@@ -31,13 +31,13 @@ export const Sidebar = ({
   return (
     <div
       className={`relative z-10 h-full shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-[80px]" : "-mr-[20px] w-[260px]"
+        isCollapsed ? "w-[72px]" : "-mr-[20px] w-[260px]"
       }`}
     >
       <aside className="relative flex h-full flex-col">
         <div
           className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-white transition-all duration-300 ease-in-out ${
-            isCollapsed ? "w-[80px]" : "w-[240px]"
+            isCollapsed ? "w-[72px]" : "w-[240px]"
           }`}
         />
 

@@ -111,7 +111,7 @@ export const SidebarProfile = ({
       </div>
     </div>
   ) : (
-    <div className="flex w-[80px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
+    <div className="flex w-[72px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
       <div
         onClick={() => onToggle(false)}
         className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
