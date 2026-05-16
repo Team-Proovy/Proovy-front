@@ -51,18 +51,18 @@ export const SidebarProfile = ({
   };
   return !isCollapsed ? (
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="flex h-[80px] w-full flex-col items-center justify-center gap-[10px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white px-[11px] py-[6px] select-none">
+      <div className="flex h-[80px] w-full flex-col justify-center gap-[6px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white px-[11px] py-[6px] select-none">
         {/* 크레딧 수치 */}
-        <div className="flex w-full items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
           <CreditIcon size={18} />
-          <span className="text-[13px] font-medium text-[#333333]">
+          <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
             크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
             <span className="text-[#9CA4B0]">/{creditMax}</span>
           </span>
         </div>
 
-        {/* 프로그레스 바 */}
-        <div className="h-[5px] w-full overflow-hidden rounded-full bg-[#E8ECF5]">
+        {/* 프로그레스 바 - 아이콘(18px) + gap(6px) 들여쓰기로 "크" 왼쪽 기준 정렬 */}
+        <div className="ml-[24px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
           <div
             className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
             style={{ width: `${creditPercent}%` }}
