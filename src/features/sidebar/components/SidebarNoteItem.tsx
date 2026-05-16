@@ -18,6 +18,7 @@ export const SidebarNoteItem = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isSubmittingRef = useRef(false);
+  const isComposingRef = useRef(false);
   const { mutateAsync: updateTitle } = useUpdateNoteTitle();
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export const SidebarNoteItem = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isComposingRef.current) {
       e.preventDefault();
       handleRenameSubmit();
     }
@@ -68,6 +69,12 @@ export const SidebarNoteItem = ({
             ref={inputRef}
             value={titleInput}
             onChange={(e) => setTitleInput(e.target.value)}
+            onCompositionStart={() => {
+              isComposingRef.current = true;
+            }}
+            onCompositionEnd={() => {
+              isComposingRef.current = false;
+            }}
             onBlur={handleRenameSubmit}
             onKeyDown={handleKeyDown}
             className="w-full truncate bg-transparent text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] outline-none"

@@ -77,7 +77,7 @@ export const SidebarProfile = ({
               e.stopPropagation();
               onUpgradeClick();
             }}
-            className="flex h-[24px] w-[62px] shrink-0 items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
+            className="flex h-[24px] w-[70px] shrink-0 items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
           >
             업그레이드
           </button>
@@ -144,7 +144,7 @@ const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Pro") {
     return (
       <span className="flex items-center gap-[5px] rounded-full bg-[#003880] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-white/70" />
+        <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-white/60" />
         Pro
       </span>
     );
@@ -152,7 +152,7 @@ const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Standard") {
     return (
       <span className="flex items-center gap-[5px] rounded-full bg-[#2A6AFF] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-white/70" />
+        <span className="h-[8px] w-[8px] shrink-0 rounded-full bg-white/60" />
         Std
       </span>
     );
