@@ -17,7 +17,8 @@ export const SidebarNoteItem = ({
   const [titleInput, setTitleInput] = useState(note.title);
   const inputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const { mutateAsync: updateTitle, isPending } = useUpdateNoteTitle();
+  const isSubmittingRef = useRef(false);
+  const { mutateAsync: updateTitle } = useUpdateNoteTitle();
 
   useEffect(() => {
     if (isRenaming) {
@@ -38,15 +39,21 @@ export const SidebarNoteItem = ({
   }, [isMenuOpen]);
 
   const handleRenameSubmit = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     const trimmed = titleInput.trim();
+    setIsRenaming(false);
     if (trimmed && trimmed !== note.title) {
       await updateTitle({ noteId: note.noteId, title: trimmed });
     }
-    setIsRenaming(false);
+    isSubmittingRef.current = false;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleRenameSubmit();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRenameSubmit();
+    }
     if (e.key === "Escape") {
       setTitleInput(note.title);
       setIsRenaming(false);
@@ -63,7 +70,6 @@ export const SidebarNoteItem = ({
             onChange={(e) => setTitleInput(e.target.value)}
             onBlur={handleRenameSubmit}
             onKeyDown={handleKeyDown}
-            disabled={isPending}
             className="w-full truncate bg-transparent text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] outline-none"
           />
         </div>

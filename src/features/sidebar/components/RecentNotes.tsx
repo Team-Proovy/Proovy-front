@@ -105,7 +105,7 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
       `}</style>
 
       <div
-        className={`flex h-full w-full flex-col px-5 pb-4 transition-opacity duration-300 ease-in-out ${
+        className={`flex h-full min-w-[220px] flex-col px-5 pb-4 transition-opacity duration-300 ease-in-out ${
           isCollapsed ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
         aria-hidden={isCollapsed}

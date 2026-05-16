@@ -64,7 +64,7 @@ export const SidebarProfile = ({
         {/* 프로그레스 바 */}
         <div className="mb-3 h-[5px] w-full overflow-hidden rounded-full bg-[#E8ECF5]">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-[#2A6AFF] to-[#85B0FF] transition-all duration-300"
+            className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
             style={{ width: `${creditPercent}%` }}
           />
         </div>
@@ -77,7 +77,7 @@ export const SidebarProfile = ({
               e.stopPropagation();
               onUpgradeClick();
             }}
-            className="flex h-[24px] items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white px-2.5 text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
+            className="flex h-[24px] w-[62px] shrink-0 items-center justify-center rounded-[6px] border border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
           >
             업그레이드
           </button>
@@ -143,16 +143,16 @@ export const SidebarProfile = ({
 const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Pro") {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-[#003880] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <CreditIcon size={12} />
+      <span className="flex items-center gap-[5px] rounded-full bg-[#003880] px-2.5 py-[3px] text-[11px] font-semibold text-white">
+        <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-white/70" />
         Pro
       </span>
     );
   }
   if (plan === "Standard") {
     return (
-      <span className="flex items-center gap-1 rounded-full bg-[#2A6AFF] px-2.5 py-[3px] text-[11px] font-semibold text-white">
-        <CreditIcon size={12} />
+      <span className="flex items-center gap-[5px] rounded-full bg-[#2A6AFF] px-2.5 py-[3px] text-[11px] font-semibold text-white">
+        <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-white/70" />
         Std
       </span>
     );
