@@ -1,6 +1,5 @@
 import {
   HomeIcon,
-  NoteIcon,
   RepositoryIcon,
   SearchIcon,
 } from "../../shared/components/icons/SidebarIcons";
@@ -69,12 +68,6 @@ export const Sidebar = ({
               label="검색"
               isCollapsed={isCollapsed}
               onClick={onSearchClick}
-            />
-            <NavItem
-              to="/app/notes"
-              icon={NoteIcon}
-              label="노트목록"
-              isCollapsed={isCollapsed}
             />
             <NavItem
               to="/app/storage"

@@ -8,7 +8,6 @@ import { SignupPage } from "@/pages/auth/SignupPage";
 import { KakaoCallbackPage } from "@/pages/auth/KakaoCallbackPage";
 import { NaverCallbackPage } from "@/pages/auth/NaverCallbackPage";
 import { ChatPage } from "@/pages/ChatPage";
-import { NotesPage } from "@/pages/NotesPage";
 import { StoragePage } from "@/pages/StoragePage";
 import { PricingPage } from "@/pages/PricingPage";
 import { UnauthorizedPage } from "@/pages/error/UnauthorizedPage";
@@ -71,11 +70,6 @@ export const router = createBrowserRouter([
               {
                 path: "home",
                 element: <HomePage />,
-              },
-              // 노트 목록 - 전체 노트 리스트
-              {
-                path: "notes",
-                element: <NotesPage />,
               },
               // 저장소 - 전체 파일 리스트
               {
