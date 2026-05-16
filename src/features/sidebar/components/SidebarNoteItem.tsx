@@ -44,10 +44,13 @@ export const SidebarNoteItem = ({
     isSubmittingRef.current = true;
     const trimmed = titleInput.trim();
     setIsRenaming(false);
-    if (trimmed && trimmed !== note.title) {
-      await updateTitle({ noteId: note.noteId, title: trimmed });
+    try {
+      if (trimmed && trimmed !== note.title) {
+        await updateTitle({ noteId: note.noteId, title: trimmed });
+      }
+    } finally {
+      isSubmittingRef.current = false;
     }
-    isSubmittingRef.current = false;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -62,7 +65,7 @@ export const SidebarNoteItem = ({
   };
 
   return (
-    <li className="group relative z-0 hover:z-10">
+    <li className={`group relative ${isMenuOpen ? "z-20" : "z-0 hover:z-10"}`}>
       {isRenaming ? (
         <div className="flex items-center rounded-lg px-[12px] py-[6px]">
           <input
