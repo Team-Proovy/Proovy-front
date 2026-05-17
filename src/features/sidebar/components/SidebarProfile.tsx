@@ -49,13 +49,13 @@ export const SidebarProfile = ({
     <div className="relative shrink-0">
       {/* ── 펼쳐진 상태 (항상 flow에 유지 → 컨테이너 높이 고정) ── */}
       <div
-        className={`w-[240px] space-y-4 px-[20px] pt-4 pb-[20px] transition-opacity duration-300 ${
+        className={`w-[240px] space-y-4 pt-4 pb-[20px] transition-opacity duration-300 ${
           isCollapsed ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
         aria-hidden={isCollapsed}
       >
         {/* 크레딧 카드 */}
-        <div className="flex h-[80px] w-full flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
+        <div className="ml-[20px] flex h-[80px] w-[200px] flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
           <div className="flex items-center gap-1">
             <CreditIcon size={20} />
             <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
@@ -78,20 +78,20 @@ export const SidebarProfile = ({
                 e.stopPropagation();
                 onUpgradeClick();
               }}
-              className="flex h-[24px] w-[115px] shrink-0 items-center justify-center rounded-[4px] border-[0.5px] border-[#D1D6DE] bg-white text-[11px] leading-none font-semibold text-[#2F3440] transition-colors hover:border-[#2A6AFF] hover:bg-[#EEF2FF] hover:text-[#2A6AFF] active:bg-[#DBEAFE] active:text-[#1D4ED8]"
+              className="flex h-[24px] w-[88px] items-center justify-center rounded-[4px] border border-[#D1D6DE] bg-white px-[16px] text-[11px] leading-none font-semibold text-[#2F3440] transition-all hover:border-transparent hover:bg-[rgba(42,106,255,0.50)] hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
             >
               업그레이드
             </button>
           </div>
         </div>
 
-        {/* 유저 행 */}
+        {/* 유저 행 - UserIcon은 absolute로 분리해 깜빡임 방지, 여기선 spacer만 */}
         <div
-          className="flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] px-2 py-1 transition-colors hover:bg-gray-100"
+          className="ml-[18px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 pr-2 transition-colors hover:bg-gray-100"
           onClick={onSettingsClick}
         >
           <div className="flex items-center gap-2">
-            <UserIcon size={40} />
+            <div className="h-[40px] w-[40px] shrink-0" />
             <span className="pt-[2px] text-[20px] font-semibold">
               {formatNickname(authUser?.nickname)}
             </span>
@@ -111,38 +111,40 @@ export const SidebarProfile = ({
         </div>
       </div>
 
-      {/* ── 접힌 상태 (absolute bottom-0 → 항상 같은 위치) ── */}
+      {/* ── 접힌 상태 (크레딧 버튼만, UserIcon은 별도) ── */}
       <div
-        className={`absolute bottom-0 left-0 flex w-[72px] flex-col items-center gap-[12px] pb-[23px] transition-opacity duration-300 ${
+        className={`absolute bottom-0 left-0 flex w-[72px] flex-col pb-[76px] transition-opacity duration-300 ${
           isCollapsed ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!isCollapsed}
       >
         <div
           onClick={() => onToggle(false)}
-          className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
+          className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] self-center rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
         >
           <CreditIcon size={22} />
           <span className="text-[10px] leading-none font-semibold text-[#2F3440]">
             {creditTotal}
           </span>
         </div>
-        <button
-          type="button"
-          className="cursor-pointer border-none bg-transparent p-0"
-          onMouseEnter={() => setIsUserIconHovered(true)}
-          onMouseLeave={() => setIsUserIconHovered(false)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onSettingsClick();
-          }}
-        >
-          <UserIcon
-            size={40}
-            color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
-          />
-        </button>
       </div>
+
+      {/* ── UserIcon 단독 고정 (opacity 전환 없이 항상 동일 위치) ── */}
+      <button
+        type="button"
+        className="absolute bottom-[24px] left-[18px] cursor-pointer border-none bg-transparent p-0"
+        onMouseEnter={() => setIsUserIconHovered(true)}
+        onMouseLeave={() => setIsUserIconHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSettingsClick();
+        }}
+      >
+        <UserIcon
+          size={40}
+          color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
+        />
+      </button>
     </div>
   );
 };

@@ -22,7 +22,7 @@ export const SidebarHeader = ({
   return (
     <div
       className={`relative flex shrink-0 flex-col pt-[41px] ${
-        isCollapsed ? "mb-2 pl-[18px]" : ""
+        isCollapsed ? "mb-2 pl-[16px]" : ""
       }`}
     >
       {!isCollapsed ? (
