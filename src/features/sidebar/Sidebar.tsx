@@ -51,7 +51,7 @@ export const Sidebar = ({
 
           {/* 메인 메뉴 영역 (고정) */}
           <nav
-            className={`w-[240px] shrink-0 ${isCollapsed ? "mb-8 flex flex-col gap-[12px] py-3" : "mb-4 flex flex-col gap-[12px] py-3"}`}
+            className={`w-[240px] shrink-0 ${isCollapsed ? "mb-8 flex flex-col gap-[12px] py-3" : "mb-[52px] flex flex-col gap-[12px] py-3"}`}
           >
             <NavItem
               to="/app/home"

@@ -51,18 +51,18 @@ export const SidebarProfile = ({
   };
   return !isCollapsed ? (
     <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="flex h-[80px] w-full flex-col justify-center gap-[6px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white px-[11px] py-[6px] select-none">
+      <div className="flex h-[80px] w-full flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
         {/* 크레딧 수치 */}
         <div className="flex items-center gap-1">
-          <CreditIcon size={16} />
+          <CreditIcon size={20} />
           <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
             크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
             <span className="text-[#9CA4B0]">/{creditMax}</span>
           </span>
         </div>
 
-        {/* 프로그레스 바 - 아이콘(16px) + gap(4px) 들여쓰기로 "크" 왼쪽 기준 정렬 */}
-        <div className="ml-[20px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
+        {/* 프로그레스 바 - 아이콘(20px) + gap(4px) = 24px 들여쓰기 */}
+        <div className="ml-[24px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
           <div
             className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
             style={{ width: `${creditPercent}%` }}
@@ -70,7 +70,7 @@ export const SidebarProfile = ({
         </div>
 
         {/* 플랜 뱃지 + 업그레이드 버튼 */}
-        <div className="flex w-full items-center justify-between">
+        <div className="mt-[10px] flex items-center justify-between">
           <PlanBadge plan={planType} />
           <button
             onClick={(e) => {
