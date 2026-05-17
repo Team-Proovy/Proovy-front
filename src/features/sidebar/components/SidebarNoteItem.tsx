@@ -48,6 +48,8 @@ export const SidebarNoteItem = ({
       if (trimmed && trimmed !== note.title) {
         await updateTitle({ noteId: note.noteId, title: trimmed });
       }
+    } catch {
+      // 실패 시 note.title이 그대로 표시됨 (자동 롤백)
     } finally {
       isSubmittingRef.current = false;
     }
@@ -80,7 +82,7 @@ export const SidebarNoteItem = ({
             }}
             onBlur={handleRenameSubmit}
             onKeyDown={handleKeyDown}
-            className="w-full truncate bg-transparent text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] outline-none"
+            className="w-full truncate bg-transparent text-[16px] leading-[24px] font-normal text-[#6B7280] outline-none"
           />
         </div>
       ) : (
@@ -88,7 +90,7 @@ export const SidebarNoteItem = ({
           to={`/app/chat/${note.noteId}`}
           state={{ chatEntrySource: "sidebar-recent-notes" }}
           className={({ isActive }) =>
-            `block truncate rounded-lg py-[6px] pr-[28px] pl-[12px] text-[14px] leading-[160%] font-bold tracking-[-0.05em] text-[#454545] transition-colors ${
+            `block truncate rounded-lg py-[6px] pr-[28px] pl-[12px] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors ${
               isActive ? "mr-[-6px] bg-[#EBEBEB]" : "hover:bg-[#F5F5F5]"
             }`
           }

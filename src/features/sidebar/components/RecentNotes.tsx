@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   useInfiniteNoteList,
   useDeleteNote,
@@ -21,7 +20,6 @@ interface RecentNotesProps {
 }
 
 export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
-  const navigate = useNavigate();
   const [sort, setSort] = useState<SortValue>("lastUsedAt,desc");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
@@ -70,8 +68,12 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
 
   const handleDeleteConfirm = async () => {
     if (deleteTargetId === null) return;
-    await deleteNote(deleteTargetId);
-    setDeleteTargetId(null);
+    try {
+      await deleteNote(deleteTargetId);
+      setDeleteTargetId(null);
+    } catch {
+      // 실패 시 모달 유지 - 사용자가 재시도하거나 취소 가능
+    }
   };
 
   return (
@@ -118,7 +120,7 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
           >
             <button
               onClick={() => setIsSortOpen((prev) => !prev)}
-              className="flex items-center gap-1 text-[12px] font-medium text-[#454545] hover:text-[#2A6AFF]"
+              className="flex items-center gap-1 text-[16px] leading-[24px] font-semibold text-black hover:text-[#2A6AFF]"
             >
               <span>최근 노트 목록</span>
               <span className="flex h-3 w-3 items-center justify-center overflow-hidden">
@@ -147,28 +149,6 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
               </div>
             )}
           </div>
-
-          {/* 새 노트 버튼 */}
-          <button
-            onClick={() => navigate("/app/home")}
-            className="flex h-[20px] w-[20px] items-center justify-center rounded-[4px] text-[#8A8A8A] hover:bg-[#F5F5F5] hover:text-[#2A6AFF]"
-            aria-label="새 노트"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 14 14"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M7 2V12M2 7H12"
-                stroke="currentColor"
-                strokeWidth="1.4"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
         </div>
 
         {/* 노트 목록 */}
