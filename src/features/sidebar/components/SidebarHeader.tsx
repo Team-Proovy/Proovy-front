@@ -34,7 +34,10 @@ export const SidebarHeader = ({
             <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           </div>
           <button
-            onClick={() => onToggle(true)}
+            onClick={() => {
+              setIsExpandHovered(false);
+              onToggle(true);
+            }}
             className="group rounded p-1 transition-colors"
           >
             <BarArrowIcon
@@ -47,7 +50,10 @@ export const SidebarHeader = ({
         <button
           type="button"
           aria-label="sidebar toggle"
-          onClick={() => onToggle(false)}
+          onClick={() => {
+            setIsExpandHovered(false);
+            onToggle(false);
+          }}
           onMouseEnter={() => setIsExpandHovered(true)}
           onMouseLeave={() => setIsExpandHovered(false)}
           className="flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[8px] select-none focus:outline-none"
