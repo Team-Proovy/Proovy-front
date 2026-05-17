@@ -1,4 +1,3 @@
-// 이 컴포넌트는 사이드바의 최하단 영역인 프로필, 요금제 정보, 설정 버튼 등을 담당합니다.
 import {
   UserIcon,
   SettingIcon,
@@ -37,105 +36,113 @@ export const SidebarProfile = ({
   const creditPercent =
     creditMax > 0 ? Math.min((creditTotal / creditMax) * 100, 100) : 0;
 
-  // 닉네임 포맷팅 (한글 5자, 영문/숫자 8자 제한)
   const formatNickname = (nickname?: string) => {
     if (!nickname) return "";
-
     const hasKorean = /[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(nickname);
     const maxLength = hasKorean ? 5 : 8;
-
-    if (nickname.length > maxLength) {
+    if (nickname.length > maxLength)
       return `${nickname.slice(0, maxLength)}...`;
-    }
     return nickname;
   };
-  return !isCollapsed ? (
-    <div className="w-[240px] shrink-0 space-y-4 px-[20px] pt-4 pb-[20px]">
-      <div className="flex h-[80px] w-full flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
-        {/* 크레딧 수치 */}
-        <div className="flex items-center gap-1">
-          <CreditIcon size={20} />
-          <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
-            크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
-            <span className="text-[#9CA4B0]">/{creditMax}</span>
-          </span>
+
+  return (
+    <div className="relative shrink-0">
+      {/* ── 펼쳐진 상태 (항상 flow에 유지 → 컨테이너 높이 고정) ── */}
+      <div
+        className={`w-[240px] space-y-4 px-[20px] pt-4 pb-[20px] transition-opacity duration-300 ${
+          isCollapsed ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
+        aria-hidden={isCollapsed}
+      >
+        {/* 크레딧 카드 */}
+        <div className="flex h-[80px] w-full flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
+          <div className="flex items-center gap-1">
+            <CreditIcon size={20} />
+            <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
+              크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
+              <span className="text-[#9CA4B0]">/{creditMax}</span>
+            </span>
+          </div>
+
+          <div className="ml-[24px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
+            <div
+              className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
+              style={{ width: `${creditPercent}%` }}
+            />
+          </div>
+
+          <div className="mt-[10px] flex items-center justify-between">
+            <PlanBadge plan={planType} />
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onUpgradeClick();
+              }}
+              className="flex h-[24px] w-[115px] shrink-0 items-center justify-center rounded-[4px] border-[0.5px] border-[#D1D6DE] bg-white text-[11px] leading-none font-semibold text-[#2F3440] transition-colors hover:border-[#2A6AFF] hover:bg-[#EEF2FF] hover:text-[#2A6AFF] active:bg-[#DBEAFE] active:text-[#1D4ED8]"
+            >
+              업그레이드
+            </button>
+          </div>
         </div>
 
-        {/* 프로그레스 바 - 아이콘(20px) + gap(4px) = 24px 들여쓰기 */}
-        <div className="ml-[24px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
-          <div
-            className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
-            style={{ width: `${creditPercent}%` }}
-          />
-        </div>
-
-        {/* 플랜 뱃지 + 업그레이드 버튼 */}
-        <div className="mt-[10px] flex items-center justify-between">
-          <PlanBadge plan={planType} />
+        {/* 유저 행 */}
+        <div
+          className="flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] px-2 py-1 transition-colors hover:bg-gray-100"
+          onClick={onSettingsClick}
+        >
+          <div className="flex items-center gap-2">
+            <UserIcon size={40} />
+            <span className="pt-[2px] text-[20px] font-semibold">
+              {formatNickname(authUser?.nickname)}
+            </span>
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onUpgradeClick();
+              onSettingsClick();
             }}
-            className="flex h-[24px] w-[115px] shrink-0 items-center justify-center rounded-[4px] border-[0.5px] border-[#D1D6DE] bg-white text-[11px] font-semibold text-[#2F3440] transition-colors hover:bg-[#F5F5F5]"
+            className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors"
           >
-            업그레이드
+            <SettingIcon
+              size={20}
+              className="cursor-pointer text-gray-400"
+            />
           </button>
         </div>
       </div>
 
+      {/* ── 접힌 상태 (absolute bottom-0 → 항상 같은 위치) ── */}
       <div
-        className="flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] px-2 py-1 transition-colors hover:bg-gray-100"
-        onClick={() => {
-          onSettingsClick();
-        }}
+        className={`absolute bottom-0 left-0 flex w-[72px] flex-col items-center gap-[12px] pb-[23px] transition-opacity duration-300 ${
+          isCollapsed ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        aria-hidden={!isCollapsed}
       >
-        <div className="flex items-center gap-2">
-          <UserIcon size={40} />
-          <span className="pt-[2px] text-[20px] font-semibold">
-            {formatNickname(authUser?.nickname)}
+        <div
+          onClick={() => onToggle(false)}
+          className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
+        >
+          <CreditIcon size={22} />
+          <span className="text-[10px] leading-none font-semibold text-[#2F3440]">
+            {creditTotal}
           </span>
         </div>
         <button
+          type="button"
+          className="cursor-pointer border-none bg-transparent p-0"
+          onMouseEnter={() => setIsUserIconHovered(true)}
+          onMouseLeave={() => setIsUserIconHovered(false)}
           onClick={(e) => {
             e.stopPropagation();
             onSettingsClick();
           }}
-          className="cursor-pointer rounded-full p-1 text-gray-400 transition-colors"
         >
-          <SettingIcon
-            size={20}
-            className="cursor-pointer text-gray-400"
+          <UserIcon
+            size={40}
+            color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
           />
         </button>
       </div>
-    </div>
-  ) : (
-    <div className="flex w-[72px] shrink-0 flex-col items-center gap-[12px] pb-[23px]">
-      <div
-        onClick={() => onToggle(false)}
-        className="flex h-[26px] w-[60px] cursor-pointer items-center justify-center gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] px-[7px] py-[9px] shadow-sm transition-colors hover:bg-gray-50"
-      >
-        <CreditIcon size={22} />
-        <span className="text-[10px] font-semibold text-[#2F3440]">
-          {creditTotal}
-        </span>
-      </div>
-      <button
-        type="button"
-        className="cursor-pointer border-none bg-transparent p-0"
-        onMouseEnter={() => setIsUserIconHovered(true)}
-        onMouseLeave={() => setIsUserIconHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onSettingsClick();
-        }}
-      >
-        <UserIcon
-          size={40}
-          color={isUserIconHovered ? "#85B0FF" : "#2A6AFF"}
-        />
-      </button>
     </div>
   );
 };
@@ -143,13 +150,14 @@ export const SidebarProfile = ({
 const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Pro") {
     return (
-      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full bg-[#003880] px-2 text-[11px] font-semibold text-white">
+      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full bg-[#003880] px-2 text-[11px] leading-none font-semibold text-white">
         <svg
           width="6"
           height="6"
           viewBox="0 0 6 6"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          style={{ flexShrink: 0 }}
         >
           <defs>
             <linearGradient
@@ -178,13 +186,14 @@ const PlanBadge = ({ plan }: { plan: string }) => {
   }
   if (plan === "Standard") {
     return (
-      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full border border-[#2A6AFF] bg-[#2A6AFF] px-2 text-[11px] font-semibold text-white">
+      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full border border-[#2A6AFF] bg-[#2A6AFF] px-2 text-[11px] leading-none font-semibold text-white">
         <svg
           width="6"
           height="6"
           viewBox="0 0 6 6"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
+          style={{ flexShrink: 0 }}
         >
           <path
             d="M3 0L0 3L3 6L6 3L3 0Z"
@@ -196,7 +205,7 @@ const PlanBadge = ({ plan }: { plan: string }) => {
     );
   }
   return (
-    <span className="inline-flex h-[20px] items-center rounded-full border border-[rgba(42,106,255,0.20)] px-2 text-[11px] font-semibold text-[#2F3440]">
+    <span className="inline-flex h-[20px] items-center rounded-full border border-[rgba(42,106,255,0.20)] px-2 text-[11px] leading-none font-semibold text-[#2F3440]">
       Free
     </span>
   );
