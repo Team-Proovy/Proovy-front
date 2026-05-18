@@ -10,7 +10,7 @@ import {
 } from "../../../../shared/components/icons/ChatInputIcons";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { ToolButton } from "./ToolButton";
-import { ToolDropdownMenu } from "../input/ToolDropdownMenu";
+import { ToolDropdownMenu, ToolItemIcon } from "../input/ToolDropdownMenu";
 import { useTools } from "../../hooks/useEditorQueries";
 import {
   BUTTON_LAYOUT,
@@ -191,6 +191,7 @@ export const InputToolbar = ({
 
   // 도구 버튼 활성 상태
   const isActiveTool = !!activeToolName;
+  const activeTool = toolList.find((t) => t.name === activeToolName);
 
   // 각 버튼의 compact 상태 (순서: 도구 -> 캔버스 -> 수식 -> 클립)
   const isToolCompact = compactLevel >= 1;
@@ -275,11 +276,19 @@ export const InputToolbar = ({
           title="도구"
         >
           {isToolCompact ? (
-            <ToolIcon className="h-[26px] w-[26px] shrink-0" />
+            activeTool ? (
+              <ToolItemIcon iconType={activeTool.iconType} />
+            ) : (
+              <ToolIcon className="h-[26px] w-[26px] shrink-0" />
+            )
           ) : (
             <>
               {/* 왼쪽: 도구 아이콘 */}
-              <ToolIcon className="h-[26px] w-[26px] shrink-0" />
+              {activeTool ? (
+                <ToolItemIcon iconType={activeTool.iconType} />
+              ) : (
+                <ToolIcon className="h-[26px] w-[26px] shrink-0" />
+              )}
 
               {/* 중앙: 텍스트 (자동 너비 조정, 중앙 정렬) */}
               <span className="flex-1 text-center whitespace-nowrap">
