@@ -1,4 +1,5 @@
 // 이 컴포넌트는 사이드바의 최상단 영역인 로고와 접기/펴기 버튼을 담당합니다.
+import { useState } from "react";
 import { ProovyLogo } from "../../../shared/components/icons/ProovyLogo";
 import {
   BarArrowIcon,
@@ -16,10 +17,12 @@ export const SidebarHeader = ({
   onToggle,
   onLogoClick,
 }: SidebarHeaderProps) => {
+  const [isExpandHovered, setIsExpandHovered] = useState(false);
+
   return (
     <div
       className={`relative flex shrink-0 flex-col pt-[41px] ${
-        isCollapsed ? "mb-2 pl-[18px]" : ""
+        isCollapsed ? "mb-2 pl-[16px]" : ""
       }`}
     >
       {!isCollapsed ? (
@@ -31,7 +34,10 @@ export const SidebarHeader = ({
             <ProovyLogo className="h-[40px] w-[140px] text-gray-900" />
           </div>
           <button
-            onClick={() => onToggle(true)}
+            onClick={() => {
+              setIsExpandHovered(false);
+              onToggle(true);
+            }}
             className="group rounded p-1 transition-colors"
           >
             <BarArrowIcon
@@ -44,11 +50,16 @@ export const SidebarHeader = ({
         <button
           type="button"
           aria-label="sidebar toggle"
-          onClick={() => onToggle(false)}
+          onClick={() => {
+            setIsExpandHovered(false);
+            onToggle(false);
+          }}
+          onMouseEnter={() => setIsExpandHovered(true)}
+          onMouseLeave={() => setIsExpandHovered(false)}
           className="flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[8px] select-none focus:outline-none"
         >
           <SlideIcon
-            color="#6B7280"
+            color={isExpandHovered ? "#2A6AFF" : "#6B7280"}
             size={40}
           />
         </button>
