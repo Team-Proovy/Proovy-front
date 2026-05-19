@@ -1,8 +1,8 @@
-name: Deploy Frontend (S3 + CloudFront)
+name: Deploy Frontend (Firebase Hosting)
 
 on:
   push:
-    branches: ["dev"]
+    branches: ["dev"] 
 
 permissions:
   contents: read
@@ -23,6 +23,19 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -31,27 +44,19 @@ jobs:
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_AGENT_BASE_URL: ${{ secrets.VITE_AGENT_BASE_URL }}
+          
           VITE_APP_BASE_URL: ${{ secrets.VITE_APP_BASE_URL }}
           VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
           VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_GOOGLE_REDIRECT_URI: ${{ secrets.VITE_GOOGLE_REDIRECT_URI }}
           VITE_NAVER_CLIENT_ID: ${{ secrets.VITE_NAVER_CLIENT_ID }}
           VITE_NAVER_REDIRECT_URI: ${{ secrets.VITE_NAVER_REDIRECT_URI }}
           VITE_TLDRAW_LICENSE_KEY: ${{ secrets.VITE_TLDRAW_LICENSE_KEY }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Upload to S3
-        run: aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }}/ --delete
-
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: ${{ secrets.GCP_PROJECT_ID }}
