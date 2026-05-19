@@ -2,7 +2,7 @@ name: Deploy Frontend (Firebase Hosting)
 
 on:
   push:
-    branches: ["dev"] 
+    branches: ["dev"]
 
 permissions:
   contents: read
@@ -45,7 +45,7 @@ jobs:
           NODE_ENV: production
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_AGENT_BASE_URL: ${{ secrets.VITE_AGENT_BASE_URL }}
-          
+
           VITE_APP_BASE_URL: ${{ secrets.VITE_APP_BASE_URL }}
           VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
           VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
