@@ -25,7 +25,7 @@ export const LoadingSpinner = ({
       style={{
         minWidth: size,
         minHeight: size,
-        animationDuration: "2.4s",
+        animationDuration: "1.0s",
       }}
       aria-label="Loading"
       role="status"
