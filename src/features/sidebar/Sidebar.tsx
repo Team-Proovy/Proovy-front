@@ -1,6 +1,5 @@
 import {
   HomeIcon,
-  NoteIcon,
   RepositoryIcon,
   SearchIcon,
 } from "../../shared/components/icons/SidebarIcons";
@@ -32,13 +31,13 @@ export const Sidebar = ({
   return (
     <div
       className={`relative z-10 h-full shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-        isCollapsed ? "w-[80px]" : "-mr-[20px] w-[260px]"
+        isCollapsed ? "w-[72px]" : "-mr-[20px] w-[260px]"
       }`}
     >
       <aside className="relative flex h-full flex-col">
         <div
           className={`pointer-events-none absolute inset-y-0 left-0 z-0 rounded-r-[12px] border-y-[0.5px] border-r-[0.5px] border-[#E3E7ED] bg-white transition-all duration-300 ease-in-out ${
-            isCollapsed ? "w-[80px]" : "w-[240px]"
+            isCollapsed ? "w-[72px]" : "w-[240px]"
           }`}
         />
 
@@ -51,9 +50,7 @@ export const Sidebar = ({
           />
 
           {/* 메인 메뉴 영역 (고정) */}
-          <nav
-            className={`w-[240px] shrink-0 ${isCollapsed ? "mb-8 flex flex-col gap-[12px] py-3" : "mb-4 flex flex-col gap-[12px] py-3"}`}
-          >
+          <nav className="mb-[52px] flex w-[240px] shrink-0 flex-col gap-[12px] py-3">
             <NavItem
               to="/app/home"
               icon={HomeIcon}
@@ -69,12 +66,6 @@ export const Sidebar = ({
               label="검색"
               isCollapsed={isCollapsed}
               onClick={onSearchClick}
-            />
-            <NavItem
-              to="/app/notes"
-              icon={NoteIcon}
-              label="노트목록"
-              isCollapsed={isCollapsed}
             />
             <NavItem
               to="/app/storage"
