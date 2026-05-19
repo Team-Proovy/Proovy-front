@@ -151,9 +151,11 @@ export const useDeleteNote = () => {
 
   return useMutation({
     mutationFn: (noteId: number) => deleteNote(noteId),
-    onSuccess: () => {
-      // 노트 목록 캐시 무효화
+    onSuccess: (_data, noteId) => {
       queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+      queryClient.removeQueries({
+        queryKey: noteKeys.detail(String(noteId)),
+      });
     },
   });
 };
