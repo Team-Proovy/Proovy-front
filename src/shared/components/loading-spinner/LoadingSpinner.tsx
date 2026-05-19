@@ -7,84 +7,60 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-/**
- * 로딩 스피너 컴포넌트
- * - Figma 디자인 기반: 파란색 (#2A6AFF) 그라데이션 원형 스피너
- * - 회전 애니메이션 적용
- */
 export const LoadingSpinner = ({
   size = 160,
   className = "",
 }: LoadingSpinnerProps) => {
-  const gradientId = `spinnerGradient-${useId().replace(/:/g, "")}`;
-  const strokeWidth = size * 0.1; // 스트로크 두께 (크기의 10%)
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const clipPathId = `loading-spinner-${useId().replace(/:/g, "")}`;
+  const capRadius = size / 16;
+  const capCenterX = size * 0.9375;
+  const capCenterY = size / 2;
 
   return (
-    <div
-      className={`flex items-center justify-center ${className}`}
-      style={{ width: size, height: size }}
+    <svg
+      className={`inline-block shrink-0 animate-spin ${className}`}
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      style={{
+        minWidth: size,
+        minHeight: size,
+        animationDuration: "1.0s",
+      }}
+      aria-label="Loading"
+      role="status"
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="animate-spin"
-        style={{ animationDuration: "1.2s" }}
-      >
-        <defs>
-          {/* 그라데이션 정의 */}
-          <linearGradient
-            id={gradientId}
-            x1="0%"
-            y1="0%"
-            x2="100%"
-            y2="0%"
-          >
-            <stop
-              offset="0%"
-              stopColor="#2A6AFF"
-              stopOpacity="0.1"
-            />
-            <stop
-              offset="50%"
-              stopColor="#2A6AFF"
-              stopOpacity="0.5"
-            />
-            <stop
-              offset="100%"
-              stopColor="#2A6AFF"
-              stopOpacity="1"
-            />
-          </linearGradient>
-        </defs>
-
-        {/* 배경 원 (연한 파란색) */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#2A6AFF"
-          strokeOpacity="0.15"
-          strokeWidth={strokeWidth}
-        />
-
-        {/* 회전하는 호 (그라데이션) */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference * 0.25}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-    </div>
+      <g clipPath={`url(#${clipPathId})`}>
+        <foreignObject
+          x={0}
+          y={0}
+          width={size}
+          height={size}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              background:
+                "conic-gradient(from 90deg at 50% 50%, #F1F4F8 0deg, #2A6AFF 360deg)",
+            }}
+          />
+        </foreignObject>
+      </g>
+      <circle
+        cx={capCenterX}
+        cy={capCenterY}
+        r={capRadius}
+        fill="#2A6AFF"
+      />
+      <defs>
+        <clipPath id={clipPathId}>
+          <path
+            transform={`scale(${size / 160})`}
+            d="M160 80C160 124.183 124.183 160 80 160C35.8172 160 0 124.183 0 80C0 35.8172 35.8172 0 80 0C124.183 0 160 35.8172 160 80ZM20 80C20 113.137 46.8629 140 80 140C113.137 140 140 113.137 140 80C140 46.8629 113.137 20 80 20C46.8629 20 20 46.8629 20 80Z"
+          />
+        </clipPath>
+      </defs>
+    </svg>
   );
 };

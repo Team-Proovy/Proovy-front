@@ -326,7 +326,7 @@ export const InputToolbar = ({
       {/* 전송 버튼 */}
       <ToolButton
         onClick={hasContent && !isSending ? onSend : undefined}
-        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed" : ""}`}
+        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed px-0!" : ""}`}
       >
         {isSending ? (
           <LoadingSpinner size={20} />
