@@ -24,22 +24,51 @@ export const FileRenderer = ({
   const [error, setError] = useState<string | null>(null);
 
   const [zoom, setZoom] = useState(1.0);
+  const zoomRef = useRef(1.0);
+  const zoomWrapperRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistRef = useRef<number | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<RenderTask | null>(null);
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
+  const resizeRafRef = useRef<number | null>(null);
 
-  // 컨테이너 너비 감지 → 캔버스 base scale 계산에 사용
+  const contentWidth = Math.max(containerWidth - 32, 1);
+
+  // 컨테이너 너비 감지 → 다음 프레임에 반영해 드래그 중에도 즉시 크기 동기화
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
+
+    const updateWidth = (width: number) => {
+      if (resizeRafRef.current !== null) {
+        cancelAnimationFrame(resizeRafRef.current);
+      }
+
+      resizeRafRef.current = requestAnimationFrame(() => {
+        resizeRafRef.current = null;
+        setContainerWidth((prev) => (prev === width ? prev : width));
+      });
+    };
+
+    updateWidth(el.getBoundingClientRect().width);
+
     const ro = new ResizeObserver((entries) => {
-      setContainerWidth(entries[0].contentRect.width);
+      const entry = entries[0];
+      if (!entry) return;
+      updateWidth(entry.contentRect.width);
     });
+
     ro.observe(el);
-    return () => ro.disconnect();
+
+    return () => {
+      ro.disconnect();
+      if (resizeRafRef.current !== null) {
+        cancelAnimationFrame(resizeRafRef.current);
+        resizeRafRef.current = null;
+      }
+    };
   }, [fileType]); // fileType 전환 시 새 scroll container에 재부착
 
   // Ctrl+휠 줌 / 핀치 줌
@@ -47,12 +76,22 @@ export const FileRenderer = ({
     const el = scrollContainerRef.current;
     if (!el) return;
 
+    // DOM 직접 업데이트로 React re-render 없이 즉각 반응
+    const applyZoom = (z: number) => {
+      const clamped = Math.min(Math.max(z, 0.5), 3.0);
+      zoomRef.current = clamped;
+      if (zoomWrapperRef.current)
+        (
+          zoomWrapperRef.current.style as CSSStyleDeclaration & { zoom: string }
+        ).zoom = String(clamped);
+      setZoom(clamped); // React state 동기화 (다음 렌더 시 style override 방지)
+    };
+
     const onWheel = (e: WheelEvent) => {
       if (!e.ctrlKey) return;
       e.preventDefault();
-      setZoom((z) =>
-        Math.min(Math.max(z + (e.deltaY < 0 ? 0.1 : -0.1), 0.5), 3.0),
-      );
+      // 배율 방식: 한 스텝당 15% 변화
+      applyZoom(zoomRef.current * (e.deltaY < 0 ? 1.15 : 1 / 1.15));
     };
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2)
@@ -68,9 +107,7 @@ export const FileRenderer = ({
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY,
       );
-      setZoom((z) =>
-        Math.min(Math.max(z * (dist / lastTouchDistRef.current!), 0.5), 3.0),
-      );
+      applyZoom(zoomRef.current * (dist / lastTouchDistRef.current!));
       lastTouchDistRef.current = dist;
     };
     const onTouchEnd = () => {
@@ -108,7 +145,8 @@ export const FileRenderer = ({
         pdfRef.current = pdf;
         setNumPages(pdf.numPages);
         setPageNumber(1);
-        setZoom(1.0); // 파일 변경 시 zoom 초기화
+        zoomRef.current = 1.0;
+        setZoom(1.0);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -147,7 +185,7 @@ export const FileRenderer = ({
         const naturalViewport = page.getViewport({ scale: 1.0 });
         const fitScale =
           containerWidth > 0
-            ? Math.max((containerWidth - 32) / naturalViewport.width, 0.1)
+            ? Math.max(contentWidth / naturalViewport.width, 0.1)
             : 1.0;
         const viewport = page.getViewport({ scale: fitScale });
         canvas.height = viewport.height;
@@ -178,7 +216,7 @@ export const FileRenderer = ({
         renderTaskRef.current.cancel();
       }
     };
-  }, [pageNumber, fileType, numPages, containerWidth]);
+  }, [pageNumber, fileType, numPages, containerWidth, contentWidth]);
 
   if (error) {
     return (
@@ -210,16 +248,20 @@ export const FileRenderer = ({
         >
           <div className="flex min-h-full min-w-max items-center justify-center p-4 pt-6">
             <div
+              ref={zoomWrapperRef}
               style={{
                 zoom,
-                width: containerWidth > 0 ? containerWidth - 32 : undefined,
+                width: containerWidth > 0 ? contentWidth : undefined,
               }}
             >
               <img
                 src={fileUrl}
                 alt={fileName}
                 className="block h-auto max-h-[80vh] w-full object-contain"
-                onLoad={() => setZoom(1.0)}
+                onLoad={() => {
+                  zoomRef.current = 1.0;
+                  setZoom(1.0);
+                }}
                 draggable={false}
               />
             </div>
@@ -293,12 +335,16 @@ export const FileRenderer = ({
         >
           <div className="flex min-h-full min-w-max justify-center p-4 pt-6">
             <div
+              ref={zoomWrapperRef}
               className="h-fit shadow-lg"
               style={{ zoom }}
             >
               <canvas
                 ref={canvasRef}
-                className="block bg-white"
+                className="block h-auto max-w-full bg-white"
+                style={{
+                  width: containerWidth > 0 ? contentWidth : undefined,
+                }}
                 draggable={false}
               />
             </div>
