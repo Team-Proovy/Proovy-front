@@ -205,11 +205,11 @@ export const FileRenderer = ({
         </div>
 
         {/* 캔버스 영역 */}
-        <div className="flex min-h-0 flex-1 items-start justify-center overflow-auto bg-gray-50 p-4 pt-6">
-          <div className="shadow-lg">
+        <div className="flex min-h-0 flex-1 justify-center overflow-y-auto bg-gray-50 p-4 pt-6">
+          <div className="h-fit shadow-lg">
             <canvas
               ref={canvasRef}
-              className="block bg-white"
+              className="block h-auto max-w-full bg-white"
               draggable={false}
             />
           </div>
