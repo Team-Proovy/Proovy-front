@@ -7,6 +7,31 @@ import { LoadingSpinner } from "@/shared/components/loading-spinner";
 // Worker 설정 (로컬 번들 사용)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
+const PDF_RENDER_QUALITY_SCALE = 2.5;
+const MAX_PDF_RENDER_PIXELS = 8_000_000;
+
+const getClientReachableUrl = (url: string) => {
+  if (typeof window === "undefined") return url;
+
+  try {
+    const parsedUrl = new URL(url);
+    const appHostName = window.location.hostname;
+    const isLocalDownloadHost =
+      parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1";
+    const isRemoteClient =
+      appHostName !== "localhost" && appHostName !== "127.0.0.1";
+
+    if (isLocalDownloadHost && isRemoteClient) {
+      parsedUrl.hostname = appHostName;
+      return parsedUrl.toString();
+    }
+  } catch {
+    return url;
+  }
+
+  return url;
+};
+
 interface FileRendererProps {
   fileUrl: string | null;
   fileType: "pdf" | "image" | null;
@@ -35,6 +60,7 @@ export const FileRenderer = ({
   const resizeRafRef = useRef<number | null>(null);
 
   const contentWidth = Math.max(containerWidth - 32, 1);
+  const reachableFileUrl = fileUrl ? getClientReachableUrl(fileUrl) : null;
 
   // 컨테이너 너비 감지 → 다음 프레임에 반영해 드래그 중에도 즉시 크기 동기화
   useEffect(() => {
@@ -128,13 +154,13 @@ export const FileRenderer = ({
 
   // 1. PDF 문서 로드
   useEffect(() => {
-    if (!fileUrl || fileType !== "pdf") {
+    if (!reachableFileUrl || fileType !== "pdf") {
       pdfRef.current = null;
       return;
     }
 
     let cancelled = false;
-    const loadingTask = pdfjsLib.getDocument(fileUrl);
+    const loadingTask = pdfjsLib.getDocument(reachableFileUrl);
 
     loadingTask.promise
       .then((pdf) => {
@@ -160,7 +186,7 @@ export const FileRenderer = ({
       loadingTask.destroy();
       pdfRef.current = null;
     };
-  }, [fileUrl, fileType]);
+  }, [reachableFileUrl, fileType]);
 
   // 2. PDF 페이지 렌더링
   useEffect(() => {
@@ -188,13 +214,28 @@ export const FileRenderer = ({
             ? Math.max(contentWidth / naturalViewport.width, 0.1)
             : 1.0;
         const viewport = page.getViewport({ scale: fitScale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        const deviceScale = window.devicePixelRatio || 1;
+        const qualityScale = Math.max(deviceScale, PDF_RENDER_QUALITY_SCALE);
+        const maxScaleByPixels = Math.sqrt(
+          MAX_PDF_RENDER_PIXELS / (viewport.width * viewport.height),
+        );
+        const outputScale = Math.max(
+          1,
+          Math.min(qualityScale, maxScaleByPixels),
+        );
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.style.height = `${viewport.height}px`;
+        canvas.style.width = `${viewport.width}px`;
 
         const renderTask = page.render({
           canvas: canvas,
           canvasContext: canvas.getContext("2d")!,
           viewport: viewport,
+          transform:
+            outputScale === 1
+              ? undefined
+              : [outputScale, 0, 0, outputScale, 0, 0],
         });
         renderTaskRef.current = renderTask;
 
@@ -232,7 +273,7 @@ export const FileRenderer = ({
     );
   }
 
-  if (fileType === "image" && fileUrl) {
+  if (fileType === "image" && reachableFileUrl) {
     return (
       <div className="flex h-full flex-col bg-gray-100">
         {/* 네비게이션 바 (이미지용 - 페이지 컨트롤 없음) */}
@@ -255,12 +296,15 @@ export const FileRenderer = ({
               }}
             >
               <img
-                src={fileUrl}
+                src={reachableFileUrl}
                 alt={fileName}
                 className="block h-auto max-h-[80vh] w-full object-contain"
                 onLoad={() => {
                   zoomRef.current = 1.0;
                   setZoom(1.0);
+                }}
+                onError={() => {
+                  setError("이미지를 불러오는 중 오류가 발생했습니다.");
                 }}
                 draggable={false}
               />

@@ -23,7 +23,10 @@ import type {
 export const noteKeys = {
   all: ["notes"] as const,
   lists: () => [...noteKeys.all, "list"] as const,
-  list: (params?: NoteListParams) => [...noteKeys.lists(), params] as const,
+  list: (params?: NoteListParams) =>
+    [...noteKeys.lists(), "paginated", params] as const,
+  infiniteList: (params?: Omit<NoteListParams, "page" | "cursor">) =>
+    [...noteKeys.lists(), "infinite", params] as const,
   detail: (id: string, params?: NoteDetailParams) =>
     [...noteKeys.all, "detail", id, params] as const,
 };
@@ -50,7 +53,7 @@ export const useInfiniteNoteList = (
   params?: Omit<NoteListParams, "page" | "cursor">,
 ) => {
   return useInfiniteQuery({
-    queryKey: noteKeys.list(params),
+    queryKey: noteKeys.infiniteList(params),
     queryFn: async ({ pageParam }) => {
       const response = await getNoteList({
         ...params,

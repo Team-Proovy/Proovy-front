@@ -2,7 +2,7 @@ import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import type { ApiResponse, TokenDto } from "./shared_types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 // 토큰 저장 키
 const ACCESS_TOKEN_KEY = "accessToken";
