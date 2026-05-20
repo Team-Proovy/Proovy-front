@@ -129,8 +129,8 @@ export const FileRenderer = ({
     return (
       <div className="flex h-full flex-col bg-gray-100">
         {/* 네비게이션 바 (이미지용 - 페이지 컨트롤 없음) */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
-          <span className="truncate text-sm font-medium text-gray-700">
+        <div className="flex shrink-0 items-center justify-center border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
+          <span className="truncate text-center font-[Pretendard] text-[18px] leading-7 font-semibold tracking-[-0.002px] text-black">
             {fileName}
           </span>
         </div>
@@ -151,19 +151,32 @@ export const FileRenderer = ({
     return (
       <div className="flex h-full flex-col bg-gray-100">
         {/* 네비게이션 바 */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
-          <span className="truncate text-sm font-medium text-gray-700">
-            {fileName} (PDF)
+        <div className="flex shrink-0 items-center gap-2 border-b border-[#D1D6DE] bg-white px-4 py-2 shadow-sm">
+          <span className="min-w-0 flex-1 truncate text-center font-[Pretendard] text-[18px] leading-7 font-semibold tracking-[-0.002px] text-black">
+            {fileName}
           </span>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-black">
             <button
               onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
               disabled={pageNumber <= 1}
               className="cursor-pointer rounded p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {"<"}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M11.2931 8.29279C11.4806 8.10532 11.7349 8 12.0001 8C12.2652 8 12.5195 8.10532 12.7071 8.29279L18.3641 13.9498C18.5462 14.1384 18.647 14.391 18.6447 14.6532C18.6425 14.9154 18.5373 15.1662 18.3519 15.3516C18.1665 15.537 17.9157 15.6422 17.6535 15.6445C17.3913 15.6467 17.1387 15.5459 16.9501 15.3638L12.0001 10.4138L7.05006 15.3638C6.86146 15.5459 6.60885 15.6467 6.34666 15.6445C6.08446 15.6422 5.83365 15.537 5.64824 15.3516C5.46283 15.1662 5.35766 14.9154 5.35538 14.6532C5.35311 14.391 5.4539 14.1384 5.63606 13.9498L11.2931 8.29279Z"
+                  fill="#999999"
+                />
+              </svg>
             </button>
-            <span>
+            <span className="shrink-0 px-1">
               {pageNumber} / {numPages || "-"}
             </span>
             <button
@@ -173,7 +186,20 @@ export const FileRenderer = ({
               disabled={!numPages || pageNumber >= numPages}
               className="cursor-pointer rounded p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {">"}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="8"
+                viewBox="0 0 14 8"
+                fill="none"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M7.37629 7.37629C7.18876 7.56376 6.93445 7.66907 6.66929 7.66907C6.40412 7.66907 6.14982 7.56376 5.96229 7.37629L0.305288 1.71929C0.209778 1.62704 0.133596 1.5167 0.0811869 1.39469C0.0287779 1.27269 0.00119157 1.14147 3.77564e-05 1.00869C-0.00111606 0.87591 0.0241859 0.744231 0.0744668 0.621335C0.124748 0.498438 0.199001 0.386786 0.292893 0.292893C0.386786 0.199 0.498438 0.124747 0.621334 0.0744663C0.744231 0.0241854 0.87591 -0.00111606 1.00869 3.77571e-05C1.14147 0.00119157 1.27269 0.0287779 1.39469 0.0811869C1.5167 0.133596 1.62704 0.209778 1.71929 0.305288L6.66929 5.25529L11.6193 0.305288C11.8079 0.12313 12.0605 0.0223355 12.3227 0.0246139C12.5849 0.0268924 12.8357 0.132061 13.0211 0.317469C13.2065 0.502877 13.3117 0.75369 13.314 1.01589C13.3162 1.27808 13.2154 1.53069 13.0333 1.71929L7.37629 7.37629Z"
+                  fill="black"
+                />
+              </svg>
             </button>
           </div>
         </div>
