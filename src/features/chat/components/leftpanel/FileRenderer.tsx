@@ -20,12 +20,74 @@ export const FileRenderer = ({
 }: FileRendererProps) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [scale] = useState(1.0);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  const [zoom, setZoom] = useState(1.0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const lastTouchDistRef = useRef<number | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const renderTaskRef = useRef<RenderTask | null>(null);
   const pdfRef = useRef<PDFDocumentProxy | null>(null);
+
+  // 컨테이너 너비 감지 → 캔버스 base scale 계산에 사용
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      setContainerWidth(entries[0].contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fileType]); // fileType 전환 시 새 scroll container에 재부착
+
+  // Ctrl+휠 줌 / 핀치 줌
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setZoom((z) =>
+        Math.min(Math.max(z + (e.deltaY < 0 ? 0.1 : -0.1), 0.5), 3.0),
+      );
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2)
+        lastTouchDistRef.current = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        );
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || lastTouchDistRef.current === null) return;
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      );
+      setZoom((z) =>
+        Math.min(Math.max(z * (dist / lastTouchDistRef.current!), 0.5), 3.0),
+      );
+      lastTouchDistRef.current = dist;
+    };
+    const onTouchEnd = () => {
+      lastTouchDistRef.current = null;
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [fileType]);
 
   // 1. PDF 문서 로드
   useEffect(() => {
@@ -45,7 +107,8 @@ export const FileRenderer = ({
         }
         pdfRef.current = pdf;
         setNumPages(pdf.numPages);
-        setPageNumber(1); // 파일 변경 시 페이지 초기화
+        setPageNumber(1);
+        setZoom(1.0); // 파일 변경 시 zoom 초기화
       })
       .catch((err) => {
         if (!cancelled) {
@@ -80,7 +143,13 @@ export const FileRenderer = ({
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const viewport = page.getViewport({ scale });
+        // 컨테이너 너비에 맞는 base scale 계산 (padding 32px 제외)
+        const naturalViewport = page.getViewport({ scale: 1.0 });
+        const fitScale =
+          containerWidth > 0
+            ? Math.max((containerWidth - 32) / naturalViewport.width, 0.1)
+            : 1.0;
+        const viewport = page.getViewport({ scale: fitScale });
         canvas.height = viewport.height;
         canvas.width = viewport.width;
 
@@ -109,7 +178,7 @@ export const FileRenderer = ({
         renderTaskRef.current.cancel();
       }
     };
-  }, [pageNumber, scale, fileType, numPages]); // fileType 의존성 추가 (이미지 -> PDF 전환 시 필요)
+  }, [pageNumber, fileType, numPages, containerWidth]);
 
   if (error) {
     return (
@@ -135,13 +204,26 @@ export const FileRenderer = ({
           </span>
         </div>
 
-        <div className="flex min-h-0 flex-1 items-start justify-center overflow-auto bg-gray-50 p-4 pt-6">
-          <img
-            src={fileUrl}
-            alt={fileName}
-            className="h-full w-full object-contain"
-            draggable={false}
-          />
+        <div
+          ref={scrollContainerRef}
+          className="min-h-0 flex-1 overflow-auto bg-gray-50"
+        >
+          <div className="flex min-h-full min-w-max items-center justify-center p-4 pt-6">
+            <div
+              style={{
+                zoom,
+                width: containerWidth > 0 ? containerWidth - 32 : undefined,
+              }}
+            >
+              <img
+                src={fileUrl}
+                alt={fileName}
+                className="block h-auto max-h-[80vh] w-full object-contain"
+                onLoad={() => setZoom(1.0)}
+                draggable={false}
+              />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -204,14 +286,22 @@ export const FileRenderer = ({
           </div>
         </div>
 
-        {/* 캔버스 영역 */}
-        <div className="flex min-h-0 flex-1 justify-center overflow-y-auto bg-gray-50 p-4 pt-6">
-          <div className="h-fit shadow-lg">
-            <canvas
-              ref={canvasRef}
-              className="block h-auto max-w-full bg-white"
-              draggable={false}
-            />
+        {/* 캔버스 영역 — 줌 시 overflow 스크롤 가능하도록 레이아웃 분리 */}
+        <div
+          ref={scrollContainerRef}
+          className="min-h-0 flex-1 overflow-auto bg-gray-50"
+        >
+          <div className="flex min-h-full min-w-max justify-center p-4 pt-6">
+            <div
+              className="h-fit shadow-lg"
+              style={{ zoom }}
+            >
+              <canvas
+                ref={canvasRef}
+                className="block bg-white"
+                draggable={false}
+              />
+            </div>
           </div>
         </div>
       </div>
