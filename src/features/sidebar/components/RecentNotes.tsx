@@ -196,7 +196,7 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
       {/* 단건 삭제 확인 모달 */}
       {deleteTargetId !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000033]"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#00000033]"
           onClick={(e) => {
             if (e.target === e.currentTarget && !isDeleting) {
               setDeleteTargetId(null);
