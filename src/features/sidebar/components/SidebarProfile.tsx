@@ -87,7 +87,7 @@ export const SidebarProfile = ({
 
         {/* 유저 행 - UserIcon은 absolute로 분리해 깜빡임 방지, 여기선 spacer만 */}
         <div
-          className="ml-[18px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 pr-2 transition-colors hover:bg-gray-100"
+          className="ml-[16px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 pr-2 transition-colors hover:bg-gray-100"
           onClick={onSettingsClick}
         >
           <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export const SidebarProfile = ({
       {/* ── UserIcon 단독 고정 (opacity 전환 없이 항상 동일 위치) ── */}
       <button
         type="button"
-        className="absolute bottom-[24px] left-[18px] cursor-pointer border-none bg-transparent p-0"
+        className="absolute bottom-[24px] left-[16px] cursor-pointer border-none bg-transparent p-0"
         onMouseEnter={() => setIsUserIconHovered(true)}
         onMouseLeave={() => setIsUserIconHovered(false)}
         onClick={(e) => {
