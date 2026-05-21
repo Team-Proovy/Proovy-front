@@ -90,8 +90,10 @@ export const SidebarNoteItem = ({
           to={`/app/chat/${note.noteId}`}
           state={{ chatEntrySource: "sidebar-recent-notes" }}
           className={({ isActive }) =>
-            `block truncate rounded-lg py-[6px] pr-[28px] pl-[12px] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors ${
-              isActive ? "mr-[-6px] bg-[#EBEBEB]" : "hover:bg-[#F5F5F5]"
+            `block truncate rounded-lg py-[6px] pr-[28px] pl-[12px] text-[16px] leading-[24px] transition-colors ${
+              isActive
+                ? "mr-[-6px] bg-[#EBEBEB] font-medium text-black"
+                : "font-normal text-[#6B7280] hover:bg-[#F5F5F5] hover:text-black"
             }`
           }
         >
@@ -102,7 +104,7 @@ export const SidebarNoteItem = ({
       {!isRenaming && (
         <div
           ref={menuRef}
-          className="absolute top-1/2 right-1 -translate-y-1/2"
+          className="absolute top-1/2 right-[-6px] -translate-y-1/2"
         >
           <button
             onClick={(e) => {
@@ -142,25 +144,25 @@ export const SidebarNoteItem = ({
           </button>
 
           {isMenuOpen && (
-            <div className="absolute top-full right-0 z-50 mt-1 w-[120px] rounded-lg border border-[#E3E7ED] bg-white py-1 shadow-lg">
+            <div className="absolute top-full right-0 z-50 mt-1 flex w-[105px] flex-col items-center rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white p-[8px] shadow-[4px_4px_20px_0px_rgba(0,0,0,0.05)]">
               <button
                 onClick={() => {
                   setTitleInput(note.title);
                   setIsRenaming(true);
                   setIsMenuOpen(false);
                 }}
-                className="w-full px-3 py-[6px] text-left text-[13px] text-[#454545] hover:bg-[#F5F5F5]"
+                className="w-full rounded px-3 py-[6px] text-left text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
               >
-                이름 변경
+                수정하기
               </button>
               <button
                 onClick={() => {
                   onDeleteRequest();
                   setIsMenuOpen(false);
                 }}
-                className="w-full px-3 py-[6px] text-left text-[13px] text-red-500 hover:bg-[#FFF5F5]"
+                className="w-full rounded px-3 py-[6px] text-left text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
               >
-                삭제
+                삭제하기
               </button>
             </div>
           )}
