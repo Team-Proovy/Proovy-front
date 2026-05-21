@@ -90,7 +90,7 @@ export const SidebarNoteItem = ({
           to={`/app/chat/${note.noteId}`}
           state={{ chatEntrySource: "sidebar-recent-notes" }}
           className={({ isActive }) =>
-            `block truncate rounded-lg py-[6px] pr-[28px] pl-[12px] text-[16px] leading-[24px] transition-colors ${
+            `block truncate rounded-lg py-[3px] pr-[28px] pl-[12px] text-[16px] leading-[24px] transition-colors ${
               isActive
                 ? "mr-[-6px] bg-[#EBEBEB] font-medium text-black"
                 : "font-normal text-[#6B7280] hover:text-black"
