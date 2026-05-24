@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import type { RenderTask, PDFDocumentProxy } from "pdfjs-dist";
 import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -38,6 +38,99 @@ interface FileRendererProps {
   fileName: string;
 }
 
+interface PdfPageCanvasProps {
+  pdf: PDFDocumentProxy;
+  pageNumber: number;
+  contentWidth: number;
+  onRenderError: () => void;
+}
+
+const PdfPageCanvas = ({
+  pdf,
+  pageNumber,
+  contentWidth,
+  onRenderError,
+}: PdfPageCanvasProps) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const renderTaskRef = useRef<RenderTask | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const renderPage = async () => {
+      try {
+        if (renderTaskRef.current) {
+          renderTaskRef.current.cancel();
+        }
+
+        const page = await pdf.getPage(pageNumber);
+        if (cancelled) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const naturalViewport = page.getViewport({ scale: 1.0 });
+        const fitScale = Math.max(contentWidth / naturalViewport.width, 0.1);
+        const viewport = page.getViewport({ scale: fitScale });
+        const deviceScale = window.devicePixelRatio || 1;
+        const qualityScale = Math.max(deviceScale, PDF_RENDER_QUALITY_SCALE);
+        const maxScaleByPixels = Math.sqrt(
+          MAX_PDF_RENDER_PIXELS / (viewport.width * viewport.height),
+        );
+        const outputScale = Math.max(
+          1,
+          Math.min(qualityScale, maxScaleByPixels),
+        );
+
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.style.height = `${viewport.height}px`;
+        canvas.style.width = `${viewport.width}px`;
+
+        const canvasContext = canvas.getContext("2d");
+        if (!canvasContext) return;
+
+        const renderTask = page.render({
+          canvas,
+          canvasContext,
+          viewport,
+          transform:
+            outputScale === 1
+              ? undefined
+              : [outputScale, 0, 0, outputScale, 0, 0],
+        });
+        renderTaskRef.current = renderTask;
+
+        await renderTask.promise;
+      } catch (err: unknown) {
+        const renderErr = err as { name?: string };
+        if (renderErr.name !== "RenderingCancelledException" && !cancelled) {
+          console.error("PDF 렌더링 오류:", err);
+          onRenderError();
+        }
+      }
+    };
+
+    renderPage();
+
+    return () => {
+      cancelled = true;
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+      }
+    };
+  }, [contentWidth, onRenderError, pageNumber, pdf]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="block h-auto max-w-full bg-white shadow-lg"
+      style={{ width: contentWidth }}
+      draggable={false}
+    />
+  );
+};
+
 export const FileRenderer = ({
   fileUrl,
   fileType,
@@ -45,6 +138,10 @@ export const FileRenderer = ({
 }: FileRendererProps) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [numPages, setNumPages] = useState<number | null>(null);
+  const [pdfDoc, setPdfDoc] = useState<{
+    url: string;
+    doc: PDFDocumentProxy;
+  } | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,14 +150,16 @@ export const FileRenderer = ({
   const zoomWrapperRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistRef = useRef<number | null>(null);
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const renderTaskRef = useRef<RenderTask | null>(null);
-  const pdfRef = useRef<PDFDocumentProxy | null>(null);
+  const pageRefs = useRef<Array<HTMLDivElement | null>>([]);
   const resizeRafRef = useRef<number | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const programmaticScrollPageRef = useRef<number | null>(null);
+  const programmaticScrollTimeoutRef = useRef<number | null>(null);
 
   const contentWidth = Math.max(containerWidth - 32, 1);
   const reachableFileUrl = fileUrl ? getClientReachableUrl(fileUrl) : null;
+  const activePdfDoc =
+    pdfDoc?.url === reachableFileUrl && fileType === "pdf" ? pdfDoc.doc : null;
 
   // 컨테이너 너비 감지 → 다음 프레임에 반영해 드래그 중에도 즉시 크기 동기화
   useEffect(() => {
@@ -155,7 +254,6 @@ export const FileRenderer = ({
   // 1. PDF 문서 로드
   useEffect(() => {
     if (!reachableFileUrl || fileType !== "pdf") {
-      pdfRef.current = null;
       return;
     }
 
@@ -168,9 +266,10 @@ export const FileRenderer = ({
           pdf.destroy();
           return;
         }
-        pdfRef.current = pdf;
+        setPdfDoc({ url: reachableFileUrl, doc: pdf });
         setNumPages(pdf.numPages);
         setPageNumber(1);
+        pageRefs.current = [];
         zoomRef.current = 1.0;
         setZoom(1.0);
       })
@@ -184,80 +283,97 @@ export const FileRenderer = ({
     return () => {
       cancelled = true;
       loadingTask.destroy();
-      pdfRef.current = null;
     };
   }, [reachableFileUrl, fileType]);
 
-  // 2. PDF 페이지 렌더링
+  const handlePdfRenderError = useCallback(() => {
+    setError("PDF를 불러오는 중 오류가 발생했습니다.");
+  }, []);
+
+  const getVisiblePdfPage = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !numPages) return null;
+
+    const containerRect = container.getBoundingClientRect();
+    const readPoint = containerRect.top + containerRect.height * 0.35;
+
+    let closestPage = 1;
+    let closestDistance = Number.POSITIVE_INFINITY;
+
+    pageRefs.current.forEach((pageEl, index) => {
+      if (!pageEl) return;
+      const pageRect = pageEl.getBoundingClientRect();
+      const pageCenter = pageRect.top + pageRect.height / 2;
+      const distance = Math.abs(pageCenter - readPoint);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestPage = index + 1;
+      }
+    });
+
+    return closestPage;
+  }, [numPages]);
+
+  const updatePageNumberFromScroll = useCallback(() => {
+    const closestPage = getVisiblePdfPage();
+    if (closestPage === null) return;
+
+    setPageNumber((prev) => (prev === closestPage ? prev : closestPage));
+  }, [getVisiblePdfPage]);
+
+  const handlePdfScroll = useCallback(() => {
+    if (scrollRafRef.current !== null) return;
+
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const programmaticPage = programmaticScrollPageRef.current;
+
+      if (programmaticPage !== null) {
+        if (getVisiblePdfPage() === programmaticPage) {
+          programmaticScrollPageRef.current = null;
+        }
+        return;
+      }
+
+      updatePageNumberFromScroll();
+    });
+  }, [getVisiblePdfPage, updatePageNumberFromScroll]);
+
   useEffect(() => {
-    const pdf = pdfRef.current;
-    if (!pdf || fileType !== "pdf") return;
-
-    let cancelled = false;
-
-    const renderPage = async () => {
-      try {
-        if (renderTaskRef.current) {
-          renderTaskRef.current.cancel();
-        }
-
-        const page = await pdf.getPage(pageNumber);
-        if (cancelled) return;
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
-        // 컨테이너 너비에 맞는 base scale 계산 (padding 32px 제외)
-        const naturalViewport = page.getViewport({ scale: 1.0 });
-        const fitScale =
-          containerWidth > 0
-            ? Math.max(contentWidth / naturalViewport.width, 0.1)
-            : 1.0;
-        const viewport = page.getViewport({ scale: fitScale });
-        const deviceScale = window.devicePixelRatio || 1;
-        const qualityScale = Math.max(deviceScale, PDF_RENDER_QUALITY_SCALE);
-        const maxScaleByPixels = Math.sqrt(
-          MAX_PDF_RENDER_PIXELS / (viewport.width * viewport.height),
-        );
-        const outputScale = Math.max(
-          1,
-          Math.min(qualityScale, maxScaleByPixels),
-        );
-        canvas.height = Math.floor(viewport.height * outputScale);
-        canvas.width = Math.floor(viewport.width * outputScale);
-        canvas.style.height = `${viewport.height}px`;
-        canvas.style.width = `${viewport.width}px`;
-
-        const renderTask = page.render({
-          canvas: canvas,
-          canvasContext: canvas.getContext("2d")!,
-          viewport: viewport,
-          transform:
-            outputScale === 1
-              ? undefined
-              : [outputScale, 0, 0, outputScale, 0, 0],
-        });
-        renderTaskRef.current = renderTask;
-
-        await renderTask.promise;
-      } catch (err: unknown) {
-        const renderErr = err as { name?: string };
-        if (renderErr.name !== "RenderingCancelledException" && !cancelled) {
-          console.error("PDF 렌더링 오류:", err);
-          setError("PDF를 불러오는 중 오류가 발생했습니다.");
-        }
-      }
-    };
-
-    renderPage();
-
     return () => {
-      cancelled = true;
-      if (renderTaskRef.current) {
-        renderTaskRef.current.cancel();
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+      if (programmaticScrollTimeoutRef.current !== null) {
+        window.clearTimeout(programmaticScrollTimeoutRef.current);
+        programmaticScrollTimeoutRef.current = null;
       }
     };
-  }, [pageNumber, fileType, numPages, containerWidth, contentWidth]);
+  }, []);
+
+  const scrollToPage = useCallback(
+    (nextPage: number) => {
+      if (!numPages) return;
+      const clampedPage = Math.min(Math.max(nextPage, 1), numPages);
+      programmaticScrollPageRef.current = clampedPage;
+      if (programmaticScrollTimeoutRef.current !== null) {
+        window.clearTimeout(programmaticScrollTimeoutRef.current);
+      }
+      programmaticScrollTimeoutRef.current = window.setTimeout(() => {
+        programmaticScrollPageRef.current = null;
+        programmaticScrollTimeoutRef.current = null;
+        updatePageNumberFromScroll();
+      }, 700);
+      setPageNumber(clampedPage);
+      pageRefs.current[clampedPage - 1]?.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
+    },
+    [numPages, updatePageNumberFromScroll],
+  );
 
   if (error) {
     return (
@@ -325,7 +441,7 @@ export const FileRenderer = ({
           </span>
           <div className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-black">
             <button
-              onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
+              onClick={() => scrollToPage(pageNumber - 1)}
               disabled={pageNumber <= 1}
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
@@ -348,9 +464,7 @@ export const FileRenderer = ({
               {pageNumber} / {numPages || "-"}
             </span>
             <button
-              onClick={() =>
-                setPageNumber((prev) => Math.min(prev + 1, numPages || prev))
-              }
+              onClick={() => scrollToPage(pageNumber + 1)}
               disabled={!numPages || pageNumber >= numPages}
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
             >
@@ -375,22 +489,44 @@ export const FileRenderer = ({
         {/* 캔버스 영역 — 줌 시 overflow 스크롤 가능하도록 레이아웃 분리 */}
         <div
           ref={scrollContainerRef}
+          onScroll={handlePdfScroll}
           className="min-h-0 flex-1 overflow-auto bg-gray-50"
         >
-          <div className="flex min-h-full min-w-max justify-center p-4 pt-6">
+          <div className="flex min-h-full min-w-max justify-center p-4 pt-6 pb-10">
             <div
               ref={zoomWrapperRef}
-              className="h-fit shadow-lg"
+              className="flex h-fit flex-col gap-4"
               style={{ zoom }}
             >
-              <canvas
-                ref={canvasRef}
-                className="block h-auto max-w-full bg-white"
-                style={{
-                  width: containerWidth > 0 ? contentWidth : undefined,
-                }}
-                draggable={false}
-              />
+              {activePdfDoc && numPages ? (
+                Array.from({ length: numPages }, (_, index) => {
+                  const pdfPageNumber = index + 1;
+
+                  return (
+                    <div
+                      key={pdfPageNumber}
+                      ref={(el) => {
+                        pageRefs.current[index] = el;
+                      }}
+                      className="scroll-mt-4"
+                    >
+                      <PdfPageCanvas
+                        pdf={activePdfDoc}
+                        pageNumber={pdfPageNumber}
+                        contentWidth={contentWidth}
+                        onRenderError={handlePdfRenderError}
+                      />
+                    </div>
+                  );
+                })
+              ) : (
+                <div
+                  className="flex items-center justify-center"
+                  style={{ width: contentWidth, minHeight: 360 }}
+                >
+                  <LoadingSpinner size={40} />
+                </div>
+              )}
             </div>
           </div>
         </div>
