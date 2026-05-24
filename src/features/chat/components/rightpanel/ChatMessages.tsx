@@ -47,7 +47,7 @@ const FinalResponseLoadingBar = () => {
   }, []);
 
   return (
-    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
+    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[16px]">
       <SparkleIcon
         size={24}
         color={isBlue ? "#2A6AFF" : "#6B7280"}
@@ -78,7 +78,7 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
     )}
     {/* 텍스트 메시지 */}
     <div className="flex items-start justify-end">
-      <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
+      <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
         <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
           <MessageContent
             content={message.content}
@@ -100,10 +100,10 @@ const AssistantMessage = ({
   isStreaming?: boolean;
   statusText?: string;
 }) => (
-  <div className="flex items-start justify-start gap-[12px]">
-    <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center">
+  <div className="flex items-start justify-start gap-[24px]">
+    <div className="flex h-[30px] w-[30px] shrink-0 items-start justify-start">
       <SubscriptionIcon
-        size={40}
+        size={30}
         isActive={true}
       />
     </div>
@@ -114,7 +114,7 @@ const AssistantMessage = ({
         <FinalResponseLoadingBar />
       )
     ) : (
-      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
+      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
         <div className="text-sm leading-5 break-words text-gray-900">
           <MessageContent content={content} />
         </div>
