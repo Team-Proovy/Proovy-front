@@ -114,7 +114,7 @@ const AssistantMessage = ({
         <FinalResponseLoadingBar />
       )
     ) : (
-      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
+      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px] md:max-w-[540px]">
         <div className="text-sm leading-5 break-words text-gray-900">
           <MessageContent content={content} />
         </div>
