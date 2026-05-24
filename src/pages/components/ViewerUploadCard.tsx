@@ -96,7 +96,7 @@ export const ViewerUploadCard = ({
       <button
         onClick={onOpenExplorer}
         type="button"
-        className="group flex h-[160px] w-full shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-700 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33] lg:w-[220px]"
+        className="group flex h-[160px] w-full shrink-0 cursor-pointer flex-col items-center justify-center gap-[16px] rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white/40 px-[20px] py-[24px] shadow-[4px_4px_20px_5px_rgba(0,0,0,0.05)] transition-colors duration-500 hover:bg-[#2A6AFF33] active:bg-[#2A6AFF33] lg:w-[220px]"
       >
         <div>
           <PdfIcon size={56} />

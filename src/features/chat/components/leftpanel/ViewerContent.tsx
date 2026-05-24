@@ -12,8 +12,8 @@ import {
   PLAN_DETAILS,
   type PlanType,
 } from "@/features/subscription/types/plan_types";
-import { DragDropOverlay } from "@/features/editor/components/input/DragDropOverlay";
-import { ViewerEmpty } from "./ViewerEmpty";
+
+import { ViewerUploadCard } from "@/pages/components/ViewerUploadCard";
 import { FileRenderer } from "./FileRenderer";
 import { parseSize } from "@/shared/utils/file-utils";
 import { showErrorToast } from "@/shared/lib/toast";
@@ -181,7 +181,23 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   const renderContent = () => {
     // Case 1: 파일이 선택되지 않음 -> 업로드 UI (Empty State)
     if (!activeFileId) {
-      return <ViewerEmpty onOpenFileExplorer={openFileExplorer} />;
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-6">
+          <ViewerUploadCard
+            pdfUrl={null}
+            fileName=""
+            fileInputRef={fileInputRef}
+            onFileChange={handleFileChange}
+            onOpenExplorer={openFileExplorer}
+            onRemove={() => {}}
+            isDragging={isDragging}
+            dragProps={dragProps}
+          />
+          <p className="text-center font-[Pretendard] text-[16px] leading-6 font-normal whitespace-pre-line text-[#6B7280]">
+            {"파일이 비어있습니다.\n파일을 끌어오거나 클릭해서 추가해 주세요."}
+          </p>
+        </div>
+      );
     }
 
     // Case 2: 로딩 중
@@ -218,23 +234,5 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     );
   };
 
-  return (
-    <div
-      className="relative h-full w-full"
-      {...dragProps}
-    >
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleFileChange}
-        accept={FILE_ACCEPT}
-      />
-
-      {/* Drag Overlay */}
-      {isDragging && <DragDropOverlay />}
-
-      {renderContent()}
-    </div>
-  );
+  return <div className="relative h-full w-full">{renderContent()}</div>;
 };
