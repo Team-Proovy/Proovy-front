@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   useInfiniteNoteList,
   useDeleteNote,
@@ -193,42 +194,44 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
         </ul>
       </div>
 
-      {/* 단건 삭제 확인 모달 */}
-      {deleteTargetId !== null && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#00000033]"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !isDeleting) {
-              setDeleteTargetId(null);
-            }
-          }}
-        >
-          <div className="w-[360px] rounded-[20px] bg-white px-8 py-8 shadow-[0px_10px_40px_rgba(0,0,0,0.1)]">
-            <h2 className="text-center text-[22px] leading-[32px] font-semibold text-black">
-              이 노트를 삭제하시겠습니까?
-            </h2>
-            <p className="mt-3 text-center text-[15px] text-[#00000066]">
-              삭제된 노트는 복구가 불가능합니다.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setDeleteTargetId(null)}
-                disabled={isDeleting}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border border-[#D1D6DE] bg-[#F1F4F8] text-[16px] font-semibold text-[#6B7280] disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={isDeleting}
-                className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] bg-[#2A6AFF] text-[16px] font-semibold text-white disabled:opacity-70"
-              >
-                {isDeleting ? "삭제 중..." : "삭제"}
-              </button>
+      {/* 단건 삭제 확인 모달 — portal로 body에 마운트해 stacking context 우회 */}
+      {deleteTargetId !== null &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#00000033]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isDeleting) {
+                setDeleteTargetId(null);
+              }
+            }}
+          >
+            <div className="w-[360px] rounded-[20px] bg-white px-8 py-8 shadow-[0px_10px_40px_rgba(0,0,0,0.1)]">
+              <h2 className="text-center text-[22px] leading-[32px] font-semibold text-black">
+                이 노트를 삭제하시겠습니까?
+              </h2>
+              <p className="mt-3 text-center text-[15px] text-[#00000066]">
+                삭제된 노트는 복구가 불가능합니다.
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setDeleteTargetId(null)}
+                  disabled={isDeleting}
+                  className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] border border-[#D1D6DE] bg-[#F1F4F8] text-[16px] font-semibold text-[#6B7280] disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                  className="flex h-[48px] flex-1 items-center justify-center rounded-[16px] bg-[#2A6AFF] text-[16px] font-semibold text-white disabled:opacity-70"
+                >
+                  {isDeleting ? "삭제 중..." : "삭제"}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 };
