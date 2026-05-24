@@ -234,17 +234,5 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
     );
   };
 
-  return (
-    <div className="relative h-full w-full">
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleFileChange}
-        accept={FILE_ACCEPT}
-      />
-
-      {renderContent()}
-    </div>
-  );
+  return <div className="relative h-full w-full">{renderContent()}</div>;
 };
