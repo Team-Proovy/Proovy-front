@@ -14,6 +14,7 @@ import type { ChatMessage } from "../../types/chat_types";
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
+  align?: "start" | "center";
 }
 
 // FinalResponse 말풍선 대기 중 순환 메시지
@@ -123,7 +124,10 @@ const AssistantMessage = ({
   </div>
 );
 
-export const ChatMessages = ({ messages }: ChatMessagesProps) => {
+export const ChatMessages = ({
+  messages,
+  align = "center",
+}: ChatMessagesProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastUserMsgRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -241,7 +245,9 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <div
       ref={scrollRef}
-      className="relative flex h-full justify-start overflow-x-hidden overflow-y-auto px-[30px]"
+      className={`relative flex h-full overflow-x-hidden overflow-y-auto px-[30px] ${
+        align === "start" ? "justify-start" : "justify-center"
+      }`}
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
       <div className="w-full max-w-[660px] min-w-[270px] pt-[40px]">

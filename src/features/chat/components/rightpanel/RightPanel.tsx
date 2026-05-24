@@ -11,6 +11,7 @@ interface RightPanelProps {
   isSending?: boolean;
   /** 대화 히스토리 로딩 중 여부 */
   isLoading?: boolean;
+  isViewerOpen?: boolean;
 }
 
 export const RightPanel = ({
@@ -19,7 +20,10 @@ export const RightPanel = ({
   onSend,
   isSending,
   isLoading = false,
+  isViewerOpen = false,
 }: RightPanelProps) => {
+  const contentAlign = isViewerOpen ? "start" : "center";
+
   return (
     <div className="flex h-full flex-col bg-[#F1F4F8]">
       {/* 메시지 영역 */}
@@ -32,12 +36,19 @@ export const RightPanel = ({
             </div>
           </div>
         ) : (
-          <ChatMessages messages={messages} />
+          <ChatMessages
+            messages={messages}
+            align={contentAlign}
+          />
         )}
       </div>
 
       {/* 입력 영역 */}
-      <div className="flex shrink-0 justify-start px-[30px] pb-[20px]">
+      <div
+        className={`flex shrink-0 px-[30px] pb-[20px] ${
+          isViewerOpen ? "justify-start" : "justify-center"
+        }`}
+      >
         <ChatInput
           noteId={noteId}
           onSend={onSend}

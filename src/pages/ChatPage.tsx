@@ -107,6 +107,7 @@ const ChatPageContent = () => {
             onSend={handleSend}
             isSending={isSending}
             isLoading={isNoteLoading}
+            isViewerOpen={isViewerOpen}
           />
         </div>
       </div>
