@@ -241,7 +241,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <div
       ref={scrollRef}
-      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto px-[16px]"
+      className="relative flex h-full justify-start overflow-x-hidden overflow-y-auto px-[30px]"
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
       <div className="w-full max-w-[660px] min-w-[270px] pt-[40px]">

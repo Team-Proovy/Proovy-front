@@ -37,7 +37,7 @@ export const RightPanel = ({
       </div>
 
       {/* 입력 영역 */}
-      <div className="flex shrink-0 justify-center px-[16px] pb-[20px]">
+      <div className="flex shrink-0 justify-start px-[30px] pb-[20px]">
         <ChatInput
           noteId={noteId}
           onSend={onSend}
