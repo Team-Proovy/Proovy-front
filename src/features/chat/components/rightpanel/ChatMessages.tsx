@@ -5,10 +5,7 @@ import {
   useCallback,
   useState,
 } from "react";
-import {
-  ProfileIcon,
-  SubscriptionIcon,
-} from "@/shared/components/icons/SettingsIcons";
+import { SubscriptionIcon } from "@/shared/components/icons/SettingsIcons";
 import { SparkleIcon } from "@/shared/components/icons/SparkleIcon";
 import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
@@ -80,7 +77,7 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
       <MessageAttachments attachments={message.attachments} />
     )}
     {/* 텍스트 메시지 */}
-    <div className="flex items-start justify-end gap-[12px]">
+    <div className="flex items-start justify-end">
       <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
           <MessageContent
@@ -88,12 +85,6 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
             enableFileMentionChip={true}
           />
         </div>
-      </div>
-      <div className="shrink-0">
-        <ProfileIcon
-          size={40}
-          color="#2A6AFF"
-        />
       </div>
     </div>
   </div>
@@ -110,7 +101,7 @@ const AssistantMessage = ({
   statusText?: string;
 }) => (
   <div className="flex items-start justify-start gap-[12px]">
-    <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[40px] border-[0.5px] border-[#D1D6DE] bg-white">
+    <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center">
       <SubscriptionIcon
         size={40}
         isActive={true}
@@ -123,7 +114,7 @@ const AssistantMessage = ({
         <FinalResponseLoadingBar />
       )
     ) : (
-      <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
+      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
         <div className="text-sm leading-5 break-words text-gray-900">
           <MessageContent content={content} />
         </div>
@@ -250,16 +241,24 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <div
       ref={scrollRef}
-      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto"
+      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto px-[16px]"
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
-      <div className="w-full max-w-[660px] min-w-[270px] px-[16px] pt-[40px]">
+      <div className="w-full max-w-[660px] min-w-[270px] pt-[40px]">
         {messages.map((message, index) => {
           const prevMessage = messages[index - 1];
           const isNewGroup =
             prevMessage?.role === "assistant" && message.role === "user";
+          const isAnswerAfterQuestion =
+            prevMessage?.role === "user" && message.role === "assistant";
           const marginTop =
-            index === 0 ? "" : isNewGroup ? "mt-[40px]" : "mt-[12px]";
+            index === 0
+              ? ""
+              : isNewGroup
+                ? "mt-[40px]"
+                : isAnswerAfterQuestion
+                  ? "mt-[24px]"
+                  : "mt-[12px]";
 
           return (
             <div
