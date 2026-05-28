@@ -239,7 +239,7 @@ export const SidebarProfile = ({
 
         {/* 유저 행 - UserIcon은 absolute로 분리해 깜빡임 방지, 여기선 spacer만 */}
         <div
-          className="ml-[16px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 pr-2 transition-colors hover:bg-gray-100"
+          className="ml-[20px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 transition-colors hover:bg-gray-100"
           onClick={onSettingsClick}
         >
           <div className="flex items-center gap-2">

@@ -153,7 +153,7 @@ export const SidebarNoteItem = ({
                   setIsRenaming(true);
                   setIsMenuOpen(false);
                 }}
-                className="w-full rounded px-3 py-[6px] text-center text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
+                className="w-full rounded px-3 py-0 text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:bg-[#F1F4F8] active:text-black"
               >
                 수정하기
               </button>
@@ -162,7 +162,7 @@ export const SidebarNoteItem = ({
                   onDeleteRequest();
                   setIsMenuOpen(false);
                 }}
-                className="w-full rounded px-3 py-[6px] text-center text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
+                className="w-full rounded px-3 py-0 text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:bg-[#F1F4F8] active:text-black"
               >
                 삭제하기
               </button>
