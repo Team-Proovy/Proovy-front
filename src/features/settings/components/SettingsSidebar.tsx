@@ -72,10 +72,10 @@ export const SettingsSidebar = ({
               <button
                 key={item.id}
                 onClick={() => onTabChange(item.id)}
-                className={`relative flex cursor-pointer items-center gap-[12px] rounded-r-[12px] py-[10px] pl-0 text-left transition-all ${
+                className={`relative -ml-[40px] flex cursor-pointer items-center gap-[12px] rounded-r-[12px] py-[10px] pl-[40px] text-left transition-all ${
                   isActive
-                    ? "-ml-[40px] w-[268px] bg-white pl-[40px] shadow-[0px_4px_10px_2px_rgba(0,0,0,0.1)]"
-                    : "w-full hover:opacity-70"
+                    ? "w-[268px] bg-white shadow-[0px_4px_10px_2px_rgba(0,0,0,0.1)]"
+                    : "w-[246px] hover:bg-gray-50"
                 }`}
               >
                 {/* 아이콘 */}
@@ -87,7 +87,7 @@ export const SettingsSidebar = ({
                 <span
                   className={`font-['Pretendard'] leading-[28px] tracking-[-0.0018em] ${
                     isActive
-                      ? "text-[22px] font-bold text-black"
+                      ? "text-[18px] font-bold text-black"
                       : "text-[18px] font-semibold text-[#2F3440]"
                   }`}
                 >

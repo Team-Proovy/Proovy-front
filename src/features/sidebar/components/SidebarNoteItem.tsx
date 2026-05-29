@@ -67,33 +67,35 @@ export const SidebarNoteItem = ({
   };
 
   return (
-    <li className={`group relative ${isMenuOpen ? "z-20" : "z-0 hover:z-10"}`}>
+    <li
+      className={`group relative flex h-[24px] w-[192px] items-center ${
+        isMenuOpen ? "z-20" : "z-0 hover:z-10"
+      }`}
+    >
       {isRenaming ? (
-        <div className="flex items-center rounded-lg px-[12px] py-[6px]">
-          <input
-            ref={inputRef}
-            value={titleInput}
-            onChange={(e) => setTitleInput(e.target.value)}
-            onCompositionStart={() => {
-              isComposingRef.current = true;
-            }}
-            onCompositionEnd={() => {
-              isComposingRef.current = false;
-            }}
-            onBlur={handleRenameSubmit}
-            onKeyDown={handleKeyDown}
-            className="w-full truncate bg-transparent text-[16px] leading-[24px] font-normal text-[#6B7280] outline-none"
-          />
-        </div>
+        <input
+          ref={inputRef}
+          value={titleInput}
+          onChange={(e) => setTitleInput(e.target.value)}
+          onCompositionStart={() => {
+            isComposingRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            isComposingRef.current = false;
+          }}
+          onBlur={handleRenameSubmit}
+          onKeyDown={handleKeyDown}
+          className="h-[24px] w-full overflow-hidden bg-transparent pr-[22px] pl-[8px] text-[16px] leading-[24px] font-normal whitespace-nowrap text-[#6B7280] outline-none"
+        />
       ) : (
         <NavLink
           to={`/app/chat/${note.noteId}`}
           state={{ chatEntrySource: "sidebar-recent-notes" }}
           className={({ isActive }) =>
-            `block truncate rounded-lg py-[3px] pr-[28px] pl-[12px] text-[16px] leading-[24px] transition-colors ${
+            `block h-[24px] w-full overflow-hidden rounded-[4px] pr-[22px] pl-[8px] text-[16px] leading-[24px] whitespace-nowrap transition-colors ${
               isActive
-                ? "mr-[-6px] bg-[#EBEBEB] font-medium text-black"
-                : "font-normal text-[#6B7280] hover:text-black"
+                ? "bg-[#F1F4F8] font-medium text-black"
+                : "font-normal text-[#6B7280] group-hover:font-medium group-hover:text-black"
             }`
           }
         >
@@ -104,7 +106,7 @@ export const SidebarNoteItem = ({
       {!isRenaming && (
         <div
           ref={menuRef}
-          className="absolute top-1/2 right-[-6px] -translate-y-1/2"
+          className="absolute top-1/2 right-0 -translate-y-1/2"
         >
           <button
             onClick={(e) => {
@@ -112,7 +114,7 @@ export const SidebarNoteItem = ({
               e.stopPropagation();
               setIsMenuOpen((prev) => !prev);
             }}
-            className="flex h-[22px] w-[22px] items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#E8E8E8]"
+            className="flex h-[22px] w-[22px] items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
             aria-label="더보기"
           >
             <svg
@@ -151,7 +153,7 @@ export const SidebarNoteItem = ({
                   setIsRenaming(true);
                   setIsMenuOpen(false);
                 }}
-                className="w-full rounded px-3 py-[6px] text-center text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
+                className="w-full rounded px-3 py-0 text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:bg-[#F1F4F8] active:text-black"
               >
                 수정하기
               </button>
@@ -160,7 +162,7 @@ export const SidebarNoteItem = ({
                   onDeleteRequest();
                   setIsMenuOpen(false);
                 }}
-                className="w-full rounded px-3 py-[6px] text-center text-[13px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:font-medium active:text-black"
+                className="w-full rounded px-3 py-0 text-center font-['Pretendard'] text-[16px] leading-[24px] font-normal text-[#6B7280] transition-colors hover:text-black active:bg-[#F1F4F8] active:text-black"
               >
                 삭제하기
               </button>

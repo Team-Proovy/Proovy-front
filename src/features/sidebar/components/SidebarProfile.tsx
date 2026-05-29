@@ -4,7 +4,7 @@ import {
   CreditIcon,
 } from "../../../shared/components/icons/SidebarIcons";
 
-import { useState } from "react";
+import { useState, useId, useEffect } from "react";
 import { useAuthStore } from "../../auth/store/auth_store";
 import { useMyProfile } from "@/features/settings/hooks/useUser";
 import { normalizePlanType } from "@/features/subscription/types/plan_types";
@@ -35,6 +35,13 @@ export const SidebarProfile = ({
     (profile?.credit.monthlyCredit.limit ?? 0);
   const creditPercent =
     creditMax > 0 ? Math.min((creditTotal / creditMax) * 100, 100) : 0;
+  const barId = useId();
+  const progressWidth = Math.round((creditPercent / 100) * 140);
+  const [animatedWidth, setAnimatedWidth] = useState(0);
+  useEffect(() => {
+    const id = setTimeout(() => setAnimatedWidth(progressWidth), 50);
+    return () => clearTimeout(id);
+  }, [progressWidth]);
 
   const formatNickname = (nickname?: string) => {
     if (!nickname) return "";
@@ -55,30 +62,175 @@ export const SidebarProfile = ({
         aria-hidden={isCollapsed}
       >
         {/* 크레딧 카드 */}
-        <div className="ml-[20px] flex h-[80px] w-[200px] flex-col rounded-[12px] border-[0.5px] border-[#C6C6C6] bg-white pt-[8.5px] pr-[12.75px] pb-[8.5px] pl-[13.25px] select-none">
-          <div className="flex items-center gap-1">
-            <CreditIcon size={20} />
-            <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
-              크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
-              <span className="text-[#9CA4B0]">/{creditMax}</span>
-            </span>
+        <div className="ml-[20px] flex h-[80px] w-[200px] flex-col items-center justify-center gap-[10px] rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[rgba(255,255,255,0.70)] py-[6px] pr-[12.75px] pl-[13.25px] select-none">
+          {/* 크레딧 아이콘 + 텍스트 + 프로그레스 바 */}
+          <div className="flex w-full flex-col">
+            <div className="flex items-start gap-[8px]">
+              <CreditIcon
+                className="translate-y-[3px] transform"
+                size={25}
+              />
+              <span className="text-[12px] leading-[24px] font-normal text-[#2F3440]">
+                크레딧 <span className="text-[#2A6AFF]">{creditTotal}</span>
+                <span className="text-[#9CA4B0]">/{creditMax}</span>
+              </span>
+            </div>
+            <svg
+              className="ml-[33px]"
+              width="140"
+              height="7"
+              viewBox="0 0 140 7"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <filter
+                  id={`${barId}-track`}
+                  x="0"
+                  y="1"
+                  width="141"
+                  height="6"
+                  filterUnits="userSpaceOnUse"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feFlood
+                    floodOpacity="0"
+                    result="BackgroundImageFix"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="BackgroundImageFix"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset
+                    dx="1"
+                    dy="1"
+                  />
+                  <feGaussianBlur stdDeviation="0.5" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect1_innerShadow"
+                  />
+                </filter>
+                <filter
+                  id={`${barId}-progress`}
+                  x="0"
+                  y="0"
+                  width="142"
+                  height="7"
+                  filterUnits="userSpaceOnUse"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feFlood
+                    floodOpacity="0"
+                    result="BackgroundImageFix"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset dx="1" />
+                  <feGaussianBlur stdDeviation="0.5" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="out"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="BackgroundImageFix"
+                    result="effect1_dropShadow"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in="SourceGraphic"
+                    in2="effect1_dropShadow"
+                    result="shape"
+                  />
+                  <feColorMatrix
+                    in="SourceAlpha"
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                    result="hardAlpha"
+                  />
+                  <feOffset
+                    dx="1"
+                    dy="1"
+                  />
+                  <feGaussianBlur stdDeviation="0.5" />
+                  <feComposite
+                    in2="hardAlpha"
+                    operator="arithmetic"
+                    k2="-1"
+                    k3="1"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
+                  />
+                  <feBlend
+                    mode="normal"
+                    in2="shape"
+                    result="effect2_innerShadow"
+                  />
+                </filter>
+              </defs>
+              <g filter={`url(#${barId}-track)`}>
+                <rect
+                  y="1"
+                  width="140"
+                  height="5"
+                  rx="2.5"
+                  fill="#D1D6DE"
+                />
+              </g>
+              <g filter={`url(#${barId}-progress)`}>
+                <rect
+                  y="1"
+                  height="5"
+                  rx="2.5"
+                  fill="#2A6AFF"
+                  style={{
+                    width: animatedWidth,
+                    transition: "width 0.35s ease-out",
+                  }}
+                />
+              </g>
+            </svg>
           </div>
 
-          <div className="ml-[24px] h-[5px] overflow-hidden rounded-full bg-[#E8ECF5]">
-            <div
-              className="h-full rounded-full bg-[#2A6AFF] transition-all duration-300"
-              style={{ width: `${creditPercent}%` }}
-            />
-          </div>
-
-          <div className="mt-[10px] flex items-center justify-between">
+          {/* 플랜 배지 + 업그레이드 버튼 */}
+          <div className="flex w-full items-center justify-between">
             <PlanBadge plan={planType} />
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onUpgradeClick();
               }}
-              className="flex h-[24px] w-[88px] items-center justify-center rounded-[4px] border border-[#D1D6DE] bg-white px-[16px] text-[11px] leading-none font-semibold text-[#2F3440] transition-all hover:border-transparent hover:bg-[rgba(42,106,255,0.50)] hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
+              className="flex h-[24px] w-[115px] shrink-0 items-center justify-center rounded-[4px] border-[0.5px] border-[#D1D6DE] bg-white px-[16px] text-[11px] leading-none font-semibold text-[#2F3440] transition-all hover:border-transparent hover:bg-[rgba(42,106,255,0.50)] hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
             >
               업그레이드
             </button>
@@ -87,7 +239,7 @@ export const SidebarProfile = ({
 
         {/* 유저 행 - UserIcon은 absolute로 분리해 깜빡임 방지, 여기선 spacer만 */}
         <div
-          className="ml-[16px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 pr-2 transition-colors hover:bg-gray-100"
+          className="ml-[20px] flex w-[200px] cursor-pointer items-center justify-between rounded-[12px] py-1 transition-colors hover:bg-gray-100"
           onClick={onSettingsClick}
         >
           <div className="flex items-center gap-2">
@@ -152,7 +304,7 @@ export const SidebarProfile = ({
 const PlanBadge = ({ plan }: { plan: string }) => {
   if (plan === "Pro") {
     return (
-      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full bg-[#003880] px-2 text-[11px] leading-none font-semibold text-white">
+      <span className="inline-flex items-center gap-[4px] rounded-[20px] bg-[#003880] px-[8px]">
         <svg
           width="6"
           height="6"
@@ -163,7 +315,7 @@ const PlanBadge = ({ plan }: { plan: string }) => {
         >
           <defs>
             <linearGradient
-              id="paint0_linear_447_8059"
+              id="pro-badge-grad"
               x1="3"
               y1="0"
               x2="3"
@@ -179,16 +331,18 @@ const PlanBadge = ({ plan }: { plan: string }) => {
           </defs>
           <path
             d="M3 0L0 3L3 6L6 3L3 0Z"
-            fill="url(#paint0_linear_447_8059)"
+            fill="url(#pro-badge-grad)"
           />
         </svg>
-        Pro
+        <span className="w-[21px] text-center text-[10px] leading-[24px] font-bold text-white">
+          Pro
+        </span>
       </span>
     );
   }
   if (plan === "Standard") {
     return (
-      <span className="inline-flex h-[20px] items-center gap-[4px] rounded-full border border-[#2A6AFF] bg-[#2A6AFF] px-2 text-[11px] leading-none font-semibold text-white">
+      <span className="inline-flex items-center gap-[4px] rounded-[20px] border border-[#2A6AFF] bg-[#2A6AFF] px-[8px]">
         <svg
           width="6"
           height="6"
@@ -202,13 +356,17 @@ const PlanBadge = ({ plan }: { plan: string }) => {
             fill="white"
           />
         </svg>
-        Std
+        <span className="w-[21px] text-center text-[10px] leading-[24px] font-bold text-white">
+          Std
+        </span>
       </span>
     );
   }
   return (
-    <span className="inline-flex h-[20px] items-center rounded-full border border-[rgba(42,106,255,0.20)] px-2 text-[11px] leading-none font-semibold text-[#2F3440]">
-      Free
+    <span className="inline-flex items-center gap-[4px] rounded-[20px] border border-[rgba(42,106,255,0.20)] px-[8px]">
+      <span className="w-[21px] text-center text-[10px] leading-[24px] font-bold text-[#003880]">
+        Free
+      </span>
     </span>
   );
 };

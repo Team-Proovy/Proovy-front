@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LogoIcon } from "@/shared/components/icons/LoginIcons";
 import loginBgImage from "@/shared/assets/images/img_login_bg.png";
@@ -9,10 +9,38 @@ import { AxiosError } from "axios";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import { showErrorToast } from "@/shared/lib/toast";
 
+const REFERRAL_OPTIONS = [
+  "검색 엔진 (네이버, 구글 등)",
+  "AI 서비스 (ChatGPT, Claude, Gemini 등)",
+  "SNS (인스타그램, X 등)",
+  "에브리타임",
+  "온라인 커뮤니티 및 블로그",
+  "지인 추천",
+  "기타",
+];
+
 export const SignupPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [isReferralOpen, setIsReferralOpen] = useState(false);
+  const [referralDropUp, setReferralDropUp] = useState(false);
+  const referralRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        referralRef.current &&
+        !referralRef.current.contains(e.target as Node)
+      ) {
+        setIsReferralOpen(false);
+      }
+    };
+    if (isReferralOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isReferralOpen]);
 
   // KakaoCallbackPage에서 전달받은 signupToken
   const signupToken = location.state?.signupToken as string | undefined;
@@ -183,14 +211,73 @@ export const SignupPage = () => {
                 <label className="font-['Pretendard'] text-[18px] leading-[28px] font-semibold tracking-[-0.002px] text-[#000]">
                   해당 서비스를 알게 된 경로
                 </label>
-                <input
-                  type="text"
-                  name="referralSource"
-                  value={formData.referralSource}
-                  onChange={handleChange}
-                  placeholder="알게 된 경로를 입력해주세요"
-                  className="flex h-[50px] w-full items-center rounded-[10px] border border-[#D1D6DE] bg-white px-[24px] py-[8px] text-[16px] outline-none placeholder:text-[#9CA4B0] focus:border-[#2A6AFF]"
-                />
+                <div
+                  ref={referralRef}
+                  className="relative"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isReferralOpen && referralRef.current) {
+                        const rect =
+                          referralRef.current.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const estimatedHeight = REFERRAL_OPTIONS.length * 44;
+                        setReferralDropUp(spaceBelow < estimatedHeight);
+                      }
+                      setIsReferralOpen((prev) => !prev);
+                    }}
+                    className={`flex h-[50px] w-full items-center justify-between rounded-[10px] border bg-white px-[24px] py-[8px] text-[16px] ${
+                      isReferralOpen ? "border-[#2A6AFF]" : "border-[#D1D6DE]"
+                    } ${formData.referralSource ? "text-black" : "text-[#9CA4B0]"}`}
+                  >
+                    <span>
+                      {formData.referralSource || "알게 된 경로를 선택해주세요"}
+                    </span>
+                    <svg
+                      width="12"
+                      height="7"
+                      viewBox="0 0 12 7"
+                      fill="none"
+                      className={`shrink-0 transition-transform duration-200 ${isReferralOpen ? "rotate-180" : ""}`}
+                    >
+                      <path
+                        d="M1 1L6 6L11 1"
+                        stroke="#9CA4B0"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  {isReferralOpen && (
+                    <div
+                      className={`absolute left-0 z-20 w-full overflow-hidden rounded-[10px] border border-[#D1D6DE] bg-white shadow-[0_4px_20px_0px_rgba(0,0,0,0.08)] ${referralDropUp ? "bottom-full mb-1" : "top-full mt-1"}`}
+                    >
+                      {REFERRAL_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              referralSource: option,
+                            }));
+                            setIsReferralOpen(false);
+                          }}
+                          className={`w-full px-[24px] py-[10px] text-left text-[16px] transition-colors ${
+                            formData.referralSource === option
+                              ? "bg-[#F1F4F8] text-black"
+                              : "text-black hover:bg-[#F1F4F8]"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Submit Button */}
