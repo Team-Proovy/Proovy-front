@@ -66,7 +66,7 @@ export const LoginPage = () => {
               </div>
 
               {/* 하단 버튼 영역 */}
-              <div className="flex w-full flex-col gap-[4px]">
+              <div className="flex w-full flex-col gap-[16px]">
                 <SocialLoginButton
                   provider="kakao"
                   icon={<KakaoIcon className="h-[18px] w-[20px]" />}
