@@ -28,6 +28,38 @@ import { showErrorToast } from "@/shared/lib/toast";
 
 type PendingAttachment = ChatSendData["attachments"][number];
 
+const MOCK_TOOL_STATUSES: NonNullable<ChatMessage["toolStatuses"]> = [
+  {
+    id: "mock-python-create",
+    icon: "python",
+    label: "파이썬 코드 생성 중...",
+  },
+  {
+    id: "mock-python-calculate",
+    icon: "python",
+    label: "파이썬 코드로 문제의 정답 계산 중...",
+  },
+  {
+    id: "mock-transform-create",
+    icon: "transform",
+    label: "변형 문제가 생성되는 중...",
+  },
+];
+
+const withMockToolStatuses = (messages: ChatMessage[]) => {
+  const firstAssistantIndex = messages.findIndex(
+    (message) => message.role === "assistant",
+  );
+
+  if (firstAssistantIndex === -1) return messages;
+
+  return messages.map((message, index) =>
+    index === firstAssistantIndex
+      ? { ...message, toolStatuses: MOCK_TOOL_STATUSES }
+      : message,
+  );
+};
+
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
   conversations: ConversationInfo[],
@@ -116,6 +148,8 @@ export const useChatMessages = () => {
   const chatEntrySource =
     (initialStateRef.current as { chatEntrySource?: string } | null)
       ?.chatEntrySource ?? "unknown";
+  const shouldUseToolStatusMock =
+    import.meta.env.DEV && searchParams.get("toolStatusMock") === "true";
 
   const viewerFile = firstMessageData?.viewerFile;
 
@@ -206,10 +240,13 @@ export const useChatMessages = () => {
       setMessages((prev) => {
         const serverIds = new Set(serverMessages.map((m) => m.id));
         const localOnly = prev.filter((m) => !serverIds.has(m.id));
-        return [...serverMessages, ...localOnly];
+        const mergedMessages = [...serverMessages, ...localOnly];
+        return shouldUseToolStatusMock
+          ? withMockToolStatuses(mergedMessages)
+          : mergedMessages;
       });
     }
-  }, [noteDetail, hasFirstMessage]);
+  }, [noteDetail, hasFirstMessage, shouldUseToolStatusMock]);
 
   // ─── 스트리밍 상태 관리 ───
   const [isUploading, setIsUploading] = useState(false);
@@ -249,12 +286,14 @@ export const useChatMessages = () => {
 
   // 컴포넌트 언마운트 시 진행 중인 스트리밍 + 미리보기 URL 정리
   useEffect(() => {
+    const managedPreviewUrls = managedPreviewUrlsRef.current;
+
     return () => {
       abortControllerRef.current?.abort();
-      managedPreviewUrlsRef.current.forEach((url) => {
+      managedPreviewUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      managedPreviewUrlsRef.current.clear();
+      managedPreviewUrls.clear();
     };
   }, []);
 
@@ -501,6 +540,7 @@ export const useChatMessages = () => {
         role: "assistant",
         content: "",
         isStreaming: true,
+        toolStatuses: shouldUseToolStatusMock ? MOCK_TOOL_STATUSES : undefined,
       },
     ]);
 
@@ -659,6 +699,7 @@ export const useChatMessages = () => {
     registerPreviewUrl,
     searchParams,
     setSearchParams,
+    shouldUseToolStatusMock,
   ]);
 
   // ─── 후속 대화 전송 핸들러 ───
@@ -728,6 +769,9 @@ export const useChatMessages = () => {
           role: "assistant",
           content: "",
           isStreaming: true,
+          toolStatuses: shouldUseToolStatusMock
+            ? MOCK_TOOL_STATUSES
+            : undefined,
         },
       ]);
 
@@ -787,7 +831,13 @@ export const useChatMessages = () => {
         setIsStreamingResponse(false);
       }
     },
-    [noteId, processStream, queryClient, toMessageAttachment],
+    [
+      noteId,
+      processStream,
+      queryClient,
+      shouldUseToolStatusMock,
+      toMessageAttachment,
+    ],
   );
 
   // ─── 파생 데이터 ───

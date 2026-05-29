@@ -10,6 +10,7 @@ import { SparkleIcon } from "@/shared/components/icons/SparkleIcon";
 import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
 import { ThinkingBar } from "./ThinkingBar";
+import { ToolStatusBar } from "./ToolStatusBar";
 import type { ChatMessage } from "../../types/chat_types";
 
 interface ChatMessagesProps {
@@ -95,10 +96,12 @@ const AssistantMessage = ({
   content,
   isStreaming,
   statusText,
+  toolStatuses,
 }: {
   content: string;
   isStreaming?: boolean;
   statusText?: string;
+  toolStatuses?: ChatMessage["toolStatuses"];
 }) => (
   <div className="flex items-start justify-start gap-[24px]">
     <div className="flex h-[30px] w-[30px] shrink-0 items-start justify-start">
@@ -107,17 +110,40 @@ const AssistantMessage = ({
         isActive={true}
       />
     </div>
-    {isStreaming && !content ? (
-      statusText ? (
-        <ThinkingBar statusText={statusText} />
-      ) : (
-        <FinalResponseLoadingBar />
-      )
+    {isStreaming && !content && toolStatuses?.length ? (
+      <div className="flex min-w-0 flex-1 flex-col gap-[8px] md:max-w-[540px]">
+        {toolStatuses.map((status) => (
+          <ToolStatusBar
+            key={status.id}
+            icon={status.icon}
+            label={status.label}
+          />
+        ))}
+      </div>
+    ) : isStreaming && !content ? (
+      <div className="flex min-w-0 flex-1 flex-col md:max-w-[540px]">
+        {statusText ? (
+          <ThinkingBar statusText={statusText} />
+        ) : (
+          <FinalResponseLoadingBar />
+        )}
+      </div>
     ) : (
-      <div className="min-w-0 flex-1 overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px] md:max-w-[540px]">
-        <div className="text-sm leading-5 break-words text-gray-900">
-          <MessageContent content={content} />
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-[8px] md:max-w-[540px]">
+        {(content.trim() || !toolStatuses?.length) && (
+          <div className="overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
+            <div className="text-sm leading-5 break-words text-gray-900">
+              <MessageContent content={content} />
+            </div>
+          </div>
+        )}
+        {toolStatuses?.map((status) => (
+          <ToolStatusBar
+            key={status.id}
+            icon={status.icon}
+            label={status.label}
+          />
+        ))}
       </div>
     )}
   </div>
@@ -274,6 +300,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
                   content={message.content}
                   isStreaming={message.isStreaming}
                   statusText={message.statusText}
+                  toolStatuses={message.toolStatuses}
                 />
               )}
             </div>

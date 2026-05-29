@@ -10,6 +10,13 @@ export interface MessageAttachment {
   previewUrl?: string;
 }
 
+/** AI 도구 실행 상태바 */
+export interface ToolStatus {
+  id: string;
+  icon: "python" | "transform";
+  label: string;
+}
+
 /** 채팅 메시지 */
 export interface ChatMessage {
   id: string;
@@ -21,4 +28,6 @@ export interface ChatMessage {
   isStreaming?: boolean;
   /** AI 진행 상황 텍스트 — message(custom) 이벤트의 status (assistant 메시지에만 사용) */
   statusText?: string;
+  /** AI 도구 실행 상태바 목록 (assistant 메시지에만 사용) */
+  toolStatuses?: ToolStatus[];
 }
