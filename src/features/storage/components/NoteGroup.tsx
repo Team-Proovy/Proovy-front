@@ -85,7 +85,7 @@ export const NoteGroup = ({
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-          <span className="w-22.5 text-[13px] font-normal text-black">
+          <span className="w-[90px] text-[13px] font-normal text-black">
             {storageUsedDisplay.replace("MB", "")}/{storageLimitDisplay}
           </span>
         </div>
