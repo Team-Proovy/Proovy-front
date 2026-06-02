@@ -30,9 +30,12 @@ const getNearCapacityMessage = (planType?: string) => {
   return "저장소가 거의 가득 찼습니다. 파일을 삭제하여 공간을 확보하세요!";
 };
 
+type ToggleTab = "upload" | "create";
+
 export const StoragePage = () => {
   const [keyword, setKeyword] = useState("");
   const [openNoteIds, setOpenNoteIds] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState<ToggleTab>("upload");
 
   const { isDeleteModalOpen, isSuccessModalOpen } = useStorageStore();
 
@@ -65,6 +68,8 @@ export const StoragePage = () => {
           totalUsedDisplay={data?.totalUsedDisplay ?? "0MB"}
           totalLimitDisplay={data?.totalLimitDisplay ?? "0MB"}
           onSearch={handleSearch}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
 
         <div className="mt-[24px] flex flex-col gap-[20px]">
