@@ -10,39 +10,48 @@ export const UploadCreateToggle = ({
   onTabChange,
 }: UploadCreateToggleProps) => {
   return (
-    <div className="relative h-8 w-[110px] shrink-0 rounded-full border-[0.5px] border-[#D1D6DE] bg-white">
-      {/* 슬라이딩 활성 pill */}
-      <div
-        className={`absolute top-0.5 h-7 w-[61px] rounded-full bg-[#2A6AFF]/20 transition-all duration-200 ${
-          activeTab === "upload" ? "left-0.5" : "left-[47px]"
-        }`}
-      />
+    <div
+      className="relative h-[32px] w-[110px] shrink-0 overflow-hidden rounded-full border-[0.5px] border-[#D1D6DE] bg-white"
+      role="tablist"
+      aria-label="저장소 파일 보기 방식"
+    >
+      <div className="absolute inset-[2px] grid grid-cols-2">
+        <div
+          className={`absolute inset-y-0 left-0 w-1/2 rounded-full bg-[#2A6AFF]/20 transition-transform duration-200 ease-out ${
+            activeTab === "create" ? "translate-x-full" : "translate-x-0"
+          }`}
+        />
 
-      {/* 업로드 버튼 */}
-      <button
-        type="button"
-        onClick={() => onTabChange("upload")}
-        className={`absolute top-0 left-0 flex h-full w-[55px] items-center justify-center font-[Pretendard] text-[14px] transition-colors duration-200 ${
-          activeTab === "upload"
-            ? "font-semibold text-[#2A6AFF]"
-            : "font-medium text-[#9CA4B0]"
-        }`}
-      >
-        업로드
-      </button>
+        {/* 업로드 버튼 */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "upload"}
+          onClick={() => onTabChange("upload")}
+          className={`relative z-10 flex h-full min-w-0 items-center justify-center rounded-full font-[Pretendard] text-[14px] transition-colors duration-200 ${
+            activeTab === "upload"
+              ? "font-semibold text-[#2A6AFF]"
+              : "font-medium text-[#9CA4B0]"
+          }`}
+        >
+          업로드
+        </button>
 
-      {/* 생성 버튼 */}
-      <button
-        type="button"
-        onClick={() => onTabChange("create")}
-        className={`absolute top-0 right-0 flex h-full w-[55px] items-center justify-center font-[Pretendard] text-[14px] transition-colors duration-200 ${
-          activeTab === "create"
-            ? "font-semibold text-[#2A6AFF]"
-            : "font-medium text-[#9CA4B0]"
-        }`}
-      >
-        생성
-      </button>
+        {/* 생성 버튼 */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "create"}
+          onClick={() => onTabChange("create")}
+          className={`relative z-10 flex h-full min-w-0 items-center justify-center rounded-full font-[Pretendard] text-[14px] transition-colors duration-200 ${
+            activeTab === "create"
+              ? "font-semibold text-[#2A6AFF]"
+              : "font-medium text-[#9CA4B0]"
+          }`}
+        >
+          생성
+        </button>
+      </div>
     </div>
   );
 };

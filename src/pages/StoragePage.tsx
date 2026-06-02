@@ -72,7 +72,7 @@ export const StoragePage = () => {
           onTabChange={setActiveTab}
         />
 
-        <div className="mt-[24px] flex flex-col gap-[20px]">
+        <div className="mt-3 flex flex-col gap-4">
           {isLoading ? (
             <p>데이터를 불러오는 중입니다...</p>
           ) : error ? (
