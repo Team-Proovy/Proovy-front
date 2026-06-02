@@ -63,40 +63,42 @@ export const StorageToolbar = ({
             />
           </button>
         </div>
-        {/* 선택/취소 + 삭제 버튼 (노트목록 디자인 통일) */}
-        {isSelectMode ? (
-          <div className="flex items-center gap-[8px]">
-            <button
-              onClick={handleSelectToggle}
-              className="flex h-8 w-14 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
-              type="button"
-            >
-              취소
-            </button>
-            <button
-              onClick={handleDeleteClick}
-              disabled={selectedIds.length === 0}
-              className="flex h-8 w-20 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#2A6AFF] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-            >
-              삭제하기
-            </button>
-          </div>
-        ) : (
-          <>
-            <button
-              onClick={handleSelectToggle}
-              className="flex h-8 w-14 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
-              type="button"
-            >
-              선택
-            </button>
-            <UploadCreateToggle
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-            />
-          </>
-        )}
+        {/* 액션 슬롯: 모드 전환 시 검색창 폭과 첫 버튼 위치를 고정 */}
+        <div className="flex w-[186px] shrink-0 items-center gap-[20px]">
+          {isSelectMode ? (
+            <>
+              <button
+                onClick={handleSelectToggle}
+                className="flex h-8 w-14 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
+                type="button"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                disabled={selectedIds.length === 0}
+                className="flex h-8 w-20 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#2A6AFF] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                type="button"
+              >
+                삭제하기
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleSelectToggle}
+                className="flex h-8 w-14 cursor-pointer items-center justify-center rounded-xl border-[0.5px] border-[#D1D6DE] bg-white font-['Pretendard'] text-[14px] leading-5 font-medium text-[#9CA4B0] transition-colors duration-200 hover:border-transparent hover:bg-[#2A6AFF]/50 hover:text-white active:border-transparent active:bg-[#2A6AFF] active:text-white"
+                type="button"
+              >
+                선택
+              </button>
+              <UploadCreateToggle
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+              />
+            </>
+          )}
+        </div>
       </div>
       <div
         className="shrink-0 justify-self-end"
