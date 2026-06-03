@@ -38,7 +38,6 @@ export const NoteCard = ({
   onSelect,
   thumbnailUrl,
   mimeType,
-  fileCategory,
   ocrStatus = "completed",
   onClick,
 }: NoteCardProps) => {
@@ -48,10 +47,12 @@ export const NoteCard = ({
 
   const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
   const [hasThumbnailError, setHasThumbnailError] = useState(false);
+  const [prevThumbnailUrl, setPrevThumbnailUrl] = useState(thumbnailUrl);
 
-  useEffect(() => {
+  if (thumbnailUrl !== prevThumbnailUrl) {
+    setPrevThumbnailUrl(thumbnailUrl);
     setHasThumbnailError(false);
-  }, [thumbnailUrl, label, id]);
+  }
 
   // 업로드된 PDF의 경우, 썸네일 URL이 깨질 수 있으므로 원본 다운로드 URL을 받아와서 미리보기를 띄운다.
   useEffect(() => {
@@ -85,7 +86,8 @@ export const NoteCard = ({
       return (
         <PdfPreview
           fileUrl={thumbnailUrl}
-          width={240}
+          width={160}
+          className="flex h-full w-full overflow-hidden"
         />
       );
     }
@@ -95,7 +97,8 @@ export const NoteCard = ({
       return (
         <PdfPreview
           fileUrl={pdfDownloadUrl}
-          width={240}
+          width={160}
+          className="flex h-full w-full overflow-hidden"
         />
       );
     }
@@ -114,113 +117,121 @@ export const NoteCard = ({
       );
     }
 
-    // 썸네일이 없을 때 파일 타입에 따른 기본 아이콘 표시
     return (
-      <div className="flex flex-col items-center gap-2">
-        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200">
-          {fileCategory === "document" || mimeType === "application/pdf" ? (
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="text-gray-500"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-              />
-            </svg>
-          ) : (
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              className="text-gray-500"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          )}
-        </div>
-        <p className="text-[11px] text-gray-400">썸네일 없음</p>
-      </div>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="90"
+        height="90"
+        viewBox="0 0 90 90"
+        fill="none"
+      >
+        <path
+          d="M66.5387 27.3425V73.2069H23.4614V17.1465H44.1357L54.5434 35.0689L59.4473 27.8011L66.5387 27.3425Z"
+          fill="url(#paint0_linear_432_11017)"
+        />
+        <path
+          d="M54.3317 38.8084L60.2588 29.2827H66.5387V25.3666H57.9655L54.3317 31.2584L45.2646 16.7935H23.4614V20.6743H43.0067L54.3317 38.8084Z"
+          fill="#2A6AFF"
+        />
+        <path
+          d="M62.6224 41.4189H27.3774V44.947H62.6224V41.4189Z"
+          fill="#2A6AFF"
+        />
+        <path
+          d="M62.6224 51.2974H27.3774V54.8254H62.6224V51.2974Z"
+          fill="#2A6AFF"
+        />
+        <path
+          d="M45.6879 66.1504H27.3774V73.2064H45.6879V66.1504Z"
+          fill="#2A6AFF"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear_432_11017"
+            x1="45"
+            y1="17.1465"
+            x2="45"
+            y2="73.2069"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="white" />
+            <stop
+              offset="1"
+              stopColor="#2A6AFF"
+              stopOpacity="0.5"
+            />
+          </linearGradient>
+        </defs>
+      </svg>
     );
   };
 
   return (
     <div
       onClick={() => (isSelectMode ? onSelect() : onClick?.())}
-      className="group relative flex cursor-pointer flex-col transition-transform hover:scale-[1.02]"
+      className="group relative cursor-pointer transition-transform hover:scale-[1.02]"
       style={{
         width: "240px",
         height: "180px",
         borderRadius: "12px",
         border: isSelected ? "1.5px solid #2A6AFF" : "0.5px solid #D1D6DE",
-        background: isSelected ? "rgba(42, 106, 255, 0.05)" : "transparent",
+        background: isSelected
+          ? "rgba(42, 106, 255, 0.1)"
+          : "rgba(42, 106, 255, 0.05)",
         overflow: "hidden",
       }}
     >
-      {/* 썸네일 영역 */}
+      {/* 썸네일 영역: Figma 160×140px, x=37, y=1 */}
       <div
-        className="relative flex items-center justify-center overflow-hidden"
+        className="absolute flex items-center justify-center overflow-hidden"
         style={{
-          width: "100%",
+          left: "37px",
+          top: "1px",
+          width: "160px",
           height: "140px",
-          background: "#F2F2F2",
+          background: "#FFFFFF",
           boxShadow: "4px 4px 20px 0px rgba(0, 0, 0, 0.05)",
         }}
       >
-        {/* 체크박스 (선택 모드일 때) */}
-        {isSelectMode && (
-          <div className="absolute top-[12px] left-[12px] z-10 flex items-center justify-center">
-            {isSelected ? (
-              <StorageCheckboxCheckedIcon />
-            ) : (
-              <StorageCheckboxUncheckedIcon />
-            )}
-          </div>
-        )}
-
-        {/* 썸네일 렌더링 */}
-        <div className="flex h-full w-full items-center justify-center p-2">
+        <div className="flex h-full w-full items-center justify-center">
           {renderThumbnail()}
-        </div>
-
-        {/* 업로드/AI 생성 배지 */}
-        <div
-          style={{
-            position: "absolute",
-            top: "12px",
-            right: "12px",
-            display: "flex",
-            height: "20px",
-            padding: "0 8px",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "10px",
-            background: badgeColor,
-            zIndex: 10,
-          }}
-        >
-          <span className="font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
-            {badgeText}
-          </span>
         </div>
       </div>
 
-      {/* 파일명 영역 */}
+      {/* 체크박스 (선택 모드) */}
+      {isSelectMode && (
+        <div className="absolute top-3 left-3 z-10 flex items-center justify-center">
+          {isSelected ? (
+            <StorageCheckboxCheckedIcon />
+          ) : (
+            <StorageCheckboxUncheckedIcon />
+          )}
+        </div>
+      )}
+
+      {/* 업로드/AI 생성 배지: Figma x=180, y=12 → right=12, top=12 */}
       <div
-        className="flex items-center"
+        className="absolute z-10"
+        style={{
+          top: "12px",
+          right: "12px",
+          display: "flex",
+          height: "20px",
+          padding: "0 8px",
+          justifyContent: "center",
+          alignItems: "center",
+          borderRadius: "10px",
+          background: badgeColor,
+        }}
+      >
+        <span className="font-['Pretendard'] text-[10px] font-bold whitespace-nowrap text-white">
+          {badgeText}
+        </span>
+      </div>
+
+      {/* 파일명 영역: Figma x=0, y=140, 240×40px */}
+      <div
+        className="absolute bottom-0 left-0 flex items-center"
         style={{
           width: "100%",
           height: "40px",
