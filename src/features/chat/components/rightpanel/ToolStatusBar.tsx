@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
-
-type ToolStatusIconType = "python" | "transform";
+import type { ToolStatusIconType } from "../../types/chat_types";
+import { STATUS_BAR_BASE_CLASS } from "./status_bar_styles";
 
 interface ToolStatusBarProps {
   icon: ToolStatusIconType;
@@ -96,9 +96,7 @@ export const ToolStatusBar = ({
   const Icon = ICON_BY_TYPE[icon];
 
   return (
-    <div
-      className={`flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] px-[20px] py-[8px] ${className}`}
-    >
+    <div className={`${STATUS_BAR_BASE_CLASS} px-[20px] py-[8px] ${className}`}>
       <Icon className="size-[24px] shrink-0" />
       <p className="min-w-0 truncate text-[14px] leading-[20px] font-medium text-[#6B7280]">
         {label}

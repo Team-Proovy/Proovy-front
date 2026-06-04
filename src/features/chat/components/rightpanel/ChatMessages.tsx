@@ -11,6 +11,7 @@ import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
 import { ThinkingBar } from "./ThinkingBar";
 import { ToolStatusBar } from "./ToolStatusBar";
+import { STATUS_BAR_BASE_CLASS } from "./status_bar_styles";
 import type { ChatMessage } from "../../types/chat_types";
 
 interface ChatMessagesProps {
@@ -48,7 +49,7 @@ const FinalResponseLoadingBar = () => {
   }, []);
 
   return (
-    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[16px]">
+    <div className={`${STATUS_BAR_BASE_CLASS} p-[16px]`}>
       <SparkleIcon
         size={24}
         color={isBlue ? "#2A6AFF" : "#6B7280"}

@@ -10,10 +10,13 @@ export interface MessageAttachment {
   previewUrl?: string;
 }
 
+/** AI 도구 실행 상태바 아이콘 종류 */
+export type ToolStatusIconType = "python" | "transform";
+
 /** AI 도구 실행 상태바 */
 export interface ToolStatus {
   id: string;
-  icon: "python" | "transform";
+  icon: ToolStatusIconType;
   label: string;
 }
 

@@ -25,40 +25,9 @@ import { creditKeys } from "@/features/settings/hooks/useCredit";
 import { userKeys } from "@/features/settings/hooks/useUser";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
 import { showErrorToast } from "@/shared/lib/toast";
+import { MOCK_TOOL_STATUSES, withMockToolStatuses } from "./tool_status_mock";
 
 type PendingAttachment = ChatSendData["attachments"][number];
-
-const MOCK_TOOL_STATUSES: NonNullable<ChatMessage["toolStatuses"]> = [
-  {
-    id: "mock-python-create",
-    icon: "python",
-    label: "파이썬 코드 생성 중...",
-  },
-  {
-    id: "mock-python-calculate",
-    icon: "python",
-    label: "파이썬 코드로 문제의 정답 계산 중...",
-  },
-  {
-    id: "mock-transform-create",
-    icon: "transform",
-    label: "변형 문제가 생성되는 중...",
-  },
-];
-
-const withMockToolStatuses = (messages: ChatMessage[]) => {
-  const firstAssistantIndex = messages.findIndex(
-    (message) => message.role === "assistant",
-  );
-
-  if (firstAssistantIndex === -1) return messages;
-
-  return messages.map((message, index) =>
-    index === firstAssistantIndex
-      ? { ...message, toolStatuses: MOCK_TOOL_STATUSES }
-      : message,
-  );
-};
 
 /** 서버 ConversationInfo[] → ChatMessage[] 변환 */
 const convertConversations = (
