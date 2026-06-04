@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import { useId, type SVGProps } from "react";
 import type { ToolStatusIconType } from "../../types/chat_types";
 import { STATUS_BAR_BASE_CLASS } from "./status_bar_styles";
 
@@ -41,47 +41,52 @@ const PythonIcon = (props: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const TransformIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
-    {...props}
-  >
-    <path
-      d="M8.55191 18.835C8.33553 18.8256 8.0721 18.7033 7.94039 18.4869L5.91765 15.0623C5.72008 14.7236 5.83298 14.2909 6.17167 14.0933C6.51036 13.8957 6.94313 14.0086 7.1407 14.3473L8.56132 16.7464L11.5719 11.7131C11.7036 11.4967 11.9294 11.365 12.174 11.365H17.452L14.5072 6.57625H11.0074C10.6217 6.57625 10.3018 6.25638 10.3018 5.87064C10.3018 5.48491 10.6217 5.16504 11.0074 5.16504H14.9024C15.147 5.16504 15.3728 5.29675 15.5045 5.50373L19.3148 11.7037C19.4465 11.92 19.4559 12.1929 19.3336 12.4187C19.2113 12.6445 18.9761 12.7762 18.722 12.7762H12.5786L9.17285 18.4869C9.04113 18.7033 8.81534 18.835 8.57073 18.835H8.55191Z"
-      fill="#2A6AFF"
-    />
-    <path
-      d="M15.0435 18.8348H8.54254V17.4236H14.639L18.0917 11.7129L19.296 12.4467L15.6362 18.5055C15.5045 18.7125 15.2787 18.8442 15.0341 18.8442L15.0435 18.8348Z"
-      fill="#2A6AFF"
-    />
-    <path
-      d="M7.3062 4.70411L3.76324 8.24707L7.51858 12.0024L11.0615 8.45945L7.3062 4.70411Z"
-      fill="url(#transform-icon-gradient)"
-    />
-    <defs>
-      <linearGradient
-        id="transform-icon-gradient"
-        x1="5.54562"
-        y1="6.48431"
-        x2="9.30207"
-        y2="10.2408"
-        gradientUnits="userSpaceOnUse"
-      >
-        <stop stopColor="white" />
-        <stop
-          offset="1"
-          stopColor="#2A6AFF"
-          stopOpacity="0.3"
-        />
-      </linearGradient>
-    </defs>
-  </svg>
-);
+const TransformIcon = (props: SVGProps<SVGSVGElement>) => {
+  // 같은 아이콘이 여러 개 렌더링돼도 gradient id가 충돌하지 않도록 인스턴스마다 고유 id 생성
+  const gradientId = useId();
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M8.55191 18.835C8.33553 18.8256 8.0721 18.7033 7.94039 18.4869L5.91765 15.0623C5.72008 14.7236 5.83298 14.2909 6.17167 14.0933C6.51036 13.8957 6.94313 14.0086 7.1407 14.3473L8.56132 16.7464L11.5719 11.7131C11.7036 11.4967 11.9294 11.365 12.174 11.365H17.452L14.5072 6.57625H11.0074C10.6217 6.57625 10.3018 6.25638 10.3018 5.87064C10.3018 5.48491 10.6217 5.16504 11.0074 5.16504H14.9024C15.147 5.16504 15.3728 5.29675 15.5045 5.50373L19.3148 11.7037C19.4465 11.92 19.4559 12.1929 19.3336 12.4187C19.2113 12.6445 18.9761 12.7762 18.722 12.7762H12.5786L9.17285 18.4869C9.04113 18.7033 8.81534 18.835 8.57073 18.835H8.55191Z"
+        fill="#2A6AFF"
+      />
+      <path
+        d="M15.0435 18.8348H8.54254V17.4236H14.639L18.0917 11.7129L19.296 12.4467L15.6362 18.5055C15.5045 18.7125 15.2787 18.8442 15.0341 18.8442L15.0435 18.8348Z"
+        fill="#2A6AFF"
+      />
+      <path
+        d="M7.3062 4.70411L3.76324 8.24707L7.51858 12.0024L11.0615 8.45945L7.3062 4.70411Z"
+        fill={`url(#${gradientId})`}
+      />
+      <defs>
+        <linearGradient
+          id={gradientId}
+          x1="5.54562"
+          y1="6.48431"
+          x2="9.30207"
+          y2="10.2408"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="white" />
+          <stop
+            offset="1"
+            stopColor="#2A6AFF"
+            stopOpacity="0.3"
+          />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+};
 
 const ICON_BY_TYPE: Record<ToolStatusIconType, typeof PythonIcon> = {
   python: PythonIcon,
