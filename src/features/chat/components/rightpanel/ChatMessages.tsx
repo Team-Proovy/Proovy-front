@@ -131,7 +131,7 @@ const AssistantMessage = ({
       </div>
     ) : (
       <div className="flex min-w-0 flex-1 flex-col gap-[8px] md:max-w-[540px]">
-        {(content.trim() || !toolStatuses?.length) && (
+        {content.trim().length > 0 && (
           <div className="overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
             <div className="text-sm leading-5 break-words text-gray-900">
               <MessageContent content={content} />
