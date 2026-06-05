@@ -106,7 +106,7 @@ export const SidebarNoteItem = ({
       {!isRenaming && (
         <div
           ref={menuRef}
-          className="absolute top-1/2 right-0 -translate-y-1/2"
+          className="absolute top-1/2 right-0 z-10 -translate-y-1/2"
         >
           <button
             onClick={(e) => {

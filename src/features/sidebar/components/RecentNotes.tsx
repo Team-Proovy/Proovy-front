@@ -23,6 +23,7 @@ interface RecentNotesProps {
 export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
   const [sort, setSort] = useState<SortValue>("lastUsedAt,desc");
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isNotesCollapsed, setIsNotesCollapsed] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const sortRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<HTMLDivElement>(null);
@@ -113,87 +114,94 @@ export const RecentNotes = ({ isCollapsed }: RecentNotesProps) => {
         }`}
         aria-hidden={isCollapsed}
       >
-        {/* 헤더: 정렬 드롭다운 + 새 노트 버튼 */}
-        <div
-          ref={sortRef}
-          className="relative mb-[16px] w-[192px] flex-shrink-0"
-        >
-          <button
-            onClick={() => setIsSortOpen((prev) => !prev)}
-            className="flex w-full items-center justify-between"
+        {/* 헤더: 정렬 드롭다운 + 접기 버튼 */}
+        <div className="mb-[16px] flex w-[192px] flex-shrink-0 items-center justify-between">
+          {/* 텍스트 클릭 → 정렬 모달 */}
+          <div
+            ref={sortRef}
+            className="relative"
           >
-            <span className="pl-[8px] text-[16px] leading-[24px] font-semibold text-black">
+            <button
+              onClick={() => setIsSortOpen((prev) => !prev)}
+              className="pl-[8px] text-[16px] leading-[24px] font-semibold text-black"
+            >
               최근 노트 목록
-            </span>
-            <span className="flex h-[22px] w-[22px] items-center justify-center">
-              <span className="flex h-3 w-3 items-center justify-center overflow-hidden">
-                <StorageChevronIcon isOpen={isSortOpen} />
-              </span>
+            </button>
+            {isSortOpen && (
+              <div className="absolute top-full left-0 z-20 mt-1 w-[124px] rounded-lg border border-[#E3E7ED] bg-white py-1 shadow-lg">
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSort(option.value);
+                      setIsSortOpen(false);
+                    }}
+                    className={`w-full px-3 py-[6px] text-left text-[13px] transition-colors hover:bg-[#F5F5F5] ${
+                      sort === option.value
+                        ? "font-semibold text-[#2A6AFF]"
+                        : "text-[#454545]"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 화살표 클릭 → 노트 목록 접기/펴기 */}
+          <button
+            onClick={() => setIsNotesCollapsed((prev) => !prev)}
+            className="flex h-[22px] w-[22px] items-center justify-center"
+          >
+            <span className="flex h-3 w-3 items-center justify-center overflow-hidden">
+              <StorageChevronIcon isOpen={!isNotesCollapsed} />
             </span>
           </button>
-
-          {isSortOpen && (
-            <div className="absolute top-full right-0 z-20 mt-1 w-[124px] rounded-lg border border-[#E3E7ED] bg-white py-1 shadow-lg">
-              {SORT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    setSort(option.value);
-                    setIsSortOpen(false);
-                  }}
-                  className={`w-full px-3 py-[6px] text-left text-[13px] transition-colors hover:bg-[#F5F5F5] ${
-                    sort === option.value
-                      ? "font-semibold text-[#2A6AFF]"
-                      : "text-[#454545]"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* 노트 목록 */}
-        <ul className="recent-notes-list flex min-h-0 flex-1 flex-col gap-[16px] overflow-y-auto pr-3">
-          {isLoading ? (
-            [1, 2, 3].map((i) => (
-              <li
-                key={`skeleton-${i}`}
-                className="px-3"
-              >
+        {!isNotesCollapsed && (
+          <ul className="recent-notes-list flex min-h-0 flex-1 flex-col gap-[16px] overflow-x-hidden overflow-y-auto pr-3">
+            {isLoading ? (
+              [1, 2, 3].map((i) => (
+                <li
+                  key={`skeleton-${i}`}
+                  className="px-3"
+                >
+                  <div className="h-[30px] animate-pulse rounded bg-gray-200" />
+                </li>
+              ))
+            ) : error ? (
+              <li className="px-3 text-[12px] text-red-500">
+                노트를 불러올 수 없습니다
+              </li>
+            ) : notes.length === 0 ? (
+              <li className="px-3 text-[12px] text-gray-400">
+                최근 노트가 없습니다
+              </li>
+            ) : (
+              notes.map((note) => (
+                <SidebarNoteItem
+                  key={note.noteId}
+                  note={note}
+                  onDeleteRequest={() => setDeleteTargetId(note.noteId)}
+                />
+              ))
+            )}
+
+            {/* 무한 스크롤 트리거 */}
+            <div
+              ref={observerRef}
+              className="h-1 flex-shrink-0"
+            />
+            {isFetchingNextPage && (
+              <li className="px-3">
                 <div className="h-[30px] animate-pulse rounded bg-gray-200" />
               </li>
-            ))
-          ) : error ? (
-            <li className="px-3 text-[12px] text-red-500">
-              노트를 불러올 수 없습니다
-            </li>
-          ) : notes.length === 0 ? (
-            <li className="px-3 text-[12px] text-gray-400">
-              최근 노트가 없습니다
-            </li>
-          ) : (
-            notes.map((note) => (
-              <SidebarNoteItem
-                key={note.noteId}
-                note={note}
-                onDeleteRequest={() => setDeleteTargetId(note.noteId)}
-              />
-            ))
-          )}
-
-          {/* 무한 스크롤 트리거 */}
-          <div
-            ref={observerRef}
-            className="h-1 flex-shrink-0"
-          />
-          {isFetchingNextPage && (
-            <li className="px-3">
-              <div className="h-[30px] animate-pulse rounded bg-gray-200" />
-            </li>
-          )}
-        </ul>
+            )}
+          </ul>
+        )}
       </div>
 
       {/* 단건 삭제 확인 모달 — portal로 body에 마운트해 stacking context 우회 */}

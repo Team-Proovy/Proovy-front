@@ -5,15 +5,21 @@ import * as pdfjsLib from "pdfjs-dist";
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface PdfPreviewProps {
-  fileUrl: string; // preview할 PDF의 Blob URL
-  width?: number; // 캔버스 넓이 (선택)
+  fileUrl: string;
+  width?: number;
+  className?: string;
 }
 
-export const PdfPreview = ({ fileUrl, width = 180 }: PdfPreviewProps) => {
+export const PdfPreview = ({
+  fileUrl,
+  width = 180,
+  className,
+}: PdfPreviewProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    let renderTask: any = null;
+    let renderTask: { cancel: () => void; promise: Promise<void> } | null =
+      null;
     let isCancelled = false;
 
     const renderPdf = async () => {
@@ -45,9 +51,11 @@ export const PdfPreview = ({ fileUrl, width = 180 }: PdfPreviewProps) => {
         });
 
         await renderTask.promise;
-      } catch (error: any) {
-        if (error.name === "RenderingCancelledException" || isCancelled) {
-          // 렌더링 취소는 에러가 아님
+      } catch (error: unknown) {
+        const isRenderCancel =
+          error instanceof Error &&
+          error.name === "RenderingCancelledException";
+        if (isRenderCancel || isCancelled) {
           console.log("PDF 렌더링 취소됨");
         } else {
           console.error("PDF Preview 렌더링 실패:", error);
@@ -69,7 +77,12 @@ export const PdfPreview = ({ fileUrl, width = 180 }: PdfPreviewProps) => {
   }, [fileUrl, width]); // 파일이나 너비가 바뀌면 다시 렌더링한다.
 
   return (
-    <div className="flex justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100 shadow-sm">
+    <div
+      className={
+        className ??
+        "flex justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100 shadow-sm"
+      }
+    >
       <canvas ref={canvasRef} />
     </div>
   );

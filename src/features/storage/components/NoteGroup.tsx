@@ -57,7 +57,7 @@ export const NoteGroup = ({
             {title}
           </span>
         </div>
-        <div className="flex items-center gap-[10px] font-['Pretendard']">
+        <div className="flex shrink-0 items-center gap-2 font-['Pretendard']">
           <span
             style={{
               color: "#000",
@@ -69,7 +69,6 @@ export const NoteGroup = ({
           >
             노트 용량
           </span>
-          {/* 동적 막대 그래프 */}
           <div
             style={{
               display: "flex",
@@ -86,9 +85,7 @@ export const NoteGroup = ({
               style={{ width: `${usagePercent}%` }}
             />
           </div>
-
-          {/* 서버 데이터 기반 텍스트 */}
-          <span className="text-[13px] font-normal text-black">
+          <span className="w-[90px] text-[13px] font-normal text-black">
             {storageUsedDisplay.replace("MB", "")}/{storageLimitDisplay}
           </span>
         </div>
@@ -97,8 +94,8 @@ export const NoteGroup = ({
       {isOpen &&
         (notes.length > 0 ? (
           <ContentGrid
-            className="mt-[20px]"
-            gapClass="gap-[20px]"
+            className="mt-3"
+            gapClass="gap-x-[40px] gap-y-[20px]"
             cols={{ base: 2, xl: 3, xl3: 4 }}
           >
             {notes.map((asset) => (
