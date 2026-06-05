@@ -70,6 +70,16 @@ const resolveErrorRoute = (error: AxiosError) => {
   return null;
 };
 
+/**
+ * 주어진 에러가 에러 페이지 리다이렉트를 유발하는지 판단해 그 경로를 반환한다.
+ * (전역 에러 토스트가 리다이렉트와 중복 표시되지 않도록 판단하는 용도)
+ */
+export const getErrorRedirectRoute = (error: unknown): string | null => {
+  if (!SHOULD_ENABLE_ERROR_REDIRECT) return null;
+  if (!axios.isAxiosError(error)) return null;
+  return resolveErrorRoute(error);
+};
+
 // 토큰 관리 유틸
 export const tokenUtils = {
   getAccessToken: () => localStorage.getItem(ACCESS_TOKEN_KEY),
