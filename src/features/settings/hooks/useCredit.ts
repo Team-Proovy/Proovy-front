@@ -31,6 +31,8 @@ export const useUseCredit = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // ChatInput에서 크레딧 부족 등을 자체 토스트로 처리 + 낙관적 롤백 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: useCredit,
     onMutate: async (variables: CreditUsageRequest) => {
       await queryClient.cancelQueries({ queryKey: userKeys.profile() });

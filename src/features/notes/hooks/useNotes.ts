@@ -73,6 +73,8 @@ export const useCreateNote = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // useHomeSend에서 자체 onError 토스트로 처리 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: (
       variables: CreateNoteRequest & { suppressRedirect?: boolean },
     ) => {
@@ -140,6 +142,8 @@ export const useDeleteNotesBulk = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // DeleteNotesModal에서 인라인 에러 메시지로 처리 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: (noteIds: number[]) => deleteNotesBulk(noteIds),
     onSuccess: () => {
       // 노트 목록 캐시 무효화
