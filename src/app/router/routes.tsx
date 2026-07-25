@@ -22,10 +22,13 @@ import {
   PublicRoute,
 } from "@/shared/router/components/RouteGuards";
 import { RootRoute } from "@/shared/router/RootRoute";
+import { RouteErrorBoundary } from "@/shared/router/RouteErrorBoundary";
 
 export const router = createBrowserRouter([
   {
     element: <RootRoute />,
+    // 라우트 트리 내부에서 throw된 렌더/로더 에러를 잡아 500 페이지로 폴백
+    errorElement: <RouteErrorBoundary />,
     children: [
       // ========================================
       // 🌐 Public Routes (인증 지향적이나 로그인이 필수는 아님)
