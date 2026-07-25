@@ -67,7 +67,7 @@ const ChatPageContent = () => {
   return (
     <div
       id="chat-container"
-      className="flex h-full min-h-0 w-full flex-col overflow-hidden"
+      className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#F1F4F8]"
     >
       <ChatHeader
         title={noteTitle}

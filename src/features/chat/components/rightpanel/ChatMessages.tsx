@@ -5,14 +5,13 @@ import {
   useCallback,
   useState,
 } from "react";
-import {
-  ProfileIcon,
-  SubscriptionIcon,
-} from "@/shared/components/icons/SettingsIcons";
+import { SubscriptionIcon } from "@/shared/components/icons/SettingsIcons";
 import { SparkleIcon } from "@/shared/components/icons/SparkleIcon";
 import { MessageContent } from "./MessageContent";
 import { MessageAttachments } from "./MessageAttachments";
 import { ThinkingBar } from "./ThinkingBar";
+import { ToolStatusBar } from "./ToolStatusBar";
+import { STATUS_BAR_BASE_CLASS } from "./status_bar_styles";
 import type { ChatMessage } from "../../types/chat_types";
 
 interface ChatMessagesProps {
@@ -50,7 +49,7 @@ const FinalResponseLoadingBar = () => {
   }, []);
 
   return (
-    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
+    <div className={`${STATUS_BAR_BASE_CLASS} p-[16px]`}>
       <SparkleIcon
         size={24}
         color={isBlue ? "#2A6AFF" : "#6B7280"}
@@ -80,20 +79,14 @@ const UserMessage = ({ message }: { message: ChatMessage }) => (
       <MessageAttachments attachments={message.attachments} />
     )}
     {/* 텍스트 메시지 */}
-    <div className="flex items-start justify-end gap-[12px]">
-      <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
+    <div className="flex items-start justify-end">
+      <div className="max-w-[400px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
         <div className="text-[14px] leading-[20px] font-medium break-words whitespace-pre-wrap text-black">
           <MessageContent
             content={message.content}
             enableFileMentionChip={true}
           />
         </div>
-      </div>
-      <div className="shrink-0">
-        <ProfileIcon
-          size={40}
-          color="#2A6AFF"
-        />
       </div>
     </div>
   </div>
@@ -104,29 +97,54 @@ const AssistantMessage = ({
   content,
   isStreaming,
   statusText,
+  toolStatuses,
 }: {
   content: string;
   isStreaming?: boolean;
   statusText?: string;
+  toolStatuses?: ChatMessage["toolStatuses"];
 }) => (
-  <div className="flex items-start justify-start gap-[12px]">
-    <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[40px] border-[0.5px] border-[#D1D6DE] bg-white">
+  <div className="flex items-start justify-start gap-[24px]">
+    <div className="flex h-[30px] w-[30px] shrink-0 items-start justify-start">
       <SubscriptionIcon
-        size={40}
+        size={30}
         isActive={true}
       />
     </div>
-    {isStreaming && !content ? (
-      statusText ? (
-        <ThinkingBar statusText={statusText} />
-      ) : (
-        <FinalResponseLoadingBar />
-      )
+    {isStreaming && !content && toolStatuses?.length ? (
+      <div className="flex min-w-0 flex-1 flex-col gap-[8px] md:max-w-[540px]">
+        {toolStatuses.map((status) => (
+          <ToolStatusBar
+            key={status.id}
+            icon={status.icon}
+            label={status.label}
+          />
+        ))}
+      </div>
+    ) : isStreaming && !content ? (
+      <div className="flex min-w-0 flex-1 flex-col md:max-w-[540px]">
+        {statusText ? (
+          <ThinkingBar statusText={statusText} />
+        ) : (
+          <FinalResponseLoadingBar />
+        )}
+      </div>
     ) : (
-      <div className="w-full overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[10px]">
-        <div className="text-sm leading-5 break-words text-gray-900">
-          <MessageContent content={content} />
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-[8px] md:max-w-[540px]">
+        {content.trim().length > 0 && (
+          <div className="overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-white p-[16px]">
+            <div className="text-sm leading-5 break-words text-gray-900">
+              <MessageContent content={content} />
+            </div>
+          </div>
+        )}
+        {toolStatuses?.map((status) => (
+          <ToolStatusBar
+            key={status.id}
+            icon={status.icon}
+            label={status.label}
+          />
+        ))}
       </div>
     )}
   </div>
@@ -250,16 +268,24 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
   return (
     <div
       ref={scrollRef}
-      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto"
+      className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto px-[30px]"
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
-      <div className="w-full max-w-[660px] min-w-[270px] px-[16px] pt-[40px]">
+      <div className="w-full max-w-[660px] min-w-[270px] pt-[40px]">
         {messages.map((message, index) => {
           const prevMessage = messages[index - 1];
           const isNewGroup =
             prevMessage?.role === "assistant" && message.role === "user";
+          const isAnswerAfterQuestion =
+            prevMessage?.role === "user" && message.role === "assistant";
           const marginTop =
-            index === 0 ? "" : isNewGroup ? "mt-[40px]" : "mt-[12px]";
+            index === 0
+              ? ""
+              : isNewGroup
+                ? "mt-[40px]"
+                : isAnswerAfterQuestion
+                  ? "mt-[24px]"
+                  : "mt-[12px]";
 
           return (
             <div
@@ -275,6 +301,7 @@ export const ChatMessages = ({ messages }: ChatMessagesProps) => {
                   content={message.content}
                   isStreaming={message.isStreaming}
                   statusText={message.statusText}
+                  toolStatuses={message.toolStatuses}
                 />
               )}
             </div>

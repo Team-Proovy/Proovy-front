@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SparkleIcon } from "@/shared/components/icons/SparkleIcon";
+import { STATUS_BAR_BASE_CLASS } from "./status_bar_styles";
 
 interface ThinkingBarProps {
   /** 서버에서 전달받은 진행 상황 텍스트 (없으면 기본 메시지) */
@@ -26,7 +27,7 @@ export const ThinkingBar = ({ statusText }: ThinkingBarProps) => {
   const iconColor = isBlue ? "#2A6AFF" : "#6B7280";
 
   return (
-    <div className="flex min-h-[30px] w-full items-center gap-[8px] overflow-hidden rounded-[12px] border-[0.5px] border-[#D1D6DE] bg-[#E3E7ED] p-[10px]">
+    <div className={`${STATUS_BAR_BASE_CLASS} p-[16px]`}>
       <SparkleIcon
         size={24}
         color={iconColor}

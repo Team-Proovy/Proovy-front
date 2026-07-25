@@ -42,7 +42,7 @@ export const useChatPanel = ({
   } = useResizable({
     initialWidth: 50,
     leftMinPx: 382,
-    rightMinPx: 302,
+    rightMinPx: 330,
   });
 
   const handleTabChange = useCallback(
