@@ -1,6 +1,7 @@
 import {
   TERMINAL_RUN_STATUSES,
   toEventId,
+  type ActiveRunStatus,
   type ActivityFrame,
   type AssistantConversationMessage,
   type BrowserFrame,
@@ -10,6 +11,7 @@ import {
 } from "@/shared/contracts/browser_run_v1";
 import type {
   ActivityEntry,
+  ConversationResume,
   RunAction,
   RunIdentity,
   RunState,
@@ -45,8 +47,9 @@ export const isTerminalRunStatus = (status: PublicRunStatus | null) =>
  * run 하나의 상태 reducer (순수 함수).
  *
  * 반영하지 않는 입력은 같은 state 참조를 그대로 돌려준다:
- * terminal 뒤 입력, 다른 run의 frame, `seq <= lastSeq`(같은 event id 재전달 포함), heartbeat,
- * started 없이 온 activity 후속 이벤트, 이미 outcome이 정해진 Activity의 이벤트.
+ * terminal 뒤 입력, 다른 run의 frame, `seq <= lastSeq`(같은 event id 재전달 포함), heartbeat.
+ * started 없이 온 activity 후속 이벤트·이미 outcome이 정해진 Activity의 이벤트는 내용을 바꾸지 않지만
+ * 받은 frame이므로 `lastSeq`·cursor는 올린다(cursor = 마지막으로 받은 frame id).
  */
 export const runReducer = (state: RunState, action: RunAction): RunState => {
   if (isTerminalRunStatus(state.status)) return state;
@@ -54,7 +57,12 @@ export const runReducer = (state: RunState, action: RunAction): RunState => {
     case "frame":
       return applyFrame(state, action.frame);
     case "conversation":
-      return applyConversation(state, action.page, action.runId);
+      return applyConversation(
+        state,
+        action.page,
+        action.runId,
+        action.resume ?? "replay",
+      );
     case "heartbeat":
       return state;
   }
@@ -78,8 +86,7 @@ const applyFrame = (state: RunState, frame: BrowserFrame): RunState => {
   if (state.runId !== null && frame.runId !== state.runId) return state;
   if (frame.seq <= state.lastSeq) return state;
 
-  const next = applyFramePayload(state, frame);
-  if (next === null) return state;
+  const next = applyFramePayload(state, frame) ?? state;
   return {
     ...next,
     runId: frame.runId,
@@ -88,11 +95,29 @@ const applyFrame = (state: RunState, frame: BrowserFrame): RunState => {
   };
 };
 
-/** 진행 frame은 PENDING을 RUNNING으로 올린다. CANCELING은 되돌리지 않는다. */
-const progressed = (status: PublicRunStatus | null): PublicRunStatus =>
-  status === "CANCELING" ? "CANCELING" : "RUNNING";
+const ACTIVE_STATUS_RANK: Record<ActiveRunStatus, number> = {
+  PENDING: 0,
+  RUNNING: 1,
+  CANCELING: 2,
+};
 
-/** `null`이면 무시할 frame이다(cursor도 움직이지 않는다). */
+/** 진행 중 status는 PENDING→RUNNING→CANCELING으로만 움직인다(뒤로 가지 않는다). */
+const advanceStatus = (
+  status: PublicRunStatus | null,
+  incoming: ActiveRunStatus,
+): PublicRunStatus => {
+  if (status === null || !(status in ACTIVE_STATUS_RANK)) return incoming;
+  const current = status as ActiveRunStatus;
+  return ACTIVE_STATUS_RANK[incoming] > ACTIVE_STATUS_RANK[current]
+    ? incoming
+    : current;
+};
+
+/** 진행 frame은 PENDING을 RUNNING으로 올린다. CANCELING은 되돌리지 않는다. */
+const progressed = (status: PublicRunStatus | null) =>
+  advanceStatus(status, "RUNNING");
+
+/** `null`이면 내용을 바꾸지 않는 frame이다(cursor는 `applyFrame`이 올린다). */
 const applyFramePayload = (
   state: RunState,
   frame: BrowserFrame,
@@ -102,7 +127,7 @@ const applyFramePayload = (
       const { payload } = frame;
       return {
         ...state,
-        status: state.status ?? "PENDING",
+        status: advanceStatus(state.status, "PENDING"),
         identity: {
           requestId: payload.requestId,
           noteId: payload.noteId,
@@ -217,7 +242,10 @@ const createActivityEntry = (
   updatedSeq: frame.seq,
 });
 
-/** kind별 payload 필드를 Activity에 옮긴다. payload에 없는 필드는 이전 값을 유지한다. */
+/**
+ * kind별 payload 필드를 Activity에 옮긴다. 진행 중에는 payload에 없는 필드가 이전 값을 유지한다.
+ * activity terminal에서는 진행 sub-state를 지우고 message를 그 payload 값(없으면 null)으로 바꾼다.
+ */
 const mergeActivityPayload = (
   entry: ActivityEntry,
   frame: ActivityFrame,
@@ -225,8 +253,12 @@ const mergeActivityPayload = (
   const payload = frame.payload;
   const next: ActivityEntry = { ...entry, updatedSeq: frame.seq };
 
-  if ("message" in payload && payload.message != null)
-    next.message = payload.message;
+  if (frame.type === "activity.updated") {
+    if (frame.payload.message != null) next.message = frame.payload.message;
+  } else if (frame.type !== "activity.started") {
+    next.progressStatus = null;
+    next.message = frame.payload.message ?? null;
+  }
   if ("methodLabel" in payload) next.methodLabel = payload.methodLabel;
   if ("progress" in payload) next.stepProgress = { ...payload.progress };
   if ("processedPages" in payload)
@@ -316,17 +348,20 @@ const findAssistantMessage = (page: ConversationPage, runId: Uuid) =>
   );
 
 /**
- * 대화 조회로 run 하나를 초기화한다.
- * - activeRun: status·`lastSeq`·cursor를 그 값으로 올린다. 이후 `seq > lastSeq` frame만 반영된다.
- * - terminal assistant message: 결과(응답·실패·취소)로 terminal 상태를 만든다. seq는 알 수 없어 0으로 둔다.
- * 이미 더 앞선 seq를 처리했거나 다른 run을 보고 있으면 바꾸지 않는다.
+ * 대화 조회로 run 하나를 초기화·보강한다.
+ * - 대상 run: `runId` → 지금 추적 중인 run → `activeRun` 순서. 다른 run이면 바꾸지 않는다.
+ * - activeRun이면 status를 앞으로만 옮긴다(PENDING→RUNNING→CANCELING).
+ *   `resume: "cursor"`이고 아직 cursor가 없을 때만 `lastSeq`·cursor를 activeRun 값으로 둔다.
+ *   이미 frame을 받았거나 cursor가 있으면 cursor를 당기지 않는다(받고 있는 frame을 버리지 않는다).
+ * - terminal assistant message면 결과(응답·실패·취소)로 terminal 상태를 만든다. `lastSeq`·cursor는 그대로 둔다.
  */
 const applyConversation = (
   state: RunState,
   page: ConversationPage,
-  requestedRunId?: Uuid,
+  requestedRunId: Uuid | undefined,
+  resume: ConversationResume,
 ): RunState => {
-  const runId = requestedRunId ?? page.activeRun?.runId;
+  const runId = requestedRunId ?? state.runId ?? page.activeRun?.runId;
   if (runId === undefined) return state;
   if (state.runId !== null && state.runId !== runId) return state;
 
@@ -340,16 +375,19 @@ const applyConversation = (
 
   const activeRun = page.activeRun?.runId === runId ? page.activeRun : null;
   if (activeRun) {
-    if (activeRun.lastSeq <= state.lastSeq) {
-      return state.runId === null ? { ...state, runId, identity } : state;
-    }
+    const adoptCursor = resume === "cursor" && state.cursor === null;
+    const status = advanceStatus(state.status, activeRun.status);
+    if (!adoptCursor && status === state.status && state.runId !== null)
+      return state;
     return {
       ...state,
       runId,
       identity,
-      status: state.status === "CANCELING" ? "CANCELING" : activeRun.status,
-      lastSeq: activeRun.lastSeq,
-      cursor: toEventId(runId, activeRun.lastSeq),
+      status,
+      ...(adoptCursor && {
+        lastSeq: activeRun.lastSeq,
+        cursor: toEventId(runId, activeRun.lastSeq),
+      }),
     };
   }
 

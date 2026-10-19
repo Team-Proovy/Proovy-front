@@ -55,9 +55,9 @@ export interface ActivityEntry {
   label: string;
   responsePageId: string | null;
   phase: ActivityPhase;
-  /** 마지막 `activity.updated`의 진행 sub-state (in_progress·waiting·retrying) */
+  /** 마지막 `activity.updated`의 진행 sub-state (in_progress·waiting·retrying). outcome이 정해지면 null */
   progressStatus: ActivityStatus | null;
-  /** 마지막으로 받은 payload의 공개 message */
+  /** 공개 message. 진행 중에는 마지막 non-null 값, outcome이 정해지면 그 terminal payload 값(없으면 null) */
   message: string | null;
   /** code_execution·verification */
   methodLabel: string | null;
@@ -139,15 +139,32 @@ export interface RunState {
 }
 
 /**
+ * 대화 조회로 초기화한 뒤 stream을 어디서부터 받을지.
+ * - `"replay"`(기본): cursor를 두지 않는다. cursor 없이 GET /events로 seq 1부터 받으면 Activity·page까지
+ *   처음부터 받은 결과와 같다(재진입에서 Activity 복원, spec 08).
+ * - `"cursor"`: 아직 cursor가 없을 때만 `activeRun.lastSeq`를 cursor로 둔다. 대화 조회에는 Activity가 없으므로
+ *   그 앞에서 시작한 Activity 박스는 복원되지 않는다(status·결과만 필요할 때).
+ * 어느 쪽이든 이미 cursor가 있으면 대화 조회가 cursor를 바꾸지 않는다.
+ */
+export type ConversationResume = "replay" | "cursor";
+
+/**
  * reducer 입력.
  * - `frame`: SSE durable frame 하나 (POST·GET /events 공통).
- * - `conversation`: 대화 조회 응답으로 초기화. `runId`를 생략하면 `activeRun`의 run이다.
- *   activeRun이면 `lastSeq`를 cursor로 삼고, terminal assistant message면 그 결과로 terminal 상태를 만든다.
+ * - `conversation`: 대화 조회 응답으로 초기화·보강. 대상 run은 `runId` → 추적 중인 run → `activeRun` 순서다.
+ *   activeRun이면 status를 앞으로만 옮기고, terminal assistant message면 그 결과로 terminal 상태를 만든다.
+ *   cursor는 `resume`으로 정한다(`ConversationResume`).
  * - `heartbeat`: live heartbeat comment. 아무것도 바꾸지 않는다(cursor가 아니다).
  */
 export type RunAction =
   | { type: "frame"; frame: BrowserFrame }
-  | { type: "conversation"; page: ConversationPage; runId?: Uuid }
+  | {
+      type: "conversation";
+      page: ConversationPage;
+      runId?: Uuid;
+      /** 기본 `"replay"` */
+      resume?: ConversationResume;
+    }
   | { type: "heartbeat" };
 
 /** 화면용 Activity. terminal 시점에 열린 Activity는 run 결과에 맞춘 outcome으로 투영된다. */

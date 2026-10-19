@@ -223,19 +223,36 @@ describe("runReducer — fixture 10개 시나리오", () => {
       expect(runReducer(full, { type: "frame", frame: late })).toBe(full);
     });
 
-    it("대화 조회 activeRun.lastSeq로 초기화한 뒤 이어 받으면 처음부터 받은 결과와 같다", () => {
+    const activeStatusAt = (cut: number) => {
+      const status = reduceFrames(stream.frames.slice(0, cut)).status;
+      if (
+        status !== "PENDING" &&
+        status !== "RUNNING" &&
+        status !== "CANCELING"
+      )
+        throw new Error(`cut ${cut}: active 아님 ${status}`);
+      return status;
+    };
+
+    it("대화 조회(activeRun)로 초기화한 뒤 cursor 없이 이어 받으면 처음부터 받은 결과와 같다(기본 replay)", () => {
       for (let cut = 1; cut < stream.frames.length; cut += 1) {
-        const atCut = reduceFrames(stream.frames.slice(0, cut));
-        const status = atCut.status;
-        if (
-          status !== "PENDING" &&
-          status !== "RUNNING" &&
-          status !== "CANCELING"
-        )
-          throw new Error(`cut ${cut}: active 아님 ${status}`);
+        const initialized = runReducer(createInitialRunState(), {
+          type: "conversation",
+          page: activeRunPage(stream.runId, activeStatusAt(cut), cut),
+        });
+        expect(initialized.status).toBe(activeStatusAt(cut));
+        expect(initialized.cursor).toBeNull();
+        expect(reduceFrames(stream.frames, initialized)).toEqual(full);
+      }
+    });
+
+    it("대화 조회 activeRun.lastSeq를 cursor로 이어 받으면 run 결과·cursor·이후 Activity가 처음부터 받은 결과와 같다(resume: cursor)", () => {
+      for (let cut = 1; cut < stream.frames.length; cut += 1) {
+        const status = activeStatusAt(cut);
         const initialized = runReducer(createInitialRunState(), {
           type: "conversation",
           page: activeRunPage(stream.runId, status, cut),
+          resume: "cursor",
         });
         expect(initialized.status).toBe(status);
         expect(initialized.cursor).toBe(toEventId(stream.runId, cut));
@@ -263,6 +280,27 @@ describe("runReducer — fixture 10개 시나리오", () => {
           expect(resumed.activities[id]).toEqual(full.activities[id]);
       }
     });
+
+    it.each(["replay", "cursor"] as const)(
+      "frame을 받는 중 더 큰 activeRun.lastSeq 대화 조회가 와도 이어 받은 결과가 처음부터 받은 결과와 같다(resume: %s)",
+      (resume) => {
+        for (let cut = 1; cut < stream.frames.length; cut += 1) {
+          for (let later = cut + 1; later < stream.frames.length; later += 1) {
+            const receiving = reduceFrames(stream.frames.slice(0, cut));
+            const refetched = runReducer(receiving, {
+              type: "conversation",
+              page: activeRunPage(stream.runId, activeStatusAt(later), later),
+              resume,
+            });
+            expect(refetched.lastSeq).toBe(receiving.lastSeq);
+            expect(refetched.cursor).toBe(receiving.cursor);
+            expect(reduceFrames(stream.frames.slice(cut), refetched)).toEqual(
+              full,
+            );
+          }
+        }
+      },
+    );
   });
 });
 
@@ -287,11 +325,27 @@ describe("runReducer — replay와 live", () => {
 });
 
 describe("runReducer — 대화 조회 초기화", () => {
-  it("conversation-active-run은 cursor 판정표 active run의 lastSeq로 이어 받을 cursor를 만든다", () => {
+  it("conversation-active-run은 기본(replay)에서 cursor 없이 run·status만 초기화한다", () => {
     const page = getConversationFixture("conversation-active-run").body.result;
     const state = runReducer(createInitialRunState(), {
       type: "conversation",
       page,
+    });
+    expect(state.runId).toBe(page.activeRun!.runId);
+    expect(state.status).toBe("RUNNING");
+    expect(state.lastSeq).toBe(0);
+    expect(state.cursor).toBeNull();
+    expect(state.identity.assistantMessageId).toBe(
+      page.messages.at(-1)!.messageId,
+    );
+  });
+
+  it("conversation-active-run은 resume: cursor에서 cursor 판정표 active run의 lastSeq로 이어 받을 cursor를 만든다", () => {
+    const page = getConversationFixture("conversation-active-run").body.result;
+    const state = runReducer(createInitialRunState(), {
+      type: "conversation",
+      page,
+      resume: "cursor",
     });
     const active = getCursorCases().runs.active;
     expect(state.runId).toBe(active.runId);
@@ -327,6 +381,36 @@ describe("runReducer — 대화 조회 초기화", () => {
       );
     },
   );
+
+  it("추적 중 run이 끝난 뒤 refetch는 runId를 넘기지 않아도 그 run의 terminal message를 반영한다", () => {
+    const page = getConversationFixture("conversation-completed").body.result;
+    expect(page.activeRun).toBeNull();
+    const stream = getStreamFixture("substantive-with-source");
+    const receiving = reduceFrames(stream.frames.slice(0, 5));
+    const refetched = runReducer(receiving, { type: "conversation", page });
+    expect(refetched.status).toBe("COMPLETED");
+    expect(selectOutcome(refetched)).toEqual(
+      selectOutcome(reduceFrames(stream.frames)),
+    );
+  });
+
+  it("대화 조회 status는 뒤로 가지 않는다(RUNNING → PENDING 금지)", () => {
+    const stream = getStreamFixture("substantive-completed");
+    const running = reduceFrames(stream.frames.slice(0, 3));
+    expect(running.status).toBe("RUNNING");
+    expect(
+      runReducer(running, {
+        type: "conversation",
+        page: activeRunPage(stream.runId, "PENDING", 2),
+      }),
+    ).toBe(running);
+    const canceling = runReducer(running, {
+      type: "conversation",
+      page: activeRunPage(stream.runId, "CANCELING", 9),
+    });
+    expect(canceling.status).toBe("CANCELING");
+    expect(canceling.cursor).toBe(running.cursor);
+  });
 
   it("activeRun보다 앞선 seq를 이미 처리했으면 대화 조회가 되돌리지 않는다", () => {
     const stream = getStreamFixture("substantive-completed");
@@ -417,14 +501,48 @@ describe("runReducer — Activity 규칙", () => {
     const after = reduceFrames([started(4, "a"), updated(5, "a", 1)], done);
     expect(after.activities.a).toEqual(done.activities.a);
     expect(after.activities.a.phase).toBe("completed");
-    // 무시한 frame은 cursor도 움직이지 않는다.
-    expect(after.cursor).toBe(done.cursor);
+    // 내용은 무시해도 받은 frame이므로 cursor는 올라간다.
+    expect(after.cursor).toBe(toEventId(created.runId, 5));
+  });
+
+  it("activity terminal은 진행 sub-state를 지우고 message를 terminal payload 값으로 바꾼다", () => {
+    const retrying = frameAt<ActivityUpdatedFrame>(3, {
+      type: "activity.updated",
+      payload: {
+        activityId: "a",
+        kind: "verification",
+        status: "retrying",
+        message: "다시 확인하고 있습니다.",
+        methodLabel: "대입 검산",
+        progress: { checked: 1, total: 3 },
+      },
+    });
+    const completed = frameAt<BrowserFrame>(4, {
+      type: "activity.completed",
+      payload: {
+        activityId: "a",
+        kind: "verification",
+        methodLabel: "대입 검산",
+        progress: { checked: 3, total: 3 },
+      },
+    });
+    const during = reduceFrames([created, started(2, "a"), retrying]);
+    expect(during.activities.a.progressStatus).toBe("retrying");
+    expect(during.activities.a.message).toBe("다시 확인하고 있습니다.");
+    // message 없는 updated는 이전 message를 유지한다.
+    const quiet = reduceFrames([updated(4, "a", 2)], during);
+    expect(quiet.activities.a.message).toBe("다시 확인하고 있습니다.");
+    const done = reduceFrames([completed], during);
+    expect(done.activities.a.phase).toBe("completed");
+    expect(done.activities.a.progressStatus).toBeNull();
+    expect(done.activities.a.message).toBeNull();
   });
 
   it("started 없는 후속 이벤트는 박스를 만들지 않는다", () => {
     const state = reduceFrames([created, updated(2, "ghost", 1)]);
     expect(state.activityOrder).toEqual([]);
     expect(state.status).toBe("PENDING");
+    expect(state.cursor).toBe(toEventId(created.runId, 2));
   });
 
   it("CANCELING 뒤 activity frame이 와도 RUNNING으로 돌아가지 않는다", () => {
@@ -461,6 +579,17 @@ describe("runReducer — Activity 규칙", () => {
       expect(running.closedByRun).toBe(false);
     },
   );
+
+  it("selectActivities는 같은 state에 같은 배열, 바뀌지 않은 Activity에 같은 객체를 준다", () => {
+    const first = reduceFrames([created, started(2, "a"), started(3, "b")]);
+    expect(selectActivities(first)).toBe(selectActivities(first));
+    const second = reduceFrames([updated(4, "b", 1)], first);
+    const [a1, b1] = selectActivities(first);
+    const [a2, b2] = selectActivities(second);
+    expect(a2).toBe(a1);
+    expect(b2).not.toBe(b1);
+    expect(b2.stepProgress).toEqual({ checked: 1, total: 3 });
+  });
 
   it("heartbeat는 cursor를 바꾸지 않는다", () => {
     const state = reduceFrames([created, started(2, "a")]);
