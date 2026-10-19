@@ -127,6 +127,43 @@ const processQueue = (
   failedQueue = [];
 };
 
+/**
+ * access token을 갱신해 새 token을 돌려준다. 이미 갱신 중이면 그 결과를 기다린다.
+ * Server는 refresh token을 한 번 쓰면 폐기하므로, axios 밖(fetch 기반 run SSE 등)에서 401을 받았을 때도
+ * interceptor와 같은 대기큐를 써서 동시 갱신을 막는다. 실패하면 토큰을 지우고 reject한다(redirect는 부른 쪽이 정한다).
+ */
+export const refreshAccessToken = async (): Promise<string> => {
+  if (isRefreshing) {
+    return new Promise<unknown>((resolve, reject) => {
+      failedQueue.push({ resolve, reject });
+    }) as Promise<string>;
+  }
+
+  const refreshToken = tokenUtils.getRefreshToken();
+  if (!refreshToken) {
+    tokenUtils.clearTokens();
+    throw new Error("refresh token이 없습니다.");
+  }
+
+  isRefreshing = true;
+  try {
+    const response = await axios.post<ApiResponse<TokenDto>>(
+      `${BASE_URL}/api/auth/refresh`,
+      { refreshToken },
+    );
+    const { accessToken, refreshToken: newRefreshToken } = response.data.result;
+    tokenUtils.setTokens(accessToken, newRefreshToken);
+    processQueue(null, accessToken);
+    return accessToken;
+  } catch (refreshError) {
+    processQueue(refreshError as AxiosError, null);
+    tokenUtils.clearTokens();
+    throw refreshError;
+  } finally {
+    isRefreshing = false;
+  }
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
