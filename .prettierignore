@@ -15,3 +15,6 @@ yarn.lock
 
 # Public assets (optional, if you don't want to format static files)
 public
+
+# 계약 사본(browser-run-v1 pin) — 손으로 고치지 않는다
+src/test/contracts/brain
