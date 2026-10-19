@@ -1,14 +1,20 @@
 name: Deploy Frontend (Firebase Hosting)
 
+# 자동 배포 중지: 운영 Server가 새 실행 API로 바뀌는 S14 전까지 Front만 먼저 나가면 질문 기능이 깨진다.
+# 그 전까지 dev push는 배포하지 않고, 배포는 Actions에서 dev를 골라 수동으로만 실행한다.
 on:
-  push:
-    branches: ["dev"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: frontend-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
+    if: ${{ github.ref == 'refs/heads/dev' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +27,7 @@ jobs:
           node-version: "20"
 
       - name: Install pnpm
-        run: npm install -g pnpm
+        run: npm install -g pnpm@10
 
       - name: Get pnpm store directory
         shell: bash
