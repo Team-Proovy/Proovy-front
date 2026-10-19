@@ -10,6 +10,7 @@ import type {
   Uuid,
 } from "@/shared/contracts/browser_run_v1";
 import type { RunApiError } from "./run_api_error";
+import { isUuid } from "./run_request";
 
 /**
  * fetch 기반 browser-run SSE reader.
@@ -178,8 +179,13 @@ export const toBrowserFrame = (
     throw new SseProtocolError(
       `event(${message.event})와 type(${type})이 다르다`,
     );
-  if (typeof runId !== "string" || typeof seq !== "number")
-    throw new SseProtocolError("runId·seq가 없다");
+  // cursor를 만드는 필드는 reader가 보장한다(다음 재접속 cursor가 계약 형식이어야 한다).
+  if (!isUuid(runId))
+    throw new SseProtocolError(
+      `runId가 소문자 UUID가 아니다: ${String(runId)}`,
+    );
+  if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < 1)
+    throw new SseProtocolError(`seq가 1..2^53-1 정수가 아니다: ${String(seq)}`);
   if (message.id !== toEventId(runId, seq))
     throw new SseProtocolError(`id(${message.id})가 ${runId}:${seq}가 아니다`);
   if (expectedRunId !== undefined && runId !== expectedRunId)

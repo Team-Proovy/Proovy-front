@@ -343,6 +343,31 @@ describe("readRunStream — protocol 오류", () => {
     });
   });
 
+  it.each([
+    ["seq 0", 0],
+    ["seq 음수", -1],
+    ["seq 소수", 1.5],
+    ["seq 2^53", 2 ** 53],
+  ])("%s → cursor로 쓰지 않고 protocol 오류", async (_name, seq) => {
+    const data = { ...fixture.frames[0], seq };
+    const bad = `event: run.created\nid: ${fixture.runId}:${seq}\ndata: ${JSON.stringify(data)}\n\n`;
+    const { frames, end } = await readAll([bad]);
+    expect(frames).toEqual([]);
+    expect(end).toMatchObject({
+      reason: "interrupted",
+      cause: "protocol",
+      lastEventId: null,
+    });
+  });
+
+  it("runId가 소문자 UUID가 아니면 protocol 오류", async () => {
+    const runId = fixture.runId.toUpperCase();
+    const data = { ...fixture.frames[0], runId };
+    const bad = `event: run.created\nid: ${runId}:1\ndata: ${JSON.stringify(data)}\n\n`;
+    const { end } = await readAll([bad]);
+    expect(end).toMatchObject({ reason: "interrupted", cause: "protocol" });
+  });
+
   it("GET 재접속에서 다른 run의 frame은 protocol 오류", async () => {
     const other = getStreamFixture("substantive-completed");
     const { frames, end } = await readAll(

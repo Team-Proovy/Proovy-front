@@ -44,6 +44,17 @@ describe("validateConversationRequest — fixture requests", () => {
     expect(listInvalidRequestFixtures()).toHaveLength(43);
   });
 
+  it("값이 undefined인 선택 키는 JSON에 실리지 않으므로 없는 것과 같다", () => {
+    expect(
+      validateConversationRequest({
+        requestId: "7f460a7b-bf54-570e-a3af-b63a26435627",
+        text: "a",
+        noteId: undefined,
+        turnAttachmentIds: undefined,
+      }).ok,
+    ).toBe(true);
+  });
+
   it("구조 위반과 video가 함께 있으면 RUN4001이 먼저다", () => {
     const result = validateConversationRequest({
       requestId: "7f460a7b-bf54-570e-a3af-b63a26435627",

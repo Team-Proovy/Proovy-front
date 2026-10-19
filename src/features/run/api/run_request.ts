@@ -198,7 +198,8 @@ export const validateConversationRequest = (
   if (!isUuid(value.requestId))
     reject("requestId", "소문자 canonical UUID가 아니다");
 
-  if ("noteId" in value && !isNoteId(value.noteId))
+  // undefined 값은 JSON에 실리지 않으므로 키가 없는 것과 같다.
+  if (value.noteId !== undefined && !isNoteId(value.noteId))
     reject("noteId", "선행 0 없는 10진 문자열 1..2^63-1이 아니다");
 
   checkBoundedText(value.text, "text", reject);
@@ -222,7 +223,7 @@ export const validateConversationRequest = (
   )
     reject("requestedOutputs", "video는 Phase 1 미지원", "RUN4002");
 
-  if ("turnAttachmentIds" in value) {
+  if (value.turnAttachmentIds !== undefined) {
     const ids = value.turnAttachmentIds;
     if (!Array.isArray(ids)) reject("turnAttachmentIds", "배열이 아니다");
     else {

@@ -114,14 +114,14 @@ describe("streamConversation — POST /api/conversations", () => {
     expect(sent[1].body).toBe(sent[0].body);
   });
 
-  it("계약에 맞지 않는 요청은 보내지 않는다", () => {
+  it("계약에 맞지 않는 요청은 보내지 않는다", async () => {
     const { client, fetchMock } = setup([]);
     const invalid = {
       requestId: "7f460a7b-bf54-570e-a3af-b63a26435627",
       text: "a",
       locale: "ko",
     } as unknown as ConversationRunRequest;
-    expect(() => client.streamConversation(invalid, collect())).toThrow(
+    await expect(client.streamConversation(invalid, collect())).rejects.toThrow(
       TypeError,
     );
     expect(fetchMock).not.toHaveBeenCalled();
@@ -359,14 +359,105 @@ describe("streamRunEvents — GET /api/ai-runs/{runId}/events", () => {
       }
     }
     const { client, fetchMock } = setup([]);
-    expect(() =>
+    await expect(
       client.streamRunEvents(
         stream.runId,
         { lastEventId: `${stream.runId}:03` },
         collect(),
       ),
-    ).toThrow(TypeError);
+    ).rejects.toThrow(TypeError);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("대문자 runId·다른 run의 cursor는 보내지 않는다", async () => {
+    const { client, fetchMock } = setup([]);
+    await expect(
+      client.streamRunEvents(stream.runId.toUpperCase(), {}, collect()),
+    ).rejects.toThrow(TypeError);
+    const otherRunCursor = toEventId(
+      getStreamFixture("canceled-pending").runId,
+      1,
+    );
+    await expect(
+      client.streamRunEvents(
+        stream.runId,
+        { lastEventId: otherRunCursor },
+        collect(),
+      ),
+    ).rejects.toThrow(TypeError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("body 읽기·갱신 중 abort·네트워크 실패", () => {
+  /** body를 읽기 시작하면 실패하는 오류 응답 */
+  const brokenErrorResponse = (status: number) =>
+    new Response(
+      new ReadableStream({
+        pull(controller) {
+          controller.error(new TypeError("network error"));
+        },
+      }),
+      { status, headers: { "Content-Type": "application/json" } },
+    );
+
+  it("stream 전 오류 body를 읽다 끊기면 rejected가 아니라 interrupted(network)", async () => {
+    const { client } = setup([brokenErrorResponse(409)]);
+    expect(
+      await client.streamConversation(
+        getRequestFixture("first-no-note").request,
+        collect(),
+      ),
+    ).toMatchObject({ reason: "interrupted", cause: "network" });
+  });
+
+  it("JSON 함수는 body 읽기 실패를 계약 밖 오류로 바꾸지 않고 던진다", async () => {
+    const ok = new Response(
+      new ReadableStream({
+        pull(controller) {
+          controller.error(new TypeError("network error"));
+        },
+      }),
+      { status: 200 },
+    );
+    const { client } = setup([ok, brokenErrorResponse(404)]);
+    await expect(client.getRunStatus(stream.runId)).rejects.toBeInstanceOf(
+      TypeError,
+    );
+    await expect(client.cancelRun(stream.runId)).rejects.toBeInstanceOf(
+      TypeError,
+    );
+  });
+
+  it("401 갱신을 기다리는 중 abort하면 바로 aborted, 재요청하지 않는다", async () => {
+    const controller = new AbortController();
+    const refreshAccessToken = vi.fn(() => new Promise<string>(() => {}));
+    const { client, sent } = setup(
+      [jsonResponse(401, getErrorFixture("AUTH4012").body)],
+      { getAccessToken: () => "expired", refreshAccessToken },
+    );
+    const endPromise = client.streamConversation(
+      getRequestFixture("first-no-note").request,
+      { ...collect(), signal: controller.signal },
+    );
+    await vi.waitFor(() => expect(refreshAccessToken).toHaveBeenCalled());
+    controller.abort();
+    expect(await endPromise).toEqual({ reason: "aborted", lastEventId: null });
+    expect(sent).toHaveLength(1);
+  });
+
+  it("JSON 함수도 갱신 대기 중 abort되면 abort reason으로 reject", async () => {
+    const controller = new AbortController();
+    const { client } = setup(
+      [jsonResponse(401, getErrorFixture("AUTH4012").body)],
+      {
+        getAccessToken: () => "expired",
+        refreshAccessToken: () => new Promise<string>(() => {}),
+      },
+    );
+    const pending = client.getRunStatus(stream.runId, controller.signal);
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
   });
 });
 

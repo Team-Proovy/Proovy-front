@@ -56,14 +56,19 @@ export class RunApiError extends Error {
 const isRunErrorCode = (value: unknown): value is RunErrorCode =>
   (RUN_ERROR_CODES as readonly unknown[]).includes(value);
 
-/** 실패 응답(`!response.ok`)의 body·header를 읽어 `RunApiError`로 만든다. body는 소비된다. */
+/**
+ * 실패 응답(`!response.ok`)의 body·header를 읽어 `RunApiError`로 만든다. body는 소비된다.
+ * body를 읽다가 실패하면(abort·네트워크) 그 오류를 던진다.
+ */
 export const readRunApiError = async (
   response: Response,
   now: number = Date.now(),
 ): Promise<RunApiError> => {
+  // body 읽기 중 abort·네트워크 실패는 그대로 던진다(계약 밖 응답으로 삼키지 않는다).
+  const text = await response.text();
   let body: unknown = null;
   try {
-    body = JSON.parse(await response.text());
+    body = JSON.parse(text);
   } catch {
     // JSON이 아닌 오류 본문(proxy 502 HTML 등)은 계약 밖 응답으로 둔다.
   }

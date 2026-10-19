@@ -11,14 +11,15 @@ import type {
   Uuid,
 } from "@/shared/contracts/browser_run_v1";
 import { readRunApiError, RunApiError } from "./run_api_error";
-import { validateConversationRequest } from "./run_request";
+import { isUuid, validateConversationRequest } from "./run_request";
 import { readRunStream } from "./sse_reader";
 import type { RunStreamEnd } from "./sse_reader";
 
 /**
  * browser-run-v1 run API client (S07 Server 경로).
  *
- * - SSE 함수(`streamConversation`·`streamRunEvents`)는 던지지 않고 `RunStreamEnd`로 한 번의 연결 결과를 돌려준다.
+ * - SSE 함수(`streamConversation`·`streamRunEvents`)는 한 번의 연결 결과를 `RunStreamEnd`로 돌려준다.
+ *   reject하는 경우는 계약에 맞지 않는 입력(request·runId·cursor → `TypeError`)과 `onFrame` 예외뿐이다.
  * - JSON 함수는 성공 시 `result`를 돌려주고, 오류 응답은 `RunApiError`로 던진다.
  *   fetch 자체 실패(네트워크·abort)는 fetch의 오류(`TypeError`·`AbortError`)를 그대로 던진다.
  * - 모든 요청은 `Authorization: Bearer`를 붙이고, stream 전 401이면 token을 한 번 갱신해 같은 요청을 다시 보낸다.
@@ -68,6 +69,29 @@ export const isEventId = (value: unknown): value is EventId =>
   EVENT_ID_PATTERN.test(value) &&
   Number(value.slice(value.indexOf(":") + 1)) <= Number.MAX_SAFE_INTEGER;
 
+const parseJsonOrNull = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+};
+
+/** `promise`를 기다리되 `signal`이 abort되면 그 reason으로 바로 reject한다. */
+const raceAbort = <T>(promise: Promise<T>, signal?: AbortSignal | null) => {
+  if (!signal) return promise;
+  let onAbort = () => {};
+  const aborted = new Promise<never>((_, reject) => {
+    onAbort = () => reject(signal.reason);
+    if (signal.aborted) onAbort();
+    else signal.addEventListener("abort", onAbort, { once: true });
+  });
+  promise.catch(() => {}); // abort로 진 뒤의 갱신 실패는 처리하지 않는다.
+  return Promise.race([promise, aborted]).finally(() =>
+    signal.removeEventListener("abort", onAbort),
+  );
+};
+
 const SSE_ACCEPT = "text/event-stream";
 const JSON_ACCEPT = "application/json";
 
@@ -91,8 +115,10 @@ export const createRunApiClient = ({
 
     let token: string;
     try {
-      token = await auth.refreshAccessToken();
-    } catch {
+      token = await raceAbort(auth.refreshAccessToken(), init.signal);
+    } catch (error) {
+      // abort는 fetch 실패처럼 던지고, 갱신 실패는 처음 401을 돌려준다.
+      if (init.signal?.aborted) throw error;
       return response;
     }
     await response.body?.cancel().catch(() => {});
@@ -106,25 +132,30 @@ export const createRunApiClient = ({
     runId?: Uuid,
     lastEventId: EventId | null = null,
   ): Promise<RunStreamEnd> => {
+    const failConnection = (error: unknown): RunStreamEnd =>
+      signal?.aborted
+        ? { reason: "aborted", lastEventId }
+        : { reason: "interrupted", cause: "network", error, lastEventId };
+
     let response: Response;
     try {
       response = await send(path, { ...init, signal });
     } catch (error) {
-      if (signal?.aborted) return { reason: "aborted", lastEventId };
-      return { reason: "interrupted", cause: "network", error, lastEventId };
+      return failConnection(error);
     }
 
-    if (!response.ok)
-      return {
-        reason: "rejected",
-        error: await readRunApiError(response),
-        lastEventId,
-      };
     const contentType = response.headers.get("Content-Type") ?? "";
-    if (!contentType.startsWith(SSE_ACCEPT) || !response.body) {
-      // 200인데 SSE가 아니면 계약 밖 응답이다(proxy 오류 페이지 등).
-      const error = await readRunApiError(response);
-      return { reason: "rejected", error, lastEventId };
+    // 200인데 SSE가 아니면 계약 밖 응답이다(proxy 오류 페이지 등).
+    if (!response.ok || !contentType.startsWith(SSE_ACCEPT) || !response.body) {
+      try {
+        const error = await readRunApiError(response);
+        // 오류 body를 다 읽은 뒤 abort됐어도 호출한 쪽에는 abort가 먼저다.
+        if (signal?.aborted) return { reason: "aborted", lastEventId };
+        return { reason: "rejected", error, lastEventId };
+      } catch (error) {
+        // 오류 body를 읽다가 끊긴 경우: 거부가 아니라 연결 실패다.
+        return failConnection(error);
+      }
     }
 
     onOpen?.();
@@ -144,9 +175,10 @@ export const createRunApiClient = ({
     headers.set("Accept", JSON_ACCEPT);
     const response = await send(path, { ...init, headers });
     if (!response.ok) throw await readRunApiError(response);
-    const body = (await response
-      .json()
-      .catch(() => null)) as ApiSuccessResponse<T> | null;
+    // body 읽기 중 abort·네트워크 실패는 그대로 던지고, JSON이 아닌 본문만 계약 밖으로 본다.
+    const body = parseJsonOrNull(
+      await response.text(),
+    ) as ApiSuccessResponse<T> | null;
     if (body?.isSuccess !== true)
       throw new RunApiError({
         code: null,
@@ -160,12 +192,12 @@ export const createRunApiClient = ({
   /**
    * `POST /api/conversations` — 질문을 보내고 SSE를 seq 1(`run.created`)부터 읽는다.
    * 같은 전송을 다시 보낼 때는 같은 `request`(같은 requestId)를 넘긴다 — Server가 기존 run을 replay한다.
-   * 계약에 맞지 않는 request는 보내지 않고 `TypeError`를 던진다(`createConversationRequest`로 만든다).
+   * 계약에 맞지 않는 request는 보내지 않고 `TypeError`로 reject한다(`createConversationRequest`로 만든다).
    */
-  const streamConversation = (
+  const streamConversation = async (
     request: ConversationRunRequest,
     options: RunStreamOptions,
-  ) => {
+  ): Promise<RunStreamEnd> => {
     const check = validateConversationRequest(request);
     if (!check.ok)
       throw new TypeError(
@@ -186,15 +218,22 @@ export const createRunApiClient = ({
 
   /**
    * `GET /api/ai-runs/{runId}/events` — cursor 다음 seq부터 replay 후 terminal이 아니면 live로 이어 받는다.
-   * cursor는 같은 run의 frame `id`여야 한다(아니면 `TypeError`). 형식 판정의 최종 기준은 Server(RUN4003·RUN4004)다.
+   * runId는 소문자 canonical UUID, cursor는 같은 run의 frame `id`여야 한다(아니면 `TypeError`로 reject).
+   * 형식 판정의 최종 기준은 Server(RUN4003·RUN4004)다.
    */
-  const streamRunEvents = (
+  const streamRunEvents = async (
     runId: Uuid,
     { lastEventId = null, placement = "header" }: RunEventsCursor,
     options: RunStreamOptions,
-  ) => {
-    if (lastEventId != null && !isEventId(lastEventId))
-      throw new TypeError(`event id 형식이 아니다: ${lastEventId}`);
+  ): Promise<RunStreamEnd> => {
+    // frame runId는 정확히 같은 문자열로 비교하므로 대문자 runId는 모든 frame을 protocol 오류로 만든다.
+    if (!isUuid(runId))
+      throw new TypeError(`runId가 소문자 canonical UUID가 아니다: ${runId}`);
+    if (
+      lastEventId != null &&
+      (!isEventId(lastEventId) || !lastEventId.startsWith(`${runId}:`))
+    )
+      throw new TypeError(`이 run의 event id가 아니다: ${lastEventId}`);
     const headers: Record<string, string> = { Accept: SSE_ACCEPT };
     let query = "";
     if (lastEventId != null && placement === "header")
