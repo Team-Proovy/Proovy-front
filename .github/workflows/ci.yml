@@ -1,0 +1,63 @@
+name: Frontend CI
+
+on:
+  pull_request:
+  push:
+    branches: ["dev"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # dev에 이미 lint 오류가 있어 전체 lint 대신 PR에서 바뀐 파일만 검사한다.
+      - name: Lint changed files
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- '*.ts' '*.tsx' '*.js' '*.jsx')
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "변경된 lint 대상 파일 없음"
+            exit 0
+          fi
+          pnpm exec eslint --max-warnings=0 "${files[@]}"
+
+      # build는 tsc -b 타입 검사를 포함한다.
+      - name: Build
+        run: pnpm run build
