@@ -15,7 +15,7 @@ Proovy-server `src/test/resources/contracts/brain/PIN.json`과 같은 commit·`c
   - 목록 밖 파일이 없다(`PIN.json`·`README.md` 제외).
   - `consumer_version`이 `src/shared/contracts/browser_run_v1.ts`의 `BROWSER_RUN_CONSUMER_VERSION`과 같다.
   - `PROOVY_SERVER_DIR`가 설정되어 있으면 Server `PIN.json`과 commit·version·manifest sha256이 같다(로컬 전용, CI에서는 건너뛴다).
-- **손으로 고치지 않는다.** prettier·lint-staged 대상에서도 빠져 있다(`.prettierignore`).
+- **손으로 고치지 않는다.** prettier·lint-staged 대상에서 빠져 있고(`.prettierignore`), 줄바꿈 변환도 막아 둔다(`.gitattributes` `-text`).
 - 계약 의미(경로·판정·오류)는 Server가 소유한다. Front가 계약과 다르게 읽어야 하면 사본이 아니라
   Server 이슈 → Brain 새 `consumer_version` → Server pin 갱신 → Front pin 갱신 순서로 바꾼다.
 
@@ -39,4 +39,5 @@ Proovy-server `src/test/resources/contracts/brain/PIN.json`과 같은 commit·`c
    Server `PIN.json`과 값이 같아야 한다.
 4. `consumer_version`이 바뀌었으면 `src/shared/contracts/browser_run_v1.ts`의 `BROWSER_RUN_CONSUMER_VERSION`과
    바뀐 타입을 함께 고친다. 고치지 않으면 `contract_mirror.test.ts`·`browser_run_types.test.ts`가 실패한다.
-5. `PROOVY_SERVER_DIR=<Proovy-server checkout> pnpm test -- src/test/contracts`로 확인한다.
+5. `PROOVY_SERVER_DIR=<Proovy-server checkout> pnpm test`와 `pnpm typecheck:test`로 확인한다.
+   `PROOVY_SERVER_DIR`가 가리키는 곳에 Server `PIN.json`이 없으면 테스트가 실패한다.

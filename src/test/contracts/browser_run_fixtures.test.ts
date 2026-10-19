@@ -185,6 +185,24 @@ describe("runId 색인", () => {
   });
 });
 
+describe("fixture 격리", () => {
+  it("호출마다 복사본을 주므로 받은 값을 고쳐도 다음 호출에 새지 않는다", () => {
+    getStreamFixture("canceled-pending").frames.pop();
+    listStreamFixtures()[0].frames.length = 0;
+    getRunScenarioByStream("canceled-pending").streams[0].frames.length = 0;
+    getRunStatusFixture("status-running").body.result.lastSeq = 999;
+    getCursorCases().cases.length = 0;
+
+    expect(getStreamFixture("canceled-pending").frames).toHaveLength(2);
+    expect(listStreamFixtures()[0].frames.length).toBeGreaterThan(0);
+    expect(
+      getRunScenarioByStream("canceled-pending").streams[0].frames,
+    ).toHaveLength(2);
+    expect(getRunStatusFixture("status-running").body.result.lastSeq).toBe(4);
+    expect(getCursorCases().cases.length).toBeGreaterThan(0);
+  });
+});
+
 describe("이름·code로 꺼내기", () => {
   it("응답 종류가 다르면 오류다", () => {
     expect(() => getRunStatusFixture("cancel-accepted-running")).toThrow(

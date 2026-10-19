@@ -42,6 +42,15 @@ const readSchema = (relativePath: string) =>
     readFileSync(path.join(CONTRACT_MIRROR_DIR, relativePath), "utf8"),
   ) as JsonSchemaDocument;
 
+const schemaRegistry = (
+  JSON.parse(
+    readFileSync(
+      path.join(CONTRACT_MIRROR_DIR, "browser-run-v1/manifest.json"),
+      "utf8",
+    ),
+  ) as { schema_registry: Record<string, string> }
+).schema_registry;
+
 export const browserRunSchema = readSchema(
   "browser-run-v1/schemas/browser-run.schema.json",
 );
@@ -70,8 +79,11 @@ const createAjv = () => {
     strictRequired: false,
   });
   addFormats(ajv);
-  ajv.addSchema(terminalBrowserSchema, TERMINAL_BROWSER_SCHEMA_ID);
-  ajv.addSchema(browserRunSchema);
+  // manifest `schema_registry`(schema URI → 사본 경로)를 그대로 등록한다. 새 consumer_version이
+  // 의존 schema를 늘려도 pin 갱신만으로 따라간다.
+  for (const [schemaId, relativePath] of Object.entries(schemaRegistry)) {
+    ajv.addSchema(readSchema(relativePath), schemaId);
+  }
   return ajv;
 };
 

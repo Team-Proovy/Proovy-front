@@ -1,0 +1,2 @@
+# browser-run-v1 계약 사본은 sha256으로 검사하므로 줄바꿈 변환(core.autocrlf)을 막는다.
+src/test/contracts/brain/** -text

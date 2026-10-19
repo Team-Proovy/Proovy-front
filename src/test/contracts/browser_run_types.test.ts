@@ -9,7 +9,9 @@ import { readContractJson, readContractText } from "./browser_run_fixtures";
  *
  * - enum 상수 배열 = schema enum
  * - 객체 타입마다 `shapeOf<T>()(keys, required)`로 필드 목록을 적는다. 목록이 TS 타입의 key·필수 key와
- *   다르면 `tsc -b`(pnpm build)가 실패하고, 목록이 schema `properties`·`required`와 다르면 이 테스트가 실패한다.
+ *   다르면 `pnpm typecheck:test`가 실패하고, 목록이 schema `properties`·`required`와 다르면 이 테스트가 실패한다.
+ * - 한계: 필드의 값 타입·null 허용 여부는 비교하지 않는다. 그 부분은 valid fixture가 schema를 통과한 뒤
+ *   공용 타입으로 읽히는 것(`browser_run_fixtures.ts`)과 pin 갱신 때 사람이 schema diff를 보는 것으로 확인한다.
  */
 
 type RequiredKeys<T> = {

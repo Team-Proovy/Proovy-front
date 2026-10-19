@@ -21,6 +21,7 @@ import { parseWire } from "./browser_run_schema";
  * 계약은 "runId = 시나리오"다. 같은 run을 설명하는 stream·상태·취소·대화 조회 fixture가
  * runId를 공유하므로 `getRunScenario(runId)`로 한 시나리오를 모아 꺼낼 수 있다.
  * invalid fixture는 색인하지 않고 원본 값(`unknown`)을 그대로 준다.
+ * 모든 helper는 호출마다 깊은 복사본을 주므로 받은 값을 고쳐도 된다.
  *
  * fixture 이름은 파일명에서 `.json`을 뺀 값이다(예: `substantive-completed`).
  */
@@ -46,6 +47,15 @@ const memoize = <T>(load: () => T) => {
   return () => (cached ??= { value: load() }).value;
 };
 
+/**
+ * 한 번 읽어 둔 fixture를 호출마다 깊은 복사로 돌려준다.
+ * reducer 테스트 등이 받은 값을 고쳐도 다른 테스트에 새지 않는다(테스트 순서 독립).
+ */
+const memoizeCopy = <T>(load: () => T) => {
+  const getCached = memoize(load);
+  return () => structuredClone(getCached());
+};
+
 const indexByName = <T extends { name: string }>(
   fixtures: T[],
   kind: string,
@@ -56,7 +66,7 @@ const indexByName = <T extends { name: string }>(
   return (name: string) => {
     const fixture = fixtureMap.get(name);
     if (!fixture) throw new Error(`${kind} fixture 없음: ${name}`);
-    return fixture;
+    return structuredClone(fixture);
   };
 };
 
@@ -105,7 +115,7 @@ const parseFrames = (frames: unknown[], label: string) =>
     parseWire("BrowserFrame", frame, `${label} frames[${index}]`),
   );
 
-export const listStreamFixtures = memoize(() =>
+export const listStreamFixtures = memoizeCopy(() =>
   listFixtureNames("streams/valid").map((name): StreamFixture => {
     const raw = readContractJson<RawStreamFixture>(
       `streams/valid/${name}.json`,
@@ -133,7 +143,7 @@ const findStreamFixture = memoize(() =>
 );
 export const getStreamFixture = (name: string) => findStreamFixture()(name);
 
-export const listInvalidStreamFixtures = memoize(() =>
+export const listInvalidStreamFixtures = memoizeCopy(() =>
   listFixtureNames("streams/invalid").map((name): InvalidStreamFixture => {
     const raw = readContractJson<{
       rationale: string;
@@ -152,7 +162,7 @@ export const listInvalidStreamFixtures = memoize(() =>
 );
 
 /** live heartbeat 원문(`: heartbeat\n\n`)과 heartbeat로 취급하면 안 되는 SSE 예제 */
-export const getHeartbeatFixture = memoize(() => {
+export const getHeartbeatFixture = memoizeCopy(() => {
   const invalid = readContractJson<{
     valid: string;
     cases: { name: string; rationale: string; sse: string }[];
@@ -206,7 +216,7 @@ export interface InvalidResponseFixture {
   body: unknown;
 }
 
-export const listResponseFixtures = memoize(() =>
+export const listResponseFixtures = memoizeCopy(() =>
   listFixtureNames("responses/valid").map((name) => {
     const raw = readContractJson<{
       schema: ResponseSchemaName;
@@ -253,7 +263,7 @@ export const getConversationFixture = getResponseFixtureOf(
 export const getErrorFixture = (code: RunErrorCode) =>
   getResponseFixtureOf("ErrorResponse")(`error-${code.toLowerCase()}`);
 
-export const listInvalidResponseFixtures = memoize(() =>
+export const listInvalidResponseFixtures = memoizeCopy(() =>
   listFixtureNames("responses/invalid").map(
     (name): InvalidResponseFixture => ({
       name,
@@ -286,7 +296,7 @@ export interface InvalidRequestFixture {
   expected: { http: number; code: RunErrorCode };
 }
 
-export const listRequestFixtures = memoize(() =>
+export const listRequestFixtures = memoizeCopy(() =>
   listFixtureNames("requests/valid").map((name): RequestFixture => {
     const raw = readContractJson<{
       rationale: string;
@@ -313,7 +323,7 @@ const findRequestFixture = memoize(() =>
 );
 export const getRequestFixture = (name: string) => findRequestFixture()(name);
 
-export const listInvalidRequestFixtures = memoize(() =>
+export const listInvalidRequestFixtures = memoizeCopy(() =>
   listFixtureNames("requests/invalid").map((name): InvalidRequestFixture => {
     const raw = readContractJson<{
       rationale: string;
@@ -358,7 +368,7 @@ export interface CursorCase {
 }
 
 /** `GET /api/ai-runs/{runId}/events` cursor 판정표 */
-export const getCursorCases = memoize(() =>
+export const getCursorCases = memoizeCopy(() =>
   readContractJson<{
     runs: Record<string, CursorCaseRun>;
     thenLiveRule: string;
@@ -381,14 +391,14 @@ export interface CancelCase {
 }
 
 /** `POST /api/ai-runs/{runId}/cancel` 판정표 */
-export const getCancelCases = memoize(() =>
+export const getCancelCases = memoizeCopy(() =>
   readContractJson<{ path: string; precedence: string[]; cases: CancelCase[] }>(
     "cancel/cases.json",
   ),
 );
 
 /** `POST /api/conversations` 접수 판정표(Server 판정 순서 참고용) */
-export const getAdmissionDecisions = memoize(() =>
+export const getAdmissionDecisions = memoizeCopy(() =>
   readContractJson<{
     precedence: string[];
     cases: {
@@ -481,12 +491,13 @@ const buildRunScenarioIndex = memoize(() => {
 });
 
 /** valid fixture에 등장하는 모든 run 시나리오 */
-export const listRunScenarios = () => [...buildRunScenarioIndex().values()];
+export const listRunScenarios = () =>
+  structuredClone([...buildRunScenarioIndex().values()]);
 
 export const getRunScenario = (runId: Uuid) => {
   const scenario = buildRunScenarioIndex().get(runId);
   if (!scenario) throw new Error(`runId ${runId}를 쓰는 valid fixture 없음`);
-  return scenario;
+  return structuredClone(scenario);
 };
 
 /** stream fixture 이름으로 그 run의 시나리오를 찾는다. 예: `getRunScenarioByStream("canceled-pending")` */

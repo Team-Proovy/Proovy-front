@@ -115,31 +115,33 @@ describe("browser-run-v1 검증된 사본", () => {
 });
 
 // 로컬 전용: PROOVY_SERVER_DIR=<Proovy-server checkout>이면 Server pin과 같은지 확인한다.
+// 변수가 없으면 건너뛰고, 변수가 있는데 PIN.json이 없으면(경로 오타 등) 통과로 보이지 않게 실패한다.
 const serverDir = process.env.PROOVY_SERVER_DIR;
 const serverPinPath =
   serverDir &&
   path.join(serverDir, "src/test/resources/contracts/brain/PIN.json");
 
-describe.skipIf(!serverPinPath || !existsSync(serverPinPath))(
-  "Server pin 일치",
-  () => {
-    it("Front PIN.json이 Server PIN.json과 같은 commit·version·manifest를 가리킨다", () => {
-      const serverPin = JSON.parse(
-        readFileSync(serverPinPath!, "utf8"),
-      ) as ContractPin;
-      const frontPin = readContractPin();
+describe.skipIf(!serverPinPath)("Server pin 일치", () => {
+  it("PROOVY_SERVER_DIR에 Server PIN.json이 있다", () => {
+    expect(existsSync(serverPinPath!), serverPinPath!).toBe(true);
+  });
 
-      expect({
-        commit: frontPin.commit,
-        consumer_version: frontPin.consumer_version,
-        manifest: frontPin.manifest,
-        manifest_sha256: frontPin.manifest_sha256,
-      }).toEqual({
-        commit: serverPin.commit,
-        consumer_version: serverPin.consumer_version,
-        manifest: serverPin.manifest,
-        manifest_sha256: serverPin.manifest_sha256,
-      });
+  it("Front PIN.json이 Server PIN.json과 같은 commit·version·manifest를 가리킨다", () => {
+    const serverPin = JSON.parse(
+      readFileSync(serverPinPath!, "utf8"),
+    ) as ContractPin;
+    const frontPin = readContractPin();
+
+    expect({
+      commit: frontPin.commit,
+      consumer_version: frontPin.consumer_version,
+      manifest: frontPin.manifest,
+      manifest_sha256: frontPin.manifest_sha256,
+    }).toEqual({
+      commit: serverPin.commit,
+      consumer_version: serverPin.consumer_version,
+      manifest: serverPin.manifest,
+      manifest_sha256: serverPin.manifest_sha256,
     });
-  },
-);
+  });
+});
