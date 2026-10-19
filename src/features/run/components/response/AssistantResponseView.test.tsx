@@ -48,7 +48,11 @@ describe("fixture 응답", () => {
 
     const toggle = screen.getByRole("button", { name: "보조 펼치기" });
     expect(toggle).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByText("스레드에 붙는 보조 설명이다.")).not.toBeVisible();
+    // 접힌 동안에는 block을 그리지 않고 aria-controls 대상만 남긴다.
+    expect(screen.queryByText("스레드에 붙는 보조 설명이다.")).toBeNull();
+    expect(
+      document.getElementById(toggle.getAttribute("aria-controls") ?? ""),
+    ).not.toBeNull();
 
     await user.click(toggle);
     expect(toggle).toHaveAttribute("aria-expanded", "true");
@@ -57,7 +61,11 @@ describe("fixture 응답", () => {
 
     await user.click(toggle);
     expect(toggle).toHaveAccessibleName("보조 펼치기");
-    expect(screen.getByText("스레드에 붙는 보조 설명이다.")).not.toBeVisible();
+    // 접힌 동안에는 block을 그리지 않고 aria-controls 대상만 남긴다.
+    expect(screen.queryByText("스레드에 붙는 보조 설명이다.")).toBeNull();
+    expect(
+      document.getElementById(toggle.getAttribute("aria-controls") ?? ""),
+    ).not.toBeNull();
 
     // page는 article 바로 아래 형제 section이다(중첩 없음). 링크·route 이동이 없다.
     const sections = container.querySelectorAll<HTMLElement>(

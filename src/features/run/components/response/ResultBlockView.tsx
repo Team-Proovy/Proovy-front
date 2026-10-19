@@ -8,7 +8,7 @@ import type {
 } from "@/shared/contracts/browser_run_v1";
 import { cn } from "@/shared/utils/cn";
 import { SafeMarkdown } from "./SafeMarkdown";
-import { sliceCodePoints } from "./safe_markdown_syntax";
+import { sliceStepExcerpt } from "./safe_markdown_syntax";
 import {
   CHECK_UNCONFIRMED_NOTICE,
   NOTICE_TITLE,
@@ -74,7 +74,7 @@ const StepMarkList = ({
         </div>
         {stepMark.anchor && (
           <SafeMarkdown
-            body={sliceCodePoints(
+            body={sliceStepExcerpt(
               body,
               stepMark.anchor.start,
               stepMark.anchor.end,

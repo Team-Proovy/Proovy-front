@@ -49,6 +49,7 @@ const MainPageSection = ({ page, sourceLabels }: ResponsePageSectionProps) => {
 /**
  * thread_like page: 같은 메시지 안 접이식 section이다.
  * 새 Note·message·run·route가 아니며 접힘 상태는 이 컴포넌트 로컬 상태다. 처음에는 접혀 있다.
+ * 접힌 동안에는 block을 그리지 않는다(KaTeX 렌더 비용). `aria-controls` 대상 컨테이너는 남긴다.
  */
 const ThreadLikePageSection = ({
   page,
@@ -89,10 +90,12 @@ const ThreadLikePageSection = ({
         hidden={!expanded}
         className="border-t border-[#E3E8F0] px-3 py-2"
       >
-        <ResultBlockList
-          page={page}
-          sourceLabels={sourceLabels}
-        />
+        {expanded && (
+          <ResultBlockList
+            page={page}
+            sourceLabels={sourceLabels}
+          />
+        )}
       </div>
     </section>
   );

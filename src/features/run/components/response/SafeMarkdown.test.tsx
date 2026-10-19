@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { SafeMarkdown } from "./SafeMarkdown";
-import { normalizeMathDelimiters } from "./safe_markdown_syntax";
+import {
+  normalizeMathDelimiters,
+  sliceStepExcerpt,
+} from "./safe_markdown_syntax";
 
 const renderBody = (body: string, sourceLabels?: Map<string, string>) =>
   render(
@@ -80,6 +83,28 @@ describe("SafeMarkdown 비렌더 항목", () => {
   });
 });
 
+describe("SafeMarkdown 허용 목록 밖 구문", () => {
+  it.each([
+    ["취소선", "~~지움~~ 끝", "del", "~~지움~~"],
+    ["구분선", "위\n\n---\n\n아래", "hr", "---"],
+    ["각주", "본문[^1]\n\n[^1]: 각주 내용", "sup, section", "[^1]: 각주 내용"],
+  ])("%s을 요소가 아닌 원문 텍스트로 보인다", (_, body, selector, text) => {
+    const container = renderBody(body);
+
+    expect(container.querySelector(selector)).toBeNull();
+    expect(container).toHaveTextContent(text);
+  });
+
+  it("task list 체크 상자 대신 [x] 텍스트를 보인다", () => {
+    const container = renderBody("- [x] 끝냄\n- [ ] 남음");
+
+    expect(container.querySelector("input")).toBeNull();
+    const items = container.querySelectorAll("li");
+    expect(items[0]).toHaveTextContent("[x] 끝냄");
+    expect(items[1]).toHaveTextContent("[ ] 남음");
+  });
+});
+
 describe("SafeMarkdown 허용 항목", () => {
   it("문단·목록·강조·표를 그린다", () => {
     const container = renderBody(
@@ -126,6 +151,15 @@ describe("SafeMarkdown 허용 항목", () => {
     expect(container.innerHTML).not.toContain("\r");
   });
 
+  it("문단 안 \\[…\\]·$$…$$를 display 수식으로 그린다", () => {
+    const container = renderBody(
+      "앞 \\[x^2\\] 뒤, 그리고 $$y$$ 끝, 인라인 $z$",
+    );
+
+    expect(container.querySelectorAll(".katex-display")).toHaveLength(2);
+    expect(container.querySelectorAll(".katex")).toHaveLength(3);
+  });
+
   it("escape한 \\$는 수식이 아닌 달러 기호다", () => {
     const container = renderBody("가격은 \\$5 이다");
 
@@ -163,5 +197,14 @@ describe("normalizeMathDelimiters", () => {
     expect(normalizeMathDelimiters("가격 \\$5, 열림 \\(x")).toBe(
       "가격 \\$5, 열림 \\(x",
     );
+  });
+});
+
+describe("sliceStepExcerpt", () => {
+  it("code point로 자르고 줄머리 공백을 걷어 code block이 되지 않게 한다", () => {
+    const body = "1. 첫째\n    - 😀 둘째 단계\n    - 셋째";
+    const start = Array.from(body).indexOf("😀");
+
+    expect(sliceStepExcerpt(body, start - 6, start + 7)).toBe("- 😀 둘째 단계");
   });
 });
