@@ -195,6 +195,8 @@ export const createBrowserRunMockServer = ({
   const requests: MockRequestLog[] = [];
   let nextNoteId = 9001;
   let openConnections = 0;
+  /** 열린 SSE 연결을 닫는 함수(reset용) */
+  const openStreams = new Set<() => void>();
 
   const log = (entry: MockRequestLog) => {
     requests.push(entry);
@@ -546,10 +548,12 @@ export const createBrowserRunMockServer = ({
     let index = afterSeq;
     let sent = 0;
 
+    let closeStream = () => {};
     const release = () => {
       if (closed) return false;
       closed = true;
       openConnections -= 1;
+      openStreams.delete(closeStream);
       wake(); // 대기 중인 pull·heartbeat를 끝낸다.
       return true;
     };
@@ -575,18 +579,16 @@ export const createBrowserRunMockServer = ({
       {
         start(controller) {
           openConnections += 1;
-          signal.addEventListener(
-            "abort",
-            () => {
-              if (!release()) return;
-              try {
-                controller.close();
-              } catch {
-                // 이미 닫혔다.
-              }
-            },
-            { once: true },
-          );
+          closeStream = () => {
+            if (!release()) return;
+            try {
+              controller.close();
+            } catch {
+              // 이미 닫혔다.
+            }
+          };
+          openStreams.add(closeStream);
+          signal.addEventListener("abort", closeStream, { once: true });
         },
         async pull(controller) {
           const finish = (mode: "eof" | "network") => {
@@ -865,7 +867,10 @@ export const createBrowserRunMockServer = ({
     getRequests: () => requests.map((entry) => ({ ...entry })),
     /** 열려 있는 SSE 연결 수 */
     getOpenConnections: () => openConnections,
+    /** 열린 SSE 연결을 닫고(terminal 없는 eof) 모든 상태를 비운다. */
     reset: () => {
+      for (const close of [...openStreams]) close();
+      openConnections = 0;
       for (const run of runs.values()) if (run.pacing) clearTimeout(run.pacing);
       runs.clear();
       deletedNotes.clear();

@@ -332,7 +332,7 @@ describe("terminal 없는 단절 → backoff 재접속", () => {
     expectSameAsCleanStream(done.run, mock);
   });
 
-  it("재접속이 404 RUN4041이면 멈추고 run_not_found로 알린다(더 요청하지 않음)", async () => {
+  it("재접속이 404 RUN4041이면 멈추고 not_found(events)로 알린다(더 요청하지 않음)", async () => {
     const { mock, create } = setup({ template: "canceled-running" });
     const session = create({ noteId: "5" });
     session.send(QUESTION);
@@ -342,7 +342,7 @@ describe("terminal 없는 단절 → backoff 재접속", () => {
       session,
       (snapshot) => snapshot.connection === "stopped",
     );
-    expect(stopped.problem).toEqual({ kind: "run_not_found" });
+    expect(stopped.problem).toEqual({ kind: "not_found", during: "events" });
     expect(stopped.canCancel).toBe(false);
     const count = mock.getRequests().length;
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -675,6 +675,183 @@ describe("접수 거부", () => {
       });
     },
   );
+});
+
+describe("리뷰 1회차 회귀", () => {
+  const runningSession = async (
+    ctx: ReturnType<typeof setup>,
+    options: RunSessionOptions = {},
+  ) => {
+    const session = ctx.create({ noteId: "5", ...options });
+    session.send(QUESTION);
+    await waitFor(session, (snapshot) => snapshot.run.lastSeq === 5);
+    return { session, runId: session.getSnapshot().run.runId! };
+  };
+
+  it("B1: 이탈 중 끝난 run은 돌아와 restore하면 대화 조회의 terminal message로 끝나고 전송할 수 있다", async () => {
+    const ctx = setup({ template: "canceled-running" });
+    const { session, runId } = await runningSession(ctx);
+    session.dispose();
+    await api.cancelRun(runId); // 다른 탭에서 정지 → Server에서 CANCELED
+    expect(ctx.mock.getRun(runId)!.status).toBe("CANCELED");
+    expect(session.getSnapshot()).toMatchObject({
+      run: { status: "RUNNING" },
+      canSend: false,
+    });
+
+    const page = await session.restore();
+    expect(page?.activeRun).toBeNull();
+    expect(session.getSnapshot()).toMatchObject({
+      connection: "idle",
+      run: { status: "CANCELED" },
+      canSend: true,
+      canCancel: false,
+    });
+    // 완료됐던 Activity는 남는다.
+    expect(selectActivities(session.getSnapshot().run)[0]).toMatchObject({
+      activityId: "activity-1",
+      phase: "completed",
+    });
+    expect(requestsOf(ctx.mock, "GET", "/events")).toHaveLength(0);
+  });
+
+  it("B1: 대화 조회 페이지에 그 run message가 없으면 cursor로 붙어 terminal replay를 받는다", async () => {
+    const ctx = setup({ template: "canceled-running" });
+    const { session, runId } = await runningSession(ctx);
+    session.dispose();
+    await api.cancelRun(runId);
+    await session.restore({
+      noteId: "5",
+      activeRun: null,
+      messages: [],
+      nextBefore: null,
+    });
+    const done = await waitFor(session, isTerminal);
+    expect(done.run.status).toBe("CANCELED");
+    expect(
+      requestsOf(ctx.mock, "GET", "/events").map((e) => e.lastEventId),
+    ).toEqual([`${runId}:5`]);
+    expectSameAsCleanStream(done.run, ctx.mock);
+  });
+
+  it("R1: 이미 terminal을 받은 run을 가리키는 오래된 page로 restore해도 연결하지 않는다", async () => {
+    const ctx = setup();
+    const session = ctx.create({ noteId: "5" });
+    session.send(QUESTION);
+    const done = await waitFor(session, isTerminal);
+    await session.restore({
+      noteId: "5",
+      activeRun: { runId: done.run.runId!, status: "RUNNING", lastSeq: 3 },
+      messages: [],
+      nextBefore: null,
+    });
+    expect(session.getSnapshot()).toMatchObject({
+      connection: "idle",
+      reconnect: null,
+      canSend: true,
+    });
+    expect(ctx.delays).toEqual([]);
+    expect(requestsOf(ctx.mock, "GET", "/events")).toHaveLength(0);
+  });
+
+  it("R3: 재시도 소진으로 stream이 없을 때 정지가 받아들여지면 한 번 다시 붙어 terminal을 받는다", async () => {
+    const ctx = setup({ template: "canceled-running" });
+    ctx.mock.injectFault("conversation", {
+      kind: "disconnect",
+      afterFrames: 5,
+    });
+    for (let i = 0; i <= RECONNECT_BACKOFF.maxAttempts; i += 1)
+      ctx.mock.injectFault("events", { kind: "error" });
+    const session = ctx.create();
+    session.send(QUESTION);
+    await waitFor(
+      session,
+      (snapshot) => snapshot.problem?.kind === "reconnect_exhausted",
+    );
+    expect(await session.cancel()).toMatchObject({ outcome: "accepted" });
+    const done = await waitFor(session, isTerminal);
+    expect(done).toMatchObject({
+      run: { status: "CANCELED" },
+      problem: null,
+      canSend: true,
+    });
+    expect(requestsOf(ctx.mock, "POST", "/api/conversations")).toHaveLength(1);
+  });
+
+  it("R3: dispose 뒤 끝난 정지 요청은 다시 붙지 않는다", async () => {
+    const ctx = setup({ template: "canceled-running" });
+    const { session } = await runningSession(ctx);
+    const canceling = session.cancel();
+    session.dispose();
+    expect(await canceling).toMatchObject({ outcome: "accepted" });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(requestsOf(ctx.mock, "GET", "/events")).toHaveLength(0);
+    expect(session.getSnapshot().connection).toBe("idle");
+  });
+
+  it("R2: 재접속의 그 밖 거부는 stream_rejected로 멈추고 clearDraft가 지우지 않으며 reconnect()로 회복한다", async () => {
+    const ctx = setup();
+    ctx.mock.injectFault("conversation", {
+      kind: "disconnect",
+      afterFrames: 4,
+    });
+    server.use(
+      http.get(
+        `${BASE_URL}/api/ai-runs/:runId/events`,
+        () =>
+          HttpResponse.json(
+            { isSuccess: false, code: "COMMON403", message: "금지" },
+            { status: 403 },
+          ),
+        { once: true },
+      ),
+    );
+    const session = ctx.create();
+    session.send(QUESTION);
+    const stopped = await waitFor(
+      session,
+      (snapshot) => snapshot.connection === "stopped",
+    );
+    expect(stopped.problem).toMatchObject({
+      kind: "stream_rejected",
+      detail: { code: null, status: 403 },
+    });
+    session.clearDraft();
+    expect(session.getSnapshot().problem?.kind).toBe("stream_rejected");
+    expect(session.reconnect()).toBe(true);
+    const done = await waitFor(session, isTerminal);
+    expectSameAsCleanStream(done.run, ctx.mock);
+  });
+
+  it("R5: 전송의 404 RUN4041(Note 삭제)도 not_found이고 draft를 남긴다", async () => {
+    const ctx = setup();
+    ctx.mock.deleteNote("5");
+    const session = ctx.create({ noteId: "5" });
+    session.send(QUESTION);
+    const rejected = await waitFor(
+      session,
+      (snapshot) => snapshot.problem !== null,
+    );
+    expect(rejected).toMatchObject({
+      connection: "idle",
+      problem: { kind: "not_found", during: "send" },
+      draft: QUESTION,
+    });
+  });
+
+  it("R6: mock reset은 열린 SSE 연결을 닫는다", async () => {
+    const ctx = setup({ template: "canceled-running" });
+    const { session } = await runningSession(ctx);
+    expect(ctx.mock.getOpenConnections()).toBe(1);
+    ctx.mock.reset();
+    expect(ctx.mock.getOpenConnections()).toBe(0);
+    // 끊긴 연결은 재접속을 시도하고(reset된 server에는 run이 없어 404) 멈춘다.
+    const stopped = await waitFor(
+      session,
+      (snapshot) => snapshot.connection === "stopped",
+    );
+    expect(stopped.problem).toEqual({ kind: "not_found", during: "events" });
+  });
 });
 
 describe("화면 이탈·Note 전환", () => {

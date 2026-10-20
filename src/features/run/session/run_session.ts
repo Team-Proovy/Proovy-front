@@ -22,6 +22,7 @@ import {
   runReducer,
   selectCanCancel,
   selectIsActive,
+  selectIsTerminal,
 } from "../model";
 import type { RunState } from "../model";
 import { RECONNECT_BACKOFF, reconnectDelay } from "./reconnect_backoff";
@@ -47,7 +48,7 @@ export type RunSessionInput = Omit<ConversationQuestionInput, "noteId">;
  * - `connecting`: POST·GET /events 요청을 보냈고 SSE 응답 전
  * - `streaming`: SSE 수신 중
  * - `backoff`: terminal 없이 끊겨 재접속을 기다리는 중 (`reconnect` 참고)
- * - `stopped`: 재접속하지 않는다 (`problem` 참고: run_not_found·unauthorized·reconnect_exhausted·unexpected)
+ * - `stopped`: 재접속하지 않는다 (`problem` 참고: not_found·unauthorized·reconnect_exhausted·stream_rejected·unexpected)
  */
 export type RunSessionConnection =
   | "idle"
@@ -67,11 +68,15 @@ export interface RunSessionReconnect {
 /**
  * 화면이 사용자 문구로 바꿀 typed 상태.
  * - `invalid_request`: 보내기 전 계약 검사 실패 (RUN4001·RUN4002)
- * - `rejected`: stream 전 거부. `detail.code`로 구분한다(RUN4291 `retryAfterSeconds`·RUN4021 잔액 부족·
+ * - `rejected`: 전송(POST)의 접수 거부. `detail.code`로 구분한다(RUN4291 `retryAfterSeconds`·RUN4021 잔액 부족·
  *   RUN4221·RUN4092 등, 계약 밖이면 `code: null`). RUN4291이면 `retryAt`(epoch ms)이 있다. 자동 재전송하지 않는다.
- * - `run_not_found`: 재접속·취소가 404 RUN4041 (Note 삭제 등) — 재접속을 멈췄다
+ *   RUN4041은 여기가 아니라 `not_found`다.
+ * - `not_found`: 404 RUN4041 — Note 삭제·없는 run. 전송(`during: "send"`, draft 유지)·재접속(`"events"`)·
+ *   정지(`"cancel"`) 어느 경로든 같은 kind다. 재접속을 멈췄다
  * - `unauthorized`: token 갱신까지 실패한 401 — 재접속하지 않고 로그인 흐름으로 보냈다
  * - `reconnect_exhausted`: 진행 없이 `maxAttempts`번 연속 실패 — `reconnect()`로 다시 시도할 수 있다
+ * - `stream_rejected`: 재접속(GET /events)의 그 밖 거부(RUN4003·RUN4004·계약 밖 4xx). 계약상 생기지 않아야 하며
+ *   `reconnect()`·`restore()`로 다시 시도할 수 있다
  * - `restore_failed`: Note 진입 대화 조회 실패
  * - `unexpected`: 계약 밖 예외(버그) — 연결을 멈췄다
  */
@@ -82,9 +87,10 @@ export type RunSessionProblem =
       issues: RequestValidationIssue[];
     }
   | { kind: "rejected"; detail: RunApiErrorDetail; retryAt: number | null }
-  | { kind: "run_not_found" }
+  | { kind: "not_found"; during: "send" | "events" | "cancel" }
   | { kind: "unauthorized" }
   | { kind: "reconnect_exhausted"; attempts: number }
+  | { kind: "stream_rejected"; detail: RunApiErrorDetail }
   | { kind: "restore_failed"; error: unknown }
   | { kind: "unexpected"; error: unknown };
 
@@ -144,7 +150,7 @@ export interface RunSession {
    * cursor 없이 붙어 seq 1부터 받는다. 받은(또는 조회한) 페이지를 돌려준다. 이미 연결 중이면 아무것도 하지 않는다.
    */
   restore: (page?: ConversationPage) => Promise<ConversationPage | null>;
-  /** `stopped`(reconnect_exhausted 등)에서 사용자가 다시 시도할 때. 재접속 횟수를 처음부터 센다. */
+  /** `stopped`(reconnect_exhausted·stream_rejected)에서 사용자가 다시 시도할 때. 재접속 횟수를 처음부터 센다. */
   reconnect: () => boolean;
   /** `draft`와 그 입력의 거부 사유(`rejected`·`invalid_request`)를 비운다(화면이 draft를 입력창으로 옮긴 뒤). */
   clearDraft: () => void;
@@ -177,8 +183,12 @@ export interface RunSessionOptions {
 
 const UNAUTHORIZED_ROUTE = "/error/401";
 
+// axios interceptor(`src/shared/api/client.ts` redirectToErrorRoute)와 같은 가드: 개발 모드는 명시적으로 켤 때만 이동한다.
+const SHOULD_ENABLE_ERROR_REDIRECT =
+  import.meta.env.VITE_ENABLE_ERROR_REDIRECT === "true" || !import.meta.env.DEV;
+
 const navigateToLogin = () => {
-  if (typeof window === "undefined") return;
+  if (!SHOULD_ENABLE_ERROR_REDIRECT || typeof window === "undefined") return;
   if (window.location.pathname.startsWith("/error/")) return;
   window.dispatchEvent(
     new CustomEvent("proovy:navigate", {
@@ -200,7 +210,7 @@ const isTransientRejection = (error: RunApiError) =>
 
 /** 연결 대상. `send`는 `run.created` 전까지 POST, 그 뒤로는 그 run의 GET /events다. */
 type Target =
-  | { kind: "send"; request: ConversationRunRequest; input: RunSessionInput }
+  | { kind: "send"; request: ConversationRunRequest }
   | { kind: "events"; runId: Uuid };
 
 type SnapshotFields = Omit<RunSessionSnapshot, "canSend" | "canCancel">;
@@ -215,7 +225,7 @@ const computeCanSend = (fields: SnapshotFields) => {
   if (fields.cancel.phase === "requesting") return false;
   if (fields.problem?.kind === "unauthorized") return false;
   // 404로 사라진 run은 더 진행되지 않는다.
-  if (fields.problem?.kind === "run_not_found") return true;
+  if (fields.problem?.kind === "not_found") return true;
   return !selectIsActive(fields.run);
 };
 
@@ -223,7 +233,7 @@ const computeCanCancel = (fields: SnapshotFields) => {
   if (fields.run.runId === null || !selectCanCancel(fields.run)) return false;
   if (
     fields.problem?.kind === "unauthorized" ||
-    fields.problem?.kind === "run_not_found"
+    fields.problem?.kind === "not_found"
   )
     return false;
   // 받아들여진 정지(done)는 다시 보내지 않는다. 실패했으면 다시 누를 수 있다.
@@ -261,6 +271,8 @@ export const createRunSession = ({
   let controller: AbortController | null = null;
   /** `reconnect()`가 다시 열 대상 */
   let lastTarget: Target | null = null;
+  /** `dispose()` 뒤 true. 정지 응답 뒤 자동 재접속(terminal 받기)을 하지 않는다. send·restore·reconnect가 푼다. */
+  let detached = false;
 
   const update = (patch: Partial<SnapshotFields>) => {
     fields = { ...fields, ...patch };
@@ -297,6 +309,11 @@ export const createRunSession = ({
 
     for (;;) {
       lastTarget = target;
+      // 이미 terminal인 run에는 붙지 않는다(cursor 뒤 frame이 없어 eof → backoff 루프가 된다).
+      if (selectIsTerminal(snapshot.run)) {
+        update({ connection: "idle", reconnect: null });
+        return;
+      }
       const seqBefore = snapshot.run.lastSeq;
       update({ connection: "connecting" });
 
@@ -355,6 +372,14 @@ export const createRunSession = ({
             });
             continue;
           }
+          if (error.detail.code === "RUN4041") {
+            update({
+              connection: "idle",
+              reconnect: null,
+              problem: { kind: "not_found", during: "send" },
+            });
+            return;
+          }
           if (!isTransientRejection(error)) {
             const retryAfter =
               error.detail.code === "RUN4291"
@@ -373,13 +398,9 @@ export const createRunSession = ({
           }
         } else {
           if (error.detail.code === "RUN4041")
-            return stop({ kind: "run_not_found" });
+            return stop({ kind: "not_found", during: "events" });
           if (!isTransientRejection(error))
-            return stop({
-              kind: "rejected",
-              detail: error.detail,
-              retryAt: null,
-            });
+            return stop({ kind: "stream_rejected", detail: error.detail });
         }
       }
 
@@ -399,6 +420,7 @@ export const createRunSession = ({
   };
 
   const startFollowing = (target: Target) => {
+    detached = false;
     controller?.abort();
     const current = new AbortController();
     controller = current;
@@ -435,7 +457,7 @@ export const createRunSession = ({
       problem: null,
       cancel: { phase: "idle" },
     });
-    startFollowing({ kind: "send", request: check.request, input });
+    startFollowing({ kind: "send", request: check.request });
     return { ok: true, requestId: check.request.requestId };
   };
 
@@ -464,8 +486,31 @@ export const createRunSession = ({
       if (current.signal.aborted) return conversation;
     }
 
-    const activeRun = conversation.activeRun;
+    controller = null; // 조회용 controller는 끝났다. 이어지는 연결은 자기 controller를 쓴다.
+    detached = false;
+    const { activeRun } = conversation;
+    const held = snapshot.run;
+
+    // 들고 있던 run이 진행 중으로 남아 있는데(이탈 중 끝남·재시도 소진) 대화 조회의 activeRun이 아니면,
+    // 그 run의 terminal message로 끝낸다. 이 페이지에 message가 없으면 cursor로 붙어 terminal replay를 받는다.
+    if (
+      held.runId !== null &&
+      selectIsActive(held) &&
+      activeRun?.runId !== held.runId
+    ) {
+      const run = runReducer(held, {
+        type: "conversation",
+        page: conversation,
+        runId: held.runId,
+      });
+      update({ run, connection: "idle", reconnect: null, problem: null });
+      if (!activeRun && selectIsActive(run)) {
+        startFollowing({ kind: "events", runId: held.runId });
+        return conversation;
+      }
+    }
     if (!activeRun) return conversation;
+
     // 같은 run을 이미 들고 있으면 그 cursor로 이어 받고, 아니면 cursor 없이 seq 1부터 받는다(Activity 복원).
     const base =
       snapshot.run.runId === activeRun.runId
@@ -479,7 +524,7 @@ export const createRunSession = ({
       problem: null,
       cancel: base === snapshot.run ? snapshot.cancel : { phase: "idle" },
     });
-    controller = null; // 조회용 controller는 끝났다. 이어지는 연결은 자기 controller를 쓴다.
+    // 오래된 page: 이미 terminal을 받은 run이면 붙지 않는다(follow도 같은 검사를 한다).
     startFollowing({ kind: "events", runId: activeRun.runId });
     return conversation;
   };
@@ -491,14 +536,23 @@ export const createRunSession = ({
     try {
       // dispose와 무관하게 끝까지 보낸다(사용자가 누른 정지는 화면을 떠나도 유효하다).
       const result = await api.cancelRun(runId);
-      if (snapshot.run.runId === runId)
-        update({
-          cancel: {
-            phase: "done",
-            outcome: result.outcome,
-            status: result.status,
-          },
-        });
+      if (snapshot.run.runId !== runId) return result;
+      update({
+        cancel: {
+          phase: "done",
+          outcome: result.outcome,
+          status: result.status,
+        },
+      });
+      // stream이 없으면(dispose 뒤·재시도 소진) terminal을 받으려고 그 run에 한 번 다시 붙는다(재전송이 아니다).
+      const stalled =
+        snapshot.connection === "idle" ||
+        snapshot.problem?.kind === "reconnect_exhausted" ||
+        snapshot.problem?.kind === "stream_rejected";
+      if (!detached && stalled && selectIsActive(snapshot.run)) {
+        update({ problem: null });
+        startFollowing({ kind: "events", runId });
+      }
       return result;
     } catch (error) {
       if (snapshot.run.runId !== runId) return null;
@@ -509,9 +563,11 @@ export const createRunSession = ({
       ) {
         controller?.abort();
         controller = null;
-        stop({
-          kind: error.status === 401 ? "unauthorized" : "run_not_found",
-        });
+        stop(
+          error.status === 401
+            ? { kind: "unauthorized" }
+            : { kind: "not_found", during: "cancel" },
+        );
       }
       return null;
     }
@@ -519,7 +575,9 @@ export const createRunSession = ({
 
   const reconnect = () => {
     if (snapshot.connection !== "stopped" || !lastTarget) return false;
-    if (snapshot.problem?.kind !== "reconnect_exhausted") return false;
+    const kind = snapshot.problem?.kind;
+    if (kind !== "reconnect_exhausted" && kind !== "stream_rejected")
+      return false;
     // runId를 알면 그 run의 GET /events(reducer cursor), 아니면 같은 request(같은 requestId)로 다시 POST한다.
     const { runId } = snapshot.run;
     update({ problem: null });
@@ -543,6 +601,7 @@ export const createRunSession = ({
       update({ draft: null, ...(clearsProblem && { problem: null }) });
     },
     dispose: () => {
+      detached = true;
       controller?.abort();
       controller = null;
       if (isConnected(snapshot.connection))
