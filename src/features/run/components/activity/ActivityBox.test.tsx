@@ -1,81 +1,27 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import type {
-  BrowserFrame,
-  PublicRunStatus,
-} from "@/shared/contracts/browser_run_v1";
+import {
+  reduceFrames,
+  selectActivities,
+  selectRunStatus,
+} from "@/features/run/model";
+import type { BrowserFrame } from "@/shared/contracts/browser_run_v1";
 import { getStreamFixture } from "@/test/contracts/browser_run_fixtures";
 import { ActivityBox } from "./ActivityBox";
 import type { ActivityBoxItem } from "./activity_types";
 
-/**
- * fixture stream의 앞 `upToSeq` frame까지를 Activity 박스 입력으로 접는다(테스트 전용).
- * 상태 계산은 1.90 reducer 몫이라 여기서는 박스가 쓰는 필드만 wire 그대로 옮긴다.
- */
+/** fixture stream의 앞 `upToSeq` frame까지를 1.90 reducer로 접어 박스 입력을 만든다. */
 const sliceStream = (name: string, upToSeq = Infinity) => {
   const frames: BrowserFrame[] = getStreamFixture(name).frames.filter(
     (frame) => frame.seq <= upToSeq,
   );
-  const items = new Map<string, ActivityBoxItem>();
-  let runStatus: PublicRunStatus | null = null;
-
-  for (const frame of frames) {
-    switch (frame.type) {
-      case "run.created":
-        runStatus = frame.payload.status;
-        break;
-      case "run.canceling":
-        runStatus = "CANCELING";
-        break;
-      case "run.completed":
-        runStatus = "COMPLETED";
-        break;
-      case "run.failed":
-        runStatus = "FAILED";
-        break;
-      case "run.canceled":
-        runStatus = "CANCELED";
-        break;
-      case "activity.started": {
-        const { payload } = frame;
-        items.set(payload.activityId, {
-          activityId: payload.activityId,
-          kind: payload.kind,
-          label: payload.label,
-          phase: "running",
-          progressStatus: null,
-          methodLabel: "methodLabel" in payload ? payload.methodLabel : null,
-          stepProgress: null,
-          pageProgress: null,
-        });
-        break;
-      }
-      case "activity.updated":
-      case "activity.completed":
-      case "activity.failed":
-      case "activity.canceled": {
-        const { payload } = frame;
-        const item = items.get(payload.activityId)!;
-        if ("status" in payload) item.progressStatus = payload.status ?? null;
-        if ("progress" in payload) item.stepProgress = payload.progress;
-        if ("totalPages" in payload) {
-          item.pageProgress = {
-            processedPages: payload.processedPages,
-            totalPages: payload.totalPages,
-          };
-        }
-        if (frame.type !== "activity.updated") {
-          item.phase = frame.type.replace("activity.", "") as
-            | "completed"
-            | "failed"
-            | "canceled";
-        }
-        break;
-      }
-    }
-  }
-  return { activities: [...items.values()], runStatus, frames };
+  const state = reduceFrames(frames);
+  return {
+    activities: selectActivities(state),
+    runStatus: selectRunStatus(state),
+    frames,
+  };
 };
 
 /** fixture frame의 공개 message 전부 (박스는 표시하지 않아야 한다) */
@@ -170,7 +116,7 @@ describe("ActivityBox fixture 단면", () => {
     }
   });
 
-  it("실패: 실패 Activity는 X와 '실패', 앞선 완료는 그대로다", () => {
+  it("실패: 실패 Activity는 X와 '실패', 앞선 완료는 그대로고 요약은 run 실패다", () => {
     const { activities, runStatus, frames } = sliceStream(
       "failed-verification",
     );
@@ -186,7 +132,7 @@ describe("ActivityBox fixture 단면", () => {
     expect(getRowIcon(generation)).toHaveAttribute("data-phase", "failed");
     expect(generation).toHaveTextContent("풀이 작성");
     expect(generation).toHaveTextContent("실패");
-    expect(screen.getByRole("status")).toHaveTextContent("풀이 작성 실패");
+    expect(screen.getByRole("status")).toHaveTextContent(/^실패$/);
     for (const message of collectMessages(frames)) {
       expect(container.textContent).not.toContain(message);
     }
@@ -211,19 +157,20 @@ describe("ActivityBox fixture 단면", () => {
     expect(screen.getByRole("status")).toHaveTextContent("중단 중");
   });
 
-  it("중단 중: Activity가 없어도 '중단 중'을 표시하고, 그대로 취소되면 박스가 없다", () => {
+  it("중단 중: Activity가 없어도 '중단 중'을 표시하고, 그대로 취소되면 박스 없이 '중단됨'을 알린다", () => {
     // canceled-pending은 run.canceling 없이 PENDING → CANCELED다
     const { activities, runStatus } = sliceStream("canceled-pending");
     expect(activities).toEqual([]);
     expect(runStatus).toBe("CANCELED");
 
-    const { rerender, container } = render(
+    const { rerender } = render(
       <ActivityBox
         activities={[]}
         runStatus="CANCELING"
       />,
     );
-    expect(screen.getByRole("status")).toHaveTextContent("중단 중");
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("중단 중");
 
     rerender(
       <ActivityBox
@@ -231,7 +178,42 @@ describe("ActivityBox fixture 단면", () => {
         runStatus={runStatus}
       />,
     );
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status).toHaveTextContent("중단됨");
+  });
+
+  it("완료 뒤 중단: 마지막 Activity가 완료여도 run이 CANCELED면 '완료'가 아니라 '중단됨'이다", () => {
+    const stream = getStreamFixture("canceled-asset-deleting");
+    const cancelingSeq = stream.frames.find(
+      (frame) => frame.type === "run.canceling",
+    )!.seq;
+    const canceling = sliceStream("canceled-asset-deleting", cancelingSeq);
+    const { rerender } = render(
+      <ActivityBox
+        activities={canceling.activities}
+        runStatus={canceling.runStatus}
+      />,
+    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("중단 중");
+
+    const canceled = sliceStream("canceled-asset-deleting");
+    expect(canceled.runStatus).toBe("CANCELED");
+    expect(canceled.activities.at(-1)?.phase).toBe("completed");
+    rerender(
+      <ActivityBox
+        activities={canceled.activities}
+        runStatus={canceled.runStatus}
+      />,
+    );
+    expect(status).toHaveTextContent(/^중단됨$/);
+    const toggle = screen.getByRole("button", { name: /중단됨/ });
+    expect(toggle).not.toHaveTextContent("완료");
+    expect(toggle.querySelector("svg[data-phase]")).toHaveAttribute(
+      "data-phase",
+      "canceled",
+    );
   });
 
   it("취소: 취소된 Activity는 minus와 '취소됨'이다", () => {
@@ -246,7 +228,7 @@ describe("ActivityBox fixture 단면", () => {
     const [, retrieval] = getRows();
     expect(getRowIcon(retrieval)).toHaveAttribute("data-phase", "canceled");
     expect(retrieval).toHaveTextContent("취소됨");
-    expect(screen.getByRole("status")).toHaveTextContent("노트 검색 취소됨");
+    expect(screen.getByRole("status")).toHaveTextContent(/^중단됨$/);
   });
 });
 
@@ -445,13 +427,69 @@ describe("ActivityBox 표시 규칙", () => {
     expect(status).toHaveTextContent("단계 검증 완료");
   });
 
-  it("Activity가 없고 중단 중이 아니면 아무것도 그리지 않는다", () => {
-    const { container } = render(
+  it("Activity가 없고 중단 중이 아니면 박스 없이 빈 live region만 두고, 첫 Activity 문구는 같은 노드에 쓴다", () => {
+    const { rerender } = render(
       <ActivityBox
         activities={[]}
         runStatus="RUNNING"
       />,
     );
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    const status = screen.getByRole("status");
+    expect(status).toBeEmptyDOMElement();
+
+    rerender(
+      <ActivityBox
+        activities={[
+          item({
+            activityId: "a1",
+            kind: "input_analysis",
+            label: "analyzing_input",
+          }),
+        ]}
+        runStatus="RUNNING"
+      />,
+    );
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status).toHaveTextContent("입력 분석 진행 중");
+  });
+
+  it("waiting·retrying sub-state는 목록 행에만 있고 live region 문구는 바뀌지 않는다", () => {
+    const generation = (progressStatus: ActivityBoxItem["progressStatus"]) =>
+      item({
+        activityId: "a1",
+        kind: "solution_generation",
+        label: "drafting_solution",
+        progressStatus,
+      });
+    const { rerender } = render(
+      <ActivityBox
+        activities={[generation("in_progress")]}
+        runStatus="RUNNING"
+      />,
+    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(/^풀이 작성 진행 중$/);
+
+    for (const progressStatus of [
+      "retrying",
+      "waiting",
+      "in_progress",
+    ] as const) {
+      rerender(
+        <ActivityBox
+          activities={[generation(progressStatus)]}
+          runStatus="RUNNING"
+        />,
+      );
+      expect(status).toHaveTextContent(/^풀이 작성 진행 중$/);
+    }
+    rerender(
+      <ActivityBox
+        activities={[generation("retrying")]}
+        runStatus="RUNNING"
+      />,
+    );
+    expect(getRows()[0]).toHaveTextContent("다시 시도 중");
   });
 });

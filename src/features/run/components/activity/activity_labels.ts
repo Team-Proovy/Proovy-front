@@ -1,6 +1,12 @@
 import type {
   ActivityKind,
   ActivityStatus,
+  AssetUnderstandingLabel,
+  CodeExecutionLabel,
+  InputAnalysisLabel,
+  NoteRetrievalLabel,
+  SolutionGenerationLabel,
+  VerificationLabel,
 } from "@/shared/contracts/browser_run_v1";
 import type { ActivityBoxItem, ActivityBoxPhase } from "./activity_types";
 
@@ -21,7 +27,15 @@ export const ACTIVITY_KIND_TITLES: Record<ActivityKind, string> = {
 };
 
 /** kind별 계약 label enum의 고정 문구. 모르는 label은 kind 제목만 쓴다. */
-const ACTIVITY_LABEL_TEXTS: Record<string, string> = {
+const ACTIVITY_LABEL_TEXTS: Record<
+  | InputAnalysisLabel
+  | SolutionGenerationLabel
+  | AssetUnderstandingLabel
+  | NoteRetrievalLabel
+  | CodeExecutionLabel
+  | VerificationLabel,
+  string
+> = {
   analyzing_input: "입력 분석",
   reading_input: "입력 읽기",
   drafting_solution: "풀이 작성",
@@ -43,6 +57,12 @@ export const ACTIVITY_PHASE_TEXTS: Record<ActivityBoxPhase, string> = {
 
 export const CANCELING_TEXT = "중단 중";
 
+/** run이 Activity outcome과 따로 끝났을 때의 박스 요약 문구 */
+export const RUN_OUTCOME_TEXTS = {
+  CANCELED: "중단됨",
+  FAILED: "실패",
+} as const;
+
 /** running 중 sub-state 보조 문구. in_progress는 "진행 중"과 같아 따로 붙이지 않는다. */
 const PROGRESS_STATUS_TEXTS: Partial<Record<ActivityStatus, string>> = {
   waiting: "대기 중",
@@ -53,7 +73,7 @@ export const getActivityTitle = (
   item: Pick<ActivityBoxItem, "kind" | "label">,
 ) =>
   Object.hasOwn(ACTIVITY_LABEL_TEXTS, item.label)
-    ? ACTIVITY_LABEL_TEXTS[item.label]
+    ? ACTIVITY_LABEL_TEXTS[item.label as keyof typeof ACTIVITY_LABEL_TEXTS]
     : ACTIVITY_KIND_TITLES[item.kind];
 
 /** run이 CANCELING이면 아직 열린 Activity도 "중단 중"으로 읽힌다. */

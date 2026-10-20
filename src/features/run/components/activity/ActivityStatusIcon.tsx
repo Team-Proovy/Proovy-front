@@ -1,18 +1,14 @@
-import { Check, LoaderCircle, Minus, X } from "lucide-react";
+import { Check, LoaderCircle, Minus, X, type LucideIcon } from "lucide-react";
 import type { ActivityBoxPhase } from "./activity_types";
 
-const ICON_BY_PHASE = {
-  running: LoaderCircle,
-  completed: Check,
-  failed: X,
-  canceled: Minus,
-} as const;
-
-const COLOR_BY_PHASE: Record<ActivityBoxPhase, string> = {
-  running: "text-[#2A6AFF]",
-  completed: "text-[#16A34A]",
-  failed: "text-[#DC2626]",
-  canceled: "text-[#6B7280]",
+const PHASE_ICONS: Record<
+  ActivityBoxPhase,
+  { icon: LucideIcon; color: string }
+> = {
+  running: { icon: LoaderCircle, color: "text-[#2A6AFF]" },
+  completed: { icon: Check, color: "text-[#16A34A]" },
+  failed: { icon: X, color: "text-[#DC2626]" },
+  canceled: { icon: Minus, color: "text-[#6B7280]" },
 };
 
 interface ActivityStatusIconProps {
@@ -26,14 +22,14 @@ interface ActivityStatusIconProps {
  * `data-phase`로 어떤 모양을 그렸는지 테스트에서 확인한다.
  */
 export const ActivityStatusIcon = ({ phase }: ActivityStatusIconProps) => {
-  const Icon = ICON_BY_PHASE[phase];
+  const { icon: Icon, color } = PHASE_ICONS[phase];
   return (
     <Icon
       aria-hidden="true"
       data-phase={phase}
       size={16}
       strokeWidth={2.5}
-      className={`shrink-0 ${COLOR_BY_PHASE[phase]} ${phase === "running" ? "animate-spin motion-reduce:animate-none" : ""}`}
+      className={`shrink-0 ${color} ${phase === "running" ? "animate-spin motion-reduce:animate-none" : ""}`}
     />
   );
 };
