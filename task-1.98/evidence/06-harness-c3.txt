@@ -1,0 +1,17 @@
+$ node c3.mjs
+[local-stack] user 3 — access token (1시간 유효):
+ Container proovy-local-brain-1  Paused
+stop clicked at +3235ms
+'중단 중' at +3255ms
++6472ms while paused: ["중단 중","중단 중","중단 중"] answers=0
+ Container proovy-local-brain-1  Unpaused
+brain unpaused at +6736ms
++14876ms after unpause: ["중단됨","중단됨 · 답변 생성을 중단했습니다."] rows=[] answers=0 stopBtn=0
+after reload: ["중단됨 · 답변 생성을 중단했습니다."] answers=0 stopBtn=0
+36:53.937 POST 200 /api/conversations 
+36:54.714 GET undefined /api/conversations/3/messages?limit=30 
+36:54.717 GET 200 /api/conversations/3/messages?limit=30 
+36:55.039 GET 200 /api/ai-runs/1cbc2615-6447-4af1-a43a-872d8034f1cf/events 1cbc2615-6447-4af1-a43a-872d8034f1cf:1
+36:56.670 POST 200 /api/ai-runs/1cbc2615-6447-4af1-a43a-872d8034f1cf/cancel 
+37:09.420 GET undefined /api/conversations/3/messages?limit=30 
+37:09.420 GET 200 /api/conversations/3/messages?limit=30 

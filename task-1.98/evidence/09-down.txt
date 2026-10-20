@@ -1,0 +1,40 @@
+$ docker compose down -v
+ Container proovy-local-brain-1  Stopping
+ Container proovy-local-brain-1  Stopped
+ Container proovy-local-brain-1  Removing
+ Container proovy-local-brain-1  Removed
+ Container proovy-local-provision-1  Stopping
+ Container proovy-local-provision-1  Stopped
+ Container proovy-local-provision-1  Removing
+ Container proovy-local-provision-1  Removed
+ Container proovy-local-brain-migrate-1  Stopping
+ Container proovy-local-brain-migrate-1  Stopped
+ Container proovy-local-brain-migrate-1  Removing
+ Container proovy-local-brain-migrate-1  Removed
+ Container proovy-local-server-1  Stopping
+ Container proovy-local-server-1  Stopped
+ Container proovy-local-server-1  Removing
+ Container proovy-local-server-1  Removed
+ Container proovy-local-redis-1  Stopping
+ Container proovy-local-postgres-1  Stopping
+ Container proovy-local-redis-1  Stopped
+ Container proovy-local-redis-1  Removing
+ Container proovy-local-postgres-1  Stopped
+ Container proovy-local-postgres-1  Removing
+ Container proovy-local-redis-1  Removed
+ Container proovy-local-postgres-1  Removed
+ Container proovy-local-secrets-1  Stopping
+ Container proovy-local-secrets-1  Stopped
+ Container proovy-local-secrets-1  Removing
+ Container proovy-local-secrets-1  Removed
+ Volume proovy-local_secrets  Removing
+ Volume proovy-local_pgdata  Removing
+ Network proovy-local_default  Removing
+ Volume proovy-local_pgdata  Removed
+ Volume proovy-local_secrets  Removed
+ Network proovy-local_default  Removed
+
+# leftovers (containers volumes networks)
+0
+0
+0

@@ -1,0 +1,15 @@
+$ docker compose ps -a
+NAME                           IMAGE                 COMMAND                   SERVICE         CREATED              STATUS                          PORTS
+proovy-local-brain-1           proovy-local-brain    "sh -c 'set -eu\nINTE…"   brain           About a minute ago   Up 12 seconds (healthy)         
+proovy-local-brain-migrate-1   proovy-local-brain    "sh -c 'set -eu\nBRAI…"   brain-migrate   About a minute ago   Exited (0) 13 seconds ago       
+proovy-local-postgres-1        proovy-local-tools    "docker-entrypoint.s…"    postgres        About a minute ago   Up About a minute (healthy)     5432/tcp
+proovy-local-provision-1       proovy-local-tools    "sh -c 'set -eu\nPGPA…"   provision       About a minute ago   Exited (0) 12 seconds ago       
+proovy-local-redis-1           redis:7-alpine        "docker-entrypoint.s…"    redis           About a minute ago   Up About a minute (healthy)     6379/tcp
+proovy-local-secrets-1         proovy-local-tools    "init-secrets.sh"         secrets         About a minute ago   Exited (0) About a minute ago   
+proovy-local-server-1          proovy-local-server   "server-entrypoint.sh"    server          About a minute ago   Up About a minute (healthy)     127.0.0.1:28098->8080/tcp
+
+$ docker compose ps --format '{{.Service}}: {{.Publishers}}'
+brain: []
+postgres: [{ 5432 0 tcp}]
+redis: [{ 6379 0 tcp}]
+server: [{127.0.0.1 8080 28098 tcp}]

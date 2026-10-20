@@ -1,0 +1,6 @@
+$ docker compose logs secrets brain-migrate provision
+brain-migrate-1  | Database bootstrap complete: Brain roles and schemas are ready
+brain-migrate-1  | Database migrations applied: 0001, 0002, 0003, 0004, 0005
+brain-migrate-1  | Database migration version: 0005
+provision-1      | [local-stack] role boundary applied
+secrets-1        | [local-stack] secrets ready

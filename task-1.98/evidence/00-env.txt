@@ -1,0 +1,6 @@
+$ git rev-parse HEAD
+a4dc0b57051a9a652573df14038ca0ad8712484a
+$ cat .env
+BRAIN_DIR=/tmp/claude-1000/-home-chowon442-coding-workspace--worktree-Proovy-front-worktree-task-1-98/266a0cd4-70ab-4d06-88ae-eb9bf53ba14f/scratchpad/brain-89520f6
+SERVER_PORT=28098
+Docker Compose version 2.40.3+ds1-0ubuntu1~24.04.1

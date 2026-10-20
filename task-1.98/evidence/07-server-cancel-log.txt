@@ -1,0 +1,3 @@
+$ docker compose logs server | grep -E 'run canceled|cancellation confirmed|brain stored run'
+server-1  | 2026-10-20T16:37:01.442Z  INFO 1 --- [proovy-api] [    runCancel-1] c.p.domain.run.cancel.RunCancelStore     : run canceled: runId=1cbc2615-6447-4af1-a43a-872d8034f1cf, from=RUNNING, cause=user_requested, compensation=NOT_COMPENSABLE
+server-1  | 2026-10-20T16:37:01.447Z  INFO 1 --- [proovy-api] [    runCancel-1] c.p.d.run.cancel.RunCancelFinalizer      : cancellation confirmed: runId=1cbc2615-6447-4af1-a43a-872d8034f1cf, reason=brain_terminal, lastSeq=3

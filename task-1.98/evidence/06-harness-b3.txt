@@ -1,0 +1,20 @@
+$ node b3.mjs
+[local-stack] user 2 — access token (1시간 유효):
+ Container proovy-local-brain-1  Paused
++3958ms before reload rows=[] answers=0 stopBtn=1
+body: "x^2-7x+12=0을 풀어줘\n\nx^2-7x+12=0을 풀어줘\n\n답변을 준비하고 있어요\n수식 입력기\n캔버스\n도구\n\n답변이 끝나면 보낼 수 있어요. 지금은 다음 질문을 미리 써 둘 수 있어요."
++9091ms after reload rows=[] answers=0 stopBtn=1
+body: "x^2-7x+12=0을 풀어줘\n\nx^2-7x+12=0을 풀어줘\n\n답변을 준비하고 있어요\n수식 입력기\n캔버스\n도구\n\n답변이 끝나면 보낼 수 있어요. 지금은 다음 질문을 미리 써 둘 수 있어요."
+ Container proovy-local-brain-1  Unpaused
+brain unpaused at +9417ms
++9456ms rows=[] answers=0 stopBtn=1
++9849ms rows=["풀이 작성\n완료","단계 검증 · 코드 실행 기반 단계 검증 · 3/3단계 확인\n완료"] answers=0 stopBtn=1
++10080ms rows=["풀이 작성\n완료","단계 검증 · 코드 실행 기반 단계 검증 · 3/3단계 확인\n완료"] answers=1 stopBtn=0
+final rows=["풀이 작성\n완료","단계 검증 · 코드 실행 기반 단계 검증 · 3/3단계 확인\n완료"] answers=1 stopBtn=0
+36:36.632 POST 200 /api/conversations 
+36:37.264 GET undefined /api/conversations/2/messages?limit=30 
+36:37.265 GET 200 /api/conversations/2/messages?limit=30 
+36:37.482 GET undefined /api/ai-runs/f7f2d8fb-1f99-4fb5-a51a-31a564dbf226/events f7f2d8fb-1f99-4fb5-a51a-31a564dbf226:1
+36:41.350 GET undefined /api/conversations/2/messages?limit=30 
+36:41.351 GET 200 /api/conversations/2/messages?limit=30 
+36:41.964 GET 200 /api/ai-runs/f7f2d8fb-1f99-4fb5-a51a-31a564dbf226/events 
