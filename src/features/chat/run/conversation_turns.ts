@@ -73,13 +73,15 @@ export const buildConversationTurns = (
   for (const run of liveRuns) {
     if (run.runId === null) continue;
     const turn = turnFor(run.runId);
-    // 접수 전 자리(requestId key)와 같은 key를 쓴다. 이력에 먼저 나온 turn이어도 바꿔 remount를 막는다.
-    if (run.identity.requestId !== null) turn.key = run.identity.requestId;
-    turn.assistant = { kind: "live", run };
     const input =
       run.identity.requestId === null
         ? undefined
         : inputs.get(run.identity.requestId);
+    // 이 화면(또는 홈)이 보낸 질문이면 접수 전 자리(requestId key)와 같은 key를 써 remount를 막는다.
+    // 복원·409로 붙은 run은 접수 전 자리가 없었으므로 이력과 같은 runId key를 그대로 둔다.
+    if (input && run.identity.requestId !== null)
+      turn.key = run.identity.requestId;
+    turn.assistant = { kind: "live", run };
     if (!turn.user && input) turn.user = toTurnUser(input);
   }
 

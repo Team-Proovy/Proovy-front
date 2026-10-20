@@ -32,34 +32,44 @@ describe("buildConversationTurns", () => {
     expect(accepted[0].user?.text).toBe("질문");
   });
 
-  it("이력에 먼저 나온 run도 live run의 requestId를 key로 쓴다(이력 도착으로 remount하지 않는다)", () => {
-    const history: ConversationMessage[] = [
-      {
-        messageId: userMessageId,
-        role: "user",
-        status: "COMPLETED",
-        runId,
-        createdAt: "2026-10-20T00:00:00Z",
-        user: {
-          text: "이력 질문",
-          latex: null,
-          requestedTasks: [],
-          requestedOutputs: ["text"],
-          turnAttachments: [],
-          viewerFocus: null,
-        },
+  const history: ConversationMessage[] = [
+    {
+      messageId: userMessageId,
+      role: "user",
+      status: "COMPLETED",
+      runId,
+      createdAt: "2026-10-20T00:00:00Z",
+      user: {
+        text: "이력 질문",
+        latex: null,
+        requestedTasks: [],
+        requestedOutputs: ["text"],
+        turnAttachments: [],
+        viewerFocus: null,
       },
-    ];
+    },
+  ];
+  const liveRun = reduceFrames(fixture.frames.slice(0, 3));
+
+  it("이 화면이 보낸 run은 이력이 먼저 와도 requestId key를 지킨다(이력 도착으로 remount하지 않는다)", () => {
     const turns = buildConversationTurns(
       history,
-      [reduceFrames(fixture.frames.slice(0, 3))],
-      new Map(),
+      [liveRun],
+      new Map([[requestId, input]]),
       null,
     );
     expect(turns).toHaveLength(1);
     expect(turns[0].key).toBe(requestId);
     expect(turns[0].user?.text).toBe("이력 질문");
     expect(turns[0].assistant?.kind).toBe("live");
+  });
+
+  it("복원·409로 붙은 run은 이력과 같은 runId key를 유지한다(live run이 붙어도 remount하지 않는다)", () => {
+    const before = buildConversationTurns(history, [], new Map(), null);
+    const after = buildConversationTurns(history, [liveRun], new Map(), null);
+    expect(before.map((turn) => turn.key)).toEqual([runId]);
+    expect(after.map((turn) => turn.key)).toEqual([runId]);
+    expect(after[0].assistant?.kind).toBe("live");
   });
 });
 

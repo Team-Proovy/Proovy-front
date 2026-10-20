@@ -25,8 +25,16 @@ export interface RunSessionRegistry {
   create: (noteId?: NoteId | null) => RunSession;
   /** 대화 조회 API (Note 화면 이력) */
   api: Pick<RunApiClient, "getConversationMessages">;
-  /** 첫 질문 세션을 Note 화면에 맡긴다. */
-  handOff: (noteId: NoteId, handoff: RunSessionHandoff) => void;
+  /**
+   * 첫 질문 세션을 Note 화면에 맡긴다. 같은 noteId에 다른 세션이 맡겨져 있으면 그 세션은 연결을 끊는다.
+   * `detached`(홈을 떠난 뒤 접수)면 아무도 이어 받지 않은 채 run이 끝나거나 연결이 멈출 때 정리한다
+   * (그 Note에 들어가면 대화 조회로 복원한다).
+   */
+  handOff: (
+    noteId: NoteId,
+    handoff: RunSessionHandoff,
+    options?: { detached?: boolean },
+  ) => void;
   /** 맡긴 세션을 본다(지우지 않는다 — StrictMode에서 state 초기화가 두 번 불려도 같은 값). */
   peek: (noteId: NoteId) => RunSessionHandoff | undefined;
   /** 이어 받은 세션을 registry에서 뺀다. 그 사이 다른 세션이 맡겨졌으면 그대로 둔다. */

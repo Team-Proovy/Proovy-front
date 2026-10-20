@@ -214,11 +214,12 @@ export const ChatInput = ({
     if (!input) return;
     const current = input.textContent?.trim() ?? "";
     if (!current) input.textContent = restoreText;
-    else if (!current.startsWith(restoreText.trim()))
-      input.insertBefore(
-        document.createTextNode(`${restoreText}\n`),
-        input.firstChild,
-      );
+    else if (!current.startsWith(restoreText.trim())) {
+      // 줄은 `<br>`로 나눈다(text node의 `\n`은 접힐 수 있다). 추출은 `<br>`을 줄바꿈으로 읽는다.
+      const first = input.firstChild;
+      input.insertBefore(document.createTextNode(restoreText), first);
+      input.insertBefore(document.createElement("br"), first);
+    }
     setHasContent(input.textContent?.trim().length !== 0);
   }, [restoreId, restoreText, setHasContent]);
 

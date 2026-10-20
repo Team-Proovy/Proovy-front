@@ -93,11 +93,16 @@ export const useHomeSend = () => {
   const [isStalled, setIsStalled] = useState(false);
   /** `run.created`를 기다리는(또는 기다리다 멈춘) 전송 */
   const waitingRef = useRef<WaitingSend | null>(null);
+  /** 홈 화면의 접수 대기 구독을 끊는다(이동·handOff는 홈이 보일 때만 한다). */
+  const stopCheckRef = useRef<(() => void) | null>(null);
 
   // `run.created` 전에 홈을 떠나도 접수됐을 수 있는 run을 버리지 않는다: 연결을 유지해 접수되면
   // registry에 맡기고(그 Note에 들어가면 이어 받는다) 노트 목록을 다시 읽는다. 멈춰 있었으면 연결만 정리한다.
+  // 홈의 접수 대기 구독은 먼저 끊는다 — 사용자가 간 화면을 그 Note로 바꾸지 않는다.
   useEffect(
     () => () => {
+      stopCheckRef.current?.();
+      stopCheckRef.current = null;
       const waiting = waitingRef.current;
       waitingRef.current = null;
       if (!waiting) return;
@@ -106,7 +111,9 @@ export const useHomeSend = () => {
         const snapshot = session.getSnapshot();
         if (snapshot.noteId !== null) {
           unsubscribe();
-          registry.handOff(snapshot.noteId, toHandoff(waiting));
+          registry.handOff(snapshot.noteId, toHandoff(waiting), {
+            detached: true,
+          });
           void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
         } else if (!isConnected(snapshot)) {
           unsubscribe();
@@ -147,6 +154,7 @@ export const useHomeSend = () => {
     return new Promise<boolean>((resolve) => {
       const settle = (accepted: boolean) => {
         unsubscribe();
+        stopCheckRef.current = null;
         setIsSending(false);
         resolve(accepted);
       };
@@ -183,6 +191,10 @@ export const useHomeSend = () => {
         settle(false);
       };
       const unsubscribe = session.subscribe(check);
+      stopCheckRef.current = () => {
+        unsubscribe();
+        resolve(false);
+      };
       check();
     });
   };

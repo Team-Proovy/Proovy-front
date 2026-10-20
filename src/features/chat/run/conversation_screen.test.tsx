@@ -22,9 +22,16 @@ import {
 import { createRunApiClient } from "@/features/run/api";
 import { createBrowserRunMockServer } from "@/features/run/session/mocks";
 import type { BrowserRunMockServerOptions } from "@/features/run/session/mocks";
+import { extractInputContent } from "@/features/editor/utils/extract_input_content";
 import { ChatPage } from "@/pages/ChatPage";
 import { HomePage } from "@/pages/HomePage";
+import type {
+  ReconnectBackoff,
+  RunSessionOptions,
+} from "@/features/run/session";
 import { RunSessionRegistryProvider } from "./RunSessionRegistryProvider";
+import { useRunSessionRegistry } from "./run_session_registry";
+import type { RunSessionRegistry } from "./run_session_registry";
 
 // mathlive는 jsdom에서 custom element를 등록하지 못한다. 수식 입력은 이 테스트 범위가 아니다.
 vi.mock("mathlive", () => ({ MathfieldElement: class {} }));
@@ -99,11 +106,27 @@ const FAST_BACKOFF = {
   maxAttempts: 1,
 };
 
-const Layout = ({ fastBackoff }: { fastBackoff: boolean }) => (
+/** 화면이 쓰는 registry를 테스트에서 본다(handOff 횟수 확인). */
+const RegistryProbe = ({
+  onRegistry,
+}: {
+  onRegistry: (registry: RunSessionRegistry) => void;
+}) => {
+  onRegistry(useRunSessionRegistry());
+  return null;
+};
+
+interface LayoutProps {
+  sessionOptions: Omit<RunSessionOptions, "noteId">;
+  onRegistry: (registry: RunSessionRegistry) => void;
+}
+
+const Layout = ({ sessionOptions, onRegistry }: LayoutProps) => (
   <RunSessionRegistryProvider
-    sessionOptions={{ api, ...(fastBackoff && { backoff: FAST_BACKOFF }) }}
+    sessionOptions={sessionOptions}
     api={api}
   >
+    <RegistryProbe onRegistry={onRegistry} />
     <Outlet />
     <LocationProbe />
   </RunSessionRegistryProvider>
@@ -115,8 +138,16 @@ const renderApp = (
   {
     strict = false,
     fastBackoff = false,
-  }: { strict?: boolean; fastBackoff?: boolean } = {},
+    backoff = fastBackoff ? FAST_BACKOFF : undefined,
+    sessionApi = api,
+  }: {
+    strict?: boolean;
+    fastBackoff?: boolean;
+    backoff?: ReconnectBackoff;
+    sessionApi?: RunSessionOptions["api"];
+  } = {},
 ) => {
+  let registry: RunSessionRegistry | null = null;
   const mock = createBrowserRunMockServer({
     baseUrl: BASE_URL,
     ...mockOptions,
@@ -126,7 +157,14 @@ const renderApp = (
   const router = createMemoryRouter(
     [
       {
-        element: <Layout fastBackoff={fastBackoff} />,
+        element: (
+          <Layout
+            sessionOptions={{ api: sessionApi, ...(backoff && { backoff }) }}
+            onRegistry={(value) => {
+              registry = value;
+            }}
+          />
+        ),
         children: [
           { path: "/app/home", element: <HomePage /> },
           { path: "/app/chat/:noteId", element: <ChatPage /> },
@@ -155,7 +193,22 @@ const renderApp = (
   const posts = () => requests("POST", /^\/api\/conversations$/);
   const cancels = () => requests("POST", /\/cancel$/);
   const events = () => requests("GET", /\/events$/);
-  return { mock, legacy, view, user, router, posts, cancels, events };
+  const getRegistry = () => {
+    if (!registry) throw new Error("registry 없음");
+    return registry;
+  };
+  return {
+    mock,
+    legacy,
+    view,
+    user,
+    router,
+    queryClient,
+    getRegistry,
+    posts,
+    cancels,
+    events,
+  };
 };
 
 const getInput = () => {
@@ -287,6 +340,57 @@ describe("홈 첫 질문", () => {
     expect(mock.listRunIds()).toHaveLength(1);
     expect(new Set(posts().map((entry) => entry.requestId)).size).toBe(1);
     expect(legacy.calls).not.toContain("POST /api/notes");
+  });
+
+  it("접수 전에 홈을 떠나면 사용자가 간 화면을 바꾸지 않고, 접수 뒤 한 번만 맡기고 노트 목록을 다시 읽는다", async () => {
+    const { user, mock, posts, router, queryClient, getRegistry } = renderApp(
+      "/app/home",
+      {},
+      {
+        backoff: {
+          initialDelayMs: 300,
+          maxDelayMs: 300,
+          multiplier: 1,
+          maxAttempts: 3,
+        },
+      },
+    );
+    const handOff = vi.spyOn(getRegistry(), "handOff");
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+    // 첫 POST는 run.created 전에 끊긴다 → 300ms 뒤 같은 requestId로 다시 보낸다.
+    mock.injectFault("conversation", { kind: "disconnect", afterFrames: 0 });
+
+    await typeQuestion(user, "떠나기 전 질문");
+    await user.click(sendButton());
+    await waitFor(() => expect(posts()).toHaveLength(1));
+
+    // 재접속 대기 중 사이드바로 다른 노트에 간다.
+    await act(() => router.navigate("/app/chat/1"));
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+    await waitFor(() => expect(posts()).toHaveLength(2));
+    const [runId] = mock.listRunIds();
+    await waitFor(() => expect(mock.getRun(runId)?.status).toBe("COMPLETED"));
+    await waitFor(() =>
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: ["notes", "list"],
+      }),
+    );
+    // 이동 없음, handOff 1회(detached).
+    expect(location()).toBe("/app/chat/1");
+    expect(handOff).toHaveBeenCalledTimes(1);
+    expect(handOff).toHaveBeenCalledWith("9001", expect.anything(), {
+      detached: true,
+    });
+    // 아무도 이어 받지 않은 채 run이 끝났으므로 registry에서 정리됐다.
+    await waitFor(() => expect(getRegistry().peek("9001")).toBeUndefined());
+
+    // 나중에 그 Note에 들어가면 대화 조회로 완료 응답을 본다(새 전송 없음).
+    await act(() => router.navigate("/app/chat/9001"));
+    expect(await screen.findByText(COMPLETED_BODY)).toBeInTheDocument();
+    expect(screen.getByText("떠나기 전 질문")).toBeInTheDocument();
+    expect(posts()).toHaveLength(2);
+    expect(mock.listRunIds()).toHaveLength(1);
   });
 
   it("이력 조회가 실패해도 '다시 불러오기'가 진행 중 stream을 끊지 않는다", async () => {
@@ -546,9 +650,84 @@ describe("실패·접수 거부 안내", () => {
     await typeQuestion(user, "새 초안");
     await user.click(screen.getByRole("button", { name: "질문 다시 쓰기" }));
     await waitFor(() =>
-      expect(getInput().textContent).toBe("검증 실패할 질문\n새 초안"),
+      expect(extractInputContent(getInput()).text).toBe(
+        "검증 실패할 질문\n새 초안",
+      ),
     );
+    expect(getInput().querySelector("br")).not.toBeNull();
     expect(posts()).toHaveLength(1);
+  });
+
+  it("Note에서 접수 전에 재접속이 멈추면 질문 자리를 남기고 새 전송을 막으며, '다시 연결'로 같은 요청을 잇는다", async () => {
+    const { user, mock, posts } = renderApp(
+      "/app/chat/11",
+      {},
+      { fastBackoff: true },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+    mock.injectFault("conversation", { kind: "disconnect", afterFrames: 0 });
+    mock.injectFault("conversation", { kind: "disconnect", afterFrames: 0 });
+
+    await typeQuestion(user, "Note 끊기는 질문");
+    await user.click(sendButton());
+
+    expect(await screen.findByText("답변 연결이 끊겼어요")).toBeInTheDocument();
+    // 질문 자리는 남고 입력창으로 돌려주지 않는다(접수됐을 수 있다).
+    expect(screen.getByText("Note 끊기는 질문")).toBeInTheDocument();
+    expect(getInput().textContent).toBe("");
+    // 정지할 run이 없으니 전송 버튼이지만 막혀 있다.
+    expect(sendButton()).toHaveAttribute("aria-disabled", "true");
+    await typeQuestion(user, "새 질문");
+    await user.click(sendButton());
+    expect(posts()).toHaveLength(2);
+
+    await user.click(screen.getByRole("button", { name: "다시 연결" }));
+    expect(await screen.findByText(COMPLETED_BODY)).toBeInTheDocument();
+    expect(mock.listRunIds()).toHaveLength(1);
+    expect(new Set(posts().map((entry) => entry.requestId)).size).toBe(1);
+    expect(screen.getAllByText("Note 끊기는 질문")).toHaveLength(1);
+  });
+
+  it("접수 전 계약 밖 오류(unexpected)는 입력창을 막아 두지 않고 질문을 돌려준다", async () => {
+    const streamConversation = vi
+      .fn<typeof api.streamConversation>()
+      .mockRejectedValueOnce(new Error("계약 밖 오류"))
+      .mockImplementation(api.streamConversation);
+    const { user, posts } = renderApp(
+      "/app/chat/12",
+      {},
+      { sessionApi: { ...api, streamConversation } },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+    await typeQuestion(user, "오류 날 질문");
+    await user.click(sendButton());
+
+    expect(
+      await screen.findByText("답변을 표시하지 못했어요"),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(getInput().textContent).toBe("오류 날 질문"));
+    expect(screen.queryByRole("button", { name: "답변 중단" })).toBeNull();
+    expect(sendButton()).not.toHaveAttribute("aria-disabled", "true");
+    expect(posts()).toHaveLength(0);
+    // 사용자가 직접 다시 보내면 보낸다.
+    await user.click(sendButton());
+    await waitFor(() => expect(posts()).toHaveLength(1));
+  });
+
+  it("#파일 멘션이 있는 질문은 말없이 빼고 보내지 않고 안내한다", async () => {
+    const { user, posts } = renderApp("/app/chat/13");
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+    const input = getInput();
+    input.innerHTML = '<span data-asset-id="3">#문제.pdf</span>';
+    await typeQuestion(user, " 이 파일 풀어줘");
+    await user.click(sendButton());
+
+    expect(
+      await screen.findByText(/#파일 멘션·@도구 선택은 아직 질문과 함께/),
+    ).toBeInTheDocument();
+    expect(getInput().textContent).toContain("이 파일 풀어줘");
+    expect(posts()).toHaveLength(0);
   });
 
   it("unsupported_only 응답은 미지원 안내로 보인다", async () => {
