@@ -1,0 +1,234 @@
+$ COMPOSE_BAKE=true docker compose -f compose.old.yaml up -d --build --wait   # 수정 전(cec40eb)
+#1 [internal] load local bake definitions
+#1 reading from stdin 4.41kB done
+#1 DONE 0.0s
+
+#2 [postgres internal] load build definition from Dockerfile
+#2 transferring dockerfile:
+#2 transferring dockerfile: 1.85kB 0.0s done
+#2 ...
+
+#3 [brain-migrate internal] load build definition from Dockerfile
+#3 transferring dockerfile: 2.00kB 0.0s done
+#3 DONE 1.6s
+
+#2 [postgres internal] load build definition from Dockerfile
+#2 DONE 1.8s
+
+#4 [brain] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#4 DONE 2.5s
+
+#5 [brain-migrate] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#5 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#5 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.6s done
+#5 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.6s done
+#5 CACHED
+
+#6 [provision internal] load metadata for docker.io/library/postgres:15-alpine
+#6 DONE 1.6s
+
+#7 [brain internal] load metadata for ghcr.io/astral-sh/uv:0.11.7
+#7 DONE 1.6s
+
+#8 [server internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#8 DONE 1.6s
+
+#9 [server internal] load metadata for docker.io/library/eclipse-temurin:21-jdk
+#9 DONE 1.6s
+
+#10 [brain internal] load metadata for docker.io/library/python:3.12.11-slim-bookworm
+#10 DONE 1.6s
+
+#11 [postgres internal] load .dockerignore
+#11 transferring context: 2B done
+#11 DONE 0.0s
+
+#12 [brain-migrate internal] load .dockerignore
+#12 transferring context: 342B done
+#12 DONE 0.0s
+
+#13 [provision internal] load git source https://github.com/Team-Proovy/Proovy-server.git#b576af30a55c2c2383357bc897b1bdaeb3c49ded
+#13 DONE 0.0s
+
+#14 [brain internal] load build context
+#14 DONE 0.0s
+
+#15 [server internal] load build context
+#15 transferring context: 454B done
+#15 DONE 0.1s
+
+#16 [secrets internal] load build context
+#16 transferring context: 4.17kB 0.0s done
+#16 DONE 0.1s
+
+#17 [brain uv 1/1] FROM ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a
+#17 resolve ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a 0.1s done
+#17 resolve ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a 0.1s done
+#17 DONE 0.1s
+
+#18 [provision tools 1/5] FROM docker.io/library/postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81
+#18 resolve docker.io/library/postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81 0.1s done
+#18 DONE 0.1s
+
+#19 [server server-build 1/4] FROM docker.io/library/eclipse-temurin:21-jdk@sha256:23cc5734ff46e776f51ce66eb9ee08444fd47caabec0a95b7eb6e94be2d3696d
+#19 resolve docker.io/library/eclipse-temurin:21-jdk@sha256:23cc5734ff46e776f51ce66eb9ee08444fd47caabec0a95b7eb6e94be2d3696d 0.1s done
+#19 DONE 0.1s
+
+#20 [server server 1/5] FROM docker.io/library/eclipse-temurin:21-jre@sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99
+#20 resolve docker.io/library/eclipse-temurin:21-jre@sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99 0.1s done
+#20 DONE 0.1s
+
+#21 [brain-migrate build 1/8] FROM docker.io/library/python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+#21 resolve docker.io/library/python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7 0.1s done
+#21 DONE 0.1s
+
+#22 [server server 4/5] COPY --from=server-build /src/build/libs/app.jar app.jar
+#22 CACHED
+
+#23 [server server 3/5] WORKDIR /app
+#23 CACHED
+
+#24 [server server 2/5] RUN groupadd --system app && useradd --system --gid app --no-create-home app
+#24 CACHED
+
+#25 [server server-build 4/4] RUN --mount=type=cache,id=proovy-local-gradle,target=/root/.gradle     sh ./gradlew bootJar --no-daemon --max-workers=2 -Dorg.gradle.jvmargs=-Xmx768m
+#25 CACHED
+
+#26 [server server-build 3/4] COPY --from=server-src . .
+#26 CACHED
+
+#27 [server server-build 2/4] WORKDIR /src
+#27 CACHED
+
+#28 [server server 5/5] COPY --chmod=755 tools/server-entrypoint.sh /usr/local/bin/server-entrypoint.sh
+#28 CACHED
+
+#29 [postgres tools 3/5] COPY --chmod=755 tools/initdb.sh /docker-entrypoint-initdb.d/10-proovy.sh
+#29 CACHED
+
+#30 [postgres tools 4/5] COPY --chmod=755 tools/init-secrets.sh /usr/local/bin/init-secrets.sh
+#30 CACHED
+
+#31 [postgres tools 2/5] COPY --from=server-src src/main/resources/db/provisioning/role-boundary.sql /provisioning/role-boundary.sql
+#31 CACHED
+
+#32 [secrets tools 5/5] COPY --chmod=755 tools/issue-token.sh /usr/local/bin/issue-token
+#32 CACHED
+
+#33 [provision] exporting to image
+#33 exporting layers 0.1s done
+#33 exporting manifest sha256:52cc883a6195b309948afaf53e9d43b78310d1d2f03ccdeb67e8691148ff330f 0.0s done
+#33 exporting config sha256:c733e2277cc3c61b954d8a238ae20a248808d7a4a61e65805314c2e4153224db
+#33 ...
+
+#14 [brain internal] load build context
+#14 transferring context: 3.67MB 0.2s done
+#14 DONE 0.2s
+
+#33 [provision] exporting to image
+#33 exporting config sha256:c733e2277cc3c61b954d8a238ae20a248808d7a4a61e65805314c2e4153224db 0.1s done
+#33 exporting attestation manifest sha256:1c3af496ab1b5a6a13e14b828ba3e34240c3a987b71fb7606d1644eee4a51d59
+#33 ...
+
+#34 [brain build 2/8] COPY --from=uv /uv /usr/local/bin/uv
+#34 CACHED
+
+#35 [brain build 7/8] COPY evals ./evals
+#35 CACHED
+
+#36 [brain build 8/8] RUN uv sync --locked --no-dev --no-editable
+#36 CACHED
+
+#37 [brain build 4/8] COPY pyproject.toml uv.lock README.md ./
+#37 CACHED
+
+#38 [brain build 5/8] RUN uv sync --locked --no-dev --no-install-project
+#38 CACHED
+
+#39 [brain build 6/8] COPY src ./src
+#39 CACHED
+
+#40 [brain build 3/8] WORKDIR /src
+#40 CACHED
+
+#41 [brain stage-2 3/4] COPY --from=build /opt/venv /opt/venv
+#41 CACHED
+
+#42 [brain stage-2 2/4] RUN useradd --system --uid 10001 --user-group --no-create-home brain
+#42 CACHED
+
+#43 [brain stage-2 4/4] WORKDIR /app
+#43 CACHED
+
+#33 [provision] exporting to image
+#33 exporting attestation manifest sha256:1c3af496ab1b5a6a13e14b828ba3e34240c3a987b71fb7606d1644eee4a51d59 0.1s done
+#33 exporting manifest list sha256:5288dd4569ecc900821c1ea8c84360dc4cb396c8388b0f17653c91e029242d6f
+#33 exporting manifest list sha256:5288dd4569ecc900821c1ea8c84360dc4cb396c8388b0f17653c91e029242d6f 0.0s done
+#33 naming to docker.io/library/proovy-local-tools:latest done
+#33 unpacking to docker.io/library/proovy-local-tools:latest
+#33 ...
+
+#44 [brain] exporting to image
+#44 exporting layers 0.0s done
+#44 exporting manifest sha256:4f84effebc42308dd0b0958b0faae1d4903d2a9c0b89afaee7cfccc73c697933 0.0s done
+#44 exporting config sha256:cec13e2f582da68394300e169ac224daffced057ea94129bd89a6b94f55332a6 0.0s done
+#44 exporting attestation manifest sha256:836b9dccc3aa10d107ac3518a01c36da298040c027325d46dffe676d707ba2bf 0.1s done
+#44 exporting manifest list sha256:9490fe81deaf84405e076b2217695e26439587fe477b9896222962cc4cc702d3 0.0s done
+#44 naming to docker.io/library/proovy-local-brain:latest 0.0s done
+#44 ERROR: image "docker.io/library/proovy-local-brain:latest": already exists
+
+#45 [postgres] exporting to image
+#45 exporting layers 0.1s done
+#45 exporting manifest sha256:25ab0d48cf9d32e038594d923567c91f29c330a558dafc26db9a3dcf0de28454 0.0s done
+#45 exporting config sha256:37eada2c5857ef97c20a6ca80a4de3bd9b9b66d8e292453a01f7b8f033b76027 0.0s done
+#45 exporting attestation manifest sha256:b04e0d9859cba54826b320eb5ff69fa6c502e7c08cef559f9300e70b60045d7d 0.1s done
+#45 exporting manifest list sha256:d20be08ac63a3d14dacc0e8e6ab26fa5eedf2f57735387b690c3424e2a11829c 0.1s done
+#45 naming to docker.io/library/proovy-local-tools:latest 0.0s done
+#45 unpacking to docker.io/library/proovy-local-tools:latest 0.3s done
+#45 DONE 0.7s
+
+#46 [secrets] exporting to image
+#46 exporting layers 0.1s done
+#46 exporting manifest sha256:54529a289d01e30a702ce2c5b429b325f15e046b7e0960669dc7fc5aa67d2b95 0.0s done
+#46 exporting config sha256:e33092595217ad846e6c272b24aa0f6695868a0f61ecc328c62e4732e6c4e8cb 0.0s done
+#46 exporting attestation manifest sha256:2664e53018ae3778743b368a6424a62ee3eee4c6009c928380f15677a2d73fe3 0.1s done
+#46 exporting manifest list sha256:2a655bf31349185f211a0fe6c7bd412e06ad5c5b8d100eee89cea4c6e50721ae 0.0s done
+#46 naming to docker.io/library/proovy-local-tools:latest 0.0s done
+#46 unpacking to docker.io/library/proovy-local-tools:latest 0.3s done
+#46 DONE 0.7s
+
+#33 [provision] exporting to image
+#33 unpacking to docker.io/library/proovy-local-tools:latest 0.3s done
+#33 DONE 0.8s
+
+#47 [brain-migrate] exporting to image
+#47 exporting layers 0.0s done
+#47 exporting manifest sha256:c9ddfaecd2cf83fd8258093aecab0dda988badaeea46cbc2a4a415c882ff2905 0.0s done
+#47 exporting config sha256:af51047f4d42cc812623075eb5b1035907efb7a4113c2cfa0b0fea5ea7b5a74f 0.0s done
+#47 exporting attestation manifest sha256:f4c746ee219e87780396b89c03ea6547e14bbf5e1e59603dc8a9ce12d1610cf1 0.1s done
+#47 exporting manifest list sha256:1e6dabbf8a21c4b5c9e43e97e3270fb324af615d8a3c5b54ed80d3bf23a9c405 0.0s done
+#47 naming to docker.io/library/proovy-local-brain:latest 0.0s done
+#47 unpacking to docker.io/library/proovy-local-brain:latest
+#47 unpacking to docker.io/library/proovy-local-brain:latest 0.7s done
+#47 CANCELED
+
+#48 [server] exporting to image
+#48 exporting layers done
+#48 exporting manifest sha256:cbb787eb3f410c31e7c68a697fc0ef5f59785c3734a756c15239cbb822f0e4fd 0.0s done
+#48 exporting config sha256:24c6b4b0e3b80f5ae1c35038c2354c093a50fc4c2113f3c661d6f96b3ab753d2 0.0s done
+#48 exporting attestation manifest sha256:82a1d9a85ede0ede3d5421687a71f927d08e63682563bb2d6c8965c90974ae68 0.1s done
+#48 exporting manifest list sha256:93d7537266b8e2e4d0ae5554e921b0e398770c70e97ea24b0fae05c6aab840f6 0.0s done
+#48 naming to docker.io/library/proovy-local-server:latest 0.0s done
+#48 unpacking to docker.io/library/proovy-local-server:latest
+#48 unpacking to docker.io/library/proovy-local-server:latest 1.0s done
+#48 CANCELED
+------
+ > [brain] exporting to image:
+------
+target brain: failed to solve: image "docker.io/library/proovy-local-brain:latest": already exists
+
+
+real	0m13.304s
+user	0m0.683s
+sys	0m0.423s
+exit=1

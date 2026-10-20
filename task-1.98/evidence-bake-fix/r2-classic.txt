@@ -1,0 +1,323 @@
+$ docker compose up -d --build --wait   # buildx 없음(이 서버 기본) = classic builder, 이미지 없는 상태
+time="2026-10-21T02:50:52+09:00" level=warning msg="Docker Compose is configured to build using Bake, but buildx isn't installed"
+#0 building with "default" instance using docker driver
+
+#1 [secrets internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.85kB done
+#1 DONE 0.0s
+
+#2 [secrets] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 0.7s
+
+#3 [secrets] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#4 [secrets internal] load metadata for docker.io/library/postgres:15-alpine
+#4 DONE 0.7s
+
+#5 [secrets internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [secrets internal] load git source https://github.com/Team-Proovy/Proovy-server.git#b576af30a55c2c2383357bc897b1bdaeb3c49ded
+#6 DONE 0.0s
+
+#7 [secrets internal] load build context
+#7 transferring context: 143B done
+#7 DONE 0.0s
+
+#8 [secrets tools 1/5] FROM docker.io/library/postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81
+#8 resolve docker.io/library/postgres:15-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81 0.0s done
+#8 DONE 0.0s
+
+#9 [secrets tools 2/5] COPY --from=server-src src/main/resources/db/provisioning/role-boundary.sql /provisioning/role-boundary.sql
+#9 CACHED
+
+#10 [secrets tools 3/5] COPY --chmod=755 tools/initdb.sh /docker-entrypoint-initdb.d/10-proovy.sh
+#10 CACHED
+
+#11 [secrets tools 4/5] COPY --chmod=755 tools/init-secrets.sh /usr/local/bin/init-secrets.sh
+#11 CACHED
+
+#12 [secrets tools 5/5] COPY --chmod=755 tools/issue-token.sh /usr/local/bin/issue-token
+#12 CACHED
+
+#13 [secrets] exporting to image
+#13 exporting layers 0.0s done
+#13 exporting manifest sha256:54529a289d01e30a702ce2c5b429b325f15e046b7e0960669dc7fc5aa67d2b95 done
+#13 exporting config sha256:e33092595217ad846e6c272b24aa0f6695868a0f61ecc328c62e4732e6c4e8cb done
+#13 exporting attestation manifest sha256:be5fbbefece52a482de47bea9e25e88b5450ca7a97915df9e23993bfa8d6511f 0.0s done
+#13 exporting manifest list sha256:ebbda487f62e25d0d6136b9eb79136bc9642ae37ed866f298ac02882e457b0a9 0.0s done
+#13 naming to docker.io/library/proovy-local-tools:latest done
+#13 unpacking to docker.io/library/proovy-local-tools:latest 0.1s done
+#13 DONE 0.2s
+
+#14 [secrets] resolving provenance for metadata file
+#14 DONE 0.0s
+
+#15 [server internal] load build definition from Dockerfile
+#15 transferring dockerfile: 1.85kB done
+#15 DONE 0.0s
+
+#2 [server] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.0s
+
+#3 [server] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#16 [server internal] load metadata for docker.io/library/eclipse-temurin:21-jdk
+#16 ...
+
+#17 [server internal] load metadata for docker.io/library/eclipse-temurin:21-jre
+#17 DONE 0.7s
+
+#16 [server internal] load metadata for docker.io/library/eclipse-temurin:21-jdk
+#16 DONE 0.7s
+
+#18 [server internal] load .dockerignore
+#18 transferring context: 2B done
+#18 DONE 0.0s
+
+#6 [server internal] load git source https://github.com/Team-Proovy/Proovy-server.git#b576af30a55c2c2383357bc897b1bdaeb3c49ded
+#6 DONE 0.0s
+
+#19 [server internal] load build context
+#19 transferring context: 454B done
+#19 DONE 0.0s
+
+#20 [server server-build 1/4] FROM docker.io/library/eclipse-temurin:21-jdk@sha256:23cc5734ff46e776f51ce66eb9ee08444fd47caabec0a95b7eb6e94be2d3696d
+#20 resolve docker.io/library/eclipse-temurin:21-jdk@sha256:23cc5734ff46e776f51ce66eb9ee08444fd47caabec0a95b7eb6e94be2d3696d 0.0s done
+#20 DONE 0.0s
+
+#21 [server server 1/5] FROM docker.io/library/eclipse-temurin:21-jre@sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99
+#21 resolve docker.io/library/eclipse-temurin:21-jre@sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99
+#21 resolve docker.io/library/eclipse-temurin:21-jre@sha256:227118764cccd3c3294617061aaa93a08309c63a395eefa83e6b35032992ea99 0.0s done
+#21 DONE 0.0s
+
+#22 [server server-build 4/4] RUN --mount=type=cache,id=proovy-local-gradle,target=/root/.gradle     sh ./gradlew bootJar --no-daemon --max-workers=2 -Dorg.gradle.jvmargs=-Xmx768m
+#22 CACHED
+
+#23 [server server 4/5] COPY --from=server-build /src/build/libs/app.jar app.jar
+#23 CACHED
+
+#24 [server server-build 2/4] WORKDIR /src
+#24 CACHED
+
+#25 [server server 2/5] RUN groupadd --system app && useradd --system --gid app --no-create-home app
+#25 CACHED
+
+#26 [server server 3/5] WORKDIR /app
+#26 CACHED
+
+#27 [server server-build 3/4] COPY --from=server-src . .
+#27 CACHED
+
+#28 [server server 5/5] COPY --chmod=755 tools/server-entrypoint.sh /usr/local/bin/server-entrypoint.sh
+#28 CACHED
+
+#29 [server] exporting to image
+#29 exporting layers done
+#29 exporting manifest sha256:cbb787eb3f410c31e7c68a697fc0ef5f59785c3734a756c15239cbb822f0e4fd done
+#29 exporting config sha256:24c6b4b0e3b80f5ae1c35038c2354c093a50fc4c2113f3c661d6f96b3ab753d2 done
+#29 exporting attestation manifest sha256:5dee0345b1fd362ed7a8bcabd4eeecedfcd57270c8f8bc1dad883c4a3c944d48 0.0s done
+#29 exporting manifest list sha256:ec4bd3ca6e0afc63cdfa62be658a6b172a8181386823fd6ab84e329856eca466 0.0s done
+#29 naming to docker.io/library/proovy-local-server:latest done
+#29 unpacking to docker.io/library/proovy-local-server:latest
+#29 unpacking to docker.io/library/proovy-local-server:latest 1.4s done
+#29 DONE 1.6s
+
+#30 [server] resolving provenance for metadata file
+#30 DONE 0.0s
+
+#31 [brain internal] load build definition from Dockerfile
+#31 transferring dockerfile: 2.00kB done
+#31 DONE 0.0s
+
+#2 [brain] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.3s
+
+#3 [brain] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#32 [brain internal] load metadata for docker.io/library/python:3.12.11-slim-bookworm
+#32 ...
+
+#33 [brain internal] load metadata for ghcr.io/astral-sh/uv:0.11.7
+#33 DONE 0.6s
+
+#32 [brain internal] load metadata for docker.io/library/python:3.12.11-slim-bookworm
+#32 DONE 0.7s
+
+#34 [brain internal] load .dockerignore
+#34 transferring context: 342B done
+#34 DONE 0.0s
+
+#35 [brain uv 1/1] FROM ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a
+#35 resolve ghcr.io/astral-sh/uv:0.11.7@sha256:240fb85ab0f263ef12f492d8476aa3a2e4e1e333f7d67fbdd923d00a506a516a 0.0s done
+#35 DONE 0.0s
+
+#36 [brain build 1/8] FROM docker.io/library/python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+#36 resolve docker.io/library/python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7 0.0s done
+#36 DONE 0.0s
+
+#37 [brain internal] load build context
+#37 transferring context: 10.88kB 0.0s done
+#37 DONE 0.0s
+
+#38 [brain build 4/8] COPY pyproject.toml uv.lock README.md ./
+#38 CACHED
+
+#39 [brain build 6/8] COPY src ./src
+#39 CACHED
+
+#40 [brain stage-2 3/4] COPY --from=build /opt/venv /opt/venv
+#40 CACHED
+
+#41 [brain build 2/8] COPY --from=uv /uv /usr/local/bin/uv
+#41 CACHED
+
+#42 [brain build 3/8] WORKDIR /src
+#42 CACHED
+
+#43 [brain build 5/8] RUN uv sync --locked --no-dev --no-install-project
+#43 CACHED
+
+#44 [brain build 7/8] COPY evals ./evals
+#44 CACHED
+
+#45 [brain build 8/8] RUN uv sync --locked --no-dev --no-editable
+#45 CACHED
+
+#46 [brain stage-2 2/4] RUN useradd --system --uid 10001 --user-group --no-create-home brain
+#46 CACHED
+
+#47 [brain stage-2 4/4] WORKDIR /app
+#47 CACHED
+
+#48 [brain] exporting to image
+#48 exporting layers done
+#48 exporting manifest sha256:4f84effebc42308dd0b0958b0faae1d4903d2a9c0b89afaee7cfccc73c697933 done
+#48 exporting config sha256:cec13e2f582da68394300e169ac224daffced057ea94129bd89a6b94f55332a6 done
+#48 exporting attestation manifest sha256:9d3fdb456263dcb7366288894d6d7c046678e52f25e3ea831922d72d531b1731 0.0s done
+#48 exporting manifest list sha256:57cf7b1f25c2c84f567e3709b890bb838e69a433180da6ab5622329fa6e8b9ef done
+#48 naming to docker.io/library/proovy-local-brain:latest done
+#48 unpacking to docker.io/library/proovy-local-brain:latest
+#48 unpacking to docker.io/library/proovy-local-brain:latest 6.7s done
+#48 DONE 6.8s
+
+#49 [brain] resolving provenance for metadata file
+#49 DONE 0.0s
+ brain  Built
+ secrets  Built
+ server  Built
+ Network proovy-local_default  Creating
+ Network proovy-local_default  Created
+ Volume proovy-local_pgdata  Creating
+ Volume proovy-local_pgdata  Created
+ Volume proovy-local_secrets  Creating
+ Volume proovy-local_secrets  Created
+ Container proovy-local-redis-1  Creating
+ Container proovy-local-secrets-1  Creating
+ Container proovy-local-redis-1  Created
+ Container proovy-local-secrets-1  Created
+ Container proovy-local-postgres-1  Creating
+ Container proovy-local-postgres-1  Created
+ Container proovy-local-server-1  Creating
+ Container proovy-local-server-1  Created
+ Container proovy-local-brain-migrate-1  Creating
+ Container proovy-local-brain-migrate-1  Created
+ Container proovy-local-provision-1  Creating
+ Container proovy-local-provision-1  Created
+ Container proovy-local-brain-1  Creating
+ Container proovy-local-brain-1  Created
+ Container proovy-local-redis-1  Starting
+ Container proovy-local-secrets-1  Starting
+ Container proovy-local-redis-1  Started
+ Container proovy-local-secrets-1  Started
+ Container proovy-local-secrets-1  Waiting
+ Container proovy-local-secrets-1  Exited
+ Container proovy-local-postgres-1  Starting
+ Container proovy-local-postgres-1  Started
+ Container proovy-local-postgres-1  Waiting
+ Container proovy-local-redis-1  Waiting
+ Container proovy-local-redis-1  Healthy
+ Container proovy-local-postgres-1  Healthy
+ Container proovy-local-server-1  Starting
+ Container proovy-local-server-1  Started
+ Container proovy-local-server-1  Waiting
+ Container proovy-local-server-1  Healthy
+ Container proovy-local-brain-migrate-1  Starting
+ Container proovy-local-brain-migrate-1  Started
+ Container proovy-local-brain-migrate-1  Waiting
+ Container proovy-local-brain-migrate-1  Exited
+ Container proovy-local-provision-1  Starting
+ Container proovy-local-provision-1  Started
+ Container proovy-local-provision-1  Waiting
+ Container proovy-local-provision-1  Exited
+ Container proovy-local-brain-1  Starting
+ Container proovy-local-brain-1  Started
+ Container proovy-local-provision-1  Waiting
+ Container proovy-local-brain-1  Waiting
+ Container proovy-local-secrets-1  Waiting
+ Container proovy-local-postgres-1  Waiting
+ Container proovy-local-redis-1  Waiting
+ Container proovy-local-server-1  Waiting
+ Container proovy-local-brain-migrate-1  Waiting
+ Container proovy-local-brain-migrate-1  Exited
+ Container proovy-local-secrets-1  Exited
+ Container proovy-local-provision-1  Exited
+ Container proovy-local-redis-1  Healthy
+ Container proovy-local-postgres-1  Healthy
+ Container proovy-local-server-1  Healthy
+ Container proovy-local-brain-1  Healthy
+
+real	1m28.094s
+user	0m0.543s
+sys	0m0.318s
+exit=0
+brain running Up 12 seconds (healthy)
+brain-migrate exited Exited (0) 13 seconds ago
+postgres running Up About a minute (healthy)
+provision exited Exited (0) 12 seconds ago
+redis running Up About a minute (healthy)
+secrets exited Exited (0) About a minute ago
+server running Up About a minute (healthy)
+[local-stack] user 1 — access token (1시간 유효):
+ Container proovy-local-brain-1  Stopping
+ Container proovy-local-brain-1  Stopped
+ Container proovy-local-brain-1  Removing
+ Container proovy-local-brain-1  Removed
+ Container proovy-local-provision-1  Stopping
+ Container proovy-local-provision-1  Stopped
+ Container proovy-local-provision-1  Removing
+ Container proovy-local-provision-1  Removed
+ Container proovy-local-brain-migrate-1  Stopping
+ Container proovy-local-brain-migrate-1  Stopped
+ Container proovy-local-brain-migrate-1  Removing
+ Container proovy-local-brain-migrate-1  Removed
+ Container proovy-local-server-1  Stopping
+ Container proovy-local-server-1  Stopped
+ Container proovy-local-server-1  Removing
+ Container proovy-local-server-1  Removed
+ Container proovy-local-redis-1  Stopping
+ Container proovy-local-postgres-1  Stopping
+ Container proovy-local-redis-1  Stopped
+ Container proovy-local-redis-1  Removing
+ Container proovy-local-postgres-1  Stopped
+ Container proovy-local-postgres-1  Removing
+ Container proovy-local-redis-1  Removed
+ Container proovy-local-postgres-1  Removed
+ Container proovy-local-secrets-1  Stopping
+ Container proovy-local-secrets-1  Stopped
+ Container proovy-local-secrets-1  Removing
+ Container proovy-local-secrets-1  Removed
+ Volume proovy-local_secrets  Removing
+ Volume proovy-local_pgdata  Removing
+ Network proovy-local_default  Removing
+ Volume proovy-local_secrets  Removed
+ Volume proovy-local_pgdata  Removed
+ Network proovy-local_default  Removed
+3

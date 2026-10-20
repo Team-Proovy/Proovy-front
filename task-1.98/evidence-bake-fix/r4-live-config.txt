@@ -1,0 +1,43 @@
+== compose 2.40.3+ds1-0ubuntu1~24.04.1
+-- offline: docker compose config
+  brain          image=proovy-local-brain build=yes pull_policy=- seat=offline env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  brain-migrate  image=proovy-local-brain build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  postgres       image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/var/lib/postgresql/data', '/secrets'] ports=[]
+  provision      image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  redis          image=redis:7-alpine build=- pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=[] ports=[]
+  secrets        image=proovy-local-tools build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  server         image=proovy-local-server build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=['127.0.0.1:28098']
+-- live: BRAIN_ENV_FILE=<dummy> docker compose -f compose.yaml -f compose.live.yaml --profile refresh config
+  brain          image=proovy-local-brain build=yes pull_policy=- seat=live env_file_key(OPENROUTER_API_KEY)=yes mounts=['/secrets', '/capabilities'] ports=[]
+  brain-migrate  image=proovy-local-brain build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  capabilities   image=proovy-local-brain build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=yes mounts=['/capabilities'] ports=[]
+  postgres       image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/var/lib/postgresql/data', '/secrets'] ports=[]
+  provision      image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  redis          image=redis:7-alpine build=- pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=[] ports=[]
+  secrets        image=proovy-local-tools build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  server         image=proovy-local-server build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=['127.0.0.1:28098']
+-- live, BRAIN_ENV_FILE 없음
+error while interpolating services.brain.env_file.[]: required variable BRAIN_ENV_FILE is missing a value: set BRAIN_ENV_FILE to the proovy-brain .env.local path
+== compose 2.24.7
+-- offline: docker compose config
+  brain          image=proovy-local-brain build=yes pull_policy=- seat=offline env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  brain-migrate  image=proovy-local-brain build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  postgres       image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/var/lib/postgresql/data', '/secrets'] ports=[]
+  provision      image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  redis          image=redis:7-alpine build=- pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=[] ports=[]
+  secrets        image=proovy-local-tools build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  server         image=proovy-local-server build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=['127.0.0.1:28098']
+-- live: BRAIN_ENV_FILE=<dummy> docker compose -f compose.yaml -f compose.live.yaml --profile refresh config
+  brain          image=proovy-local-brain build=yes pull_policy=- seat=live env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets', '/capabilities'] ports=[]
+  brain-migrate  image=proovy-local-brain build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  capabilities   image=proovy-local-brain build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/capabilities'] ports=[]
+  postgres       image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/var/lib/postgresql/data', '/secrets'] ports=[]
+  provision      image=proovy-local-tools build=- pull_policy=never seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  redis          image=redis:7-alpine build=- pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=[] ports=[]
+  secrets        image=proovy-local-tools build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=[]
+  server         image=proovy-local-server build=yes pull_policy=- seat= env_file_key(OPENROUTER_API_KEY)=- mounts=['/secrets'] ports=['127.0.0.1:28098']
+-- live, BRAIN_ENV_FILE 없음
+error while interpolating services.brain.env_file.[]: required variable BRAIN_ENV_FILE is missing a value: set BRAIN_ENV_FILE to the proovy-brain .env.local path
+
+# 참고: compose 2.24.7의 config 출력은 env_file을 environment로 펼치지 않고 경로 목록으로 남긴다(위 2.24 live의 env_file_key가 '-'인 이유).
+# 2.24.7 live brain: env_file = [<dummy .env.local>(required), capabilities/capabilities.env(required: false)], environment = BRAIN_SEAT_MODE=live, PROFILE=local
