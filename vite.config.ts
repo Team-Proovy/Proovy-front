@@ -8,8 +8,9 @@ import { resolveApiMode } from "./src/app/api_mode";
 
 // 개발 proxy의 기본 대상은 로컬 개발 Server다. 다른 Server로 보내려면
 // .env.local 등에 DEV_API_PROXY_TARGET을 둔다(VITE_ 접두사가 없어 브라우저에 노출되지 않는다).
-// 로컬 http Server를 전제로 한다. 원격 Server로 보내면 그 Server가 CORS에서 localhost Origin을
-// 허용해야 하고, 자체 서명 인증서 https는 검증 실패로 연결되지 않는다.
+// 로컬 http Server를 전제로 한다. proxy는 브라우저 Origin을 그대로 넘기므로 Server가 localhost Origin을
+// 허용해야 한다(Server local profile은 http://localhost:* 허용 — 브라우저를 127.0.0.1로 열면 POST가 403).
+// 자체 서명 인증서 https는 검증 실패로 연결되지 않는다.
 const DEFAULT_DEV_API_PROXY_TARGET = "http://localhost:8080";
 
 // MSW worker(public/mockServiceWorker.js)는 개발 서버의 fixture 모드(VITE_API_MODE=fixture)에서만 쓴다.
