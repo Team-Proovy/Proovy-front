@@ -222,31 +222,88 @@ pnpm run dev
 
 ### 로컬 Server·Brain stack (실제 연결)
 
-`server` 모드로 실제 대화(Note 생성·Activity·검증 응답·정지·재접속)를 확인하려면 로컬 Server와 Brain을 함께 띄운다. `scripts/local-stack/local-stack.sh`가 격리 Postgres·Redis 컨테이너, Server(local profile), proovy-brain testkit(실제 Brain API·graph·store·SSE, 모델은 offline seat)을 올리고 검증용 사용자 token을 발급한다. 운영 API·DB·GCS·OAuth는 쓰지 않는다.
+`server` 모드로 실제 대화(Note 생성·Activity·검증 응답·정지·재접속)를 확인하려면 로컬 Server와 Brain을 함께 띄운다. `scripts/local-stack/compose.yaml`이 macOS·Windows·Linux 어디서든 `docker compose` 한 번으로 Postgres·Redis·Server(local profile)·Brain(proovy-brain 로컬 이미지)을 올린다. 운영 API·DB·GCS·OAuth는 쓰지 않는다.
+
+필요한 것은 Docker Desktop(또는 Docker Engine + Compose v2.24 이상)·Node·pnpm, 그리고 proovy-brain checkout(1.97 merge `89520f6` 이후 commit)뿐이다. Java·Python·uv는 필요 없다 — Server jar와 Brain은 이미지 빌드 안에서 만든다.
+
+- **Docker 메모리 4GB 이상**: Server·Brain·Postgres와 첫 빌드(Gradle)를 함께 돌린다. Docker Desktop은 Settings → Resources → Memory에서 4GB 이상으로 둔다.
+- **Apple Silicon**: 모든 base 이미지가 arm64를 지원해 native로 빌드된다(Rosetta 불필요). 첫 빌드는 Gradle·Python 의존성을 내려받아 몇 분 걸린다.
+- **Windows**: PowerShell에서 같은 명령을 쓴다. 스크립트는 `.gitattributes`로 LF를 유지한다.
 
 ```bash
-# 준비 1) Server bootJar — 원본 checkout을 건드리지 않게 확인할 commit을 임시 디렉터리에 풀어 빌드한다.
-#          공용 서버에서는 Gradle을 전역 lock과 낮은 자원으로 돌린다.
-mkdir -p /tmp/proovy-server-src
-git -C <Proovy-server> archive <commit 예: origin/dev> | tar -x -C /tmp/proovy-server-src
-(cd /tmp/proovy-server-src && flock /tmp/proovy-s07-gradle.lock ./gradlew bootJar --no-daemon --max-workers=2 -Dorg.gradle.jvmargs=-Xmx768m)
-# 준비 2) proovy-brain checkout에서 uv sync --locked
-SERVER_DIR=/tmp/proovy-server-src BRAIN_DIR=<proovy-brain> scripts/local-stack/local-stack.sh up
-scripts/local-stack/local-stack.sh token   # 새 사용자 + access token 파일 경로 출력(1시간 유효)
-DEV_API_PROXY_TARGET=http://127.0.0.1:8080 pnpm run dev --port 5196
-# 끝나면
-scripts/local-stack/local-stack.sh down    # 컨테이너·프로세스·token 정리
+cd scripts/local-stack
+cp .env.example .env          # BRAIN_DIR(proovy-brain checkout 경로) 등. 기본은 ../../../proovy-brain
+docker compose up -d --build --wait            # offline(기본, 유료 호출 없음). 모두 healthy/완료되면 돌아온다
+docker compose exec postgres issue-token       # 검증용 사용자 + access token(1시간 유효)과 브라우저 Console용 한 줄 출력
+```
+
+Front는 저장소 루트에서 지금처럼 띄운다. Server는 `127.0.0.1:${SERVER_PORT:-8080}`에만 publish된다.
+
+```bash
+# 저장소 루트 .env.local (2단계, git 제외). 로컬 stack은 OAuth를 쓰지 않으므로 소셜 로그인 값은 placeholder여도 된다
+VITE_KAKAO_CLIENT_ID=local-placeholder
+VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/kakao/callback
+VITE_NAVER_CLIENT_ID=local-placeholder
+VITE_NAVER_REDIRECT_URI=http://localhost:5173/oauth/naver/callback
+# Node가 localhost를 ::1로 먼저 풀어도 연결되게 IPv4로 적는다
+DEV_API_PROXY_TARGET=http://127.0.0.1:8080
+```
+
+```bash
+pnpm run dev    # 브라우저는 http://localhost:5173
 ```
 
 - 브라우저는 **`http://localhost:<port>`로 연다.** Server local profile의 CORS는 `http://localhost:*` Origin만 허용하므로 `127.0.0.1`로 열면 전송·정지(POST)가 403이다.
-- Server는 `127.0.0.1`에만 bind한다(외부 interface 비노출). proxy target은 `http://127.0.0.1:<SERVER_PORT>`로 둔다 — Node 20 미만은 `localhost`를 `::1`로 먼저 풀어 연결에 실패할 수 있다.
-- Server에는 개발용 로그인이 없다. 발급한 token을 브라우저 localStorage `accessToken`에 넣고, `auth-storage`를 `{"state":{"user":{"userId":0,"nickname":"local"},"isAuthenticated":true},"version":0}`로 둔다(실제 사용자 정보는 `/api/users/me`가 채운다). token은 1시간 유효하고 refresh token이 없다 — 만료되어 401이 나면 `token`을 다시 발급해 바꾼다.
-- 포트·컨테이너 이름은 환경변수로 바꾼다(기본 Postgres 29632·Redis 29679·Server 8080·Brain 29680/29681, 접미사 `t196`, 헤더 주석 참고). 고정 compose 자원(15432·6379)과 다른 세션 자원과 겹치지 않게 고른다. 8080을 이미 쓰고 있으면 `SERVER_PORT`와 `DEV_API_PROXY_TARGET`을 함께 바꾼다. `up`이 쓴 값은 `STATE_DIR/env`에 남아 `token`·`status`·`down`이 읽는다 — `SUFFIX`·`STATE_DIR`를 바꿨다면 그 명령에도 같은 값을 준다.
-- `up`은 시작 전에 jar·SQL·포트·컨테이너 이름을 확인하고, 중간에 실패하면 로그 끝부분을 보여 준 뒤 만든 자원을 모두 정리한다.
-- 요청 한도 안내를 보려면 `RATE_LIMIT_MAX_REQUESTS=4`처럼 낮춰 `up`한다(사용자당 1분).
-- Free 플랜은 노트 2개까지라 홈 첫 질문이 막히면 `token`으로 새 사용자를 만든다.
-- 특정 결과(미지원·미검증·혼합·추가 정보 요청)나 진행 중 상태는 Brain testkit control route에 그 요청의 `requestId`로 scenario·hold를 먼저 등록해 재현한다(proovy-brain `testkit/README.md`). 1.96 인수 검증에 쓴 Playwright 하네스와 요청 기록은 PR #316의 `pr-assets/task-1.96` branch에 있다.
+- Server에는 개발용 로그인이 없다. `issue-token`이 출력한 한 줄을 브라우저 Console에서 실행한다(localStorage `accessToken`과 `auth-storage`를 넣고 새로고침). token은 refresh가 없어 만료되면(401) 다시 발급한다. Free 플랜은 노트 2개까지라 홈 첫 질문이 막히면 새 사용자를 발급한다.
+- 기동 순서: `secrets`(실행마다 새 개발용 JWT secret·shared token·DB password를 volume에 생성) → `postgres`·`redis` → `server`(Flyway) → `brain-migrate`(Brain `db bootstrap`·`db migrate`) → `provision`(Server `role-boundary.sql`) → `brain`. secret 값은 compose 파일·이미지에 없다.
+- Brain DB 명령·runtime은 loopback 대상만 허용하므로 Brain 컨테이너는 Postgres 컨테이너의 network namespace를 공유해 `127.0.0.1:5432`로 붙는다. Server는 `http://postgres:8080`으로 Brain을 부른다. host에는 Server 포트 하나만 열린다.
+- Server 소스는 기본으로 공개 Proovy-server 저장소의 pin한 commit(`.env.example`의 `SERVER_CONTEXT`)을 Docker가 직접 받아 빌드한다. 로컬 checkout을 쓰려면 `SERVER_CONTEXT`에 경로를 준다. proovy-brain checkout을 바꿨다면 `--build`로 다시 빌드한다.
+- 포트·요청 한도는 `.env`로 바꾼다(`SERVER_PORT`, `RATE_LIMIT_MAX_REQUESTS`). `SERVER_PORT`를 바꾸면 `DEV_API_PROXY_TARGET`도 같이 바꾼다.
+- 상태·로그: `docker compose ps -a`, `docker compose logs server brain`.
+- offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다).
 - Vite dev proxy는 Server 쪽 소켓이 끊겨도 브라우저 응답을 닫지 않는다. 연결 끊김 재접속은 브라우저↔dev server 구간을 끊어 확인한다.
+
+정리:
+
+```bash
+docker compose down -v             # 컨테이너·network·volume(DB 데이터·secret) 삭제
+docker compose down -v --rmi all   # 빌드·pull한 이미지까지 삭제. Gradle 빌드 cache는 docker builder prune
+```
+
+#### live 모드 (실제 모델)
+
+> **비용 주의**: live 모드의 질문은 실제 OpenRouter 추론과 Daytona sandbox를 호출해 요금이 든다(질문 하나에 여러 모델 호출). 필요할 때만 켜고, 확인이 끝나면 offline으로 되돌린다.
+
+1. proovy-brain `.env.local`에 키(`OPENROUTER_API_KEY`·`DAYTONA_API_KEY`)와 모델 설정을 둔다(proovy-brain README). 값은 따옴표 없이 적어도 되고, `DATABASE_URL`·`INTERNAL_API_SHARED_TOKEN`은 stack이 덮어쓴다.
+2. `scripts/local-stack/.env`에 `BRAIN_ENV_FILE=<.env.local 절대 경로>`를 적는다(Linux는 `LOCAL_UID`·`LOCAL_GID`도 `id -u`·`id -g`로).
+3. capability 스냅샷을 조회한다(1.97 `capabilities refresh`: OpenRouter 공개 models 목록 조회, 추론 비용 없음). 결과는 `BRAIN_CAPABILITIES_DIR`(기본 `scripts/local-stack/capabilities/`, git 제외)에 쓰인다. 출력에 `removed ...` 줄이 있으면 이전 스냅샷이 지워진 것이고 `capabilities.env`는 통째로 바뀐다. 모델 설정을 바꾸면 다시 조회한다.
+
+   ```bash
+   docker compose -f compose.yaml -f compose.live.yaml run --rm capabilities
+   ```
+
+4. live로 띄운다(offline stack이 떠 있으면 Brain 컨테이너만 바뀐다). offline으로 돌아가려면 `docker compose up -d --wait`.
+
+   ```bash
+   docker compose -f compose.yaml -f compose.live.yaml up -d --build --wait
+   ```
+
+- 키는 실행 시 env로만 넘어가고 compose 파일·이미지·로그에 남지 않는다. 다만 `docker compose ... config`와 `docker inspect`는 env 값을 보여 주므로 그 출력을 공유하지 않는다.
+- 스냅샷 없이 live로 띄우면 Brain이 기동에서 거부한다(`docker compose logs brain`).
+
+#### testkit scenario 재현 (Linux 전용, 1.96 `local-stack.sh`)
+
+특정 결과(미지원·미검증·혼합·추가 정보 요청)나 진행 중 hold를 재현하려면 Docker stack 대신 1.96 `scripts/local-stack/local-stack.sh`를 쓴다. proovy-brain testkit(control route)으로 Brain을 띄우므로 Linux·Java(Server bootJar)·uv가 필요하다. 두 stack을 동시에 띄우지 않는다(기본 Server 포트 8080이 겹친다).
+
+```bash
+SERVER_DIR=<Proovy-server bootJar 완료 소스> BRAIN_DIR=<uv sync된 proovy-brain> scripts/local-stack/local-stack.sh up
+scripts/local-stack/local-stack.sh token   # 새 사용자 + access token 파일 경로 출력(1시간 유효)
+DEV_API_PROXY_TARGET=http://127.0.0.1:8080 pnpm run dev --port 5196
+scripts/local-stack/local-stack.sh down
+```
+
+- 포트·컨테이너 이름은 환경변수로 바꾼다(기본 Postgres 29632·Redis 29679·Server 8080·Brain 29680/29681, 접미사 `t196`, 스크립트 헤더 주석 참고).
+- scenario·hold는 Brain testkit control route에 그 요청의 `requestId`로 먼저 등록한다(proovy-brain `testkit/README.md`). 1.96 인수 검증에 쓴 Playwright 하네스와 요청 기록은 PR #316의 `pr-assets/task-1.96` branch에 있다.
 
 ### 검증
 

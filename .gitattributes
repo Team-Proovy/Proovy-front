@@ -1,2 +1,4 @@
 # browser-run-v1 계약 사본은 sha256으로 검사하므로 줄바꿈 변환(core.autocrlf)을 막는다.
 src/test/contracts/brain/** -text
+# 로컬 Docker stack 스크립트는 Linux 컨테이너 안에서 돈다 — Windows checkout에서도 LF를 유지한다.
+scripts/local-stack/** text eol=lf
