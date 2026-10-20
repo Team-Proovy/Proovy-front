@@ -102,32 +102,6 @@ export interface GetCreditHistoryParams {
   endDate?: string;
 }
 
-/** 크레딧 사용 요청 */
-export interface CreditUsageRequest {
-  eventType: CreditEventType;
-  difficulty?: "easy" | "medium" | "hard";
-  featureName: string;
-  description: string;
-  amount?: number | null;
-}
-
-/** 크레딧 잔액 정보 (사용 응답용) */
-export interface CreditBalanceDto {
-  dailyFreeCredit: number;
-  freeCredit: number;
-  paidCredit: number;
-  totalAvailable: number;
-}
-
-/** 크레딧 사용 결과 */
-export interface CreditUsageResult {
-  success: boolean;
-  usedAmount: number;
-  balance: CreditBalanceDto;
-  insufficientCredit: boolean;
-  message: string;
-}
-
 /** 기능별 비용 정보 */
 export interface CreditCostItem {
   eventType: CreditEventType;

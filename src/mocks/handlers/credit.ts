@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw";
 import type { CreditHistoryResultDto } from "../../features/settings/api/credit_types";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// 빈 값이거나 정의되지 않으면 API client(client.ts)와 같이 같은 origin의 /api를 받는다.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export const creditHandlers = [
   // 크레딧 히스토리 조회
@@ -67,27 +68,6 @@ export const creditHandlers = [
       isSuccess: true,
       message: "성공",
       result: mockData,
-    });
-  }),
-
-  // 크레딧 사용
-  http.post(`${BASE_URL}/api/credits/use`, async () => {
-    return HttpResponse.json({
-      isSuccess: true,
-      code: "COMMON200",
-      message: "요청에 성공했습니다.",
-      result: {
-        success: true,
-        usedAmount: 15,
-        balance: {
-          dailyFreeCredit: 65,
-          freeCredit: 50,
-          paidCredit: 120,
-          totalAvailable: 235,
-        },
-        insufficientCredit: false,
-        message: "크레딧이 차감되었습니다.",
-      },
     });
   }),
 

@@ -3,11 +3,8 @@ import type { ApiResponse } from "@/shared/api/shared_types";
 import type {
   NoteListParams,
   NoteListResponse,
-  CreateNoteRequest,
-  CreateNoteResponse,
   UpdateNoteTitleRequest,
   UpdateNoteTitleResponse,
-  GenerateTitleRequest,
   NoteDetailParams,
   NoteDetailResponse,
   DeleteNotesBulkResult,
@@ -44,25 +41,6 @@ export const getNoteList = async (
   return response.data;
 };
 
-// 노트 생성
-export const createNote = async (
-  data: CreateNoteRequest,
-  options?: {
-    suppressRedirect?: boolean;
-  },
-): Promise<ApiResponse<CreateNoteResponse>> => {
-  const response = await apiClient.post<ApiResponse<CreateNoteResponse>>(
-    NOTES_BASE,
-    data,
-    {
-      meta: {
-        suppressRedirect: options?.suppressRedirect,
-      },
-    },
-  );
-  return response.data;
-};
-
 // 노트 제목 변경
 export const updateNoteTitle = async (
   noteId: number,
@@ -70,18 +48,6 @@ export const updateNoteTitle = async (
 ): Promise<ApiResponse<UpdateNoteTitleResponse>> => {
   const response = await apiClient.patch<ApiResponse<UpdateNoteTitleResponse>>(
     `${NOTES_BASE}/${noteId}`,
-    data,
-  );
-  return response.data;
-};
-
-// 첫 질문 기반 AI 노트 제목 생성
-export const generateNoteTitle = async (
-  noteId: number,
-  data: GenerateTitleRequest,
-): Promise<ApiResponse<UpdateNoteTitleResponse>> => {
-  const response = await apiClient.post<ApiResponse<UpdateNoteTitleResponse>>(
-    `${NOTES_BASE}/${noteId}/generate-title`,
     data,
   );
   return response.data;
@@ -102,57 +68,6 @@ export const getNoteDetail = async (
     { params },
   );
   return response.data;
-};
-
-export const getNoteDetailWithAllConversations = async (
-  noteId: number,
-  params?: NoteDetailParams,
-): Promise<ApiResponse<NoteDetailResponse>> => {
-  const pageSize = params?.conversationSize ?? 50;
-  const firstResponse = await getNoteDetail(noteId, {
-    ...params,
-    conversationPage: 0,
-    conversationSize: pageSize,
-  });
-
-  const firstResult = firstResponse.result;
-  if (!firstResult.conversationPageInfo?.hasNext) {
-    return firstResponse;
-  }
-
-  let currentPage = firstResult.conversationPageInfo.page;
-  let hasNext: boolean = firstResult.conversationPageInfo.hasNext;
-  let mergedConversations = [...firstResult.conversations];
-  let lastPageInfo = firstResult.conversationPageInfo;
-
-  while (hasNext) {
-    const nextPage = currentPage + 1;
-    const pageResponse = await getNoteDetail(noteId, {
-      ...params,
-      conversationPage: nextPage,
-      conversationSize: pageSize,
-    });
-
-    mergedConversations = [
-      ...mergedConversations,
-      ...pageResponse.result.conversations,
-    ];
-    lastPageInfo = pageResponse.result.conversationPageInfo;
-    currentPage = nextPage;
-    hasNext = pageResponse.result.conversationPageInfo.hasNext;
-  }
-
-  return {
-    ...firstResponse,
-    result: {
-      ...firstResult,
-      conversations: mergedConversations,
-      conversationPageInfo: {
-        ...lastPageInfo,
-        hasNext: false,
-      },
-    },
-  };
 };
 
 // 노트 벌크 삭제

@@ -9,7 +9,8 @@ import type {
 } from "../../features/storage/api/assets_types";
 import { mockNoteAssets } from "./editor";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// 빈 값이거나 정의되지 않으면 API client(client.ts)와 같이 같은 origin의 /api를 받는다.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 // ============================================================
 // 목 데이터
