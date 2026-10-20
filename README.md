@@ -256,7 +256,7 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - 브라우저는 **`http://localhost:<port>`로 연다.** Server local profile의 CORS는 `http://localhost:*` Origin만 허용하므로 `127.0.0.1`로 열면 전송·정지(POST)가 403이다.
 - Server에는 개발용 로그인이 없다. `issue-token`이 출력한 한 줄을 브라우저 Console에서 실행한다(localStorage `accessToken`과 `auth-storage`를 넣고 새로고침). token은 refresh가 없어 만료되면(401) 다시 발급한다. Free 플랜은 노트 2개까지라 홈 첫 질문이 막히면 새 사용자를 발급한다.
 - 기동 순서: `secrets`(volume이 비어 있을 때 — 처음 또는 `down -v` 뒤 — 개발용 JWT secret·shared token·DB password를 생성하고, 있으면 그대로 쓴다. 같은 volume의 DB가 그 password로 만들어져 있다) → `postgres`·`redis` → `server`(Flyway) → `brain-migrate`(Brain `db bootstrap`·`db migrate`) → `provision`(Server `role-boundary.sql`) → `brain`. secret 값은 compose 파일·이미지에 없다.
-- 이미지는 셋이다: `proovy-local-tools`(`secrets`가 빌드하고 `postgres`·`provision`이 같이 쓴다), `proovy-local-server`(`server`), `proovy-local-brain`(`brain`이 빌드하고 `brain-migrate`가 같이 쓴다). 같은 이미지를 두 서비스가 빌드하지 않으므로 Docker Desktop의 병렬 빌드(bake)·containerd image store에서도 `image ... already exists` 충돌이 나지 않는다. 같이 쓰는 서비스는 `pull_policy: never`라 registry에서 받지 않는다 — 이미지만 다시 빌드하려면 `docker compose build`(서비스를 고를 때는 `secrets`·`server`·`brain`).
+- 이미지는 셋이다: `proovy-local-tools`(`secrets`가 빌드하고 `postgres`·`provision`이 같이 쓴다), `proovy-local-server`(`server`), `proovy-local-brain`(`brain`이 빌드하고 `brain-migrate`가 같이 쓴다). 같은 이미지를 두 서비스가 빌드하지 않으므로 Docker Desktop의 병렬 빌드(bake)·containerd image store에서도 `image ... already exists` 충돌이 나지 않는다. 같이 쓰는 서비스는 `pull_policy: never`라 registry에서 받지 않는다 — 처음에는 전체 `up --build` 또는 `docker compose build`로 이미지를 만든 뒤 개별 서비스를 실행한다. 이미지만 다시 빌드하려면 `docker compose build`(서비스를 고를 때는 `secrets`·`server`·`brain`).
 - Brain DB 명령·runtime은 loopback 대상만 허용하므로 Brain 컨테이너는 Postgres 컨테이너의 network namespace를 공유해 `127.0.0.1:5432`로 붙는다. Server는 `http://postgres:8080`으로 Brain을 부른다. host에는 Server 포트 하나만 열린다.
 - Server 소스는 기본으로 공개 Proovy-server 저장소의 pin한 commit(`.env.example`의 `SERVER_CONTEXT`)을 Docker가 직접 받아 빌드한다. 로컬 checkout을 쓰려면 `SERVER_CONTEXT`에 경로를 준다(Windows checkout은 `core.autocrlf`로 `gradlew`가 CRLF이면 빌드가 실패한다 — 기본 git URL을 쓰거나 LF로 받은 checkout을 쓴다). proovy-brain checkout을 바꿨다면 `--build`로 다시 빌드한다.
 - DB는 `down -v` 전까지 volume에 남는다. Server·Brain commit을 바꾼 뒤 Flyway나 `brain-migrate`가 실패하면(migration 이력 불일치) `docker compose down -v`로 지우고 다시 띄운다.
@@ -283,7 +283,7 @@ docker compose down -v --rmi all   # 빌드·pull한 이미지까지 삭제. Gra
 3. capability 스냅샷을 조회한다(1.97 `capabilities refresh`: OpenRouter 공개 models 목록 조회, 추론 비용 없음). 결과는 `BRAIN_CAPABILITIES_DIR`(기본 `scripts/local-stack/capabilities/`, git 제외)에 쓰인다. 기본 디렉터리는 저장소에 빈 디렉터리(`.gitkeep`)로 있다 — 다른 경로를 쓰면 먼저 `mkdir`로 만든다(Linux에서 Docker가 대신 만들면 root 소유라 조회 컨테이너가 쓰지 못한다). 출력에 `removed ...` 줄이 있으면 이전 스냅샷이 지워진 것이고 `capabilities.env`는 통째로 바뀐다. 모델 설정을 바꾸면 다시 조회한다.
 
    ```bash
-   docker compose -f compose.yaml -f compose.live.yaml run --rm capabilities
+   docker compose -f compose.yaml -f compose.live.yaml run --rm --build capabilities   # --build: 이미지가 없거나 checkout이 바뀌었으면 Brain 이미지를 먼저 빌드
    ```
 
 4. live로 띄운다. offline stack이 떠 있어도 `up`은 one-shot 단계(`secrets`·`brain-migrate`·`provision`)를 다시 돌리고 그 완료를 기다린 뒤 Brain 컨테이너를 live로 바꾼다 — one-shot 단계가 실패하면 Brain이 뜨지 않으니 `docker compose ps -a`·`logs`로 확인한다. offline으로 돌아가려면 `docker compose up -d --wait`.

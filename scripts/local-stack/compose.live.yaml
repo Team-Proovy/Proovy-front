@@ -1,6 +1,6 @@
 # live 모드 override — Brain이 실제 모델(OpenRouter)·sandbox(Daytona)를 호출한다. 비용이 든다.
 #
-#   docker compose -f compose.yaml -f compose.live.yaml run --rm capabilities   # 1.97 스냅샷 조회
+#   docker compose -f compose.yaml -f compose.live.yaml run --rm --build capabilities   # 1.97 스냅샷 조회
 #   docker compose -f compose.yaml -f compose.live.yaml up -d --build --wait
 #
 # 키·모델은 proovy-brain .env.local(BRAIN_ENV_FILE)에서 실행 시에만 env로 넘긴다 — 이 파일·이미지에 값을 적지 않는다.
