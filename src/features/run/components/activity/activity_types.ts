@@ -20,6 +20,8 @@ export type ActivityBoxItem = Pick<
   | "methodLabel"
   | "stepProgress"
   | "pageProgress"
+  | "startedSeq"
+  | "updatedSeq"
 >;
 
 export interface ActivityBoxProps {

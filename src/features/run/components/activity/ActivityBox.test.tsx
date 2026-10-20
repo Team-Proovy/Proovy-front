@@ -49,6 +49,8 @@ const item = (
   methodLabel: null,
   stepProgress: null,
   pageProgress: null,
+  startedSeq: 0,
+  updatedSeq: 0,
   ...overrides,
 });
 
@@ -491,5 +493,61 @@ describe("ActivityBox 표시 규칙", () => {
       />,
     );
     expect(getRows()[0]).toHaveTextContent("다시 시도 중");
+  });
+
+  it("앞서 열린 Activity가 뒤 Activity 시작 뒤에 끝나면 그 outcome을 알리고, n/m 갱신으로는 바뀌지 않는다", () => {
+    const verification = item({
+      activityId: "a1",
+      kind: "verification",
+      label: "verifying_steps",
+      stepProgress: { checked: 1, total: 5 },
+      startedSeq: 1,
+      updatedSeq: 1,
+    });
+    const retrieval = item({
+      activityId: "a2",
+      kind: "note_retrieval",
+      label: "searching_notes",
+      startedSeq: 2,
+      updatedSeq: 2,
+    });
+    const { rerender } = render(
+      <ActivityBox
+        activities={[verification, retrieval]}
+        runStatus="RUNNING"
+      />,
+    );
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent(/^노트 검색 진행 중$/);
+
+    // 앞선 verification의 n/m만 오르면 요약은 그대로다
+    rerender(
+      <ActivityBox
+        activities={[
+          {
+            ...verification,
+            stepProgress: { checked: 2, total: 5 },
+            updatedSeq: 3,
+          },
+          retrieval,
+        ]}
+        runStatus="RUNNING"
+      />,
+    );
+    expect(status).toHaveTextContent(/^노트 검색 진행 중$/);
+
+    rerender(
+      <ActivityBox
+        activities={[
+          { ...verification, phase: "failed", updatedSeq: 4 },
+          retrieval,
+        ]}
+        runStatus="RUNNING"
+      />,
+    );
+    expect(status).toHaveTextContent(/^단계 검증 실패$/);
+    expect(
+      screen.getByRole("button").querySelector("svg[data-phase]"),
+    ).toHaveAttribute("data-phase", "failed");
   });
 });

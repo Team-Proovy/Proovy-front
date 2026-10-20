@@ -20,11 +20,19 @@ import type {
 const BOX_TITLE = "진행 상황";
 
 /**
+ * Activity의 마지막 사건 seq. 진행 중이면 시작 seq다: `updatedSeq`는 n/m 갱신마다 올라
+ * 그대로 쓰면 열린 Activity 사이에서 요약이 번갈아 바뀌어 다시 읽힌다. outcome 뒤 `updatedSeq`는 바뀌지 않는다.
+ */
+const getEventSeq = (item: ActivityBoxItem) =>
+  item.phase === "running" ? item.startedSeq : item.updatedSeq;
+
+/**
  * 박스 요약 = live region 문구. 문구가 바뀔 때만 읽히므로 다음 경우에만 바뀐다.
  *
  * - run이 CANCELING이면 "중단 중", CANCELED·FAILED면 run 결과("중단됨"·"실패"). 마지막 Activity가 완료였어도
  *   중단·실패한 run을 "완료"로 읽지 않고, Activity 없이 끝난 run도 최종 상태를 알린다.
- * - 그 밖에는 마지막 Activity의 제목 + 단계(진행 중·완료·실패·취소됨) = 새 Activity 또는 outcome.
+ * - 그 밖에는 가장 최근 사건(시작 또는 outcome)이 일어난 Activity의 제목 + 단계(진행 중·완료·실패·취소됨).
+ *   앞서 열린 Activity가 뒤 Activity 시작 이후에 끝나도 그 outcome을 알린다.
  *
  * 진행 수(n/m)와 sub-state(대기 중·다시 시도 중)는 넣지 않는다. 진행이 오르거나 retrying을 오갈 때마다
  * 스크린리더가 다시 읽지 않도록 그것들은 목록 행에만 표시한다.
@@ -42,7 +50,11 @@ const getSummary = (
   if (runStatus === "FAILED") {
     return { text: RUN_OUTCOME_TEXTS.FAILED, phase: "failed" };
   }
-  const latest = activities.at(-1);
+  const latest = activities.reduce<ActivityBoxItem | undefined>(
+    (current, item) =>
+      current && getEventSeq(current) > getEventSeq(item) ? current : item,
+    undefined,
+  );
   if (!latest) return { text: "", phase: "running" };
   return {
     text: `${getActivityTitle(latest)} ${ACTIVITY_PHASE_TEXTS[latest.phase]}`,
