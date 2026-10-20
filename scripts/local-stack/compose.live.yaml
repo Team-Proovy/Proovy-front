@@ -20,6 +20,7 @@ services:
 
   # 현재 모델 설정의 capability 스냅샷을 OpenRouter 공개 models 목록에서 조회해 BRAIN_CAPABILITIES_DIR에 쓴다(1.97).
   # 출력에 removed 줄이 있으면 이전 스냅샷 파일이 지워진 것이다. capabilities.env는 매번 통째로 바뀐다.
+  # refresh profile에서만 쓰여 `run --rm capabilities`로 혼자 빌드된다(이미지가 없는 처음에도 바로 조회). --profile refresh로 up·build하지 않는다
   capabilities:
     image: proovy-local-brain
     build:

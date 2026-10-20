@@ -9,6 +9,8 @@
 #            → provision(role 경계) → brain(serve)
 # host에는 Server 하나만 127.0.0.1에 publish한다. 개발 전용 secret은 `secrets` volume이 비어 있을 때(처음·down -v 뒤) 만든다.
 # 로컬 개발용이라 각 서비스가 secrets volume 전체를 mount한다(컨테이너 사이 secret 격리는 하지 않는다).
+# 같은 이미지는 서비스 하나에만 build를 둔다 — 여러 서비스가 같은 이름을 동시에 export하면 병렬 빌드(bake)가
+# "already exists"로 실패한다. 참조만 하는 서비스는 pull_policy: never로 registry pull을 막는다(빌드는 컨테이너 생성 전에 끝난다).
 # live 모드는 compose.live.yaml을 함께 준다(README). 설정은 이 디렉터리의 .env(.env.example 참고)로 바꾼다.
 name: proovy-local
 
@@ -23,6 +25,7 @@ x-brain-build: &brain-build
   context: ${BRAIN_DIR:-../../../proovy-brain}
 
 services:
+  # tools 이미지는 secrets만 빌드한다(postgres·provision은 같은 이미지를 참조만 한다)
   secrets:
     image: proovy-local-tools
     build: *tools-build
@@ -32,7 +35,7 @@ services:
 
   postgres:
     image: proovy-local-tools
-    build: *tools-build
+    pull_policy: never
     depends_on:
       secrets:
         condition: service_completed_successfully
@@ -107,7 +110,7 @@ services:
   # Brain DB 명령은 loopback 대상만 허용하므로 postgres의 network namespace에서 127.0.0.1:5432로 붙는다.
   brain-migrate:
     image: proovy-local-brain
-    build: *brain-build
+    pull_policy: never
     network_mode: service:postgres
     depends_on:
       server:
@@ -131,7 +134,7 @@ services:
   # Server ↔ Brain role 경계(Server role-boundary.sql). 재실행해도 같은 결과다
   provision:
     image: proovy-local-tools
-    build: *tools-build
+    pull_policy: never
     depends_on:
       brain-migrate:
         condition: service_completed_successfully
@@ -145,6 +148,7 @@ services:
           -f /provisioning/role-boundary.sql
         echo "[local-stack] role boundary applied"
 
+  # Brain 이미지는 brain만 빌드한다(brain-migrate는 같은 이미지를 참조만 한다)
   brain:
     image: proovy-local-brain
     build: *brain-build
