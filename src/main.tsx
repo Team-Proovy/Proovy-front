@@ -3,21 +3,25 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import { AppQueryProvider } from "./app/providers/query_provider";
 import { router } from "./app/router/routes";
+import { resolveApiMode } from "./app/api_mode";
 import { ToastHost } from "@/shared/components/ui/ToastHost";
 import "./app/styles/global.css";
 
-const enableMocking = async () => {
-  if (import.meta.env.DEV) {
+// fixture 모드는 개발 서버에서 VITE_API_MODE=fixture로만 켠다. 기본은 실제 Server(vite proxy)다.
+// 운영 build에서는 DEV가 false라 이 분기와 MSW가 bundle에 들어가지 않는다.
+const startFixtureMode = async () => {
+  if (
+    import.meta.env.DEV &&
+    resolveApiMode(import.meta.env.VITE_API_MODE) === "fixture"
+  ) {
     const { worker } = await import("./mocks/browser");
-    return worker.start({
+    await worker.start({
       onUnhandledRequest: "bypass",
     });
   }
-
-  return Promise.resolve();
 };
 
-enableMocking().then(() => {
+startFixtureMode().then(() => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <AppQueryProvider>

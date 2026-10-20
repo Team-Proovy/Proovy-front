@@ -98,7 +98,7 @@ Proovy의 도메인 모델은 **채팅 메시지, 수식 메타데이터, API �
 ### API 및 HTTP
 
 - **axios**: HTTP 클라이언트
-- **msw**: Mock Service Worker (개발 환경에서 API 모킹)
+- **msw**: Mock Service Worker (fixture 모드에서만 API 모킹)
 
 ### UI 컴포넌트
 
@@ -166,13 +166,20 @@ npm install -g pnpm
 
 ### 2단계: 환경 변수 설정
 
-```bash
-# .env 파일 생성
-cp .env.example .env  # (또는 수동으로 .env 생성)
+개발 서버는 `/api` 요청을 vite proxy로 보내므로 `VITE_API_BASE_URL`은 비워 둔다(빈 값 → 같은 origin의 `/api`).
 
-# .env 파일에 다음 내용 추가
-echo "VITE_API_BASE_URL=http://localhost:3000" >> .env
-echo "VITE_ENV=development" >> .env
+```bash
+# .env.local (git에 올리지 않는다)
+VITE_API_BASE_URL=
+# 필수: 소셜 로그인 설정. 없으면 앱이 시작되지 않는다.
+VITE_KAKAO_CLIENT_ID=...
+VITE_KAKAO_REDIRECT_URI=...
+VITE_NAVER_CLIENT_ID=...
+VITE_NAVER_REDIRECT_URI=...
+# 선택: proxy 대상 Server (기본 http://localhost:8080). VITE_ 접두사가 없어 브라우저에 노출되지 않는다.
+# DEV_API_PROXY_TARGET=http://localhost:8080
+# 선택: API 모드 server(기본) | fixture — 아래 "개발 API 모드" 참고
+# VITE_API_MODE=server
 ```
 
 ### 3단계: IDE 설정 (VS Code)
@@ -193,11 +200,23 @@ echo "VITE_ENV=development" >> .env
 ### 4단계: 개발 서버 실행
 
 ```bash
-# 개발 서버 시작
+# 개발 서버 시작 (기본: 실제 Server 연결)
 pnpm run dev
 
 # 브라우저에서 <http://localhost:5173> 접속
 ```
+
+### 개발 API 모드
+
+개발 서버의 API 연결은 `VITE_API_MODE`로 명시적으로 고른다. 운영 build에는 MSW가 들어가지 않는다.
+
+| 모드            | 실행                                 | 동작                                                                                                                                                                                                                                                       |
+| --------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server` (기본) | `pnpm run dev`                       | MSW를 켜지 않는다. `/api`를 vite proxy로 실제 Server(`DEV_API_PROXY_TARGET`, 기본 `http://localhost:8080`)에 보낸다. 로컬 Server를 먼저 띄운다.                                                                                                            |
+| `fixture`       | `VITE_API_MODE=fixture pnpm run dev` | MSW가 응답한다. 대화(전송·SSE·대화 조회·정지)는 browser-run-v1 fixture handler(`src/features/run/session/mocks`), 그 밖의 화면(사용자·노트·스토리지·크레딧·도구·검색)은 `src/mocks/handlers`의 개발 mock을 쓴다. mock이 없는 요청은 proxy로 그대로 나간다. |
+
+- `server`·`fixture` 밖의 값은 시작할 때 오류로 거부한다.
+- fixture run Server는 페이지 메모리에 있어 새로고침하면 진행 중이던 run이 사라진다.
 
 ### 검증
 
@@ -219,7 +238,7 @@ pnpm run format
 ```bash
 src/
 ├── app/                      # 앱 전역 설정
-│   ├── providers/            # 전역 Provider (React Query, MSW)
+│   ├── providers/            # 전역 Provider (React Query)
 │   ├── router/               # 라우터 설정
 │   └── styles/               # 전역 스타일
 │
@@ -248,7 +267,7 @@ src/
 │   ├── HomePage.tsx
 │   ├── LandingPage.tsx
 │
-├── mocks/                    # Mock Service Worker (MSW)
+├── mocks/                    # fixture 모드 MSW (VITE_API_MODE=fixture)
 │   ├── browser.ts
 │   ├── handlers.ts
 │   └── handlers/
