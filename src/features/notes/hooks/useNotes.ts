@@ -6,18 +6,12 @@ import {
 } from "@tanstack/react-query";
 import {
   getNoteList,
-  createNote,
   getNoteDetail,
-  getNoteDetailWithAllConversations,
   updateNoteTitle,
   deleteNotesBulk,
   deleteNote,
 } from "../api/notes_api";
-import type {
-  NoteListParams,
-  CreateNoteRequest,
-  NoteDetailParams,
-} from "../api/notes_types";
+import type { NoteListParams, NoteDetailParams } from "../api/notes_types";
 
 // Query Keys
 export const noteKeys = {
@@ -68,24 +62,6 @@ export const useInfiniteNoteList = (
   });
 };
 
-// 노트 생성 Hook
-export const useCreateNote = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (
-      variables: CreateNoteRequest & { suppressRedirect?: boolean },
-    ) => {
-      const { suppressRedirect, ...data } = variables;
-      return createNote(data, { suppressRedirect });
-    },
-    onSuccess: () => {
-      // 노트 목록 캐시 무효화
-      queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
-    },
-  });
-};
-
 // 노트 제목 변경 Hook
 export const useUpdateNoteTitle = () => {
   const queryClient = useQueryClient();
@@ -108,7 +84,7 @@ export const useUpdateNoteTitle = () => {
  *
  * @param noteId  URL 파라미터에서 가져온 noteId (string | undefined)
  * @param params  대화 페이지네이션 파라미터 (선택)
- * @param options.enabled  쿼리 활성화 여부 (location.state가 있으면 false)
+ * @param options.enabled  쿼리 활성화 여부
  */
 export const useNoteDetail = (
   noteId: string | undefined,
@@ -116,16 +92,13 @@ export const useNoteDetail = (
   options?: {
     enabled?: boolean;
     refetchInterval?: number | false;
-    fetchAllConversations?: boolean;
     refetchOnMount?: boolean | "always";
   },
 ) => {
   return useQuery({
     queryKey: noteKeys.detail(noteId ?? "", params),
     queryFn: async () => {
-      const response = options?.fetchAllConversations
-        ? await getNoteDetailWithAllConversations(Number(noteId), params)
-        : await getNoteDetail(Number(noteId), params);
+      const response = await getNoteDetail(Number(noteId), params);
       return response.result;
     },
     enabled: (options?.enabled ?? true) && !!noteId,

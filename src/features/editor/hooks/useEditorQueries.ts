@@ -1,8 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   getTools,
-  createConversationJson,
-  getConversationDetail,
   searchConversations,
   uploadCanvasImage,
 } from "../api/editor_api";
@@ -11,9 +9,7 @@ import { noteKeys } from "@/features/notes/hooks/useNotes";
 import type {
   ToolDto,
   ChatAssetDto,
-  CreateConversationRequest,
   ConversationSearchParams,
-  ConversationDetailResponse,
   ConversationSearchResponse,
   CanvasImageUploadRequest,
   CanvasImageUploadResponse,
@@ -69,29 +65,6 @@ export const useNoteAssets = (noteId: number | null, query?: string) =>
     },
     enabled: !!noteId,
     staleTime: 60 * 1000, // 1분간 캐시
-  });
-
-/**
- * 대화 생성 (비-스트리밍) 훅
- */
-export const useCreateConversation = () =>
-  useMutation({
-    mutationFn: (data: CreateConversationRequest) =>
-      createConversationJson(data),
-  });
-
-/**
- * 대화 상세 조회 훅
- * GET /api/conversations/{conversationId}
- */
-export const useConversationDetail = (conversationId: number | null) =>
-  useQuery<ConversationDetailResponse>({
-    queryKey: ["conversationDetail", conversationId],
-    queryFn: async () => {
-      const response = await getConversationDetail(conversationId!);
-      return response.result;
-    },
-    enabled: !!conversationId,
   });
 
 /**

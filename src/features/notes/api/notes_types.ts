@@ -12,65 +12,14 @@ export interface NoteListParams {
   sort?: "lastUsedAt,desc" | "createdAt,desc" | "title,asc";
 }
 
-/** 새 노트 생성 요청 (노트 리소스만 생성, 대화는 POST /api/conversations로 별도 호출) */
-export interface CreateNoteRequest {
-  title?: string;
-}
-
 /** 노트 제목 변경 요청 */
 export interface UpdateNoteTitleRequest {
   title: string;
 }
 
-/** AI 노트 제목 생성 요청 */
-export interface GenerateTitleRequest {
-  text: string;
-}
-
 // ============================================================
 // 응답 (Response) 타입
 // ============================================================
-
-/** 멘션된 자산 정보 */
-export interface MentionedAssetDto {
-  assetId: number;
-  fileName: string;
-}
-
-/** 사용자 메시지 */
-export interface UserMessageDto {
-  messageId: number;
-  content: string;
-  mentionedAssets: MentionedAssetDto[];
-  mentionedTools: string[];
-  createdAt: string;
-}
-
-/** AI 응답 메시지 */
-export interface AssistantMessageDto {
-  messageId: number;
-  content: string;
-  usedTools: string[];
-  status: string;
-  createdAt: string;
-}
-
-/** 첫 번째 대화 */
-export interface FirstConversationDto {
-  conversationId: number;
-  userMessage: UserMessageDto;
-  assistantMessage: AssistantMessageDto;
-}
-
-/** 새 노트 생성 응답 */
-export interface CreateNoteResponse {
-  noteId: number;
-  title: string;
-  titleGeneratedBy: string;
-  conversationLimit: number;
-  firstConversation: FirstConversationDto | null;
-  createdAt: string;
-}
 
 /** 노트 제목 변경 응답 */
 export interface UpdateNoteTitleResponse {

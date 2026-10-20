@@ -1,8 +1,6 @@
 import { http, HttpResponse, delay } from "msw";
 import type { ApiResponse } from "../../shared/api/shared_types";
 import type {
-  CreateNoteResponse,
-  CreateNoteRequest,
   NoteDto,
   NoteDetailResponse,
   UpdateNoteTitleResponse,
@@ -123,52 +121,6 @@ export const notesHandlers = [
       },
     });
   }),
-
-  // 새 노트 생성 (노트 리소스만 생성, 대화는 POST /api/conversations로 별도 호출)
-  http.post<never, CreateNoteRequest>(
-    `${BASE_URL}/api/notes`,
-    async ({ request }) => {
-      await delay(300);
-
-      const body = await request.json();
-      console.log("[MSW] 새 노트 생성:", body);
-
-      const newNoteId = mockNotes.length + 1;
-      const now = new Date().toISOString();
-      const generatedTitle =
-        body.title ?? `새 노트 ${new Date().toLocaleString("ko-KR")}`;
-
-      // mockNotes 배열에 새 노트 추가 → GET /api/notes에서 반영됨
-      const newNote: NoteDto = {
-        noteId: newNoteId,
-        title: generatedTitle,
-        thumbnailUrl: null,
-        conversationCount: 0,
-        conversationLimit: 20,
-        conversationUsagePercent: 0,
-        assetCount: 0,
-        createdAt: now,
-        lastUsedAt: now,
-      };
-      mockNotes.unshift(newNote);
-
-      const response: CreateNoteResponse = {
-        noteId: newNoteId,
-        title: generatedTitle,
-        titleGeneratedBy: body.title ? "USER" : "SYSTEM",
-        conversationLimit: 20,
-        firstConversation: null,
-        createdAt: now,
-      };
-
-      return HttpResponse.json<ApiResponse<CreateNoteResponse>>({
-        isSuccess: true,
-        code: "COMMON201",
-        message: "노트가 생성되었습니다.",
-        result: response,
-      });
-    },
-  ),
 
   // 노트 상세 정보 + 대화 히스토리 조회 (채팅방 진입 시)
   http.get(`${BASE_URL}/api/notes/:noteId`, async ({ params, request }) => {

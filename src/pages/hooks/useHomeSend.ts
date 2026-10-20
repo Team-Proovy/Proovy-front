@@ -9,7 +9,6 @@ import {
 } from "@/features/subscription/types/plan_types";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
-import type { MessageAttachment } from "@/features/chat/types/chat_types";
 import type {
   RunSession,
   RunSessionInput,
@@ -25,21 +24,6 @@ import {
 } from "@/features/chat/run/conversation_notice";
 import type { ConversationNotice } from "@/features/chat/run/conversation_notice";
 import { showErrorToast, showToast } from "@/shared/lib/toast";
-
-/**
- * 구형 첫 대화 데이터 (location.state). 새 경로는 쓰지 않는다 — 구형 `useChatMessages`가 남아 있는 동안만 둔다(1.95 삭제).
- */
-export interface FirstMessageState {
-  text: string;
-  latex?: string;
-  mentionedAssetIds: number[];
-  chosenFeatures: string[];
-  canvasImageIds: number[];
-  attachments: MessageAttachment[];
-  pendingAttachments?: ChatSendData["attachments"];
-  viewerFile?: { name: string; mimeType: string; size: number };
-  pendingViewerFile?: File;
-}
 
 interface WaitingSend {
   session: RunSession;

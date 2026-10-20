@@ -70,27 +70,6 @@ export const creditHandlers = [
     });
   }),
 
-  // 크레딧 사용
-  http.post(`${BASE_URL}/api/credits/use`, async () => {
-    return HttpResponse.json({
-      isSuccess: true,
-      code: "COMMON200",
-      message: "요청에 성공했습니다.",
-      result: {
-        success: true,
-        usedAmount: 15,
-        balance: {
-          dailyFreeCredit: 65,
-          freeCredit: 50,
-          paidCredit: 120,
-          totalAvailable: 235,
-        },
-        insufficientCredit: false,
-        message: "크레딧이 차감되었습니다.",
-      },
-    });
-  }),
-
   // 크레딧 비용 조회
   http.get(`${BASE_URL}/api/credits/costs`, () => {
     return HttpResponse.json({
