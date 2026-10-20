@@ -8,24 +8,22 @@
  *
  * 기능:
  * - 왼쪽 패널: Viewer (PDF) / Storage (파일 목록) 탭
- * - 오른쪽 패널: Chat
+ * - 오른쪽 패널: 대화 (browser-run-v1 run 세션, S08)
  * - Divider: 드래그로 패널 크기 조절
  * - 토글 버튼: 왼쪽 패널 열기/닫기
  *
- * 데이터 로드 전략:
- * 1. HomePage에서 노트 생성 직후 진입 → location.state로 첫 대화 데이터 수신 (API 스킵)
- * 2. 사이드바/새로고침/직접 URL 접근 → GET /api/notes/{noteId}로 히스토리 로드
+ * 대화 데이터:
+ * - 진입·새로고침: 대화 조회(`GET /api/conversations/{noteId}/messages`)로 이력을 그리고 진행 중 run을 이어 받는다.
+ * - 홈 첫 질문: 홈이 맡긴 run 세션을 이어 받아 같은 stream을 계속 본다.
+ * - 제목·자산 목록은 노트 상세(`GET /api/notes/{noteId}`)에서 읽는다.
  */
 
 import { useParams } from "react-router-dom";
-import {
-  LeftPanel,
-  RightPanel,
-  Divider,
-  ChatHeader,
-} from "@/features/chat/components";
-import { useChatMessages } from "@/features/chat/hooks/useChatMessages";
+import { LeftPanel, Divider, ChatHeader } from "@/features/chat/components";
+import { ConversationPanel } from "@/features/chat/components/rightpanel/ConversationPanel";
 import { useChatPanel } from "@/features/chat/hooks/useChatPanel";
+import { useNoteConversation } from "@/features/chat/run/useNoteConversation";
+import { useNoteDetail } from "@/features/notes/hooks/useNotes";
 
 /**
  * noteId가 변경될 때 전체 컴포넌트 리마운트를 강제하는 래퍼.
@@ -34,20 +32,22 @@ import { useChatPanel } from "@/features/chat/hooks/useChatPanel";
  */
 export const ChatPage = () => {
   const { noteId } = useParams<{ noteId: string }>();
-  return <ChatPageContent key={noteId} />;
+  if (!noteId) return null;
+  return (
+    <ChatPageContent
+      key={noteId}
+      noteId={noteId}
+    />
+  );
 };
 
-const ChatPageContent = () => {
-  const {
-    noteId,
-    messages,
-    handleSend,
-    isSending,
-    isNoteLoading,
-    noteTitle,
-    noteDetail,
-    viewerFile,
-  } = useChatMessages();
+/** 노트 상세는 제목·자산만 쓴다(대화는 대화 조회 API). */
+const NOTE_DETAIL_PARAMS = { conversationPage: 0, conversationSize: 1 };
+
+const ChatPageContent = ({ noteId }: { noteId: string }) => {
+  const conversation = useNoteConversation(noteId);
+  const { data: noteDetail } = useNoteDetail(noteId, NOTE_DETAIL_PARAMS);
+  const noteTitle = noteDetail?.title ?? `노트 ${noteId}`;
 
   const {
     activeTab,
@@ -60,7 +60,7 @@ const ChatPageContent = () => {
     handleTabChange,
     handleToggleViewer,
   } = useChatPanel({
-    hasViewerFile: !!viewerFile,
+    hasViewerFile: false,
     assets: noteDetail?.assets,
   });
 
@@ -85,7 +85,7 @@ const ChatPageContent = () => {
               <LeftPanel
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
-                noteId={noteId || ""}
+                noteId={noteId}
                 selectedFileId={fileId || undefined}
               />
             </div>
@@ -101,12 +101,9 @@ const ChatPageContent = () => {
           className="h-full min-w-0 overflow-hidden"
           style={{ width: isViewerOpen ? `${100 - leftPanelWidth}%` : "100%" }}
         >
-          <RightPanel
-            messages={messages}
-            noteId={noteId ? Number(noteId) : null}
-            onSend={handleSend}
-            isSending={isSending}
-            isLoading={isNoteLoading}
+          <ConversationPanel
+            conversation={conversation}
+            noteNumber={Number(noteId)}
           />
         </div>
       </div>

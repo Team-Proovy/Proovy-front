@@ -7,12 +7,26 @@ import { FeatureGrid } from "../features/landing/components/FeatureGrid";
 import { CTASection } from "../features/landing/components/CTASection";
 import { FAQSection } from "../features/landing/components/FAQSection";
 import { ChevronDown } from "lucide-react";
+import { ConversationNotices } from "../features/chat/components/rightpanel/ConversationNotices";
+import { useRetryCountdown } from "../features/chat/run/useRetryCountdown";
 
 /**
  * HomePage - 새 노트 시작점
+ *
+ * 첫 질문은 Note를 먼저 만들지 않고 보낸다(`useHomeSend`). 접수 거부 안내는 입력창 위에 보인다.
  */
 export const HomePage = () => {
-  const { viewerFileRef, isSending, handleSend } = useHomeSend();
+  const {
+    viewerFileRef,
+    isSending,
+    handleSend,
+    notice,
+    dismissNotice,
+    reconnect,
+    retryBlockedUntil,
+    isStalled,
+  } = useHomeSend();
+  const blockedSeconds = useRetryCountdown(retryBlockedUntil);
 
   const {
     pdfUrl,
@@ -58,11 +72,21 @@ export const HomePage = () => {
                 dragProps={dragProps}
               />
 
-              <ChatInput
-                onSend={handleSend}
-                isSending={isSending}
-                className="!max-w-none lg:!max-w-[660px]"
-              />
+              <div className="flex w-full min-w-0 flex-col gap-[8px] lg:max-w-[660px]">
+                <ConversationNotices
+                  notices={
+                    notice ? [{ ...notice, dismissible: !isStalled }] : []
+                  }
+                  onDismiss={dismissNotice}
+                  onReconnect={reconnect}
+                />
+                <ChatInput
+                  onSend={handleSend}
+                  isSending={isSending}
+                  isSendBlocked={blockedSeconds > 0 || isStalled}
+                  className="!max-w-none lg:!max-w-[660px]"
+                />
+              </div>
             </div>
           </div>
         </div>

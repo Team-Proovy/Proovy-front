@@ -9,6 +9,7 @@ import { useState } from "react";
 // Features
 import { Sidebar } from "../../features/sidebar/Sidebar";
 import SearchModal from "@/features/search/components/SearchModal";
+import { RunSessionRegistryProvider } from "@/features/chat/run/RunSessionRegistryProvider";
 import { SettingsModal } from "../../features/settings/components/SettingsModal";
 
 /**
@@ -16,6 +17,7 @@ import { SettingsModal } from "../../features/settings/components/SettingsModal"
  *
  * Protected Routes (/app/*) 에서 사용
  * Sidebar + Outlet 구조
+ * run 세션 registry를 화면 이동보다 위에 둔다(홈 첫 질문 → Note 화면이 같은 stream을 이어 받는다).
  */
 export const AppLayout = () => {
   const navigate = useNavigate();
@@ -48,36 +50,40 @@ export const AppLayout = () => {
   };
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden bg-[#F8F9FA]">
-      {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 */}
-      <Sidebar
-        isCollapsed={isCollapsed}
-        onToggle={setIsCollapsed}
-        onSearchClick={() => {}} // SearchButton 내부에서 처리됨
-        onSettingsClick={() => setIsSettingsOpen(true)}
-        onUpgradeClick={() => navigate("/pricing", { state: { from: "home" } })}
-        onLogoClick={handleHomeClick}
-        onHomeClick={handleHomeClick}
-      />
+    <RunSessionRegistryProvider>
+      <div className="flex h-[100dvh] w-full overflow-hidden bg-[#F8F9FA]">
+        {/* 왼쪽 사이드바 - z-10으로 main 위에 표시 */}
+        <Sidebar
+          isCollapsed={isCollapsed}
+          onToggle={setIsCollapsed}
+          onSearchClick={() => {}} // SearchButton 내부에서 처리됨
+          onSettingsClick={() => setIsSettingsOpen(true)}
+          onUpgradeClick={() =>
+            navigate("/pricing", { state: { from: "home" } })
+          }
+          onLogoClick={handleHomeClick}
+          onHomeClick={handleHomeClick}
+        />
 
-      {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
-      <main
-        className={`relative flex min-h-0 flex-1 flex-col transition-all duration-300 ${
-          isChatPage ? "overflow-hidden" : "overflow-y-auto"
-        }`}
-      >
-        <Outlet />
-      </main>
+        {/* 오른쪽 본문 영역 (Outlet) - 사이드바 너비에 따라 자동으로 밀림 */}
+        <main
+          className={`relative flex min-h-0 flex-1 flex-col transition-all duration-300 ${
+            isChatPage ? "overflow-hidden" : "overflow-y-auto"
+          }`}
+        >
+          <Outlet />
+        </main>
 
-      {/* 모달들 */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={handleCloseSearch}
-      />
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
-    </div>
+        {/* 모달들 */}
+        <SearchModal
+          isOpen={isSearchOpen}
+          onClose={handleCloseSearch}
+        />
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      </div>
+    </RunSessionRegistryProvider>
   );
 };
