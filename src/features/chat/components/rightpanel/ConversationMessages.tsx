@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import {
   HISTORY_EMPTY_TEXT,
@@ -34,6 +34,13 @@ export const ConversationMessages = ({
   const lastTurnKeyRef = useRef<string | null>(null);
   const firstTurnKeyRef = useRef<string | null>(null);
   const scrollHeightRef = useRef(0);
+  /** 마지막으로 코드가 맞춘 scrollTop. 이보다 위로 가면 사용자가 올려 읽는 중이다. */
+  const pinnedTopRef = useRef(0);
+
+  const pinToBottom = (container: HTMLDivElement) => {
+    container.scrollTop = container.scrollHeight;
+    pinnedTopRef.current = container.scrollTop;
+  };
 
   const firstTurnKey = turns[0]?.key ?? null;
   const lastTurnKey = turns.at(-1)?.key ?? null;
@@ -42,7 +49,7 @@ export const ConversationMessages = ({
     if (!container) return;
     // 새 질문이 붙으면 위를 읽던 중이어도 그 질문으로 내려간다.
     if (lastTurnKey !== lastTurnKeyRef.current) stickRef.current = true;
-    if (stickRef.current) container.scrollTop = container.scrollHeight;
+    if (stickRef.current) pinToBottom(container);
     // 이전 대화를 앞에 붙이면 보던 위치를 지킨다.
     else if (firstTurnKey !== firstTurnKeyRef.current)
       container.scrollTop += container.scrollHeight - scrollHeightRef.current;
@@ -51,12 +58,30 @@ export const ConversationMessages = ({
     scrollHeightRef.current = container.scrollHeight;
   });
 
+  // 입력창 높이(안내 줄·draft)나 응답 접기/펼치기로 크기가 바뀌어도 아래 끝을 보고 있었으면 따라간다.
+  const isListShown = turns.length > 0;
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (stickRef.current) pinToBottom(container);
+      scrollHeightRef.current = container.scrollHeight;
+    });
+    observer.observe(container);
+    if (container.firstElementChild)
+      observer.observe(container.firstElementChild);
+    return () => observer.disconnect();
+  }, [isListShown]);
+
   const handleScroll = () => {
     const container = scrollRef.current;
     if (!container) return;
-    stickRef.current =
-      container.scrollHeight - container.scrollTop - container.clientHeight <=
-      STICK_TO_BOTTOM_PX;
+    const distance =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    // 아래 끝 근처면 따라가고, 사용자가 위로 올렸을 때만 멈춘다(내용이 늘며 생긴 거리로는 멈추지 않는다).
+    if (distance <= STICK_TO_BOTTOM_PX) stickRef.current = true;
+    else if (container.scrollTop < pinnedTopRef.current - 1)
+      stickRef.current = false;
   };
 
   if (history.status === "loading" && turns.length === 0)
@@ -83,7 +108,7 @@ export const ConversationMessages = ({
       className="relative flex h-full justify-center overflow-x-hidden overflow-y-auto"
     >
       {/* 가운데 정렬 컨테이너 - ChatInput과 동일한 max-width */}
-      <div className="flex w-full max-w-[660px] min-w-[270px] flex-col gap-[40px] px-[16px] pt-[40px] pb-[32px]">
+      <div className="flex w-full max-w-[660px] min-w-[270px] flex-col gap-[40px] self-start px-[16px] pt-[40px] pb-[32px]">
         {history.status === "ready" && history.nextBefore !== null && (
           <button
             type="button"
