@@ -60,6 +60,8 @@ export const useCancelSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // SubscriptionTabContent에서 자체 토스트로 처리 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: cancelSubscription,
     onSuccess: (response) => {
       if (response.isSuccess) {
@@ -75,6 +77,8 @@ export const useUpgradeSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // PricingPage에서 자체 토스트로 처리 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: (data: UpgradeSubscriptionRequest) => upgradeSubscription(data),
     onSuccess: (response) => {
       if (response.isSuccess) {
@@ -90,6 +94,8 @@ export const useResumeSubscription = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // SubscriptionTabContent에서 자체 토스트로 처리 → 전역 토스트 제외
+    meta: { suppressGlobalErrorToast: true },
     mutationFn: resumeSubscription,
     onSuccess: (response) => {
       if (response.isSuccess) {
