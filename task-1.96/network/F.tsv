@@ -1,0 +1,52 @@
+# 시나리오 F: 요청 한도(사용자당 1분 4회) 429
+# 브라우저(Playwright)가 보낸 /api/ 요청 전부. 열: 시각(KST)	method	status	path	Last-Event-ID — body·Authorization·cookie는 기록하지 않았다.
+# status '-'는 같은 URL의 뒤 요청에 응답이 매칭된 중복 행(기록 도구 한계)
+# 요청 host 집계(모듈·폰트 포함): {'http://localhost:5197': 298, 'https://cdn.jsdelivr.net': 5}
+20:02:38.180	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:38.180	GET	200	/api/users/me	
+20:02:38.180	GET	200	/api/notes/tools	
+20:02:38.180	GET	200	/api/notes?page=0&size=1	
+20:02:38.935	POST	200	/api/conversations	
+20:02:39.051	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:39.051	GET	200	/api/notes?page=0&size=1	
+20:02:39.371	GET	-	/api/conversations/11/messages?limit=30	
+20:02:39.371	GET	200	/api/conversations/11/messages?limit=30	
+20:02:39.379	GET	200	/api/notes/11	
+20:02:39.379	GET	200	/api/users/me	
+20:02:39.379	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:39.379	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:39.380	GET	200	/api/users/me	
+20:02:39.380	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:39.569	GET	200	/api/ai-runs/79323ee0-7c34-4bde-8481-f6cea677cc60/events	79323ee0-7c34-4bde-8481-f6cea677cc60:1
+20:02:40.298	GET	200	/api/users/me	
+20:02:40.298	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:40.298	GET	200	/api/notes/11	
+20:02:40.298	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:41.097	POST	200	/api/conversations	
+20:02:41.269	GET	200	/api/users/me	
+20:02:41.269	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:41.269	GET	200	/api/notes/11	
+20:02:41.270	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:42.154	GET	200	/api/users/me	
+20:02:42.154	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:42.155	GET	200	/api/notes/11	
+20:02:42.155	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:44.404	POST	200	/api/conversations	
+20:02:44.600	GET	200	/api/users/me	
+20:02:44.600	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:44.600	GET	200	/api/notes/11	
+20:02:44.600	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:45.187	GET	200	/api/users/me	
+20:02:45.187	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:45.187	GET	200	/api/notes/11	
+20:02:45.187	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:47.800	POST	200	/api/conversations	
+20:02:48.113	GET	200	/api/users/me	
+20:02:48.117	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:48.117	GET	200	/api/notes/11	
+20:02:48.117	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:48.340	GET	200	/api/users/me	
+20:02:48.342	GET	200	/api/notes/11?conversationPage=0&conversationSize=1	
+20:02:48.343	GET	200	/api/notes/11	
+20:02:48.343	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:51.464	POST	429	/api/conversations	

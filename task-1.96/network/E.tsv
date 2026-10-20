@@ -1,0 +1,33 @@
+# 시나리오 E: 409 activeRun 복원(탭 1 기록만 — 탭 2의 POST 409는 하네스 출력)
+# 브라우저(Playwright)가 보낸 /api/ 요청 전부. 열: 시각(KST)	method	status	path	Last-Event-ID — body·Authorization·cookie는 기록하지 않았다.
+# status '-'는 같은 URL의 뒤 요청에 응답이 매칭된 중복 행(기록 도구 한계)
+# 요청 host 집계(모듈·폰트 포함): {'http://localhost:5197': 279, 'https://cdn.jsdelivr.net': 5}
+20:02:07.422	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:07.424	GET	200	/api/users/me	
+20:02:07.424	GET	200	/api/notes/tools	
+20:02:07.424	GET	200	/api/notes?page=0&size=1	
+20:02:08.130	POST	200	/api/conversations	
+20:02:08.321	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:08.321	GET	200	/api/notes?page=0&size=1	
+20:02:08.680	GET	-	/api/conversations/10/messages?limit=30	
+20:02:08.680	GET	200	/api/conversations/10/messages?limit=30	
+20:02:08.680	GET	200	/api/notes/10	
+20:02:08.680	GET	200	/api/users/me	
+20:02:08.680	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:08.680	GET	200	/api/notes/10?conversationPage=0&conversationSize=1	
+20:02:08.680	GET	200	/api/users/me	
+20:02:08.681	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:08.897	GET	200	/api/ai-runs/f0617291-95db-41b9-b333-db2e82906e81/events	f0617291-95db-41b9-b333-db2e82906e81:1
+20:02:09.159	GET	200	/api/users/me	
+20:02:09.159	GET	200	/api/notes/10?conversationPage=0&conversationSize=1	
+20:02:09.159	GET	200	/api/notes/10	
+20:02:09.159	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:11.873	POST	200	/api/conversations	
+20:02:12.133	GET	200	/api/users/me	
+20:02:12.133	GET	200	/api/notes/10?conversationPage=0&conversationSize=1	
+20:02:12.133	GET	200	/api/notes/10	
+20:02:12.133	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:02:17.804	GET	200	/api/users/me	
+20:02:17.804	GET	200	/api/notes/10?conversationPage=0&conversationSize=1	
+20:02:17.804	GET	200	/api/notes/10	
+20:02:17.804	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	

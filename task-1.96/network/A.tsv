@@ -1,0 +1,33 @@
+# 시나리오 A: 첫 질문(hold 검증)·접기·같은 Note 두 번째 질문
+# 브라우저(Playwright)가 보낸 /api/ 요청 전부. 열: 시각(KST)	method	status	path	Last-Event-ID — body·Authorization·cookie는 기록하지 않았다.
+# status '-'는 같은 URL의 뒤 요청에 응답이 매칭된 중복 행(기록 도구 한계)
+# 요청 host 집계(모듈·폰트 포함): {'http://localhost:5196': 279, 'https://cdn.jsdelivr.net': 5}
+19:52:25.257	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:25.257	GET	200	/api/users/me	
+19:52:25.257	GET	200	/api/notes/tools	
+19:52:25.257	GET	200	/api/notes?page=0&size=1	
+19:52:26.167	POST	200	/api/conversations	
+19:52:28.407	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:28.407	GET	200	/api/notes?page=0&size=1	
+19:52:28.854	GET	-	/api/conversations/1/messages?limit=30	
+19:52:28.854	GET	200	/api/conversations/1/messages?limit=30	
+19:52:28.866	GET	200	/api/notes/1	
+19:52:28.866	GET	200	/api/users/me	
+19:52:28.866	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:28.866	GET	200	/api/notes/1?conversationPage=0&conversationSize=1	
+19:52:28.867	GET	200	/api/users/me	
+19:52:28.867	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:29.333	GET	200	/api/ai-runs/93db8b7e-faa3-4a60-b390-70394b3c3158/events	
+19:52:35.064	GET	200	/api/users/me	
+19:52:35.064	GET	200	/api/notes/1?conversationPage=0&conversationSize=1	
+19:52:35.064	GET	200	/api/notes/1	
+19:52:35.064	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:36.985	POST	200	/api/conversations	
+19:52:37.369	GET	200	/api/users/me	
+19:52:37.370	GET	200	/api/notes/1?conversationPage=0&conversationSize=1	
+19:52:37.370	GET	200	/api/notes/1	
+19:52:37.370	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:52:38.428	GET	200	/api/users/me	
+19:52:38.428	GET	200	/api/notes/1?conversationPage=0&conversationSize=1	
+19:52:38.432	GET	200	/api/notes/1	
+19:52:38.432	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	

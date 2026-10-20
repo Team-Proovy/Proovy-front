@@ -1,0 +1,25 @@
+# 시나리오 C: 정지·CANCELING 전송 차단·draft 유지
+# 브라우저(Playwright)가 보낸 /api/ 요청 전부. 열: 시각(KST)	method	status	path	Last-Event-ID — body·Authorization·cookie는 기록하지 않았다.
+# status '-'는 같은 URL의 뒤 요청에 응답이 매칭된 중복 행(기록 도구 한계)
+# 요청 host 집계(모듈·폰트 포함): {'http://localhost:5197': 271, 'https://cdn.jsdelivr.net': 5}
+20:00:46.579	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:00:46.579	GET	200	/api/users/me	
+20:00:46.579	GET	200	/api/notes/tools	
+20:00:46.580	GET	200	/api/notes?page=0&size=1	
+20:00:47.253	POST	200	/api/conversations	
+20:00:47.452	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:00:47.453	GET	200	/api/notes?page=0&size=1	
+20:00:47.902	GET	-	/api/conversations/8/messages?limit=30	
+20:00:47.902	GET	200	/api/conversations/8/messages?limit=30	
+20:00:47.902	GET	200	/api/notes/8	
+20:00:47.902	GET	200	/api/users/me	
+20:00:47.902	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:00:47.902	GET	200	/api/notes/8?conversationPage=0&conversationSize=1	
+20:00:47.902	GET	200	/api/users/me	
+20:00:47.902	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+20:00:48.128	GET	200	/api/ai-runs/643d6513-42ac-4c24-9787-121e0d021c06/events	643d6513-42ac-4c24-9787-121e0d021c06:1
+20:00:51.025	POST	200	/api/ai-runs/643d6513-42ac-4c24-9787-121e0d021c06/cancel	
+20:00:51.546	GET	200	/api/users/me	
+20:00:51.546	GET	200	/api/notes/8?conversationPage=0&conversationSize=1	
+20:00:51.546	GET	200	/api/notes/8	
+20:00:51.547	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	

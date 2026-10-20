@@ -1,0 +1,46 @@
+# 시나리오 B: 진행 중 새로고침·브라우저↔dev server SSE 소켓 단절 재접속
+# 브라우저(Playwright)가 보낸 /api/ 요청 전부. 열: 시각(KST)	method	status	path	Last-Event-ID — body·Authorization·cookie는 기록하지 않았다.
+# status '-'는 같은 URL의 뒤 요청에 응답이 매칭된 중복 행(기록 도구 한계)
+# 요청 host 집계(모듈·폰트 포함): {'http://localhost:5197': 778, 'https://cdn.jsdelivr.net': 15}
+19:57:41.601	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:41.601	GET	200	/api/users/me	
+19:57:41.603	GET	200	/api/notes/tools	
+19:57:41.603	GET	200	/api/notes?page=0&size=1	
+19:57:42.313	POST	200	/api/conversations	
+19:57:42.563	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:42.563	GET	200	/api/notes?page=0&size=1	
+19:57:42.984	GET	-	/api/conversations/5/messages?limit=30	
+19:57:42.985	GET	200	/api/conversations/5/messages?limit=30	
+19:57:42.988	GET	200	/api/notes/5	
+19:57:42.988	GET	200	/api/users/me	
+19:57:42.990	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:42.990	GET	200	/api/notes/5?conversationPage=0&conversationSize=1	
+19:57:42.990	GET	200	/api/users/me	
+19:57:42.990	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:43.251	GET	-	/api/ai-runs/30d98855-86db-4897-b28e-e855e00c542a/events	30d98855-86db-4897-b28e-e855e00c542a:4
+19:57:47.960	GET	-	/api/conversations/5/messages?limit=30	
+19:57:47.961	GET	200	/api/conversations/5/messages?limit=30	
+19:57:47.961	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:47.961	GET	200	/api/users/me	
+19:57:47.961	GET	200	/api/notes/tools	
+19:57:47.961	GET	200	/api/notes/5	
+19:57:47.961	GET	200	/api/notes/5?conversationPage=0&conversationSize=1	
+19:57:48.571	GET	200	/api/ai-runs/30d98855-86db-4897-b28e-e855e00c542a/events	
+19:57:48.577	GET	200	/api/users/me	
+19:57:48.577	GET	200	/api/notes/5?conversationPage=0&conversationSize=1	
+19:57:48.577	GET	200	/api/notes/5	
+19:57:48.577	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:57:52.467	GET	-	/api/ai-runs/30d98855-86db-4897-b28e-e855e00c542a/events	30d98855-86db-4897-b28e-e855e00c542a:4
+19:57:54.541	GET	-	/api/ai-runs/30d98855-86db-4897-b28e-e855e00c542a/events	30d98855-86db-4897-b28e-e855e00c542a:4
+19:57:57.291	GET	200	/api/ai-runs/30d98855-86db-4897-b28e-e855e00c542a/events	30d98855-86db-4897-b28e-e855e00c542a:4
+19:58:03.067	GET	200	/api/users/me	
+19:58:03.067	GET	200	/api/notes/5?conversationPage=0&conversationSize=1	
+19:58:03.067	GET	200	/api/notes/5	
+19:58:03.067	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:58:05.986	GET	-	/api/conversations/5/messages?limit=30	
+19:58:05.987	GET	200	/api/conversations/5/messages?limit=30	
+19:58:05.987	GET	200	/api/notes?sort=lastUsedAt,desc&size=20	
+19:58:05.991	GET	200	/api/users/me	
+19:58:05.991	GET	200	/api/notes/tools	
+19:58:05.992	GET	200	/api/notes/5	
+19:58:05.992	GET	200	/api/notes/5?conversationPage=0&conversationSize=1	
