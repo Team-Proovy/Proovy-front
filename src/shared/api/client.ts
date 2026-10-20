@@ -127,10 +127,17 @@ const processQueue = (
   failedQueue = [];
 };
 
+class MissingRefreshTokenError extends Error {
+  constructor() {
+    super("refresh token이 없습니다.");
+    this.name = "MissingRefreshTokenError";
+  }
+}
+
 /**
  * access token을 갱신해 새 token을 돌려준다. 이미 갱신 중이면 그 결과를 기다린다.
- * Server는 refresh token을 한 번 쓰면 폐기하므로, axios 밖(fetch 기반 run SSE 등)에서 401을 받았을 때도
- * interceptor와 같은 대기큐를 써서 동시 갱신을 막는다. 실패하면 토큰을 지우고 reject한다(redirect는 부른 쪽이 정한다).
+ * Server는 refresh token을 한 번 쓰면 폐기하므로, axios interceptor와 axios 밖(fetch 기반 run SSE 등)이
+ * 모두 이 함수로 갱신해 동시 갱신을 막는다. 실패하면 토큰을 지우고 reject한다(redirect는 부른 쪽이 정한다).
  */
 export const refreshAccessToken = async (): Promise<string> => {
   if (isRefreshing) {
@@ -142,7 +149,7 @@ export const refreshAccessToken = async (): Promise<string> => {
   const refreshToken = tokenUtils.getRefreshToken();
   if (!refreshToken) {
     tokenUtils.clearTokens();
-    throw new Error("refresh token이 없습니다.");
+    throw new MissingRefreshTokenError();
   }
 
   isRefreshing = true;
@@ -179,56 +186,22 @@ apiClient.interceptors.response.use(
       originalRequest?.meta?.suppressRedirect,
     );
 
-    // 401 에러이고 재시도하지 않은 요청인 경우
+    // 401 에러이고 재시도하지 않은 요청인 경우: 갱신(이미 갱신 중이면 그 결과를 기다림) 후 재요청
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // 이미 토큰 갱신 중이면 큐에 추가
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
-
-      const refreshToken = tokenUtils.getRefreshToken();
-
-      if (!refreshToken) {
-        tokenUtils.clearTokens();
-        if (!shouldSuppressRedirect) {
-          redirectToErrorRoute("/error/401");
-        }
-        return Promise.reject(error);
-      }
-
       try {
-        const response = await axios.post<ApiResponse<TokenDto>>(
-          `${BASE_URL}/api/auth/refresh`,
-          { refreshToken },
-        );
-
-        const { accessToken, refreshToken: newRefreshToken } =
-          response.data.result;
-        tokenUtils.setTokens(accessToken, newRefreshToken);
-
-        processQueue(null, accessToken);
-
+        const accessToken = await refreshAccessToken();
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError as AxiosError, null);
-        tokenUtils.clearTokens();
         if (!shouldSuppressRedirect) {
           redirectToErrorRoute("/error/401");
         }
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+        return Promise.reject(
+          refreshError instanceof MissingRefreshTokenError
+            ? error
+            : refreshError,
+        );
       }
     }
 

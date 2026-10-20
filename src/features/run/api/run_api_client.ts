@@ -117,7 +117,7 @@ export const createRunApiClient = ({
     try {
       token = await raceAbort(auth.refreshAccessToken(), init.signal);
     } catch (error) {
-      // abort는 fetch 실패처럼 던지고, 갱신 실패는 처음 401을 돌려준다.
+      // abort는 fetch 실패처럼 던지고, 갱신 실패는 처음 401을 돌려준다(redirect는 화면이 정한다).
       if (init.signal?.aborted) throw error;
       return response;
     }
