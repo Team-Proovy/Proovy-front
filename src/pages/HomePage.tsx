@@ -16,9 +16,17 @@ import { useRetryCountdown } from "../features/chat/run/useRetryCountdown";
  * 첫 질문은 Note를 먼저 만들지 않고 보낸다(`useHomeSend`). 접수 거부 안내는 입력창 위에 보인다.
  */
 export const HomePage = () => {
-  const { viewerFileRef, isSending, handleSend, notice, dismissNotice } =
-    useHomeSend();
-  const blockedSeconds = useRetryCountdown(notice?.retryAt);
+  const {
+    viewerFileRef,
+    isSending,
+    handleSend,
+    notice,
+    dismissNotice,
+    reconnect,
+    retryBlockedUntil,
+    isStalled,
+  } = useHomeSend();
+  const blockedSeconds = useRetryCountdown(retryBlockedUntil);
 
   const {
     pdfUrl,
@@ -66,13 +74,16 @@ export const HomePage = () => {
 
               <div className="flex w-full min-w-0 flex-col gap-[8px] lg:max-w-[660px]">
                 <ConversationNotices
-                  notices={notice ? [{ ...notice, dismissible: true }] : []}
+                  notices={
+                    notice ? [{ ...notice, dismissible: !isStalled }] : []
+                  }
                   onDismiss={dismissNotice}
+                  onReconnect={reconnect}
                 />
                 <ChatInput
                   onSend={handleSend}
                   isSending={isSending}
-                  isSendBlocked={blockedSeconds > 0}
+                  isSendBlocked={blockedSeconds > 0 || isStalled}
                   className="!max-w-none lg:!max-w-[660px]"
                 />
               </div>

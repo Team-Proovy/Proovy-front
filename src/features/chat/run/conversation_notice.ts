@@ -23,7 +23,17 @@ export const LOAD_OLDER_BUTTON = "이전 대화 더 보기";
 export const ACTIVE_RUN_INPUT_HINT =
   "답변이 끝나면 보낼 수 있어요. 지금은 다음 질문을 미리 써 둘 수 있어요.";
 export const ATTACHMENT_NOT_SUPPORTED_TEXT =
-  "파일 첨부는 아직 질문과 함께 보낼 수 없어요. 첨부를 빼고 보내 주세요.";
+  "파일 첨부·#파일 멘션·@도구 선택은 아직 질문과 함께 보낼 수 없어요. 빼고 보내 주세요.";
+
+/** browser-run-v1 요청에 담을 수 없는 입력(첨부·#파일 멘션·@도구). 말없이 버리지 않고 전송을 막는다(S09·S11). */
+export const hasUnsupportedParts = (data: {
+  attachments: readonly unknown[];
+  mentionedAssetIds: readonly unknown[];
+  mentionedToolCodes: readonly unknown[];
+}) =>
+  data.attachments.length > 0 ||
+  data.mentionedAssetIds.length > 0 ||
+  data.mentionedToolCodes.length > 0;
 
 export type ConversationNoticeTone = "info" | "warning" | "error";
 
@@ -182,6 +192,16 @@ export const ACTIVE_RUN_CONFLICT_NOTICE: ConversationNotice = {
 };
 
 /** terminal 없이 끊겨 재접속을 기다리는 중 */
+/** 홈: 접수 전에 재접속이 멈췄다. 같은 요청(requestId)으로 다시 연결해야 중복 질문이 생기지 않는다. */
+export const HOME_STALLED_NOTICE: ConversationNotice = {
+  key: "home_stalled",
+  tone: "warning",
+  title: "질문 전송 연결이 끊겼어요",
+  description:
+    "질문이 이미 접수됐을 수 있어요. 다시 연결하면 같은 질문으로 이어서 확인해요.",
+  action: "reconnect",
+};
+
 export const RECONNECTING_NOTICE: ConversationNotice = {
   key: "reconnecting",
   tone: "info",

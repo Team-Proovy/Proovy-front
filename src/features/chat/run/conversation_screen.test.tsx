@@ -91,9 +91,17 @@ const LocationProbe = () => (
   <output data-testid="location">{useLocation().pathname}</output>
 );
 
-const Layout = () => (
+/** 재접속 소진을 빨리 보려는 테스트용 backoff(1ms, 한 번만 재시도) */
+const FAST_BACKOFF = {
+  initialDelayMs: 1,
+  maxDelayMs: 1,
+  multiplier: 1,
+  maxAttempts: 1,
+};
+
+const Layout = ({ fastBackoff }: { fastBackoff: boolean }) => (
   <RunSessionRegistryProvider
-    sessionOptions={{ api }}
+    sessionOptions={{ api, ...(fastBackoff && { backoff: FAST_BACKOFF }) }}
     api={api}
   >
     <Outlet />
@@ -104,7 +112,10 @@ const Layout = () => (
 const renderApp = (
   path: string,
   mockOptions: Omit<BrowserRunMockServerOptions, "baseUrl"> = {},
-  { strict = false }: { strict?: boolean } = {},
+  {
+    strict = false,
+    fastBackoff = false,
+  }: { strict?: boolean; fastBackoff?: boolean } = {},
 ) => {
   const mock = createBrowserRunMockServer({
     baseUrl: BASE_URL,
@@ -115,7 +126,7 @@ const renderApp = (
   const router = createMemoryRouter(
     [
       {
-        element: <Layout />,
+        element: <Layout fastBackoff={fastBackoff} />,
         children: [
           { path: "/app/home", element: <HomePage /> },
           { path: "/app/chat/:noteId", element: <ChatPage /> },
@@ -246,6 +257,75 @@ describe("홈 첫 질문", () => {
     expect(screen.getAllByText("이 문제를 풀어줘")).toHaveLength(1);
   });
 
+  it("접수 전에 재접속이 멈추면 새 전송을 막고, '다시 연결'로 같은 요청을 이어 Note로 간다", async () => {
+    const { user, mock, posts, legacy } = renderApp(
+      "/app/home",
+      {},
+      { fastBackoff: true },
+    );
+    // Server는 받았지만 run.created 전에 두 번 끊긴다(재시도 1회 → 소진).
+    mock.injectFault("conversation", { kind: "disconnect", afterFrames: 0 });
+    mock.injectFault("conversation", { kind: "disconnect", afterFrames: 0 });
+
+    await typeQuestion(user, "끊기는 질문");
+    await user.click(sendButton());
+
+    expect(
+      await screen.findByText("질문 전송 연결이 끊겼어요"),
+    ).toBeInTheDocument();
+    expect(location()).toBe("/app/home");
+    expect(getInput().textContent).toBe("끊기는 질문");
+    // 새 requestId로 다시 보내지 않는다(중복 Note·run 방지).
+    expect(sendButton()).toHaveAttribute("aria-disabled", "true");
+    await user.click(sendButton());
+    expect(posts()).toHaveLength(2);
+    expect(screen.queryByRole("button", { name: "안내 닫기" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "다시 연결" }));
+    await waitFor(() => expect(location()).toBe("/app/chat/9001"));
+    expect(await screen.findByText(COMPLETED_BODY)).toBeInTheDocument();
+    expect(mock.listRunIds()).toHaveLength(1);
+    expect(new Set(posts().map((entry) => entry.requestId)).size).toBe(1);
+    expect(legacy.calls).not.toContain("POST /api/notes");
+  });
+
+  it("이력 조회가 실패해도 '다시 불러오기'가 진행 중 stream을 끊지 않는다", async () => {
+    const { user, posts, events } = renderApp("/app/home", {
+      frameIntervalMs: 40,
+    });
+    let failed = 0;
+    server.use(
+      http.get(
+        `${BASE_URL}/api/conversations/:noteId/messages`,
+        () => {
+          failed += 1;
+          return HttpResponse.json(
+            { isSuccess: false, code: "COMMON500", message: "오류" },
+            { status: 500 },
+          );
+        },
+        { once: true },
+      ),
+    );
+
+    await typeQuestion(user, "이력 실패 질문");
+    await user.click(sendButton());
+    await waitFor(() => expect(location()).toBe("/app/chat/9001"));
+    expect(
+      await screen.findByText("대화를 불러오지 못했어요"),
+    ).toBeInTheDocument();
+    expect(failed).toBe(1);
+
+    await user.click(screen.getByRole("button", { name: "다시 불러오기" }));
+    expect(
+      await screen.findByText(COMPLETED_BODY, undefined, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    // 같은 POST stream으로 끝까지 받았다(재접속 없음).
+    expect(posts()).toHaveLength(1);
+    expect(events()).toHaveLength(0);
+    expect(screen.getAllByText("이력 실패 질문")).toHaveLength(1);
+  });
+
   it("접수가 거부되면 이동하지 않고 안내하며 입력을 남긴다", async () => {
     const { user, mock, posts, legacy } = renderApp("/app/home");
     mock.rejectNextConversation({ code: "RUN4021" });
@@ -269,7 +349,7 @@ describe("홈 첫 질문", () => {
 
 describe("Note 진입·새로고침 복원", () => {
   it("이력을 그리고 진행 중 run에 seq 1부터 붙어 Activity를 복원한 뒤 완료 응답을 보인다", async () => {
-    const { mock, events, posts } = renderApp("/app/chat/5");
+    const { mock, events, posts, legacy } = renderApp("/app/chat/5");
     // 렌더 직후 대화 조회 전에 run을 둔다(새로고침 전 상태).
     mock.seedRun({
       noteId: "5",
@@ -298,10 +378,16 @@ describe("Note 진입·새로고침 복원", () => {
     expect(events()).toHaveLength(1);
     expect(events()[0].lastEventId).toBeNull();
 
+    const detailReads = () =>
+      legacy.calls.filter((call) => call === "GET /api/notes/5").length;
+    await waitFor(() => expect(detailReads()).toBeGreaterThan(0));
+    const beforeTerminal = detailReads();
     act(() => mock.commit(activeRunId));
     expect(await screen.findByText(COMPLETED_BODY)).toBeInTheDocument();
     expect(sendButton()).toBeInTheDocument();
     expect(posts()).toHaveLength(0);
+    // terminal 뒤 노트 상세(제목)를 다시 읽는다(잔액·프로필·목록도 invalidate).
+    await waitFor(() => expect(detailReads()).toBeGreaterThan(beforeTerminal));
   });
 
   it("409면 진행 중 run에 붙고 보낸 질문은 입력창에 남긴다(자동 재전송 없음)", async () => {
@@ -402,6 +488,14 @@ describe("실패·접수 거부 안내", () => {
     expect(sendButton()).toHaveAttribute("aria-disabled", "true");
     await user.click(sendButton());
     expect(posts()).toHaveLength(1);
+
+    // 안내를 닫아도 남은 시간 동안은 계속 막는다.
+    await user.click(screen.getByRole("button", { name: "안내 닫기" }));
+    expect(screen.queryByText("요청이 많아 잠시 기다려야 해요")).toBeNull();
+    expect(sendButton()).toHaveAttribute("aria-disabled", "true");
+    await user.click(sendButton());
+    await user.keyboard("{Enter}");
+    expect(posts()).toHaveLength(1);
   });
 
   it("미지원 요청 거부와 잔액 부족을 구분해 안내한다", async () => {
@@ -444,6 +538,15 @@ describe("실패·접수 거부 안내", () => {
     await user.click(screen.getByRole("button", { name: "질문 다시 쓰기" }));
     await waitFor(() =>
       expect(getInput().textContent).toBe("검증 실패할 질문"),
+    );
+    expect(posts()).toHaveLength(1);
+
+    // 입력창에 써 둔 내용이 있으면 덮어쓰지 않고 질문을 앞에 붙인다.
+    getInput().textContent = "";
+    await typeQuestion(user, "새 초안");
+    await user.click(screen.getByRole("button", { name: "질문 다시 쓰기" }));
+    await waitFor(() =>
+      expect(getInput().textContent).toBe("검증 실패할 질문\n새 초안"),
     );
     expect(posts()).toHaveLength(1);
   });

@@ -9,6 +9,7 @@ import type { NoteConversation } from "../../run/useNoteConversation";
 import { useRetryCountdown } from "../../run/useRetryCountdown";
 import { ConversationMessages } from "./ConversationMessages";
 import { ConversationNotices } from "./ConversationNotices";
+import { hasUnsupportedParts } from "../../run/conversation_notice";
 
 interface ConversationPanelProps {
   conversation: NoteConversation;
@@ -45,7 +46,7 @@ export const ConversationPanel = ({
     send({
       text: data.message,
       latex: data.latex ?? null,
-      hasAttachments: data.attachments.length > 0,
+      hasUnsupportedParts: hasUnsupportedParts(data),
     });
 
   return (
@@ -78,7 +79,7 @@ export const ConversationPanel = ({
             cancelingText: CANCELING_BUTTON_TEXT,
             activeHint: ACTIVE_RUN_INPUT_HINT,
           }}
-          isSendBlocked={blockedSeconds > 0}
+          isSendBlocked={blockedSeconds > 0 || composer.stalled}
           draftRestore={draftRestore}
         />
       </div>

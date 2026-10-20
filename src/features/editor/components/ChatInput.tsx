@@ -205,14 +205,21 @@ export const ChatInput = ({
   };
 
   // Server가 받지 않은 질문을 입력창으로 되돌린다(자동 재전송 없음). 수식은 `$…$` 텍스트로 돌아온다.
+  // 그 사이 써 둔 draft는 지우지 않는다: 되돌린 질문을 앞에 붙이고 기존 내용(수식 field 포함)은 그대로 둔다.
   const restoreId = draftRestore?.id;
   const restoreText = draftRestore?.text;
   useEffect(() => {
     if (restoreId === undefined || restoreText === undefined) return;
     const input = inputRef.current;
     if (!input) return;
-    input.textContent = restoreText;
-    setHasContent(restoreText.trim().length > 0);
+    const current = input.textContent?.trim() ?? "";
+    if (!current) input.textContent = restoreText;
+    else if (!current.startsWith(restoreText.trim()))
+      input.insertBefore(
+        document.createTextNode(`${restoreText}\n`),
+        input.firstChild,
+      );
+    setHasContent(input.textContent?.trim().length !== 0);
   }, [restoreId, restoreText, setHasContent]);
 
   // 파일 선택 핸들러

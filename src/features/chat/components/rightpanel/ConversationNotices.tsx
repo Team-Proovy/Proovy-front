@@ -55,11 +55,19 @@ const NoticeItem = ({
       <div className="min-w-0 flex-1">
         <p className="font-semibold">{notice.title}</p>
         {notice.retryAt != null && (
-          <p>
-            {seconds > 0
-              ? `${seconds}초 뒤에 다시 보낼 수 있어요.`
-              : "이제 다시 보낼 수 있어요."}
-          </p>
+          <>
+            {/* 남은 초는 매초 바뀌므로 읽지 않는다. 시작·끝 문구만 live region에 둔다. */}
+            <p aria-hidden="true">
+              {seconds > 0
+                ? `${seconds}초 뒤에 다시 보낼 수 있어요.`
+                : "이제 다시 보낼 수 있어요."}
+            </p>
+            <span className="sr-only">
+              {seconds > 0
+                ? "잠시 뒤에 다시 보낼 수 있어요."
+                : "이제 다시 보낼 수 있어요."}
+            </span>
+          </>
         )}
         {notice.description && <p>{notice.description}</p>}
         {notice.action === "reconnect" && onReconnect && (

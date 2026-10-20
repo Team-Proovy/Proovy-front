@@ -10,11 +10,18 @@ import {
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
 import type { MessageAttachment } from "@/features/chat/types/chat_types";
-import type { RunSession, RunSessionInput } from "@/features/run/session";
+import type {
+  RunSession,
+  RunSessionInput,
+  RunSessionSnapshot,
+} from "@/features/run/session";
+import type { Uuid } from "@/shared/contracts/browser_run_v1";
 import { useRunSessionRegistry } from "@/features/chat/run/run_session_registry";
 import {
   ATTACHMENT_NOTICE,
+  HOME_STALLED_NOTICE,
   describeProblem,
+  hasUnsupportedParts,
 } from "@/features/chat/run/conversation_notice";
 import type { ConversationNotice } from "@/features/chat/run/conversation_notice";
 import { showErrorToast, showToast } from "@/shared/lib/toast";
@@ -33,6 +40,22 @@ export interface FirstMessageState {
   viewerFile?: { name: string; mimeType: string; size: number };
   pendingViewerFile?: File;
 }
+
+interface WaitingSend {
+  session: RunSession;
+  requestId: Uuid;
+  input: RunSessionInput;
+}
+
+const toHandoff = ({ session, requestId, input }: WaitingSend) => ({
+  session,
+  inputs: new Map([[requestId, input]]),
+});
+
+const isConnected = (snapshot: RunSessionSnapshot) =>
+  snapshot.connection === "connecting" ||
+  snapshot.connection === "streaming" ||
+  snapshot.connection === "backoff";
 
 const VIEWER_FILE_NOT_SENT_TEXT =
   "뷰어 파일은 아직 질문과 함께 올라가지 않아요. 질문만 먼저 보냈어요.";
@@ -62,15 +85,39 @@ export const useHomeSend = () => {
 
   const [isSending, setIsSending] = useState(false);
   const [notice, setNotice] = useState<ConversationNotice | null>(null);
-  /** `run.created`를 기다리는 세션. 홈을 떠나면 연결만 끊는다(run 취소 아님). */
-  const waitingRef = useRef<RunSession | null>(null);
+  /** 요청 한도(Retry-After): 안내를 닫아도 이 시각까지 전송을 막는다. */
+  const [retryBlockedUntil, setRetryBlockedUntil] = useState<number | null>(
+    null,
+  );
+  /** 접수 전에 재접속이 멈췄다. "다시 연결"(같은 requestId)만 허용하고 새 전송을 막는다(중복 run 방지). */
+  const [isStalled, setIsStalled] = useState(false);
+  /** `run.created`를 기다리는(또는 기다리다 멈춘) 전송 */
+  const waitingRef = useRef<WaitingSend | null>(null);
 
+  // `run.created` 전에 홈을 떠나도 접수됐을 수 있는 run을 버리지 않는다: 연결을 유지해 접수되면
+  // registry에 맡기고(그 Note에 들어가면 이어 받는다) 노트 목록을 다시 읽는다. 멈춰 있었으면 연결만 정리한다.
   useEffect(
     () => () => {
-      waitingRef.current?.dispose();
+      const waiting = waitingRef.current;
       waitingRef.current = null;
+      if (!waiting) return;
+      const { session } = waiting;
+      const finish = () => {
+        const snapshot = session.getSnapshot();
+        if (snapshot.noteId !== null) {
+          unsubscribe();
+          registry.handOff(snapshot.noteId, toHandoff(waiting));
+          void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+        } else if (!isConnected(snapshot)) {
+          unsubscribe();
+          session.dispose();
+          void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+        }
+      };
+      const unsubscribe = session.subscribe(finish);
+      finish();
     },
-    [],
+    [registry, queryClient],
   );
 
   const isOverNoteLimit = () => {
@@ -89,10 +136,61 @@ export const useHomeSend = () => {
     return true;
   };
 
+  /**
+   * `run.created`까지 기다린다. 접수되면 세션을 맡기고 Note 화면으로 간다(true).
+   * 거부되면 안내하고 세션을 정리한다(false, 입력창 유지). 접수 전 재접속이 멈추면 세션을 남겨 "다시 연결"을 기다린다.
+   */
+  const waitForAcceptance = (waiting: WaitingSend) => {
+    const { session } = waiting;
+    waitingRef.current = waiting;
+    setIsSending(true);
+    return new Promise<boolean>((resolve) => {
+      const settle = (accepted: boolean) => {
+        unsubscribe();
+        setIsSending(false);
+        resolve(accepted);
+      };
+      const check = () => {
+        const snapshot = session.getSnapshot();
+        if (snapshot.noteId !== null) {
+          waitingRef.current = null;
+          registry.handOff(snapshot.noteId, toHandoff(waiting));
+          settle(true);
+          if (viewerFileRef.current)
+            showToast({ message: VIEWER_FILE_NOT_SENT_TEXT });
+          void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
+          navigate(`/app/chat/${snapshot.noteId}`);
+          return;
+        }
+        const { problem } = snapshot;
+        if (!problem || isConnected(snapshot)) return;
+        if (
+          problem.kind === "reconnect_exhausted" ||
+          problem.kind === "stream_rejected"
+        ) {
+          // 접수됐을 수 있다. 새 requestId로 다시 보내면 Note·run이 하나 더 생길 수 있으므로 세션을 남긴다.
+          setNotice(HOME_STALLED_NOTICE);
+          setIsStalled(true);
+          settle(false);
+          return;
+        }
+        // 접수 거부 등. 이동하지 않고 안내한다. 다시 보내는 것은 사용자다.
+        waitingRef.current = null;
+        setNotice(describeProblem(problem));
+        if (problem.kind === "rejected" && problem.retryAt !== null)
+          setRetryBlockedUntil(problem.retryAt);
+        session.dispose();
+        settle(false);
+      };
+      const unsubscribe = session.subscribe(check);
+      check();
+    });
+  };
+
   /** 접수되어 Note 화면으로 갔으면 true(입력창을 비운다), 아니면 false(입력창 유지). */
   const handleSend = (data: ChatSendData): Promise<boolean> => {
     if (waitingRef.current) return Promise.resolve(false);
-    if (data.attachments.length > 0) {
+    if (hasUnsupportedParts(data)) {
       setNotice(ATTACHMENT_NOTICE);
       return Promise.resolve(false);
     }
@@ -112,45 +210,16 @@ export const useHomeSend = () => {
     }
 
     setNotice(null);
-    setIsSending(true);
-    waitingRef.current = session;
+    return waitForAcceptance({ session, requestId: result.requestId, input });
+  };
 
-    return new Promise<boolean>((resolve) => {
-      const settle = (accepted: boolean) => {
-        unsubscribe();
-        waitingRef.current = null;
-        setIsSending(false);
-        resolve(accepted);
-      };
-      const check = () => {
-        const snapshot = session.getSnapshot();
-        if (snapshot.noteId !== null) {
-          const noteId = snapshot.noteId;
-          registry.handOff(noteId, {
-            session,
-            inputs: new Map([[result.requestId, input]]),
-          });
-          settle(true);
-          if (viewerFileRef.current)
-            showToast({ message: VIEWER_FILE_NOT_SENT_TEXT });
-          void queryClient.invalidateQueries({ queryKey: noteKeys.lists() });
-          navigate(`/app/chat/${noteId}`);
-          return;
-        }
-        // 접수 전에 멈췄다(거부·재시도 소진 등). 이동하지 않고 안내한다. 다시 보내는 것은 사용자다.
-        const waiting =
-          snapshot.connection === "connecting" ||
-          snapshot.connection === "streaming" ||
-          snapshot.connection === "backoff";
-        if (snapshot.problem && !waiting) {
-          setNotice(describeProblem(snapshot.problem));
-          session.dispose();
-          settle(false);
-        }
-      };
-      const unsubscribe = session.subscribe(check);
-      check();
-    });
+  /** 접수 전 멈춘 전송을 같은 requestId로 다시 잇는다(새 질문이 아니다). */
+  const reconnect = () => {
+    const waiting = waitingRef.current;
+    if (!waiting || !isStalled) return;
+    setIsStalled(false);
+    setNotice(null);
+    if (waiting.session.reconnect()) void waitForAcceptance(waiting);
   };
 
   return {
@@ -159,5 +228,8 @@ export const useHomeSend = () => {
     handleSend,
     notice,
     dismissNotice: () => setNotice(null),
+    reconnect,
+    retryBlockedUntil,
+    isStalled,
   };
 };

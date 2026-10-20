@@ -42,13 +42,13 @@ const toTurnUser = (input: RunSessionInput): TurnUser => ({
  *
  * - 같은 runId면 assistant는 live run으로 그린다(Activity가 있고, 조회 뒤 진행·완료가 반영된다).
  * - 조회에 아직 없는 live run은 뒤에 붙이고, user는 화면이 보낸 입력(requestId)으로 그린다.
- * - `pending`은 `run.created` 전 전송이다. 접수되면 같은 자리가 live run이 된다.
+ * - `pending`은 `run.created` 전 전송이다. key를 requestId로 두어 접수되면 같은 자리(같은 key)가 live run이 된다.
  */
 export const buildConversationTurns = (
   messages: readonly ConversationMessage[],
   liveRuns: readonly RunState[],
   inputs: SentInputs,
-  pending: RunSessionInput | null,
+  pending: { key: string; input: RunSessionInput } | null,
 ): ConversationTurn[] => {
   const turns: ConversationTurn[] = [];
   const byRunId = new Map<Uuid, ConversationTurn>();
@@ -73,6 +73,8 @@ export const buildConversationTurns = (
   for (const run of liveRuns) {
     if (run.runId === null) continue;
     const turn = turnFor(run.runId);
+    // 접수 전 자리(requestId key)와 같은 key를 쓴다. 이력에 먼저 나온 turn이어도 바꿔 remount를 막는다.
+    if (run.identity.requestId !== null) turn.key = run.identity.requestId;
     turn.assistant = { kind: "live", run };
     const input =
       run.identity.requestId === null
@@ -83,9 +85,9 @@ export const buildConversationTurns = (
 
   if (pending)
     turns.push({
-      key: "pending",
+      key: pending.key,
       runId: null,
-      user: toTurnUser(pending),
+      user: toTurnUser(pending.input),
       assistant: { kind: "pending" },
     });
 

@@ -28,13 +28,18 @@ import type {
   TurnUser,
 } from "../../run/conversation_turns";
 
-/** 사용자 질문. text의 `$…$` 수식을 그리고, text에 없는 latex는 수식 줄로 덧붙인다. */
+/** 입력창은 수식 여러 개를 `"; "`로 이어 latex에 싣는다. */
+const LATEX_SEPARATOR = "; ";
+
+/** 사용자 질문. text의 `$…$` 수식을 그리고, text에 없는 수식만 수식 줄로 덧붙인다. */
 const UserBubble = ({ user }: { user: TurnUser }) => {
-  const latex = user.latex?.trim();
-  const body =
-    latex && !user.text.includes(latex)
-      ? `${user.text}\n\n$$${latex}$$`
-      : user.text;
+  const missing = (user.latex ?? "")
+    .split(LATEX_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part && !user.text.includes(part));
+  const body = [user.text, ...missing.map((part) => `$$${part}$$`)].join(
+    "\n\n",
+  );
   return (
     <div className="flex items-start justify-end gap-[12px]">
       <div
