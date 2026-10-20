@@ -1,5 +1,4 @@
-import { useRef, lazy, Suspense, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, lazy, Suspense, useState, useEffect } from "react";
 import { MathfieldElement } from "mathlive";
 import "mathlive";
 import { showErrorToast } from "@/shared/lib/toast";
@@ -10,6 +9,7 @@ MathfieldElement.soundsDirectory = null;
 
 import { ChatInputArea } from "./input/ChatInputArea";
 import { InputToolbar } from "./toolbar/InputToolbar";
+import type { StopControl } from "./toolbar/InputToolbar";
 import { ToolDropdownMenu } from "./input/ToolDropdownMenu";
 import { FileDropdownMenu } from "./input/FileDropdownMenu";
 import { AttachmentPreview } from "./input/AttachmentPreview";
@@ -27,7 +27,6 @@ import {
   useChatContent,
 } from "../hooks";
 import { useAttachments, type Attachment } from "../hooks/useAttachments";
-import { useUseCredit } from "../../settings/hooks/useCredit";
 
 // Constants
 import { CHAT_INPUT_CLASSES } from "../constants/chat_input";
@@ -56,6 +55,21 @@ interface ChatInputProps {
   onSend?: (data: ChatSendData) => void | boolean | Promise<void | boolean>;
   /** 전송 중 여부 (true이면 전송 버튼 비활성화) */
   isSending?: boolean;
+  /**
+   * 대화 run 상태. Active Run 동안 입력은 draft로만 쓰고(Enter·전송 없음) 전송 대신 정지 버튼을 보인다.
+   * CANCELING이면 "중단 중"을 보인다. terminal 뒤에는 사용자가 직접 보낼 때만 보낸다.
+   */
+  runControl?: ChatInputRunControl;
+  /** 요청 한도(Retry-After) 대기 등으로 지금은 보내지 않는다 */
+  isSendBlocked?: boolean;
+  /** 입력창에 되돌릴 질문(Server가 받지 않은 draft 등). `id`가 바뀔 때마다 입력창 내용을 이 text로 바꾼다. */
+  draftRestore?: { id: number; text: string } | null;
+}
+
+export interface ChatInputRunControl extends Omit<StopControl, "isCanceling"> {
+  phase: "idle" | "active" | "canceling";
+  /** Active Run 동안 입력창 아래 안내 */
+  activeHint: string;
 }
 
 /**
@@ -73,19 +87,20 @@ export const ChatInput = ({
   noteId,
   onSend,
   isSending = false,
+  runControl,
+  isSendBlocked = false,
+  draftRestore,
 }: ChatInputProps) => {
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const [showCreditModal, setShowCreditModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isRunBusy = !!runControl && runControl.phase !== "idle";
 
   // Custom Hooks
   const {
     attachments,
     addFiles,
     addCanvasImage,
-    restoreAttachments,
     removeAttachment,
     clearAttachments,
     openFilePicker,
@@ -143,14 +158,11 @@ export const ChatInput = ({
     if (handleAtMenuKeyDown(e)) return;
   };
 
-  // 크레딧 사용 뮤테이션
-  const { mutateAsync: deductCredit } = useUseCredit();
-  const isHomeSend = noteId == null;
-  const isToolbarSending = !isHomeSend && isSending;
-
-  // 전송 핸들러
+  // 전송 핸들러. 크레딧 차감은 Server 접수가 맡는다(Front 직접 차감 없음).
   const handleSend = async () => {
-    if (isToolbarSending || isProcessing) return;
+    if (isSending || isProcessing) return;
+    // Active Run·중단 중에는 draft만 쓴다. 요청 한도 대기 중에도 보내지 않는다.
+    if (isRunBusy || isSendBlocked) return;
     if (!hasContent) return;
 
     // DOM에서 콘텐츠 추출 (텍스트 + LaTeX + 멘션)
@@ -162,13 +174,6 @@ export const ChatInput = ({
 
     setIsProcessing(true);
 
-    const creditPayload = {
-      eventType: "LLM_QUERY" as const,
-      difficulty: "medium" as const,
-      featureName: "Chat",
-      description: "AI 채팅 질문",
-    };
-
     const mentionedToolCodes = selectedToolCode ? [selectedToolCode] : [];
     const sendPayload: ChatSendData = {
       message: extracted.text,
@@ -178,13 +183,10 @@ export const ChatInput = ({
       attachments: [...attachments],
     };
 
-    const restoreSnapshot = {
-      text: sendPayload.message,
-      attachments: [...attachments],
-      selectedToolName: selectedTool,
-    };
-
-    const resetInputState = () => {
+    try {
+      // false면 보내지 않은 것이다(접수 거부·검사 실패 등): 입력창을 그대로 둔다.
+      const sent = await onSend?.(sendPayload);
+      if (sent === false) return;
       if (inputRef.current) {
         inputRef.current.innerHTML = "";
       }
@@ -192,85 +194,7 @@ export const ChatInput = ({
       clearMentionedAssets();
       clearAttachments();
       handleToolSelect(""); // 선택된 도구 초기화
-    };
-
-    const restoreInputState = () => {
-      if (inputRef.current) {
-        inputRef.current.innerText = restoreSnapshot.text;
-      }
-      setHasContent(restoreSnapshot.text.trim().length > 0);
-      restoreAttachments(restoreSnapshot.attachments);
-      clearMentionedAssets();
-      handleToolSelect(restoreSnapshot.selectedToolName || "");
-    };
-
-    // 홈에서는 이동을 막지 않도록 먼저 전송(onSend) 후 크레딧 차감은 백그라운드 처리
-    if (isHomeSend) {
-      if (!onSend) {
-        console.error("[HomeSend] onSend 콜백이 없어 전송을 중단합니다.");
-        setIsProcessing(false);
-        return;
-      }
-
-      try {
-        const sendResult = await onSend(sendPayload);
-
-        if (sendResult !== true) {
-          setIsProcessing(false);
-          return;
-        }
-
-        resetInputState();
-
-        void deductCredit(creditPayload)
-          .then((creditResponse) => {
-            if (!creditResponse.result.success) {
-              showErrorToast("크레딧이 부족하여 채팅을 보낼 수 없습니다.");
-              console.warn(
-                "[HomeSend] 크레딧 차감 실패",
-                creditResponse.result,
-              );
-            }
-          })
-          .catch((error) => {
-            console.error("[HomeSend] 크레딧 차감 요청 실패:", error);
-          });
-      } catch (error) {
-        console.error("Home send failed:", error);
-        showErrorToast(
-          "전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-        );
-      } finally {
-        setIsProcessing(false);
-      }
-      return;
-    }
-
-    // 크레딧 차감 시도
-    try {
-      const creditResponse = await deductCredit(creditPayload);
-
-      if (!creditResponse.result.success) {
-        showErrorToast("크레딧이 부족하여 채팅을 보낼 수 없습니다.");
-        setShowCreditModal(true);
-        setIsProcessing(false);
-        return;
-      }
     } catch (error) {
-      console.error("Credit deduction failed:", error);
-      showErrorToast(
-        "크레딧 차감 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
-      );
-      setIsProcessing(false);
-      return;
-    }
-
-    try {
-      // 부모 콜백 호출
-      resetInputState();
-      await onSend?.(sendPayload);
-    } catch (error) {
-      restoreInputState();
       console.error("Send failed:", error);
       showErrorToast(
         "메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
@@ -279,6 +203,17 @@ export const ChatInput = ({
       setIsProcessing(false);
     }
   };
+
+  // Server가 받지 않은 질문을 입력창으로 되돌린다(자동 재전송 없음). 수식은 `$…$` 텍스트로 돌아온다.
+  const restoreId = draftRestore?.id;
+  const restoreText = draftRestore?.text;
+  useEffect(() => {
+    if (restoreId === undefined || restoreText === undefined) return;
+    const input = inputRef.current;
+    if (!input) return;
+    input.textContent = restoreText;
+    setHasContent(restoreText.trim().length > 0);
+  }, [restoreId, restoreText, setHasContent]);
 
   // 파일 선택 핸들러
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -383,10 +318,26 @@ export const ChatInput = ({
         onSend={handleSend}
         onToolSelect={(tool) => handleToolSelect(tool, false)}
         activeToolName={selectedTool}
-        hasContent={hasContent}
+        hasContent={hasContent && !isSendBlocked}
         onClipClick={openFilePicker}
-        isSending={isToolbarSending}
+        isSending={isSending || isProcessing}
+        stopControl={
+          runControl && isRunBusy
+            ? {
+                canStop: runControl.canStop,
+                isCanceling: runControl.phase === "canceling",
+                onStop: runControl.onStop,
+                label: runControl.label,
+                cancelingText: runControl.cancelingText,
+              }
+            : undefined
+        }
       />
+      {isRunBusy && (
+        <p className="w-full text-[12px] leading-[18px] text-[#6B7280]">
+          {runControl.activeHint}
+        </p>
+      )}
 
       {/* Canvas Overlay - Lazy loaded */}
       {isCanvasOpen && (
@@ -403,44 +354,6 @@ export const ChatInput = ({
             onAdd={addCanvasImage}
           />
         </Suspense>
-      )}
-      {/* 크레딧 부족 안내 모달 */}
-      {showCreditModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onClick={() => setShowCreditModal(false)}
-        >
-          <div
-            className="flex w-[400px] flex-col items-center rounded-[20px] bg-white p-[30px] shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-[20px] font-['Pretendard'] text-[20px] font-bold text-black">
-              크레딧 부족
-            </h2>
-            <p className="mb-[30px] text-center font-['Pretendard'] text-[16px] leading-[24px] text-[#5D6470]">
-              현재 사용할 수 있는 크레딧이 없습니다.
-              <br />
-              업그레이드 하시겠습니까?
-            </p>
-            <div className="flex w-full gap-[10px]">
-              <button
-                onClick={() => setShowCreditModal(false)}
-                className="flex-1 cursor-pointer rounded-[12px] bg-[#F1F4F8] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-[#6B7280] transition-colors hover:bg-[#E5E8EC]"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  setShowCreditModal(false);
-                  navigate("/pricing");
-                }}
-                className="flex-1 cursor-pointer rounded-[12px] bg-[#2A6AFF] py-[14px] font-['Pretendard'] text-[16px] font-semibold text-white transition-colors hover:bg-[#1A50D1]"
-              >
-                업그레이드
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

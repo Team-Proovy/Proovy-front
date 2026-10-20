@@ -1,0 +1,336 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type {
+  ConversationMessage,
+  NoteId,
+  Uuid,
+} from "@/shared/contracts/browser_run_v1";
+import { RunApiError } from "@/features/run/api";
+import { selectIsActive } from "@/features/run/model";
+import type { RunState } from "@/features/run/model";
+import { useRunSession } from "@/features/run/session";
+import type {
+  RunSessionInput,
+  RunSessionSnapshot,
+} from "@/features/run/session";
+import {
+  ACTIVE_RUN_CONFLICT_NOTICE,
+  ATTACHMENT_NOTICE,
+  RECONNECTING_NOTICE,
+  describeProblem,
+} from "./conversation_notice";
+import type { ConversationNotice } from "./conversation_notice";
+import { buildConversationTurns, upsertLiveRun } from "./conversation_turns";
+import { useRunSessionRegistry } from "./run_session_registry";
+import type { RunSessionHandoff } from "./run_session_registry";
+
+/** 대화 조회 한 페이지 크기 */
+export const CONVERSATION_PAGE_SIZE = 30;
+
+export type HistoryState =
+  | { status: "loading" }
+  | {
+      status: "ready";
+      messages: ConversationMessage[];
+      nextBefore: Uuid | null;
+      loadingOlder: boolean;
+    }
+  | { status: "error"; notFound: boolean };
+
+/**
+ * 입력창 상태.
+ * - `idle`: 보낼 수 있다
+ * - `active`: Active Run(또는 접수 대기) — draft만 쓰고 정지 버튼을 보인다
+ * - `canceling`: 정지 요청 중·CANCELING — "중단 중", 전송 불가
+ */
+export type ComposerPhase = "idle" | "active" | "canceling";
+
+export interface ComposerState {
+  phase: ComposerPhase;
+  canStop: boolean;
+  /** 요청 한도(Retry-After): 이 시각까지 전송을 막는다 */
+  blockedUntil: number | null;
+}
+
+/** 입력창에 되돌릴 질문. `id`가 바뀔 때마다 입력창 내용을 바꾼다. */
+export interface DraftRestore {
+  id: number;
+  text: string;
+}
+
+export interface ConversationSendInput extends RunSessionInput {
+  /** 첨부(S09 전까지 보내지 않는다) */
+  hasAttachments?: boolean;
+}
+
+/** 입력창으로 돌려줄 거부: 접수 거부·409. invalid_request는 입력창이 비워지지 않았으므로 안내만 한다. */
+const HANDBACK_KINDS = new Set(["rejected", "invalid_request", "not_found"]);
+
+/** 메시지를 messageId로 합쳐 createdAt 오름차순으로 둔다. */
+const mergeMessages = (
+  current: readonly ConversationMessage[],
+  incoming: readonly ConversationMessage[],
+) => {
+  const byId = new Map(current.map((message) => [message.messageId, message]));
+  for (const message of incoming) byId.set(message.messageId, message);
+  return [...byId.values()].sort((a, b) =>
+    a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0,
+  );
+};
+
+const isInFlight = (snapshot: RunSessionSnapshot) =>
+  snapshot.origin === "send" &&
+  snapshot.run.runId === null &&
+  snapshot.draft !== null &&
+  !(snapshot.problem && HANDBACK_KINDS.has(snapshot.problem.kind));
+
+const getComposerPhase = (snapshot: RunSessionSnapshot): ComposerPhase => {
+  if (
+    snapshot.cancel.phase === "requesting" ||
+    snapshot.run.status === "CANCELING"
+  )
+    return "canceling";
+  if (selectIsActive(snapshot.run) || isInFlight(snapshot)) return "active";
+  return "idle";
+};
+
+/**
+ * Note 화면의 대화: 이력 조회·run 세션 연결·전송·정지·draft (S08 ACT-03·RSP-02).
+ *
+ * - 진입 시 대화 조회 첫 페이지를 그리고 그 페이지로 `restore`한다(activeRun이 있으면 seq 1부터 이어 받는다).
+ *   홈이 맡긴 첫 질문 세션이 있으면 그 세션을 그대로 쓴다(같은 stream).
+ * - 화면을 떠나면 연결만 끊는다(run 취소 아님).
+ * - 거부·409로 Server가 받지 않은 질문은 입력창으로 돌려준다. 어떤 경우에도 자동으로 다시 보내지 않는다.
+ */
+export const useNoteConversation = (noteId: NoteId) => {
+  const registry = useRunSessionRegistry();
+  const [handoff] = useState<RunSessionHandoff>(
+    () =>
+      registry.peek(noteId) ?? {
+        session: registry.create(noteId),
+        inputs: new Map(),
+      },
+  );
+  const { session } = handoff;
+  const snapshot = useRunSession(session);
+
+  const [inputs, setInputs] = useState(handoff.inputs);
+  const [history, setHistory] = useState<HistoryState>({ status: "loading" });
+  const [historyAttempt, setHistoryAttempt] = useState(0);
+  const [liveRuns, setLiveRuns] = useState<readonly RunState[]>([]);
+  const [localNotice, setLocalNotice] = useState<ConversationNotice | null>(
+    null,
+  );
+  const [draftRestore, setDraftRestore] = useState<DraftRestore | null>(null);
+
+  // 세션의 run을 화면 목록에 남긴다(새 질문으로 세션 run이 바뀌어도 앞 run의 결과는 그대로 보인다).
+  const currentRun = snapshot.run;
+  if (currentRun.runId !== null && !liveRuns.includes(currentRun))
+    setLiveRuns((prev) => upsertLiveRun(prev, currentRun));
+
+  const restoreDraft = useCallback((text: string) => {
+    setDraftRestore((prev) => ({ id: (prev?.id ?? 0) + 1, text }));
+  }, []);
+
+  /** 최신 페이지를 다시 읽어 이력에 합친다(409로 다른 탭의 질문에 붙었을 때 그 질문을 보이려고). */
+  const refreshLatest = useCallback(async () => {
+    try {
+      const page = await registry.api.getConversationMessages(noteId, {
+        limit: CONVERSATION_PAGE_SIZE,
+      });
+      setHistory((prev) =>
+        prev.status === "ready"
+          ? { ...prev, messages: mergeMessages(prev.messages, page.messages) }
+          : prev,
+      );
+    } catch {
+      // 이력 보강만 실패했다. 진행 중 답변은 세션이 계속 받는다.
+    }
+  }, [registry, noteId]);
+
+  // Server가 받지 않은 질문을 입력창으로 돌려준다(접수 거부·409·Note 없음). 자동 재전송은 없다.
+  useEffect(() => {
+    const handBack = () => {
+      const current = session.getSnapshot();
+      const { draft, problem } = current;
+      if (!draft) return;
+      const conflict = current.origin === "active_run_conflict";
+      if (!conflict && !(problem && HANDBACK_KINDS.has(problem.kind))) return;
+      if (problem?.kind !== "invalid_request") restoreDraft(draft.text);
+      if (conflict) {
+        setLocalNotice(ACTIVE_RUN_CONFLICT_NOTICE);
+        void refreshLatest();
+      } else if (problem && problem.kind !== "not_found")
+        setLocalNotice(describeProblem(problem));
+      session.clearDraft();
+    };
+    handBack();
+    return session.subscribe(handBack);
+  }, [session, restoreDraft, refreshLatest]);
+
+  // 진입·새로고침 복원. 떠날 때 연결만 끊는다.
+  useEffect(() => {
+    registry.release(noteId, handoff);
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const page = await registry.api.getConversationMessages(
+          noteId,
+          { limit: CONVERSATION_PAGE_SIZE },
+          controller.signal,
+        );
+        if (controller.signal.aborted) return;
+        setHistory({
+          status: "ready",
+          messages: page.messages,
+          nextBefore: page.nextBefore,
+          loadingOlder: false,
+        });
+        void session.restore(page);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setHistory({
+          status: "error",
+          notFound: error instanceof RunApiError && error.code === "RUN4041",
+        });
+      }
+    };
+    void load();
+    return () => {
+      controller.abort();
+      session.dispose();
+    };
+  }, [registry, noteId, handoff, session, historyAttempt]);
+
+  const retryHistory = useCallback(() => {
+    setHistory({ status: "loading" });
+    setHistoryAttempt((prev) => prev + 1);
+  }, []);
+
+  const nextBefore = history.status === "ready" ? history.nextBefore : null;
+  const loadOlder = useCallback(async () => {
+    if (nextBefore === null) return;
+    setHistory((prev) =>
+      prev.status === "ready" ? { ...prev, loadingOlder: true } : prev,
+    );
+    try {
+      const page = await registry.api.getConversationMessages(noteId, {
+        before: nextBefore,
+        limit: CONVERSATION_PAGE_SIZE,
+      });
+      setHistory((prev) =>
+        prev.status === "ready"
+          ? {
+              status: "ready",
+              messages: [...page.messages, ...prev.messages],
+              nextBefore: page.nextBefore,
+              loadingOlder: false,
+            }
+          : prev,
+      );
+    } catch {
+      setHistory((prev) =>
+        prev.status === "ready" ? { ...prev, loadingOlder: false } : prev,
+      );
+      setLocalNotice({
+        key: "load_older_failed",
+        tone: "error",
+        title: "이전 대화를 불러오지 못했어요",
+      });
+    }
+  }, [registry, noteId, nextBefore]);
+
+  /** 새 질문. Server에 보냈으면 true(입력창을 비운다), 보내지 않았으면 false(입력창 유지). */
+  const send = useCallback(
+    ({ hasAttachments, ...input }: ConversationSendInput) => {
+      if (hasAttachments) {
+        setLocalNotice(ATTACHMENT_NOTICE);
+        return false;
+      }
+      setLocalNotice(null);
+      const result = session.send(input);
+      if (!result.ok) return false;
+      setInputs((prev) => new Map(prev).set(result.requestId, input));
+      return true;
+    },
+    [session],
+  );
+
+  const stop = useCallback(() => {
+    void session.cancel();
+  }, [session]);
+
+  const reconnect = useCallback(() => {
+    session.reconnect();
+  }, [session]);
+
+  const turns = useMemo(
+    () =>
+      buildConversationTurns(
+        history.status === "ready" ? history.messages : [],
+        liveRuns,
+        inputs,
+        isInFlight(snapshot) ? snapshot.draft : null,
+      ),
+    [history, liveRuns, inputs, snapshot],
+  );
+
+  const sessionNotice = snapshot.problem
+    ? snapshot.problem.kind === "rejected" ||
+      snapshot.problem.kind === "invalid_request"
+      ? null // 입력창으로 돌려줄 때 localNotice로 옮겼다
+      : describeProblem(snapshot.problem)
+    : snapshot.connection === "backoff"
+      ? RECONNECTING_NOTICE
+      : null;
+  const historyNotice: ConversationNotice | null =
+    history.status !== "error"
+      ? null
+      : history.notFound
+        ? {
+            key: "history_not_found",
+            tone: "error",
+            title: "노트를 찾을 수 없어요",
+            description: "노트가 삭제되었을 수 있어요.",
+          }
+        : {
+            key: "history_failed",
+            tone: "error",
+            title: "대화를 불러오지 못했어요",
+            action: "retry_history",
+          };
+  const notices = [
+    historyNotice,
+    localNotice && { ...localNotice, dismissible: true },
+    sessionNotice,
+  ].filter((notice): notice is ConversationNotice => notice !== null);
+
+  const blockedUntil =
+    localNotice?.retryAt != null && localNotice.retryAt > 0
+      ? localNotice.retryAt
+      : null;
+
+  const composer: ComposerState = {
+    phase: getComposerPhase(snapshot),
+    canStop: snapshot.canCancel,
+    blockedUntil,
+  };
+
+  return {
+    turns,
+    history,
+    loadOlder,
+    retryHistory,
+    notices,
+    /** 화면 안내(거부·첨부 등)를 닫는다. 세션 상태 안내(연결·Note 없음)는 상태가 바뀌어야 사라진다. */
+    dismissNotice: () => setLocalNotice(null),
+    composer,
+    send,
+    stop,
+    reconnect,
+    draftRestore,
+    restoreDraft,
+    snapshot,
+  };
+};
+
+export type NoteConversation = ReturnType<typeof useNoteConversation>;

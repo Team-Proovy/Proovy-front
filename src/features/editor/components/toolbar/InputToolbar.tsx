@@ -8,6 +8,7 @@ import {
   MathIcon,
   CanvasIcon,
 } from "../../../../shared/components/icons/ChatInputIcons";
+import { LoaderCircle, Square } from "lucide-react";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { ToolButton } from "./ToolButton";
 import { ToolDropdownMenu, ToolItemIcon } from "../input/ToolDropdownMenu";
@@ -34,6 +35,18 @@ interface InputToolbarProps {
   hasContent?: boolean;
   onClipClick?: () => void;
   isSending?: boolean;
+  /** 주면 전송 대신 정지 버튼을 보인다(Active Run). `isCanceling`이면 "중단 중"(비활성) */
+  stopControl?: StopControl;
+}
+
+export interface StopControl {
+  canStop: boolean;
+  isCanceling: boolean;
+  onStop: () => void;
+  /** 정지 버튼 접근성 이름 */
+  label: string;
+  /** CANCELING 문구 */
+  cancelingText: string;
 }
 
 export const InputToolbar = ({
@@ -47,6 +60,7 @@ export const InputToolbar = ({
   hasContent = false,
   onClipClick,
   isSending = false,
+  stopControl,
 }: InputToolbarProps) => {
   const [isToolMenuOpen, setIsToolMenuOpen] = useState(false);
   const { data: toolList = [] } = useTools();
@@ -332,17 +346,49 @@ export const InputToolbar = ({
         </ToolButton>
       </div>
 
-      {/* 전송 버튼 */}
-      <ToolButton
-        onClick={hasContent && !isSending ? onSend : undefined}
-        className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed px-0!" : ""}`}
-      >
-        {isSending ? (
-          <LoadingSpinner size={20} />
-        ) : (
-          <SendIcon className="h-[16px] w-[14px] shrink-0" />
-        )}
-      </ToolButton>
+      {/* 전송 버튼 (Active Run 동안 정지 버튼, CANCELING이면 "중단 중") */}
+      {stopControl?.isCanceling ? (
+        <button
+          type="button"
+          disabled
+          className="flex h-[32px] shrink-0 cursor-not-allowed items-center gap-[4px] rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-[#F1F4F8] px-[8px] text-[13px] leading-[20px] font-medium text-[#6B7280]"
+        >
+          <LoaderCircle
+            aria-hidden="true"
+            size={14}
+            className="animate-spin motion-reduce:animate-none"
+          />
+          {stopControl.cancelingText}
+        </button>
+      ) : stopControl ? (
+        <button
+          type="button"
+          aria-label={stopControl.label}
+          title={stopControl.label}
+          disabled={!stopControl.canStop}
+          onClick={stopControl.onStop}
+          className={`${getSendButtonClass(stopControl.canStop)} flex items-center justify-center`}
+        >
+          <Square
+            aria-hidden="true"
+            size={12}
+            fill="currentColor"
+          />
+        </button>
+      ) : (
+        <ToolButton
+          onClick={hasContent && !isSending ? onSend : undefined}
+          aria-label="전송"
+          aria-disabled={!hasContent || isSending}
+          className={`${getSendButtonClass(hasContent && !isSending)} ${isSending ? "cursor-not-allowed px-0!" : ""}`}
+        >
+          {isSending ? (
+            <LoadingSpinner size={20} />
+          ) : (
+            <SendIcon className="h-[16px] w-[14px] shrink-0" />
+          )}
+        </ToolButton>
+      )}
     </div>
   );
 };
