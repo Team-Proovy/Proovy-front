@@ -220,6 +220,27 @@ pnpm run dev
 - fixture 모드에서 대화로 새로 생긴 Note(noteId 9001부터)는 노트 목록·상세 mock에 없다. 그래서 제목이 기본값("노트 9001")으로 보이고 노트 목록에 나타나지 않는다. 그 Note의 이름 변경·삭제는 mock이 없어 proxy로 나가 실패한다.
 - fixture run Server는 페이지 메모리에 있어 새로고침하면 진행 중이던 run이 사라진다.
 
+### 로컬 Server·Brain stack (실제 연결)
+
+`server` 모드로 실제 대화(Note 생성·Activity·검증 응답·정지·재접속)를 확인하려면 로컬 Server와 Brain을 함께 띄운다. `scripts/local-stack/local-stack.sh`가 격리 Postgres·Redis 컨테이너, Server(local profile), proovy-brain testkit(실제 Brain API·graph·store·SSE, 모델은 offline seat)을 올리고 검증용 사용자 token을 발급한다. 운영 API·DB·GCS·OAuth는 쓰지 않는다.
+
+```bash
+# 준비: Proovy-server 소스에서 bootJar 빌드, proovy-brain checkout에서 uv sync --locked
+SERVER_DIR=<Proovy-server> BRAIN_DIR=<proovy-brain> scripts/local-stack/local-stack.sh up
+scripts/local-stack/local-stack.sh token   # 새 사용자 + access token 파일 경로 출력
+pnpm run dev --port 5196                   # DEV_API_PROXY_TARGET 기본값 http://localhost:8080
+# 끝나면
+scripts/local-stack/local-stack.sh down    # 컨테이너·프로세스·token 정리
+```
+
+- 브라우저는 **`http://localhost:<port>`로 연다.** Server local profile의 CORS는 `http://localhost:*` Origin만 허용하므로 `127.0.0.1`로 열면 전송·정지(POST)가 403이다.
+- Server에는 개발용 로그인이 없다. 발급한 token을 브라우저 localStorage `accessToken`에 넣고, `auth-storage`를 로그인 상태(`{"state":{"user":{...},"isAuthenticated":true},"version":0}`)로 둔다.
+- 포트·컨테이너 이름은 환경변수로 바꾼다(기본 Postgres 29632·Redis 29679·Server 8080·Brain 29680/29681, 접미사 `t196`). 고정 compose 자원(15432·6379)과 겹치지 않게 고른다.
+- 요청 한도 안내를 보려면 `RATE_LIMIT_MAX_REQUESTS=4`처럼 낮춰 `up`한다(사용자당 1분).
+- Free 플랜은 노트 2개까지라 홈 첫 질문이 막히면 `token`으로 새 사용자를 만든다.
+- 특정 결과(미지원·미검증·혼합·추가 정보 요청)나 진행 중 상태는 Brain testkit control route에 그 요청의 `requestId`로 scenario·hold를 먼저 등록해 재현한다(proovy-brain `testkit/README.md`).
+- Vite dev proxy는 Server 쪽 소켓이 끊겨도 브라우저 응답을 닫지 않는다. 연결 끊김 재접속은 브라우저↔dev server 구간을 끊어 확인한다.
+
 ### 검증
 
 ```bash
