@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 import path from "path";
+import { resolveApiMode } from "./src/app/api_mode";
 
 // 개발 proxy의 기본 대상은 로컬 개발 Server다. 다른 Server로 보내려면
 // .env.local 등에 DEV_API_PROXY_TARGET을 둔다(VITE_ 접두사가 없어 브라우저에 노출되지 않는다).
@@ -28,8 +29,12 @@ const excludeMswWorkerFromBuild = (): Plugin => {
 };
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  if (command === "serve") {
+    // 잘못된 VITE_API_MODE는 페이지 로드 전에 dev server 시작에서 실패시킨다.
+    resolveApiMode(env.VITE_API_MODE);
+  }
   const devApiProxyTarget =
     env.DEV_API_PROXY_TARGET || DEFAULT_DEV_API_PROXY_TARGET;
 

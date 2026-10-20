@@ -166,7 +166,7 @@ npm install -g pnpm
 
 ### 2단계: 환경 변수 설정
 
-개발 서버는 `/api` 요청을 vite proxy로 보내므로 `VITE_API_BASE_URL`은 비워 둔다(빈 값 → 같은 origin의 `/api`).
+개발 서버는 `/api` 요청을 vite proxy로 보내므로 `VITE_API_BASE_URL`은 비워 둔다(빈 값이거나 없으면 같은 origin의 `/api`). 값을 넣으면 API client와 fixture mock이 모두 그 주소를 쓴다.
 
 ```bash
 # .env.local (git에 올리지 않는다)
@@ -210,12 +210,14 @@ pnpm run dev
 
 개발 서버의 API 연결은 `VITE_API_MODE`로 명시적으로 고른다. 운영 build에는 MSW가 들어가지 않는다.
 
-| 모드            | 실행                                 | 동작                                                                                                                                                                                                                                                       |
-| --------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `server` (기본) | `pnpm run dev`                       | MSW를 켜지 않는다. `/api`를 vite proxy로 실제 Server(`DEV_API_PROXY_TARGET`, 기본 `http://localhost:8080`)에 보낸다. 로컬 Server를 먼저 띄운다.                                                                                                            |
-| `fixture`       | `VITE_API_MODE=fixture pnpm run dev` | MSW가 응답한다. 대화(전송·SSE·대화 조회·정지)는 browser-run-v1 fixture handler(`src/features/run/session/mocks`), 그 밖의 화면(사용자·노트·스토리지·크레딧·도구·검색)은 `src/mocks/handlers`의 개발 mock을 쓴다. mock이 없는 요청은 proxy로 그대로 나간다. |
+| 모드            | 실행                                 | 동작                                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server` (기본) | `pnpm run dev`                       | MSW를 켜지 않는다. `/api`를 vite proxy로 실제 Server(`DEV_API_PROXY_TARGET`, 기본 `http://localhost:8080`)에 보낸다. 로컬 Server를 먼저 띄운다.                                                                                                                 |
+| `fixture`       | `VITE_API_MODE=fixture pnpm run dev` | MSW가 응답한다. 대화(전송·SSE·대화 조회·정지)는 browser-run-v1 fixture handler(`src/features/run/session/mocks`), 그 밖의 화면(인증·사용자·노트·스토리지·크레딧·도구·검색)은 `src/mocks/handlers`의 개발 mock을 쓴다. mock이 없는 요청은 proxy로 그대로 나간다. |
 
-- `server`·`fixture` 밖의 값은 시작할 때 오류로 거부한다.
+- `server`·`fixture` 밖의 값은 `pnpm run dev` 시작 때 오류로 거부한다.
+- fixture 모드에서는 인증도 mock이다. 로그인·토큰 갱신·로그아웃이 mock 토큰으로 응답한다.
+- fixture 모드에서 대화로 새로 생긴 Note(noteId 9001부터)는 노트 목록·상세 mock에 없다. 그래서 제목이 기본값("노트 9001")으로 보이고 노트 목록에 나타나지 않는다. 그 Note의 이름 변경·삭제는 mock이 없어 proxy로 나가 실패한다.
 - fixture run Server는 페이지 메모리에 있어 새로고침하면 진행 중이던 run이 사라진다.
 
 ### 검증
