@@ -1,2 +1,3 @@
 # capability 스냅샷(live 모드 조회 결과)
-capabilities/
+capabilities/*
+!capabilities/.gitkeep
