@@ -6,6 +6,11 @@
 # 키·모델은 proovy-brain .env.local(BRAIN_ENV_FILE)에서 실행 시에만 env로 넘긴다 — 이 파일·이미지에 값을 적지 않는다.
 # 스냅샷은 BRAIN_CAPABILITIES_DIR(조회 결과 capabilities.env 포함)를 /capabilities에 mount해 쓴다.
 services:
+  # 실제 모델 검증 흐름은 Server 기본 request deadline(3m)을 넘길 수 있다(Brain run 상한 15m). 운영 값은 별도 Server 이슈에서 다룬다
+  server:
+    environment:
+      PROOVY_RUN_SNAPSHOT_REQUEST_TIMEOUT: ${RUN_REQUEST_TIMEOUT:-10m}
+
   brain:
     env_file:
       - ${BRAIN_ENV_FILE:?set BRAIN_ENV_FILE to the proovy-brain .env.local path}

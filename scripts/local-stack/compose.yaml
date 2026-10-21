@@ -93,6 +93,8 @@ services:
       BRAIN_AUTH_MODE: shared-token
       RUN_COORDINATOR_ENABLED: "true"
       PROOVY_RUN_ADMISSION_RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-20}
+      # run 접수 시 고정하는 request deadline(Server 기본과 같은 3m). live는 compose.live.yaml이 10m로 바꾼다
+      PROOVY_RUN_SNAPSHOT_REQUEST_TIMEOUT: ${RUN_REQUEST_TIMEOUT:-3m}
       SPRING_JPA_SHOW_SQL: "false"
     volumes:
       - secrets:/secrets:ro

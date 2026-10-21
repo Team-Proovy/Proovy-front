@@ -262,7 +262,8 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - DB는 `down -v` 전까지 volume에 남는다. Server·Brain commit을 바꾼 뒤 Flyway나 `brain-migrate`가 실패하면(migration 이력 불일치) `docker compose down -v`로 지우고 다시 띄운다.
 - `postgres` 컨테이너만 재시작되면(`docker compose restart postgres`, OOM 등) 그 network namespace를 쓰는 Brain이 끊긴다. `docker compose up -d --wait`로 다시 맞춘다.
 - 로컬 개발용이라 모든 서비스가 `secrets` volume 전체를 읽는다(Brain 컨테이너도 DB 관리자 password·JWT secret을 읽을 수 있다). DB role 경계는 Server·Brain 연결 role 사이의 경계이고, 컨테이너 사이의 secret 격리는 하지 않는다.
-- 포트·요청 한도는 `.env`로 바꾼다(`SERVER_PORT`, `RATE_LIMIT_MAX_REQUESTS`). `SERVER_PORT`를 바꾸면 `DEV_API_PROXY_TARGET`도 같이 바꾼다.
+- 포트·요청 한도·run 마감은 `.env`로 바꾼다(`SERVER_PORT`, `RATE_LIMIT_MAX_REQUESTS`, `RUN_REQUEST_TIMEOUT`). `SERVER_PORT`를 바꾸면 `DEV_API_PROXY_TARGET`도 같이 바꾼다.
+- `RUN_REQUEST_TIMEOUT`은 Server가 run 접수 때 고정하는 request deadline(`proovy.run.snapshot.request-timeout`)이다. 기본은 offline 3m(Server 기본과 같다)·live 10m이고, 허용 범위는 0 초과 30m 이하다. Server는 마감 뒤 stream 여유 3m를 더 기다린다. Brain run 상한이 15m라 그보다 길게 해도 효과가 없다. 로컬 stack 전용 값이며, 운영 값은 바꾸지 않고 별도 Server 이슈에서 다룬다.
 - 상태·로그: `docker compose ps -a`, `docker compose logs server brain`.
 - offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다).
 - Vite dev proxy는 Server 쪽 소켓이 끊겨도 브라우저 응답을 닫지 않는다. 연결 끊김 재접속은 브라우저↔dev server 구간을 끊어 확인한다.
@@ -286,7 +287,7 @@ docker compose down -v --rmi all   # 빌드·pull한 이미지까지 삭제. Gra
    docker compose -f compose.yaml -f compose.live.yaml run --rm --build capabilities   # --build: 이미지가 없거나 checkout이 바뀌었으면 Brain 이미지를 먼저 빌드
    ```
 
-4. live로 띄운다. offline stack이 떠 있어도 `up`은 one-shot 단계(`secrets`·`brain-migrate`·`provision`)를 다시 돌리고 그 완료를 기다린 뒤 Brain 컨테이너를 live로 바꾼다 — one-shot 단계가 실패하면 Brain이 뜨지 않으니 `docker compose ps -a`·`logs`로 확인한다. offline으로 돌아가려면 `docker compose up -d --wait`.
+4. live로 띄운다. offline stack이 떠 있어도 `up`은 one-shot 단계(`secrets`·`brain-migrate`·`provision`)를 다시 돌리고 그 완료를 기다린 뒤 Brain 컨테이너를 live로 바꾼다. Server도 run 마감(`RUN_REQUEST_TIMEOUT`, live 기본 10m — 실제 모델 검증은 Server 기본 3m를 넘겨 `timeout`으로 끝날 수 있다)이 바뀌어 다시 만들어진다. one-shot 단계가 실패하면 Brain이 뜨지 않으니 `docker compose ps -a`·`logs`로 확인한다. offline으로 돌아가려면 `docker compose up -d --wait`.
 
    ```bash
    docker compose -f compose.yaml -f compose.live.yaml up -d --build --wait
