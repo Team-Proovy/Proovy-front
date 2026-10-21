@@ -1,0 +1,178 @@
+# 실제 로컬 Server·Brain에 Front를 연결하는 Docker 로컬 stack (task 1.98). macOS·Windows·Linux 공통.
+#
+#   cd scripts/local-stack
+#   docker compose up -d --build --wait          # Brain offline seat(기본, 유료 호출 없음)
+#   docker compose exec postgres issue-token     # 검증용 사용자 + access token
+#   docker compose down -v                       # 컨테이너·volume·network 정리
+#
+# 기동 순서: secrets → postgres·redis → server(Flyway) → brain-migrate(Brain bootstrap·migrate)
+#            → provision(role 경계) → brain(serve)
+# host에는 Server 하나만 127.0.0.1에 publish한다. 개발 전용 secret은 `secrets` volume이 비어 있을 때(처음·down -v 뒤) 만든다.
+# 로컬 개발용이라 각 서비스가 secrets volume 전체를 mount한다(컨테이너 사이 secret 격리는 하지 않는다).
+# 같은 이미지는 서비스 하나에만 build를 둔다 — 여러 서비스가 같은 이름을 동시에 export하면 병렬 빌드(bake)가
+# "already exists"로 실패한다. 참조만 하는 서비스는 pull_policy: never로 registry pull을 막는다(빌드는 컨테이너 생성 전에 끝난다).
+# live 모드는 compose.live.yaml을 함께 준다(README). 설정은 이 디렉터리의 .env(.env.example 참고)로 바꾼다.
+name: proovy-local
+
+x-tools-build: &tools-build
+  context: .
+  target: tools
+  additional_contexts:
+    server-src: ${SERVER_CONTEXT:-https://github.com/Team-Proovy/Proovy-server.git#b576af30a55c2c2383357bc897b1bdaeb3c49ded}
+
+# 1.97(proovy-brain 89520f6) 이후 commit의 checkout. private 저장소라 로컬 checkout에서 빌드한다
+x-brain-build: &brain-build
+  context: ${BRAIN_DIR:-../../../proovy-brain}
+
+services:
+  # tools 이미지는 secrets만 빌드한다(postgres·provision은 같은 이미지를 참조만 한다)
+  secrets:
+    image: proovy-local-tools
+    build: *tools-build
+    entrypoint: ["init-secrets.sh"]
+    volumes:
+      - secrets:/secrets
+
+  postgres:
+    image: proovy-local-tools
+    pull_policy: never
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: proovy_admin
+      POSTGRES_PASSWORD_FILE: /secrets/pg-admin-password
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - secrets:/secrets:ro
+    # 초기화용 임시 서버는 unix socket만 연다 — TCP로 확인해야 초기화가 끝난 서버다
+    healthcheck:
+      test: pg_isready -h 127.0.0.1 -U proovy_admin -d proovy
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  server:
+    image: proovy-local-server
+    build:
+      <<: *tools-build
+      target: server
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: proovy
+      DB_USERNAME: proovy_server
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      # GCS_ENDPOINT는 닫힌 loopback 주소다 — 텍스트 경로는 GCS를 쓰지 않고, 실수로 호출해도 실제 GCS로 나가지 않는다.
+      # OAuth·OpenRouter 값은 bean 기동용 placeholder다(로컬 검증은 issue-token으로 발급한 access token으로 로그인한다).
+      GCS_PROJECT_ID: local-placeholder
+      GCS_ENDPOINT: http://127.0.0.1:9
+      KAKAO_CLIENT_ID: local-placeholder
+      KAKAO_CLIENT_SECRET: local-placeholder
+      NAVER_CLIENT_ID: local-placeholder
+      NAVER_CLIENT_SECRET: local-placeholder
+      OPENROUTER_API_KEY: local-placeholder
+      # Brain은 postgres 컨테이너의 network namespace를 공유한다(아래 brain 참고)
+      BRAIN_BASE_URL: http://postgres:8080
+      BRAIN_AUTH_MODE: shared-token
+      RUN_COORDINATOR_ENABLED: "true"
+      PROOVY_RUN_ADMISSION_RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-20}
+      # run 접수 시 고정하는 request deadline(Server 기본과 같은 3m). live는 compose.live.yaml이 10m로 바꾼다
+      PROOVY_RUN_SNAPSHOT_REQUEST_TIMEOUT: ${RUN_REQUEST_TIMEOUT:-3m}
+      SPRING_JPA_SHOW_SQL: "false"
+    volumes:
+      - secrets:/secrets:ro
+    ports:
+      # Front dev server의 /api proxy 대상. 외부 interface에는 열지 않는다
+      - "127.0.0.1:${SERVER_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      start_period: 240s
+      retries: 12
+
+  # Server Flyway가 제품 baseline을 끝낸 뒤 Brain schema·role을 같은 database에 만든다.
+  # Brain DB 명령은 loopback 대상만 허용하므로 postgres의 network namespace에서 127.0.0.1:5432로 붙는다.
+  brain-migrate:
+    image: proovy-local-brain
+    pull_policy: never
+    network_mode: service:postgres
+    depends_on:
+      server:
+        condition: service_healthy
+    volumes:
+      - secrets:/secrets:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        BRAIN_MIGRATION_PASSWORD=$$(cat /secrets/brain-migration-password)
+        BRAIN_RUNTIME_PASSWORD=$$(cat /secrets/brain-runtime-password)
+        BRAIN_BOOTSTRAP_DATABASE_URL="postgresql://proovy_admin:$$(cat /secrets/pg-admin-password)@127.0.0.1:5432/proovy"
+        BRAIN_MIGRATION_DATABASE_URL="postgresql://brain_migration:$$BRAIN_MIGRATION_PASSWORD@127.0.0.1:5432/proovy"
+        export BRAIN_MIGRATION_PASSWORD BRAIN_RUNTIME_PASSWORD BRAIN_BOOTSTRAP_DATABASE_URL BRAIN_MIGRATION_DATABASE_URL
+        proovy-brain db bootstrap
+        proovy-brain db migrate
+    healthcheck:
+      disable: true
+
+  # Server ↔ Brain role 경계(Server role-boundary.sql). 재실행해도 같은 결과다
+  provision:
+    image: proovy-local-tools
+    pull_policy: never
+    depends_on:
+      brain-migrate:
+        condition: service_completed_successfully
+    volumes:
+      - secrets:/secrets:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        PGPASSWORD=$$(cat /secrets/pg-admin-password) psql -q -v ON_ERROR_STOP=1 -h postgres -U proovy_admin -d proovy \
+          -f /provisioning/role-boundary.sql
+        echo "[local-stack] role boundary applied"
+
+  # Brain 이미지는 brain만 빌드한다(brain-migrate는 같은 이미지를 참조만 한다)
+  brain:
+    image: proovy-local-brain
+    build: *brain-build
+    network_mode: service:postgres
+    depends_on:
+      provision:
+        condition: service_completed_successfully
+    environment:
+      PROFILE: local
+      BRAIN_SEAT_MODE: offline
+    volumes:
+      - secrets:/secrets:ro
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        INTERNAL_API_SHARED_TOKEN=$$(cat /secrets/shared-token)
+        DATABASE_URL="postgresql://brain_runtime:$$(cat /secrets/brain-runtime-password)@127.0.0.1:5432/proovy"
+        export INTERNAL_API_SHARED_TOKEN DATABASE_URL
+        exec proovy-brain serve --host 0.0.0.0 --port 8080
+    # 이미지 HEALTHCHECK(127.0.0.1:8080/health/ready)를 그대로 쓴다
+
+volumes:
+  pgdata:
+  secrets:

@@ -1,0 +1,42 @@
+# live 모드 override — Brain이 실제 모델(OpenRouter)·sandbox(Daytona)를 호출한다. 비용이 든다.
+#
+#   docker compose -f compose.yaml -f compose.live.yaml run --rm --build capabilities   # 1.97 스냅샷 조회
+#   docker compose -f compose.yaml -f compose.live.yaml up -d --build --wait
+#
+# 키·모델은 proovy-brain .env.local(BRAIN_ENV_FILE)에서 실행 시에만 env로 넘긴다 — 이 파일·이미지에 값을 적지 않는다.
+# 스냅샷은 BRAIN_CAPABILITIES_DIR(조회 결과 capabilities.env 포함)를 /capabilities에 mount해 쓴다.
+services:
+  # 실제 모델 검증 흐름은 Server 기본 request deadline(3m)을 넘길 수 있다(Brain run 상한 15m). 운영 값은 별도 Server 이슈에서 다룬다
+  server:
+    environment:
+      PROOVY_RUN_SNAPSHOT_REQUEST_TIMEOUT: ${RUN_REQUEST_TIMEOUT:-10m}
+
+  brain:
+    env_file:
+      - ${BRAIN_ENV_FILE:?set BRAIN_ENV_FILE to the proovy-brain .env.local path}
+      # 조회가 쓴 *_CAPABILITIES(/capabilities/...)가 .env.local의 같은 키를 덮어쓴다. 조회 전에는 없다 —
+      # 스냅샷 없이 live로 띄우면 Brain이 기동에서 거부한다
+      - path: ${BRAIN_CAPABILITIES_DIR:-./capabilities}/capabilities.env
+        required: false
+    environment:
+      BRAIN_SEAT_MODE: live
+    volumes:
+      - ${BRAIN_CAPABILITIES_DIR:-./capabilities}:/capabilities:ro
+
+  # 현재 모델 설정의 capability 스냅샷을 OpenRouter 공개 models 목록에서 조회해 BRAIN_CAPABILITIES_DIR에 쓴다(1.97).
+  # 출력에 removed 줄이 있으면 이전 스냅샷 파일이 지워진 것이다. capabilities.env는 매번 통째로 바뀐다.
+  # refresh profile에서만 쓰여 `run --rm capabilities`로 혼자 빌드된다(이미지가 없는 처음에도 바로 조회). --profile refresh로 up·build하지 않는다
+  capabilities:
+    image: proovy-local-brain
+    build:
+      context: ${BRAIN_DIR:-../../../proovy-brain}
+    profiles: ["refresh"]
+    env_file:
+      - ${BRAIN_ENV_FILE:?set BRAIN_ENV_FILE to the proovy-brain .env.local path}
+    # Linux에서는 mount한 디렉터리에 쓸 수 있게 .env의 LOCAL_UID·LOCAL_GID를 host 사용자로 둔다(Docker Desktop은 불필요)
+    user: "${LOCAL_UID:-10001}:${LOCAL_GID:-10001}"
+    volumes:
+      - ${BRAIN_CAPABILITIES_DIR:-./capabilities}:/capabilities
+    command: ["capabilities", "refresh", "--out", "/capabilities"]
+    healthcheck:
+      disable: true

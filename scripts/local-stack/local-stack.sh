@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # 실제 로컬 Server·Brain에 Front를 연결하는 로컬 stack (task 1.96).
+# 일반 대화 확인은 OS 무관 Docker stack(같은 디렉터리 compose.yaml, task 1.98)을 쓴다. 이 스크립트는 Brain testkit
+# scenario·hold 재현용 Linux 전용 경로로 남긴다. 두 stack을 동시에 띄우지 않는다.
 #
 # 격리 Postgres·Redis 컨테이너 → Server(local profile, bootJar) → proovy-brain testkit supervisor(실제 Brain API·graph·
 # store·SSE, 모델은 offline seat) → role 경계 적용 → 검증용 사용자·access token 발급. Front dev server는 따로 띄운다:
