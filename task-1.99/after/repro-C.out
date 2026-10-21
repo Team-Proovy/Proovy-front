@@ -1,0 +1,17 @@
+8.17 note http://localhost:5199/app/chat/18
+8.56 begin C1 answers 1
+14.72 note C1 boxes 0
+14.72 end C1 {"t":"14.32","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+14.72 begin C2 answers 1
+20.25 note C2 boxes 0
+20.25 end C2 {"t":"19.91","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+20.25 begin C3 answers 1
+25.20 note C3 boxes 0
+25.20 end C3 {"t":"24.92","phase":"C3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+25.20 begin C4 answers 1
+30.18 note C4 boxes 0
+30.18 end C4 {"t":"29.95","phase":"C4","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+30.18 begin C5 answers 1
+35.62 note C5 boxes 0
+35.62 end C5 {"t":"35.46","phase":"C5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+FAILURES 0

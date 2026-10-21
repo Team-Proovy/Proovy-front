@@ -1,0 +1,77 @@
+12.11 sw activating
+17.74 sw controller true
+24.26 note http://localhost:5199/app/chat/5
+24.27 begin A1 answers 1
+32.81 end A1 {"t":"32.55","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+32.81 begin A2 answers 2
+52.77 end A2 {"t":"52.30","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+52.77 begin A3 answers 3
+62.54 end A3 {"t":"62.24","phase":"A3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+62.54 begin B1 answers 4
+130.31 in-progress reload B1 boxes 4→0 answers 4
+130.32 FAIL B1 새로고침 뒤 진행 상황 박스 4→0개
+191.18 FAIL B1 unpause 뒤 답변 5개가 되지 않음 (now 4)
+193.38 end B1 {"t":"192.92","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+193.38 begin B2 answers 4
+271.34 in-progress reload B2 boxes 0→0 answers 4
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.33 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.77 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.78 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+294.83 console.error Failed to load resource: net::ERR_CONNECTION_REFUSED
+332.31 FAIL B2 unpause 뒤 답변 5개가 되지 않음 (now 4)
+333.90 end B2 {"t":"333.59","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+333.90 begin B3 answers 4
+446.51 in-progress reload B3 boxes 0→0 answers 4
+513.17 FAIL B3 unpause 뒤 답변 5개가 되지 않음 (now 4)
+514.68 end B3 {"t":"514.43","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+514.68 begin C1 answers 4
+540.13 note C1 boxes 0
+540.13 end C1 {"t":"539.87","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+540.13 begin C2 answers 4
+572.39 note C2 boxes 0
+572.39 end C2 {"t":"571.90","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+572.39 begin C3 answers 4
+582.04 note C3 boxes 0
+582.04 end C3 {"t":"581.65","phase":"C3","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}

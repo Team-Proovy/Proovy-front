@@ -1,0 +1,4 @@
+failures 3
+B1 새로고침 뒤 진행 상황 박스 1→0개
+B1 unpause 뒤 답변 2개가 되지 않음 (now 1)
+B2 unpause 뒤 답변 2개가 되지 않음 (now 1)

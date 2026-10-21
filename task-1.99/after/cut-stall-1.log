@@ -1,0 +1,13 @@
+8.69 cut cut stall 1
+51.17 notice 연결이 끊겨 다시 연결하는 중이에요
+52.16 result OK terminal 43.5s after cut relay {"stale":0,"sse":0,"stalled":0}
+5.48	POST	/api/conversations	
+5.98	GET	/api/conversations/20/messages?limit=30	
+5.99	GET	/api/conversations/20/messages?limit=30	
+5.99	FAILED	/api/conversations	net::ERR_ABORTED
+5.99	FAILED	/api/conversations/20/messages?limit=30	net::ERR_ABORTED
+6.00	DONE	/api/conversations/20/messages?limit=30	
+6.03	GET	/api/ai-runs/02158b4b-d6aa-490c-b30c-5e0ad5abb35f/events	02158b4b-d6aa-490c-b30c-5e0ad5abb35f:1
+51.04	FAILED	/api/ai-runs/02158b4b-d6aa-490c-b30c-5e0ad5abb35f/events	net::ERR_ABORTED
+51.97	GET	/api/ai-runs/02158b4b-d6aa-490c-b30c-5e0ad5abb35f/events	02158b4b-d6aa-490c-b30c-5e0ad5abb35f:1
+52.16	FAILED	/api/ai-runs/02158b4b-d6aa-490c-b30c-5e0ad5abb35f/events	net::ERR_ABORTED

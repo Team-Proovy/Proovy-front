@@ -1,0 +1,9 @@
+165.90 cut cut stall 1
+267.16 result FAIL relay {"stale":0,"sse":1,"stalled":1}
+58.12	POST	/api/conversations	
+151.39	GET	/api/conversations/10/messages?limit=30	
+151.39	GET	/api/conversations/10/messages?limit=30	
+151.54	FAILED	/api/conversations	net::ERR_ABORTED
+151.65	FAILED	/api/conversations/10/messages?limit=30	net::ERR_ABORTED
+165.63	DONE	/api/conversations/10/messages?limit=30	
+165.66	GET	/api/ai-runs/00cc7cdd-b5e4-4df1-ad34-cbbd744737f3/events	00cc7cdd-b5e4-4df1-ad34-cbbd744737f3:1

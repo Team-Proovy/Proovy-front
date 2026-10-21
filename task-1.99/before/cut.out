@@ -1,0 +1,4 @@
+24.16 cut cut reset 1
+30.46 result OK terminal 6.3s after cut relay {"stale":0,"sse":0,"stalled":0}
+17.82 cut cut stall 1
+98.15 result FAIL relay {"stale":0,"sse":1,"stalled":1}

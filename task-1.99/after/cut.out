@@ -1,0 +1,5 @@
+7.10 cut cut reset 1
+7.45 notice 연결이 끊겨 다시 연결하는 중이에요
+8.34 result OK terminal 1.2s after cut relay {"stale":0,"sse":0,"stalled":0}
+9.67 cut cut stall 1
+90.19 result FAIL relay {"stale":0,"sse":1,"stalled":1}

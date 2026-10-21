@@ -1,0 +1,48 @@
+116.27 note http://localhost:5199/app/chat/9
+116.28 begin A1 answers 1
+139.24 end A1 {"t":"138.99","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+139.24 begin A2 answers 2
+177.47 end A2 {"t":"177.02","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+177.47 begin A3 answers 3
+196.37 end A3 {"t":"195.88","phase":"A3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+196.37 begin A4 answers 4
+242.80 end A4 {"t":"242.32","phase":"A4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+242.89 begin A5 answers 5
+360.75 FAIL A5 답변 6개가 되지 않음 (now 5)
+363.91 end A5 {"t":"363.49","phase":"A5","apiInflight":1,"sseInflight":1,"browserToVite":2,"viteToServer":2,"serverEstablished":2}
+363.91 begin C1 answers 5
+402.17 note C1 boxes 0
+402.31 end C1 {"t":"402.02","phase":"C1","apiInflight":1,"sseInflight":0,"browserToVite":2,"viteToServer":2,"serverEstablished":1}
+402.31 begin C2 answers 5
+451.18 FAIL C2 reload: page.reload: Timeout 30000ms exceeded.
+503.95 begin C3 answers 5
+526.63 note C3 boxes 0
+526.63 end C3 {"t":"526.21","phase":"C3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+526.63 begin C4 answers 5
+533.99 note C4 boxes 0
+533.99 end C4 {"t":"533.61","phase":"C4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":1}
+533.99 begin C5 answers 5
+541.51 note C5 boxes 0
+541.51 end C5 {"t":"541.13","phase":"C5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+541.51 begin B1 answers 5
+584.42 in-progress reload B1 restore GET /events true answers 5 held 21054ms
+597.52 FAIL B1 진행 상황 박스 1개 ≠ 답변 6개(중복·누락)
+597.52 end B1 {"t":"597.22","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+597.52 begin B2 answers 6
+614.52 in-progress reload B2 restore GET /events true answers 6 held 15206ms
+630.42 FAIL B2 진행 상황 박스 1개 ≠ 답변 7개(중복·누락)
+630.42 end B2 {"t":"630.28","phase":"B2","apiInflight":4,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+630.42 begin B3 answers 7
+676.21 FAIL B3 reload: page.reload: Timeout 30000ms exceeded.
+682.44 console.error Failed to load resource: the server responded with a status of 401 (Unauthorized)
+697.93 in-progress reload B3 restore GET /events true answers 7 held 65498ms
+703.87 FAIL B3 진행 상황 박스 1개 ≠ 답변 8개(중복·누락)
+703.87 end B3 {"t":"703.62","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+703.87 begin B4 answers 8
+712.87 in-progress reload B4 restore GET /events true answers 8 held 8001ms
+727.28 FAIL B4 진행 상황 박스 1개 ≠ 답변 9개(중복·누락)
+727.39 end B4 {"t":"726.89","phase":"B4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+727.39 begin B5 answers 9
+744.36 in-progress reload B5 restore GET /events true answers 9 held 15643ms
+750.54 FAIL B5 진행 상황 박스 1개 ≠ 답변 10개(중복·누락)
+750.54 end B5 {"t":"750.28","phase":"B5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}

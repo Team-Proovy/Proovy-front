@@ -1,0 +1,45 @@
+10.24 note http://localhost:5199/app/chat/14
+10.25 begin A1 answers 1
+15.96 end A1 {"t":"15.46","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+15.96 begin A2 answers 2
+21.34 end A2 {"t":"20.96","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+21.34 begin A3 answers 3
+26.30 end A3 {"t":"25.97","phase":"A3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+26.30 begin A4 answers 4
+31.71 end A4 {"t":"31.47","phase":"A4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+31.71 begin A5 answers 5
+36.69 end A5 {"t":"36.48","phase":"A5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+36.69 begin C1 answers 6
+42.84 note C1 boxes 0
+42.84 end C1 {"t":"42.58","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+42.84 begin C2 answers 6
+48.40 note C2 boxes 0
+48.40 end C2 {"t":"48.08","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+48.40 begin C3 answers 6
+53.99 note C3 boxes 0
+53.99 end C3 {"t":"53.64","phase":"C3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+53.99 begin C4 answers 6
+58.92 note C4 boxes 0
+58.92 end C4 {"t":"58.65","phase":"C4","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+58.92 begin C5 answers 6
+64.02 note C5 boxes 0
+64.02 end C5 {"t":"63.65","phase":"C5","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"serverEstablished":0}
+64.02 begin B1 answers 6
+71.97 in-progress reload B1 restore GET /events true answers 6 held 7281ms
+76.57 end B1 {"t":"76.25","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+76.57 begin B2 answers 7
+84.06 in-progress reload B2 restore GET /events true answers 7 held 7250ms
+88.60 end B2 {"t":"88.35","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+88.60 begin B3 answers 8
+96.17 in-progress reload B3 restore GET /events true answers 8 held 7343ms
+100.74 end B3 {"t":"100.50","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+100.74 begin B4 answers 9
+108.39 in-progress reload B4 restore GET /events true answers 9 held 7426ms
+113.00 end B4 {"t":"112.66","phase":"B4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+113.00 begin B5 answers 10
+138.14 in-progress reload B5 restore GET /events false answers 10 held 24908ms
+138.14 FAIL B5 새로고침 뒤 진행 중 run에 붙지 않음
+198.59 FAIL B5 unpause 뒤 답변 11개가 되지 않음 (now 10)
+201.59 FAIL B5 진행 상황 박스 0개(기대 1: 이어 받은 run 하나)
+201.59 end B5 {"t":"201.42","phase":"B5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+FAILURES 3

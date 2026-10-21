@@ -1,0 +1,382 @@
+start	headersAt	end	how	status	conn	method	type	url	lastEventId	error
+7.87	8.97	9.25	finished	200	107	GET	Document	/app/home		
+12.79	12.88	12.88	finished	200	154	GET	Script	/src/features/auth/api/auth_api.ts		
+12.79	12.89	12.89	finished	200	161	GET	Script	/src/shared/api/client.ts		
+12.98	13.82	13.83	finished	200	168	GET	Script	/src/features/notes/api/notes_api.ts		
+12.98	13.83	13.83	finished	200	138	GET	Script	/src/features/settings/api/user_api.ts		
+12.99	13.83	13.83	finished	200	154	GET	Script	/src/features/run/api/index.ts		
+13.01	13.83	13.83	finished	200	161	GET	Script	/src/features/assets/api/assetApi.ts		
+13.17	13.89	13.89	finished	200	107	GET	Script	/src/features/storage/api/assets_api.ts		
+13.83	14.51	14.51	finished	200	161	GET	Script	/src/features/run/api/run_api_error.ts		
+13.83	14.80	14.80	finished	200	138	GET	Script	/src/features/run/api/run_api_client.ts		
+13.83	14.81	14.81	finished	200	107	GET	Script	/src/features/run/api/run_request.ts		
+13.83	14.81	14.81	finished	200	127	GET	Script	/src/features/run/api/sse_reader.ts		
+13.83	14.81	14.81	finished	200	154	GET	Script	/src/features/settings/api/credit_api.ts		
+13.95	14.82	14.82	finished	200	161	GET	Script	/src/features/editor/api/editor_api.ts		
+32.54	74.59	74.59	finished	200	1243	GET	XHR	/api/users/me		
+32.54	74.59	74.59	finished	200	161	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+32.54	74.59	74.59	finished	200	1248	GET	XHR	/api/notes/tools		
+32.54	81.88	81.88	finished	200	138	GET	XHR	/api/notes?page=0&size=1		
+84.40	102.50	102.87	failed	200	1364	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+102.53	107.14	107.14	finished	200	1388	GET	XHR	/api/notes?page=0&size=1		
+102.53	107.14	107.27	finished	200	1381	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+102.87		102.87	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+102.87	108.13	108.54	finished	200	1417	GET	XHR	/api/notes/9		
+102.87	109.56	109.56	finished	200	1424	GET	XHR	/api/users/me		
+102.87	109.56	109.60	finished	200	1434	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+102.87	110.15	110.15	finished	200	1450	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+102.87	110.15	110.15	finished	200	1440	GET	Fetch	/api/conversations/9/messages?limit=30		
+102.87	110.15	110.15	finished	200	1458	GET	XHR	/api/users/me		
+102.87	110.25	110.31	finished	200	1464	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+110.15	111.08	116.27	failed	200	1471	GET	Fetch	/api/ai-runs/b6dcd4f8/events		net::ERR_ABORTED (canceled)
+116.27	116.64	116.64	finished	200	1510	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+116.27	116.64	116.64	finished	200	1496	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+116.27	116.64	116.64	finished	200	1503	GET	XHR	/api/notes/9		
+116.27	116.64	116.64	finished	200	1489	GET	XHR	/api/users/me		
+116.64	123.28	136.17	failed	200	1516	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+123.47	124.32	124.32	finished	200	1532	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+123.47	124.37	124.37	finished	200	1525	GET	XHR	/api/users/me		
+123.47	124.44	124.44	finished	200	1539	GET	XHR	/api/notes/9		
+123.47	126.14	126.14	finished	200	1546	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+136.17	136.17	136.17	finished	200	1559	GET	XHR	/api/users/me		
+136.17	136.17	136.17	finished	200	1566	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+136.17	136.17	136.17	finished	200	1573	GET	XHR	/api/notes/9		
+136.17	136.17	136.17	finished	200	1580	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+139.77	143.73	174.46	failed	200	1588	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+144.06	144.06	144.06	finished	200	1597	GET	XHR	/api/users/me		
+144.06	144.58	144.58	finished	200	1604	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+144.06	144.68	144.69	finished	200	1611	GET	XHR	/api/notes/9		
+144.06	146.57	146.57	finished	200	1618	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+174.46	175.01	175.01	finished	200	1638	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+174.46	175.31	175.31	finished	200	1645	GET	XHR	/api/notes/9		
+174.46	175.31	175.31	finished	200	1652	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+174.46	175.31	175.31	finished	200	1631	GET	XHR	/api/users/me		
+177.91	185.61	193.36	failed	200	1660	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+186.07	186.12	186.12	finished	200	1669	GET	XHR	/api/users/me		
+186.07	186.22	186.22	finished	200	1690	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+186.07	186.34	186.34	finished	200	1676	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+186.07	186.55	186.55	finished	200	1683	GET	XHR	/api/notes/9		
+193.35	193.37	193.37	finished	200	1699	GET	XHR	/api/users/me		
+193.35	193.49	193.49	finished	200	1720	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+193.35	193.49	193.49	finished	200	1706	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+193.35	193.49	193.49	finished	200	1713	GET	XHR	/api/notes/9		
+197.89	237.65	239.78	failed	200	1728	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+237.77	238.01	238.01	finished	200	1737	GET	XHR	/api/users/me		
+237.77	238.01	238.01	finished	200	1744	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+237.77	238.01	238.01	finished	200	1751	GET	XHR	/api/notes/9		
+237.77	238.06	238.06	finished	200	1758	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+239.78	239.78	239.78	finished	200	1767	GET	XHR	/api/users/me		
+239.78	239.78	239.78	finished	200	1774	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+239.78	239.78	239.78	finished	200	1781	GET	XHR	/api/notes/9		
+239.78	239.79	239.79	finished	200	1788	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+244.05	358.93	375.88	failed	200	1796	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+358.93	359.88	359.88	finished	200	1805	GET	XHR	/api/users/me		
+358.93	359.88	359.88	finished	200	1826	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+358.93	359.88	359.88	finished	200	1812	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+358.93	359.88	359.88	finished	200	1819	GET	XHR	/api/notes/9		
+369.11	370.54	375.89	finished	200	1841	GET	Document	/app/chat/9		
+377.92	378.00	378.00	finished	200	1897	GET	Script	/src/features/auth/api/auth_api.ts		
+377.92	378.01	378.01	finished	200	1841	GET	Script	/src/shared/api/client.ts		
+378.23	378.52	378.52	finished	200	1902	GET	Script	/src/features/run/api/index.ts		
+378.23	378.52	378.52	finished	200	1902	GET	Script	/src/features/notes/api/notes_api.ts		
+378.50	378.54	378.54	finished	200	1902	GET	Script	/src/features/assets/api/assetApi.ts		
+378.50	378.54	378.54	finished	200	1854	GET	Script	/src/features/storage/api/assets_api.ts		
+378.51	378.55	378.55	finished	200	1854	GET	Script	/src/features/settings/api/user_api.ts		
+378.52	378.56	378.56	finished	200	1940	GET	Script	/src/features/run/api/run_api_client.ts		
+378.52	378.56	378.56	finished	200	1854	GET	Script	/src/features/run/api/run_api_error.ts		
+378.52	378.56	378.56	finished	200	1902	GET	Script	/src/features/run/api/run_request.ts		
+378.52	378.56	378.56	finished	200	1897	GET	Script	/src/features/run/api/sse_reader.ts		
+378.52	378.56	378.56	finished	200	1841	GET	Script	/src/features/settings/api/credit_api.ts		
+378.55	378.57	378.57	finished	200	1902	GET	Script	/src/features/editor/api/editor_api.ts		
+389.47		389.47	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+389.47	393.47	393.47	finished	200	1841	GET	XHR	/api/users/me		
+389.47	393.47	393.47	finished	200	2518	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+389.47	393.47	393.47	finished	200	2523	GET	XHR	/api/notes/tools		
+389.47	393.47	393.47	finished	200	2537	GET	XHR	/api/notes/9		
+389.47	396.83	396.83	finished	200	2590	GET	Fetch	/api/conversations/9/messages?limit=30		
+389.47		450.77	failed			GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		net::ERR_ABORTED (canceled)
+402.33	403.00	450.77	finished	200	2608	GET	Document	/app/chat/9		
+503.95	504.72	504.72	finished	200	2713	GET	Script	/src/features/auth/api/auth_api.ts		
+503.95	505.14	505.14	finished	200	2719	GET	Script	/src/shared/api/client.ts		
+506.41	506.45	506.45	finished	200	2725	GET	Script	/src/features/run/api/index.ts		
+506.41	506.45	507.11	finished	200	2728	GET	Script	/src/features/notes/api/notes_api.ts		
+506.41	507.11	507.11	finished	200	2713	GET	Script	/src/features/settings/api/user_api.ts		
+506.41	507.49	507.49	finished	200	2722	GET	Script	/src/features/assets/api/assetApi.ts		
+506.41	507.49	507.49	finished	200	2722	GET	Script	/src/features/storage/api/assets_api.ts		
+507.11	507.80	507.80	finished	200	2722	GET	Script	/src/features/run/api/run_api_client.ts		
+507.11	508.36	508.36	finished	200	2716	GET	Script	/src/features/run/api/run_api_error.ts		
+507.11	508.36	508.36	finished	200	2728	GET	Script	/src/features/run/api/run_request.ts		
+507.11	508.36	508.36	finished	200	2725	GET	Script	/src/features/run/api/sse_reader.ts		
+507.11	508.52	508.52	finished	200	2716	GET	Script	/src/features/settings/api/credit_api.ts		
+507.50	508.53	508.53	finished	200	2716	GET	Script	/src/features/editor/api/editor_api.ts		
+509.36		509.36	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+509.36	509.37	509.37	finished	200	2728	GET	XHR	/api/notes/9		
+509.36	509.37	509.37	finished	200	2713	GET	XHR	/api/notes/tools		
+509.36	509.37	509.37	finished	200	2725	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+509.36	509.37	509.37	finished	200	2722	GET	XHR	/api/users/me		
+509.36	509.37	509.42	finished	200	3354	GET	Fetch	/api/conversations/9/messages?limit=30		
+509.36		509.42	failed			GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		net::ERR_ABORTED (canceled)
+509.42	509.42	509.42	finished	200	3368	GET	Document	/app/chat/9		
+513.61	515.32	515.48	finished	200	3368	GET	Script	/src/features/auth/api/auth_api.ts		
+513.61	515.48	515.48	finished	200	3413	GET	Script	/src/shared/api/client.ts		
+515.48	517.23	517.23	finished	200	3408	GET	Script	/src/features/run/api/index.ts		
+515.48	517.23	517.23	finished	200	3463	GET	Script	/src/features/notes/api/notes_api.ts		
+515.48	517.23	517.23	finished	200	3368	GET	Script	/src/features/settings/api/user_api.ts		
+515.61	517.23	517.23	finished	200	3377	GET	Script	/src/features/assets/api/assetApi.ts		
+515.62	517.24	517.24	finished	200	3377	GET	Script	/src/features/storage/api/assets_api.ts		
+517.23	517.50	517.50	finished	200	3408	GET	Script	/src/features/run/api/run_api_client.ts		
+517.23	517.50	517.50	finished	200	3377	GET	Script	/src/features/run/api/run_request.ts		
+517.23	517.50	517.50	finished	200	3368	GET	Script	/src/features/run/api/run_api_error.ts		
+517.23	517.50	517.50	finished	200	3413	GET	Script	/src/features/run/api/sse_reader.ts		
+517.23	517.51	517.51	finished	200	3458	GET	Script	/src/features/settings/api/credit_api.ts		
+517.24	517.51	517.51	finished	200	3413	GET	Script	/src/features/editor/api/editor_api.ts		
+517.82		517.83	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+517.83	517.83	517.83	finished	200	3377	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+517.83	517.84	517.84	finished	200	3408	GET	XHR	/api/users/me		
+517.83	517.84	517.84	finished	200	3463	GET	XHR	/api/notes/tools		
+517.83	517.84	517.84	finished	200	3413	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+517.83	517.84	517.84	finished	200	4066	GET	XHR	/api/notes/9		
+517.83	517.84	517.84	finished	200	3458	GET	Fetch	/api/conversations/9/messages?limit=30		
+517.84	518.15	518.15	finished	200	4092	GET	Document	/app/chat/9		
+518.55	518.57	518.57	finished	304	4140	GET	Script	/src/features/auth/api/auth_api.ts		
+518.55	518.57	518.57	finished	304	4101	GET	Script	/src/shared/api/client.ts		
+518.58	519.11	519.11	finished	304	4125	GET	Script	/src/features/run/api/index.ts		
+518.58	519.11	519.11	finished	304	4130	GET	Script	/src/features/notes/api/notes_api.ts		
+518.58	519.11	519.11	finished	304	4125	GET	Script	/src/features/assets/api/assetApi.ts		
+518.58	519.13	519.13	finished	304	4125	GET	Script	/src/features/storage/api/assets_api.ts		
+518.59	519.13	519.13	finished	304	4140	GET	Script	/src/features/settings/api/user_api.ts		
+519.11	519.16	519.16	finished	304	4125	GET	Script	/src/features/run/api/run_api_client.ts		
+519.11	519.16	519.16	finished	304	4140	GET	Script	/src/features/run/api/run_api_error.ts		
+519.11	519.16	519.16	finished	304	4101	GET	Script	/src/features/run/api/run_request.ts		
+519.11	519.16	519.16	finished	304	4092	GET	Script	/src/features/run/api/sse_reader.ts		
+519.11	519.17	519.17	finished	304	4135	GET	Script	/src/features/settings/api/credit_api.ts		
+519.14	519.17	519.17	finished	304	4125	GET	Script	/src/features/editor/api/editor_api.ts		
+522.35		522.36	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+522.36	522.36	522.36	finished	200	4771	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+522.36	522.36	522.36	finished	200	4778	GET	XHR	/api/users/me		
+522.36	522.36	522.36	finished	200	4785	GET	XHR	/api/notes/tools		
+522.36	522.36	522.36	finished	200	4805	GET	Fetch	/api/conversations/9/messages?limit=30		
+522.36	522.36	522.36	finished	200	4792	GET	XHR	/api/notes/9		
+522.36	522.36	522.36	finished	200	4799	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+528.11	528.11	528.29	finished	200	4812	GET	Document	/app/chat/9		
+528.33	529.06	529.06	finished	200	4897	GET	Script	/src/features/auth/api/auth_api.ts		
+528.33	529.07	529.07	finished	200	4812	GET	Script	/src/shared/api/client.ts		
+529.08	529.11	529.11	finished	200	4812	GET	Script	/src/features/run/api/index.ts		
+529.08	529.11	529.11	finished	200	4863	GET	Script	/src/features/notes/api/notes_api.ts		
+529.08	529.11	529.11	finished	200	4812	GET	Script	/src/features/assets/api/assetApi.ts		
+529.09	529.11	529.11	finished	200	4812	GET	Script	/src/features/storage/api/assets_api.ts		
+529.09	529.11	529.11	finished	200	4897	GET	Script	/src/features/settings/api/user_api.ts		
+529.11	529.59	530.38	finished	200	4826	GET	Script	/src/features/run/api/run_api_client.ts		
+529.11	530.38	530.38	finished	200	4856	GET	Script	/src/features/run/api/run_api_error.ts		
+529.11	530.67	530.67	finished	200	4812	GET	Script	/src/features/run/api/sse_reader.ts		
+529.11	530.67	530.67	finished	200	4863	GET	Script	/src/features/run/api/run_request.ts		
+529.11	530.68	530.68	finished	200	4897	GET	Script	/src/features/settings/api/credit_api.ts		
+529.48	530.68	530.68	finished	200	4826	GET	Script	/src/features/editor/api/editor_api.ts		
+530.77		530.77	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+530.77	530.77	530.77	finished	200	4812	GET	XHR	/api/users/me		
+530.77	530.77	530.77	finished	200	4897	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+530.77	530.77	530.77	finished	200	4826	GET	XHR	/api/notes/tools		
+530.77	530.77	530.77	finished	200	4856	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+530.77	530.77	530.77	finished	200	4863	GET	XHR	/api/notes/9		
+530.77	530.77	530.77	finished	200	5529	GET	Fetch	/api/conversations/9/messages?limit=30		
+534.00	534.84	534.84	finished	200	5538	GET	Document	/app/chat/9		
+534.90	534.94	534.94	finished	200	5538	GET	Script	/src/features/auth/api/auth_api.ts		
+534.90	534.94	534.94	finished	200	5575	GET	Script	/src/shared/api/client.ts		
+534.95	535.11	535.11	finished	200	5625	GET	Script	/src/features/run/api/index.ts		
+534.95	535.89	535.89	finished	200	5538	GET	Script	/src/features/notes/api/notes_api.ts		
+534.95	535.89	535.89	finished	200	5625	GET	Script	/src/features/assets/api/assetApi.ts		
+534.96	536.06	536.06	finished	200	5625	GET	Script	/src/features/storage/api/assets_api.ts		
+534.96	536.06	536.06	finished	200	5580	GET	Script	/src/features/settings/api/user_api.ts		
+535.23	538.45	538.45	finished	200	5625	GET	Script	/src/features/run/api/run_api_client.ts		
+535.23	538.45	538.45	finished	200	5580	GET	Script	/src/features/run/api/run_api_error.ts		
+535.23	538.45	538.45	finished	200	5585	GET	Script	/src/features/run/api/run_request.ts		
+535.23	538.45	538.45	finished	200	5575	GET	Script	/src/features/run/api/sse_reader.ts		
+535.89	538.46	538.46	finished	200	5580	GET	Script	/src/features/settings/api/credit_api.ts		
+538.45	538.46	538.46	finished	200	5625	GET	Script	/src/features/editor/api/editor_api.ts		
+538.49		538.50	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+538.49	538.50	538.50	finished	200	5580	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+538.49	538.50	538.50	finished	200	5585	GET	XHR	/api/users/me		
+538.49	538.50	538.50	finished	200	5538	GET	XHR	/api/notes/tools		
+538.49	538.50	538.50	finished	200	5550	GET	XHR	/api/notes/9		
+538.49	538.50	538.50	finished	200	6257	GET	Fetch	/api/conversations/9/messages?limit=30		
+538.49	538.50	538.50	finished	200	5575	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+564.08	564.11	567.55	failed	200	6269	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+564.32	564.36	564.78	finished	200	6276	GET	XHR	/api/users/me		
+564.32	564.78	564.78	finished	200	6283	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+564.32	564.78	564.78	finished	200	6297	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+564.32	564.78	564.78	finished	200	6290	GET	XHR	/api/notes/9		
+567.35	567.53	567.55	finished	200	6307	GET	Document	/app/chat/9		
+567.71	568.05	568.05	finished	200	6341	GET	Script	/src/features/auth/api/auth_api.ts		
+567.72	568.05	568.05	finished	200	6316	GET	Script	/src/shared/api/client.ts		
+568.06	568.24	568.24	finished	200	6346	GET	Script	/src/features/notes/api/notes_api.ts		
+568.06	568.25	568.25	finished	200	6341	GET	Script	/src/features/run/api/index.ts		
+568.06	568.28	568.28	finished	200	6346	GET	Script	/src/features/settings/api/user_api.ts		
+568.06	568.28	568.28	finished	200	6341	GET	Script	/src/features/assets/api/assetApi.ts		
+568.09	568.29	568.29	finished	200	6341	GET	Script	/src/features/storage/api/assets_api.ts		
+568.27	568.60	568.60	finished	200	6316	GET	Script	/src/features/run/api/run_api_client.ts		
+568.27	568.60	568.60	finished	200	6351	GET	Script	/src/features/run/api/run_request.ts		
+568.27	568.60	568.60	finished	200	6356	GET	Script	/src/features/run/api/run_api_error.ts		
+568.27	568.60	568.60	finished	200	6346	GET	Script	/src/features/run/api/sse_reader.ts		
+568.29	568.60	568.60	finished	200	6356	GET	Script	/src/features/settings/api/credit_api.ts		
+568.34	568.61	568.61	finished	200	6307	GET	Script	/src/features/editor/api/editor_api.ts		
+569.60		569.62	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+569.60	583.99	583.99	finished	200	6307	GET	XHR	/api/notes/tools		
+569.60	583.99	583.99	finished	200	6316	GET	XHR	/api/notes/9		
+569.60	583.99	583.99	finished	200	6351	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+569.60	583.99	583.99	finished	200	6346	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+569.60	583.99	583.99	finished	200	6356	GET	XHR	/api/users/me		
+569.60	583.99	583.99	finished	200	7025	GET	Fetch	/api/conversations/9/messages?limit=30		
+584.21	584.21	584.21	finished	200	7064	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+584.21	584.21	584.21	finished	200	7057	GET	XHR	/api/notes/9		
+584.21	584.21	584.21	finished	200	7050	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+584.21	584.21	584.21	finished	200	7043	GET	XHR	/api/users/me		
+584.21	584.21	594.50	failed	200	7036	GET	Fetch	/api/ai-runs/74e8a024/events		net::ERR_ABORTED (canceled)
+594.50	594.87	594.87	finished	200	7075	GET	XHR	/api/users/me		
+594.50	595.47	595.47	finished	200	7082	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+594.50	595.47	595.47	finished	200	7096	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+594.50	596.61	596.61	finished	200	7089	GET	XHR	/api/notes/9		
+599.75		603.12	failed			POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+602.79	603.10	603.12	finished	200	7116	GET	Document	/app/chat/9		
+603.21	603.30	603.30	finished	200	7125	GET	Script	/src/features/auth/api/auth_api.ts		
+603.23	603.61	603.61	finished	200	7167	GET	Script	/src/shared/api/client.ts		
+603.62	603.90	603.90	finished	200	7167	GET	Script	/src/features/run/api/index.ts		
+603.62	606.58	606.58	finished	200	7125	GET	Script	/src/features/notes/api/notes_api.ts		
+603.62	606.58	606.58	finished	200	7167	GET	Script	/src/features/assets/api/assetApi.ts		
+603.62	606.58	606.58	finished	200	7167	GET	Script	/src/features/storage/api/assets_api.ts		
+603.62	606.58	606.58	finished	200	7200	GET	Script	/src/features/settings/api/user_api.ts		
+604.04	606.79	606.79	finished	200	7162	GET	Script	/src/features/run/api/run_api_error.ts		
+604.04	606.79	606.79	finished	200	7116	GET	Script	/src/features/run/api/run_api_client.ts		
+604.04	606.79	606.79	finished	200	7200	GET	Script	/src/features/run/api/run_request.ts		
+604.04	606.79	606.79	finished	200	7125	GET	Script	/src/features/run/api/sse_reader.ts		
+606.58	607.10	607.10	finished	200	7167	GET	Script	/src/features/settings/api/credit_api.ts		
+606.70	607.10	607.10	finished	200	7116	GET	Script	/src/features/editor/api/editor_api.ts		
+607.36		607.38	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+607.36	612.11	612.11	finished	200	7200	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+607.36	612.13	612.13	finished	200	7116	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+607.36	612.28	612.28	finished	200	7167	GET	XHR	/api/users/me		
+607.36	613.78	613.78	finished	200	7826	GET	Fetch	/api/conversations/9/messages?limit=30		
+607.36	614.18	614.18	finished	200	7125	GET	XHR	/api/notes/tools		
+607.36	614.18	614.18	finished	200	7162	GET	XHR	/api/notes/9		
+614.18	614.18	614.18	finished	200	7858	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+614.18	614.18	614.18	finished	200	7844	GET	XHR	/api/users/me		
+614.18	614.18	614.18	finished	200	7851	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+614.18	614.18	620.25	failed	200	7837	GET	Fetch	/api/ai-runs/8b127bbe/events		net::ERR_ABORTED (canceled)
+620.23	630.42	630.42	finished	200	7869	GET	XHR	/api/users/me		
+620.23	630.42	630.42	finished	200	7883	GET	XHR	/api/notes/9		
+620.23	630.42	630.42	finished	200	7876	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+620.23	630.42	630.42	finished	200	7890	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+633.12		637.40	failed			POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+636.14	636.25	637.40	finished	200	7912	GET	Document	/app/chat/9		
+637.44	637.47	637.47	finished	200	7912	GET	Script	/src/features/auth/api/auth_api.ts		
+637.44	637.47	637.47	finished	200	7921	GET	Script	/src/shared/api/client.ts		
+637.47	637.50	637.50	finished	200	7964	GET	Script	/src/features/assets/api/assetApi.ts		
+637.47	637.50	637.50	finished	200	7964	GET	Script	/src/features/storage/api/assets_api.ts		
+637.48	637.50	637.50	finished	200	7959	GET	Script	/src/features/settings/api/user_api.ts		
+637.48	637.50	637.50	finished	200	7912	GET	Script	/src/features/run/api/index.ts		
+637.48	637.51	637.51	finished	200	7912	GET	Script	/src/features/notes/api/notes_api.ts		
+637.51	637.53	637.53	finished	200	7912	GET	Script	/src/features/run/api/run_api_client.ts		
+637.51	637.53	637.53	finished	200	7953	GET	Script	/src/features/run/api/run_api_error.ts		
+637.51	637.53	637.53	finished	200	7945	GET	Script	/src/features/run/api/run_request.ts		
+637.51	637.53	637.53	finished	200	7964	GET	Script	/src/features/run/api/sse_reader.ts		
+637.52	637.54	637.54	finished	200	7921	GET	Script	/src/features/settings/api/credit_api.ts		
+637.52	637.54	637.54	finished	200	7945	GET	Script	/src/features/editor/api/editor_api.ts		
+676.23		676.24	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+676.23	682.44	682.49	finished	401	7959	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+676.23		689.36	failed			GET	XHR	/api/notes/tools		net::ERR_ABORTED (canceled)
+676.23		689.36	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+676.23		689.36	failed			GET	XHR	/api/users/me		net::ERR_ABORTED (canceled)
+676.23		689.36	failed			GET	XHR	/api/notes/9		net::ERR_ABORTED (canceled)
+676.23		689.36	failed			GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		net::ERR_ABORTED (canceled)
+676.24	682.49	689.36	finished	200	8641	GET	Document	/app/chat/9		
+682.49		689.36	failed			POST	XHR	/api/auth/refresh		net::ERR_ABORTED (canceled)
+695.94	695.98	695.98	finished	200	8757	GET	Script	/src/features/auth/api/auth_api.ts		
+695.94	695.98	695.98	finished	200	8760	GET	Script	/src/shared/api/client.ts		
+695.98	696.04	696.04	finished	200	8760	GET	Script	/src/features/run/api/index.ts		
+696.00	696.11	696.11	finished	200	8765	GET	Script	/src/features/notes/api/notes_api.ts		
+696.00	696.11	696.11	finished	200	8726	GET	Script	/src/features/assets/api/assetApi.ts		
+696.00	696.12	696.12	finished	200	8726	GET	Script	/src/features/storage/api/assets_api.ts		
+696.01	696.12	696.12	finished	200	8754	GET	Script	/src/features/settings/api/user_api.ts		
+696.04	696.15	696.15	finished	200	8754	GET	Script	/src/features/run/api/run_api_client.ts		
+696.04	696.15	696.15	finished	200	8760	GET	Script	/src/features/run/api/run_request.ts		
+696.04	696.15	696.15	finished	200	8770	GET	Script	/src/features/run/api/run_api_error.ts		
+696.04	696.16	696.16	finished	200	8757	GET	Script	/src/features/run/api/sse_reader.ts		
+696.06	696.18	696.18	finished	200	8765	GET	Script	/src/features/editor/api/editor_api.ts		
+696.08	696.40	696.40	finished	200	8757	GET	Script	/src/features/settings/api/credit_api.ts		
+696.45		696.46	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+696.46	696.46	696.46	finished	200	8760	GET	XHR	/api/notes/tools		
+696.46	696.46	696.46	finished	200	8770	GET	XHR	/api/users/me		
+696.46	696.90	696.90	finished	200	8754	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+696.46	696.90	696.90	finished	200	8765	GET	XHR	/api/notes/9		
+696.46	696.90	696.90	finished	200	9391	GET	Fetch	/api/conversations/9/messages?limit=30		
+696.46	697.54	697.54	finished	200	8726	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+697.52	697.93	697.93	finished	200	9409	GET	XHR	/api/users/me		
+697.52	697.93	697.93	finished	200	9423	GET	XHR	/api/notes/9		
+697.52	697.93	697.93	finished	200	9416	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+697.52	697.92	700.86	failed	200	9396	GET	Fetch	/api/ai-runs/20a4816f/events		net::ERR_ABORTED (canceled)
+700.84	700.86	700.86	finished	200	9453	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+700.84	700.86	700.86	finished	200	9446	GET	XHR	/api/notes/9		
+700.84	701.56	701.56	finished	200	9439	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+700.84	701.56	701.56	finished	200	9432	GET	XHR	/api/users/me		
+705.56	705.57	709.57	failed	200	9461	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+705.87	706.11	706.11	finished	200	9468	GET	XHR	/api/users/me		
+705.87	706.11	706.11	finished	200	9475	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+705.87	706.11	706.23	finished	200	9489	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+705.87	706.24	706.24	finished	200	9482	GET	XHR	/api/notes/9		
+709.27	709.29	709.57	finished	200	9499	GET	Document	/app/chat/9		
+709.66	709.76	709.76	finished	200	9543	GET	Script	/src/features/auth/api/auth_api.ts		
+709.66	709.76	709.76	finished	200	9538	GET	Script	/src/shared/api/client.ts		
+709.79	710.15	710.15	finished	200	9533	GET	Script	/src/features/run/api/index.ts		
+709.79	710.16	710.16	finished	200	9499	GET	Script	/src/features/assets/api/assetApi.ts		
+709.80	710.16	710.16	finished	200	9581	GET	Script	/src/features/notes/api/notes_api.ts		
+709.81	710.16	710.16	finished	200	9581	GET	Script	/src/features/storage/api/assets_api.ts		
+709.87	710.16	710.16	finished	200	9533	GET	Script	/src/features/settings/api/user_api.ts		
+710.16	710.20	710.20	finished	200	9548	GET	Script	/src/features/settings/api/credit_api.ts		
+710.16	710.20	710.20	finished	200	9581	GET	Script	/src/features/run/api/run_api_error.ts		
+710.16	710.20	710.20	finished	200	9499	GET	Script	/src/features/run/api/run_api_client.ts		
+710.16	710.20	710.20	finished	200	9533	GET	Script	/src/features/run/api/run_request.ts		
+710.16	710.20	710.20	finished	200	9543	GET	Script	/src/features/run/api/sse_reader.ts		
+710.17	710.20	710.20	finished	200	9548	GET	Script	/src/features/editor/api/editor_api.ts		
+711.85		711.85	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+711.85	711.85	711.85	finished	200	9499	GET	XHR	/api/notes/tools		
+711.85	711.85	711.86	finished	200	9581	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+711.85	711.86	711.86	finished	200	9538	GET	XHR	/api/notes/9		
+711.85	711.86	711.86	finished	200	9543	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+711.85	711.86	711.86	finished	200	10214	GET	Fetch	/api/conversations/9/messages?limit=30		
+711.85	718.88	718.88	finished	200	9533	GET	XHR	/api/users/me		
+712.27	712.88	712.88	finished	200	10233	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+712.27	715.54	715.54	finished	200	10247	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+712.27	715.54	715.54	finished	200	10240	GET	XHR	/api/notes/9		
+712.27	712.68	723.88	failed	200	10220	GET	Fetch	/api/ai-runs/ebbe7cb1/events		net::ERR_ABORTED (canceled)
+723.88	724.04	724.04	finished	200	10281	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+723.88	724.04	724.04	finished	200	10274	GET	XHR	/api/notes/9		
+723.88	724.04	724.04	finished	200	10260	GET	XHR	/api/users/me		
+723.88	724.04	724.04	finished	200	10267	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+729.19		732.47	failed			POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+732.22	732.40	732.47	finished	200	10299	GET	Document	/app/chat/9		
+732.63	733.15	733.15	finished	200	10340	GET	Script	/src/features/auth/api/auth_api.ts		
+732.65	733.20	733.20	finished	200	10330	GET	Script	/src/shared/api/client.ts		
+743.44	743.91	743.91	finished	200	10364	GET	Script	/src/features/notes/api/notes_api.ts		
+743.87	743.91	743.91	finished	200	10340	GET	Script	/src/features/run/api/index.ts		
+743.87	743.92	743.92	finished	200	10335	GET	Script	/src/features/assets/api/assetApi.ts		
+743.88	743.92	743.92	finished	200	10335	GET	Script	/src/features/storage/api/assets_api.ts		
+743.88	743.92	743.92	finished	200	10340	GET	Script	/src/features/settings/api/user_api.ts		
+743.91	743.93	743.93	finished	200	10335	GET	Script	/src/features/run/api/run_api_error.ts		
+743.91	743.93	743.93	finished	200	10330	GET	Script	/src/features/run/api/run_api_client.ts		
+743.91	743.93	743.93	finished	200	10340	GET	Script	/src/features/run/api/run_request.ts		
+743.91	743.93	743.93	finished	200	10308	GET	Script	/src/features/run/api/sse_reader.ts		
+743.91	743.93	743.93	finished	200	10815	GET	Script	/src/features/settings/api/credit_api.ts		
+743.93	743.94	743.94	finished	200	10800	GET	Script	/src/features/editor/api/editor_api.ts		
+744.16		744.17	failed			GET	Fetch	/api/conversations/9/messages?limit=30		net::ERR_ABORTED (canceled)
+744.17	744.17	744.17	finished	200	10805	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+744.17	744.17	744.17	finished	200	10858	GET	XHR	/api/notes/tools		
+744.17	744.17	744.17	finished	200	10834	GET	Fetch	/api/conversations/9/messages?limit=30		
+744.17	744.17	744.17	finished	200	10800	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+744.17	744.18	744.18	finished	200	10810	GET	XHR	/api/users/me		
+744.17	744.18	744.18	finished	200	10815	GET	XHR	/api/notes/9		
+744.18	744.18	744.18	finished	200	11057	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+744.18	744.18	744.18	finished	200	11050	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+744.18	744.18	747.52	failed	200	11037	GET	Fetch	/api/ai-runs/863e5d34/events		net::ERR_ABORTED (canceled)
+747.52	747.52	747.52	finished	200	11087	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+747.52	747.52	747.52	finished	200	11073	GET	XHR	/api/notes/9?conversationPage=0&conversationSize=1		
+747.52	747.52	747.52	finished	200	11066	GET	XHR	/api/users/me		
+747.52	747.52	747.52	finished	200	11080	GET	XHR	/api/notes/9		

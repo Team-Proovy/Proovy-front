@@ -1,0 +1,20 @@
+28.35 note http://localhost:5199/app/chat/4
+28.42 begin B1 answers 1
+130.26 in-progress reload B1 boxes 1→0 answers 1
+130.27 FAIL B1 새로고침 뒤 진행 상황 박스 1→0개
+191.46 FAIL B1 unpause 뒤 답변 2개가 되지 않음 (now 1)
+193.04 end B1 {"t":"192.76","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+193.05 begin B2 answers 1
+299.61 in-progress reload B2 boxes 0→0 answers 1
+365.75 FAIL B2 unpause 뒤 답변 2개가 되지 않음 (now 1)
+367.26 end B2 {"t":"367.01","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+367.26 begin A1 answers 1
+388.49 end A1 {"t":"388.18","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+388.59 begin A2 answers 2
+418.78 end A2 {"t":"418.51","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+418.78 begin C1 answers 3
+448.27 note C1 boxes 0
+448.27 end C1 {"t":"447.82","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+448.27 begin C2 answers 3
+480.06 note C2 boxes 0
+480.06 end C2 {"t":"479.58","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}

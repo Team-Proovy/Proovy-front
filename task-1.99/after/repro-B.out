@@ -1,0 +1,17 @@
+8.89 note http://localhost:5199/app/chat/19
+8.90 begin B1 answers 1
+15.58 in-progress reload B1 restore GET /events true answers 1 held 6426ms
+19.68 end B1 {"t":"19.41","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+19.69 begin B2 answers 2
+26.30 in-progress reload B2 restore GET /events true answers 2 held 6399ms
+30.49 end B2 {"t":"30.20","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+30.49 begin B3 answers 3
+37.04 in-progress reload B3 restore GET /events true answers 3 held 6331ms
+41.17 end B3 {"t":"40.84","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+41.17 begin B4 answers 4
+47.70 in-progress reload B4 restore GET /events true answers 4 held 6316ms
+51.95 end B4 {"t":"51.62","phase":"B4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+51.95 begin B5 answers 5
+58.93 in-progress reload B5 restore GET /events true answers 5 held 6755ms
+63.23 end B5 {"t":"62.73","phase":"B5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+FAILURES 0

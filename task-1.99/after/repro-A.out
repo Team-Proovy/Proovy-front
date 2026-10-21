@@ -1,0 +1,12 @@
+5.38 note http://localhost:5199/app/chat/17
+5.42 begin A1 answers 1
+10.49 end A1 {"t":"10.03","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+10.49 begin A2 answers 2
+15.44 end A2 {"t":"15.03","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+15.44 begin A3 answers 3
+20.79 end A3 {"t":"20.53","phase":"A3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+20.79 begin A4 answers 4
+25.81 end A4 {"t":"25.54","phase":"A4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+25.81 begin A5 answers 5
+30.89 end A5 {"t":"30.55","phase":"A5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"serverEstablished":0}
+FAILURES 0

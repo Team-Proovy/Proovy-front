@@ -1,0 +1,9 @@
+failures 8
+A5 답변 6개가 되지 않음 (now 5)
+C2 reload: page.reload: Timeout 30000ms exceeded.
+B1 진행 상황 박스 1개 ≠ 답변 6개(중복·누락)
+B2 진행 상황 박스 1개 ≠ 답변 7개(중복·누락)
+B3 reload: page.reload: Timeout 30000ms exceeded.
+B3 진행 상황 박스 1개 ≠ 답변 8개(중복·누락)
+B4 진행 상황 박스 1개 ≠ 답변 9개(중복·누락)
+B5 진행 상황 박스 1개 ≠ 답변 10개(중복·누락)
