@@ -1,5 +1,6 @@
 import {
   BROWSER_FRAME_TYPES,
+  BROWSER_RUN_LIMITS,
   isTerminalFrame,
   toEventId,
 } from "@/shared/contracts/browser_run_v1";
@@ -21,7 +22,16 @@ import { isUuid } from "./run_request";
  * - 줄 끝은 CR·LF·CRLF 모두 허용하고 청크 경계에서 갈린 줄·CRLF도 이어 붙인다(WHATWG SSE).
  * - comment(`: heartbeat`)와 data 없는 블록은 frame·cursor가 아니다.
  * - 끝 빈 줄 없이 끊긴 마지막 블록은 잘린 것이라 버린다.
+ * - watchdog: 마지막 수신(frame·heartbeat 등 아무 바이트) 뒤 `idleTimeoutMs` 동안 바이트가 없으면 연결이 죽은 것
+ *   (FIN·RST 없이 끊긴 half-open, 중간 proxy가 upstream 단절을 전달하지 않음)으로 보고 끊는다.
  */
+
+/**
+ * 무수신 감시 시간 기본값: heartbeat(15초, browser-run-v1 D10) 3회분.
+ * heartbeat 한두 번이 늦거나(서버 전송 중 heartbeat 생략·GC·망 지연) 하나를 놓쳐도 끊지 않고, 실제 단절은 1분 안에 재접속한다.
+ */
+export const RUN_STREAM_IDLE_TIMEOUT_MS =
+  BROWSER_RUN_LIMITS.heartbeatSeconds * 1000 * 3;
 
 // ---------------------------------------------------------------------------
 // 종료 사유
@@ -41,8 +51,9 @@ export type RunStreamEnd =
        * - `eof`: 서버가 terminal 없이 연결을 닫음(최대 유지 시간·재시작·내부 오류)
        * - `network`: 연결 실패·읽기 중 네트워크 오류
        * - `protocol`: frame이 계약 형식이 아님(JSON 오류·event/id와 data 불일치 등) — 연결을 끊었다
+       * - `stalled`: `idleTimeoutMs` 동안 아무 바이트(heartbeat 포함)도 오지 않아 watchdog이 연결을 끊었다
        */
-      cause: "eof" | "network" | "protocol";
+      cause: "eof" | "network" | "protocol" | "stalled";
       error?: unknown;
       lastEventId: EventId | null;
     }
@@ -59,12 +70,20 @@ export interface RunStreamReadOptions {
   runId?: Uuid;
   /** 연결 시 보낸 cursor. frame 없이 끝나면 `lastEventId`로 돌려준다. */
   lastEventId?: EventId | null;
+  /** 무수신 감시 시간(ms). 기본 `RUN_STREAM_IDLE_TIMEOUT_MS`, null이면 감시하지 않는다. */
+  idleTimeoutMs?: number | null;
 }
 
 /** SSE 응답 body를 끝까지(또는 terminal까지) 읽는다. 네트워크 오류를 정상 종료로 삼키지 않는다. */
 export const readRunStream = async (
   body: ReadableStream<Uint8Array>,
-  { onFrame, signal, runId, lastEventId = null }: RunStreamReadOptions,
+  {
+    onFrame,
+    signal,
+    runId,
+    lastEventId = null,
+    idleTimeoutMs = RUN_STREAM_IDLE_TIMEOUT_MS,
+  }: RunStreamReadOptions,
 ): Promise<RunStreamEnd> => {
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -89,14 +108,33 @@ export const readRunStream = async (
   };
   signal?.addEventListener("abort", cancelReader);
 
+  // read 하나를 기다리는 동안만 감시한다(terminal·종료 뒤에는 finally가 푼다). cancel하면 대기 중 read가 끝난다.
+  let stalled = false;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+  const watch = () => {
+    clearTimeout(idleTimer);
+    if (idleTimeoutMs == null) return;
+    idleTimer = setTimeout(() => {
+      stalled = true;
+      reader.cancel(new Error("run stream idle timeout")).catch(() => {});
+    }, idleTimeoutMs);
+  };
+  const stalledEnd = (): RunStreamEnd => ({
+    reason: "interrupted",
+    cause: "stalled",
+    lastEventId: cursor,
+  });
+
   try {
     if (signal?.aborted) return { reason: "aborted", lastEventId: cursor };
     while (true) {
       let chunk: ReadableStreamReadResult<Uint8Array>;
+      watch();
       try {
         chunk = await reader.read();
       } catch (error) {
         if (signal?.aborted) return { reason: "aborted", lastEventId: cursor };
+        if (stalled) return stalledEnd();
         return {
           reason: "interrupted",
           cause: "network",
@@ -107,6 +145,7 @@ export const readRunStream = async (
 
       // abort 뒤에는 이미 받은 바이트도 frame으로 내지 않는다.
       if (signal?.aborted) return { reason: "aborted", lastEventId: cursor };
+      if (stalled) return stalledEnd();
       if (chunk.done) parser.feed(decoder.decode());
       else parser.feed(decoder.decode(chunk.value, { stream: true }));
 
@@ -137,6 +176,7 @@ export const readRunStream = async (
         return { reason: "interrupted", cause: "eof", lastEventId: cursor };
     }
   } finally {
+    clearTimeout(idleTimer);
     signal?.removeEventListener("abort", cancelReader);
     cancelReader();
     reader.releaseLock();

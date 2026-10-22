@@ -33,7 +33,8 @@ import type { ReconnectBackoff } from "./reconnect_backoff";
  *
  * - 전송: POST SSE frame을 1.90 reducer에 넣는다. `run.created` 전에 끊기면 같은 request(같은 requestId)로
  *   다시 POST한다(Server가 기존 run을 seq 1부터 replay, reducer가 seq로 중복을 버린다).
- * - terminal 없이 끊기면 reducer cursor(마지막 처리 frame id)로 `GET /events`에 backoff 재접속한다.
+ * - terminal 없이 끊기면(heartbeat 3회분 무수신 watchdog 포함) reducer cursor(마지막 처리 frame id)로 `GET /events`에
+ *   backoff 재접속한다.
  *   단절은 취소가 아니다. 404 RUN4041이면 멈춘다.
  * - 409 RUN4091·Note 진입 복원은 그 run에 cursor 없이 붙어 seq 1부터 받는다(Activity·page까지 복원, spec 08).
  * - 정지는 `POST /cancel`만 쓴다. `dispose()`(화면 이탈·Note 전환)는 연결만 끊고 run을 취소하지 않는다.
@@ -404,7 +405,7 @@ export const createRunSession = ({
         }
       }
 
-      // terminal 없이 끊김(eof·network·protocol) 또는 일시 거부 → backoff 뒤 재접속.
+      // terminal 없이 끊김(eof·network·protocol·stalled) 또는 일시 거부 → backoff 뒤 재접속.
       // 새 frame이 들어온 연결 뒤에만 횟수를 처음부터 센다(같은 seq에서 반복되는 오류는 지연이 계속 늘어난다).
       if (snapshot.run.lastSeq > seqBefore) failures = 0;
       failures += 1;

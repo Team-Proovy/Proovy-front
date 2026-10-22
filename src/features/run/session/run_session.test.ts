@@ -381,6 +381,53 @@ describe("terminal 없는 단절 → backoff 재접속", () => {
   });
 });
 
+describe("무수신 watchdog — half-open 재접속 (#315)", () => {
+  // 실제 감시 시간(heartbeat 3회분)은 reader fake timer 테스트가 본다. 여기서는 짧게 줄여 세션 경로만 본다.
+  const watchedApi = createRunApiClient({
+    baseUrl: BASE_URL,
+    auth: { getAccessToken: () => "test-token" },
+    streamIdleTimeoutMs: 60,
+  });
+
+  it("frame 뒤 바이트 없이 멈춘 연결을 끊고 같은 cursor로 한 번 재접속해 중복 없이 terminal을 받는다", async () => {
+    const { mock, create, delays } = setup({}, { api: watchedApi });
+    mock.injectFault("conversation", { kind: "stall", afterFrames: 4 });
+    const session = create();
+    session.send(QUESTION);
+    const done = await waitFor(session, isTerminal);
+
+    const runId = done.run.runId!;
+    expect(
+      requestsOf(mock, "GET", "/events").map((entry) => entry.lastEventId),
+    ).toEqual([`${runId}:4`]);
+    expect(delays).toEqual([750]);
+    expectSameAsCleanStream(done.run, mock);
+    expect(requestsOf(mock, "POST", "/cancel")).toHaveLength(0);
+  });
+
+  it("heartbeat가 오면 frame이 늦어도 끊지 않는다", async () => {
+    const { mock, create } = setup(
+      { frameIntervalMs: 150, heartbeatMs: 20 },
+      { api: watchedApi },
+    );
+    const session = create();
+    session.send(QUESTION);
+    await waitFor(session, (snapshot) => snapshot.run.lastSeq >= 3);
+    session.dispose();
+    expect(requestsOf(mock, "GET", "/events")).toHaveLength(0);
+  });
+
+  it("terminal 뒤·idle에서는 감시하지 않는다(재접속 없음)", async () => {
+    const { mock, create } = setup({}, { api: watchedApi });
+    const session = create();
+    session.send(QUESTION);
+    await waitFor(session, isTerminal);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(session.getSnapshot().connection).toBe("idle");
+    expect(requestsOf(mock, "GET", "/events")).toHaveLength(0);
+  });
+});
+
 describe("409 RUN4091 — 진행 중 run에 붙기", () => {
   it("activeRunId에 cursor 없이 붙어 처음부터 받고 보낸 입력은 draft로 남긴다(자동 재전송 없음)", async () => {
     const { mock, create } = setup();

@@ -52,7 +52,12 @@ export type MockConnectionFault =
   /** frame마다 같은 frame을 한 번 더 보낸다(같은 event id 재전달) */
   | { kind: "duplicate" }
   /** cursor를 무시하고 seq 1부터 다시 보낸다(겹친 replay) */
-  | { kind: "ignore-cursor" };
+  | { kind: "ignore-cursor" }
+  /**
+   * `afterFrames`개를 보낸 뒤 연결을 연 채 아무 바이트(heartbeat 포함)도 보내지 않는다 — FIN·RST 없이 끊긴 half-open,
+   * upstream 단절을 전달하지 않는 proxy. 브라우저가 끊을 때까지 열려 있다.
+   */
+  | { kind: "stall"; afterFrames: number };
 
 export interface MockAdmissionRejection {
   code: Exclude<RunErrorCode, "RUN4091">;
@@ -601,6 +606,13 @@ export const createBrowserRunMockServer = ({
             if (deletedNotes.has(run.noteId)) return finish("eof");
             if (fault?.kind === "disconnect" && sent >= fault.afterFrames)
               return finish(fault.mode ?? "eof");
+            if (fault?.kind === "stall" && sent >= fault.afterFrames) {
+              await new Promise<void>((resolve) => {
+                wake = resolve; // release(브라우저 cancel·abort·reset)만 깨운다
+                if (closed) resolve();
+              });
+              return;
+            }
             if (index < run.committed) {
               const frame = run.frames[index++];
               const chunk = encodeFrame(frame);
