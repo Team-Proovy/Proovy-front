@@ -386,7 +386,7 @@ describe("무수신 watchdog — half-open 재접속 (#315)", () => {
   const watchedApi = createRunApiClient({
     baseUrl: BASE_URL,
     auth: { getAccessToken: () => "test-token" },
-    streamIdleTimeoutMs: 60,
+    streamIdleTimeoutMs: 300,
   });
 
   it("frame 뒤 바이트 없이 멈춘 연결을 끊고 같은 cursor로 한 번 재접속해 중복 없이 terminal을 받는다", async () => {
@@ -407,12 +407,13 @@ describe("무수신 watchdog — half-open 재접속 (#315)", () => {
 
   it("heartbeat가 오면 frame이 늦어도 끊지 않는다", async () => {
     const { mock, create } = setup(
-      { frameIntervalMs: 150, heartbeatMs: 20 },
+      // frame 간격은 감시 시간보다 길고 heartbeat는 훨씬 짧다(CI 부하로 event loop가 늦어도 오탐하지 않을 여유)
+      { frameIntervalMs: 400, heartbeatMs: 30 },
       { api: watchedApi },
     );
     const session = create();
     session.send(QUESTION);
-    await waitFor(session, (snapshot) => snapshot.run.lastSeq >= 3);
+    await waitFor(session, (snapshot) => snapshot.run.lastSeq >= 2);
     session.dispose();
     expect(requestsOf(mock, "GET", "/events")).toHaveLength(0);
   });
@@ -422,7 +423,7 @@ describe("무수신 watchdog — half-open 재접속 (#315)", () => {
     const session = create();
     session.send(QUESTION);
     await waitFor(session, isTerminal);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 600));
     expect(session.getSnapshot().connection).toBe("idle");
     expect(requestsOf(mock, "GET", "/events")).toHaveLength(0);
   });

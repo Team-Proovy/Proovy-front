@@ -70,7 +70,7 @@ export interface RunStreamReadOptions {
   runId?: Uuid;
   /** 연결 시 보낸 cursor. frame 없이 끝나면 `lastEventId`로 돌려준다. */
   lastEventId?: EventId | null;
-  /** 무수신 감시 시간(ms). 기본 `RUN_STREAM_IDLE_TIMEOUT_MS`, null이면 감시하지 않는다. */
+  /** 무수신 감시 시간(ms, 양수 또는 null). 기본 `RUN_STREAM_IDLE_TIMEOUT_MS`, null이면 감시하지 않는다. */
   idleTimeoutMs?: number | null;
 }
 

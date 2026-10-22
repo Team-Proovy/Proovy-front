@@ -37,8 +37,9 @@ export interface RunApiClientOptions {
   fetch?: typeof fetch;
   auth?: RunApiAuth;
   /**
-   * SSE 무수신 감시 시간(ms) — 응답 header 대기와 body 수신 모두. 기본 heartbeat 3회분(`RUN_STREAM_IDLE_TIMEOUT_MS`),
-   * null이면 감시하지 않는다. 넘으면 그 연결은 `interrupted`(`stalled`)로 끝나고 세션이 마지막 frame id로 재접속한다.
+   * SSE 무수신 감시 시간(ms, 양수 또는 null) — 응답 header 대기와 body 수신 모두. 기본 heartbeat 3회분
+   * (`RUN_STREAM_IDLE_TIMEOUT_MS`), null이면 감시하지 않는다. 넘으면 그 연결은 `interrupted`(`stalled`)로 끝나고
+   * 세션이 마지막 frame id로 재접속한다.
    */
   streamIdleTimeoutMs?: number | null;
 }
@@ -107,7 +108,7 @@ export const createRunApiClient = ({
     getAccessToken: tokenUtils.getAccessToken,
     refreshAccessToken,
   },
-  streamIdleTimeoutMs,
+  streamIdleTimeoutMs = RUN_STREAM_IDLE_TIMEOUT_MS,
 }: RunApiClientOptions = {}) => {
   const send = async (path: string, init: RequestInit) => {
     const sendWith = (token: string | null) => {
@@ -145,22 +146,18 @@ export const createRunApiClient = ({
 
     // 응답 header 대기도 무수신 감시한다. 중간 proxy 뒤 upstream이 half-open이면 header조차 오지 않는다
     // (1.99 재현: dev proxy ↔ Server 단절 직후의 재접속). header 뒤로는 reader가 같은 시간으로 감시한다.
-    const idleTimeoutMs =
-      streamIdleTimeoutMs === undefined
-        ? RUN_STREAM_IDLE_TIMEOUT_MS
-        : streamIdleTimeoutMs;
     const connection = new AbortController();
     const forwardAbort = () => connection.abort(signal?.reason);
     if (signal?.aborted) forwardAbort();
     else signal?.addEventListener("abort", forwardAbort, { once: true });
     let stalled = false;
     const headerTimer =
-      idleTimeoutMs == null
+      streamIdleTimeoutMs == null
         ? undefined
         : setTimeout(() => {
             stalled = true;
             connection.abort(new Error("run stream idle timeout"));
-          }, idleTimeoutMs);
+          }, streamIdleTimeoutMs);
 
     try {
       let response: Response;
@@ -198,7 +195,7 @@ export const createRunApiClient = ({
         signal,
         runId,
         lastEventId,
-        idleTimeoutMs,
+        idleTimeoutMs: streamIdleTimeoutMs,
       });
     } finally {
       signal?.removeEventListener("abort", forwardAbort);

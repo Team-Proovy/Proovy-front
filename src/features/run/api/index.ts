@@ -32,7 +32,6 @@ export type {
 export {
   createSseParser,
   readRunStream,
-  RUN_STREAM_IDLE_TIMEOUT_MS,
   SseProtocolError,
   toBrowserFrame,
 } from "./sse_reader";
