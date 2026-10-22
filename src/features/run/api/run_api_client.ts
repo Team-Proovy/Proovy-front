@@ -12,7 +12,7 @@ import type {
 } from "@/shared/contracts/browser_run_v1";
 import { readRunApiError, RunApiError } from "./run_api_error";
 import { isUuid, validateConversationRequest } from "./run_request";
-import { readRunStream } from "./sse_reader";
+import { readRunStream, RUN_STREAM_IDLE_TIMEOUT_MS } from "./sse_reader";
 import type { RunStreamEnd } from "./sse_reader";
 
 /**
@@ -36,6 +36,12 @@ export interface RunApiClientOptions {
   baseUrl?: string;
   fetch?: typeof fetch;
   auth?: RunApiAuth;
+  /**
+   * SSE 무수신 감시 시간(ms, 양수 또는 null) — 응답 header 대기와 body 수신 모두. 기본 heartbeat 3회분
+   * (`RUN_STREAM_IDLE_TIMEOUT_MS`), null이면 감시하지 않는다. 넘으면 그 연결은 `interrupted`(`stalled`)로 끝나고
+   * 세션이 마지막 frame id로 재접속한다.
+   */
+  streamIdleTimeoutMs?: number | null;
 }
 
 export interface RunStreamOptions {
@@ -102,6 +108,7 @@ export const createRunApiClient = ({
     getAccessToken: tokenUtils.getAccessToken,
     refreshAccessToken,
   },
+  streamIdleTimeoutMs = RUN_STREAM_IDLE_TIMEOUT_MS,
 }: RunApiClientOptions = {}) => {
   const send = async (path: string, init: RequestInit) => {
     const sendWith = (token: string | null) => {
@@ -137,34 +144,62 @@ export const createRunApiClient = ({
         ? { reason: "aborted", lastEventId }
         : { reason: "interrupted", cause: "network", error, lastEventId };
 
-    let response: Response;
+    // 응답 header 대기도 무수신 감시한다. 중간 proxy 뒤 upstream이 half-open이면 header조차 오지 않는다
+    // (1.99 재현: dev proxy ↔ Server 단절 직후의 재접속). header 뒤로는 reader가 같은 시간으로 감시한다.
+    const connection = new AbortController();
+    const forwardAbort = () => connection.abort(signal?.reason);
+    if (signal?.aborted) forwardAbort();
+    else signal?.addEventListener("abort", forwardAbort, { once: true });
+    let stalled = false;
+    const headerTimer =
+      streamIdleTimeoutMs == null
+        ? undefined
+        : setTimeout(() => {
+            stalled = true;
+            connection.abort(new Error("run stream idle timeout"));
+          }, streamIdleTimeoutMs);
+
     try {
-      response = await send(path, { ...init, signal });
-    } catch (error) {
-      return failConnection(error);
-    }
-
-    const contentType = response.headers.get("Content-Type") ?? "";
-    // 200인데 SSE가 아니면 계약 밖 응답이다(proxy 오류 페이지 등).
-    if (!response.ok || !contentType.startsWith(SSE_ACCEPT) || !response.body) {
+      let response: Response;
       try {
-        const error = await readRunApiError(response);
-        // 오류 body를 다 읽은 뒤 abort됐어도 호출한 쪽에는 abort가 먼저다.
-        if (signal?.aborted) return { reason: "aborted", lastEventId };
-        return { reason: "rejected", error, lastEventId };
+        response = await send(path, { ...init, signal: connection.signal });
       } catch (error) {
-        // 오류 body를 읽다가 끊긴 경우: 거부가 아니라 연결 실패다.
+        if (stalled && !signal?.aborted)
+          return { reason: "interrupted", cause: "stalled", lastEventId };
         return failConnection(error);
+      } finally {
+        clearTimeout(headerTimer);
       }
-    }
 
-    onOpen?.();
-    return readRunStream(response.body, {
-      onFrame,
-      signal,
-      runId,
-      lastEventId,
-    });
+      const contentType = response.headers.get("Content-Type") ?? "";
+      // 200인데 SSE가 아니면 계약 밖 응답이다(proxy 오류 페이지 등).
+      if (
+        !response.ok ||
+        !contentType.startsWith(SSE_ACCEPT) ||
+        !response.body
+      ) {
+        try {
+          const error = await readRunApiError(response);
+          // 오류 body를 다 읽은 뒤 abort됐어도 호출한 쪽에는 abort가 먼저다.
+          if (signal?.aborted) return { reason: "aborted", lastEventId };
+          return { reason: "rejected", error, lastEventId };
+        } catch (error) {
+          // 오류 body를 읽다가 끊긴 경우: 거부가 아니라 연결 실패다.
+          return failConnection(error);
+        }
+      }
+
+      onOpen?.();
+      return await readRunStream(response.body, {
+        onFrame,
+        signal,
+        runId,
+        lastEventId,
+        idleTimeoutMs: streamIdleTimeoutMs,
+      });
+    } finally {
+      signal?.removeEventListener("abort", forwardAbort);
+    }
   };
 
   const requestJson = async <T>(

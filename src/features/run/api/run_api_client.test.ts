@@ -15,6 +15,7 @@ import {
   getStreamFixture,
 } from "@/test/contracts/browser_run_fixtures";
 import { createRunApiClient, isEventId } from "./run_api_client";
+import { RUN_STREAM_IDLE_TIMEOUT_MS } from "./sse_reader";
 import type { RunApiAuth } from "./run_api_client";
 import { RunApiError } from "./run_api_error";
 import { createConversationRequest } from "./run_request";
@@ -199,6 +200,89 @@ describe("streamConversation — POST /api/conversations", () => {
         signal: controller.signal,
       }),
     ).toEqual({ reason: "aborted", lastEventId: null });
+  });
+});
+
+describe("무수신 watchdog — 응답 header 대기 (#315)", () => {
+  /** header가 오지 않는 연결(half-open upstream 앞의 dev proxy). abort하면 fetch처럼 reject한다. */
+  const hangingFetch = () =>
+    vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () =>
+            reject(new DOMException("aborted", "AbortError")),
+          );
+        }),
+    );
+  const runId = getStreamFixture("canceled-running").runId;
+
+  it("감시 시간 안에 header가 오지 않으면 interrupted(stalled)와 보낸 cursor", async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchMock = hangingFetch();
+      const client = createRunApiClient({
+        baseUrl: BASE_URL,
+        fetch: fetchMock as typeof fetch,
+        auth: { getAccessToken: () => "access-1" },
+      });
+      const cursor = toEventId(runId, 2);
+      const ending = client.streamRunEvents(
+        runId,
+        { lastEventId: cursor },
+        collect(),
+      );
+      await vi.advanceTimersByTimeAsync(RUN_STREAM_IDLE_TIMEOUT_MS - 1);
+      expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await ending).toEqual({
+        reason: "interrupted",
+        cause: "stalled",
+        lastEventId: cursor,
+      });
+      expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("호출한 쪽 abort는 aborted이고 header 대기 timer를 남기지 않는다", async () => {
+    vi.useFakeTimers();
+    try {
+      const client = createRunApiClient({
+        baseUrl: BASE_URL,
+        fetch: hangingFetch() as typeof fetch,
+        auth: { getAccessToken: () => "access-1" },
+      });
+      const controller = new AbortController();
+      const ending = client.streamRunEvents(
+        runId,
+        {},
+        { ...collect(), signal: controller.signal },
+      );
+      await vi.advanceTimersByTimeAsync(1_000);
+      controller.abort();
+      expect(await ending).toEqual({ reason: "aborted", lastEventId: null });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("header를 받은 뒤 읽기 중 abort도 fetch 연결까지 끊는다", async () => {
+    const { client, fetchMock } = setup([sseResponse([], { end: "open" })]);
+    const controller = new AbortController();
+    const ending = client.streamRunEvents(
+      runId,
+      {},
+      {
+        ...collect(),
+        signal: controller.signal,
+        onOpen: () => controller.abort(),
+      },
+    );
+    expect(await ending).toEqual({ reason: "aborted", lastEventId: null });
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
   });
 });
 

@@ -10,7 +10,12 @@ import {
   getStreamFixture,
   listStreamFixtures,
 } from "@/test/contracts/browser_run_fixtures";
-import { createSseParser, readRunStream, SseProtocolError } from "./sse_reader";
+import {
+  createSseParser,
+  readRunStream,
+  RUN_STREAM_IDLE_TIMEOUT_MS,
+  SseProtocolError,
+} from "./sse_reader";
 import type { RunStreamReadOptions, SseMessage } from "./sse_reader";
 import {
   createTestStream,
@@ -426,5 +431,152 @@ describe("createSseParser", () => {
     expect(parse("data: a\r", "", "\n\r", "", "\n")).toEqual([
       { event: "message", id: null, data: "a" },
     ]);
+  });
+});
+
+describe("readRunStream — 무수신 watchdog (#315)", () => {
+  const fixture = getStreamFixture("canceled-running");
+  const blocks = splitBlocks(fixture.sse);
+  const { comment } = getHeartbeatFixture();
+
+  /** 테스트가 바이트를 밀어 넣는 열린 연결(서버가 닫지 않는다) */
+  const createPushStream = () => {
+    let controller!: ReadableStreamDefaultController<Uint8Array>;
+    let isCanceled = false;
+    const stream = new ReadableStream<Uint8Array>({
+      start(c) {
+        controller = c;
+      },
+      cancel() {
+        isCanceled = true;
+      },
+    });
+    return {
+      stream,
+      push: (text: string) => controller.enqueue(encodeSse(text)),
+      isCanceled: () => isCanceled,
+    };
+  };
+
+  /** microtask를 비워 reader가 밀어 넣은 바이트를 처리하게 한다. */
+  const flush = () => vi.advanceTimersByTimeAsync(0);
+
+  it("기본 감시 시간은 heartbeat(15초) 3회분이다", () => {
+    expect(RUN_STREAM_IDLE_TIMEOUT_MS).toBe(45_000);
+  });
+
+  it("heartbeat가 계속 오면 감시 시간을 넘겨도 끊지 않는다", async () => {
+    vi.useFakeTimers();
+    try {
+      const push = createPushStream();
+      const frames: BrowserFrame[] = [];
+      const reading = readRunStream(push.stream, {
+        onFrame: (frame) => frames.push(frame),
+      });
+      push.push(blocks[0]);
+      for (let elapsed = 0; elapsed < 120_000; elapsed += 15_000) {
+        await vi.advanceTimersByTimeAsync(15_000);
+        push.push(comment);
+      }
+      await flush();
+      expect(push.isCanceled()).toBe(false);
+      for (const block of blocks.slice(1)) push.push(block);
+      const end = await reading;
+      expect(end.reason).toBe("terminal");
+      expect(frames).toEqual(fixture.frames);
+      // terminal 뒤에는 감시 timer가 남지 않는다.
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("마지막 수신 뒤 감시 시간 동안 아무것도 오지 않으면 끊고 마지막 frame id를 cursor로 돌려준다", async () => {
+    vi.useFakeTimers();
+    try {
+      const push = createPushStream();
+      const frames: BrowserFrame[] = [];
+      const reading = readRunStream(push.stream, {
+        onFrame: (frame) => frames.push(frame),
+      });
+      push.push(blocks[0] + blocks[1]);
+      await vi.advanceTimersByTimeAsync(30_000);
+      push.push(comment); // heartbeat도 수신이다 — 여기서 다시 센다
+      await vi.advanceTimersByTimeAsync(RUN_STREAM_IDLE_TIMEOUT_MS - 1);
+      expect(push.isCanceled()).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      const end = await reading;
+      expect(end).toEqual({
+        reason: "interrupted",
+        cause: "stalled",
+        lastEventId: lastIdOf(fixture.frames.slice(0, 2)),
+      });
+      expect(frames).toEqual(fixture.frames.slice(0, 2));
+      expect(push.isCanceled()).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("frame 없이 멈추면 연결 때 보낸 cursor를 돌려준다", async () => {
+    vi.useFakeTimers();
+    try {
+      const cursor = toEventId(fixture.runId, 3);
+      const push = createPushStream();
+      const reading = readRunStream(push.stream, {
+        onFrame: () => {},
+        lastEventId: cursor,
+        idleTimeoutMs: 1_000,
+      });
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(await reading).toEqual({
+        reason: "interrupted",
+        cause: "stalled",
+        lastEventId: cursor,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("abort는 watchdog보다 먼저다(aborted) — 감시 timer를 남기지 않는다", async () => {
+    vi.useFakeTimers();
+    try {
+      const push = createPushStream();
+      const controller = new AbortController();
+      const reading = readRunStream(push.stream, {
+        onFrame: () => {},
+        signal: controller.signal,
+      });
+      push.push(blocks[0]);
+      await vi.advanceTimersByTimeAsync(10_000);
+      controller.abort();
+      expect((await reading).reason).toBe("aborted");
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("idleTimeoutMs가 null이면 감시하지 않는다", async () => {
+    vi.useFakeTimers();
+    try {
+      const push = createPushStream();
+      const controller = new AbortController();
+      const reading = readRunStream(push.stream, {
+        onFrame: () => {},
+        signal: controller.signal,
+        idleTimeoutMs: null,
+      });
+      await flush();
+      expect(vi.getTimerCount()).toBe(0);
+      await vi.advanceTimersByTimeAsync(10 * RUN_STREAM_IDLE_TIMEOUT_MS);
+      expect(push.isCanceled()).toBe(false);
+      controller.abort();
+      expect((await reading).reason).toBe("aborted");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

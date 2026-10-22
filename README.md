@@ -265,8 +265,8 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - 포트·요청 한도·run 마감은 `.env`로 바꾼다(`SERVER_PORT`, `RATE_LIMIT_MAX_REQUESTS`, `RUN_REQUEST_TIMEOUT`). `SERVER_PORT`를 바꾸면 `DEV_API_PROXY_TARGET`도 같이 바꾼다.
 - `RUN_REQUEST_TIMEOUT`은 Server가 run 접수 때 고정하는 request deadline(`proovy.run.snapshot.request-timeout`)이다. 기본은 offline 3m(Server 기본과 같다)·live 10m이고, 허용 범위는 0 초과 30m 이하다. Server는 마감 뒤 stream 여유 3m를 더 기다린다. Brain run 상한이 15m라 그보다 길게 해도 효과가 없다. 로컬 stack 전용 값이며, 운영 값은 바꾸지 않고 별도 Server 이슈에서 다룬다.
 - 상태·로그: `docker compose ps -a`, `docker compose logs server brain`.
-- offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다).
-- Vite dev proxy는 Server 쪽 소켓이 끊겨도 브라우저 응답을 닫지 않는다. 연결 끊김 재접속은 브라우저↔dev server 구간을 끊어 확인한다.
+- offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다). **30초 안에 푼다** — Server는 Brain stream이 30초 동안 조용하면(`proovy.brain.stream-idle-timeout`) run을 `provider_error`로 실패 처리한다.
+- dev proxy ↔ Server 구간이 FIN·RST 없이 끊기면(half-open) Vite dev proxy는 브라우저 응답을 열어 둔다. 브라우저는 마지막 수신(frame·heartbeat) 뒤 heartbeat(15초) 3회분인 45초 동안 아무것도 받지 못하면 연결을 끊고 마지막 frame id로 재접속한다(#315 watchdog). 그동안 화면은 "진행 중"이다. Server가 연결을 닫거나 reset하면 dev proxy가 브라우저 응답을 끝내므로 곧바로 재접속한다.
 
 정리:
 
