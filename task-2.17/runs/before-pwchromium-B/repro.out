@@ -1,0 +1,17 @@
+1.93 note http://localhost:5173/app/chat/2
+1.93 begin B1 answers 1
+5.92 in-progress reload B1 restore GET /events true answers 1 held 3904ms
+9.45 end B1 {"t":"9.03","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+9.45 begin B2 answers 2
+13.46 in-progress reload B2 restore GET /events true answers 2 held 3896ms
+17.29 end B2 {"t":"17.09","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+17.29 begin B3 answers 3
+21.05 in-progress reload B3 restore GET /events true answers 3 held 3681ms
+24.59 end B3 {"t":"24.16","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+24.59 begin B4 answers 4
+28.64 in-progress reload B4 restore GET /events true answers 4 held 3924ms
+32.17 end B4 {"t":"31.76","phase":"B4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+32.17 begin B5 answers 5
+36.21 in-progress reload B5 restore GET /events true answers 5 held 3912ms
+39.74 end B5 {"t":"39.33","phase":"B5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+FAILURES 0

@@ -1,0 +1,6 @@
+2.18 note http://localhost:5173/app/chat/2
+2.18 begin C1 answers 1
+4.66 end C1 {"t":"4.58","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+4.66 begin C2 answers 1
+7.16 end C2 {"t":"7.09","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+FAILURES 0

@@ -1,0 +1,45 @@
+3.76 note http://localhost:5173/app/chat/3
+3.76 begin A1 answers 1
+9.72 end A1 {"t":"9.54","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+9.72 begin A2 answers 2
+13.74 end A2 {"t":"13.55","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+13.74 begin A3 answers 3
+17.75 end A3 {"t":"17.56","phase":"A3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+17.75 begin A4 answers 4
+21.80 end A4 {"t":"21.57","phase":"A4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+21.80 begin A5 answers 5
+26.03 end A5 {"t":"25.58","phase":"A5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+26.03 begin C1 answers 6
+29.49 note C1 boxes 0
+29.49 end C1 {"t":"29.09","phase":"C1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+29.49 begin C2 answers 6
+32.95 note C2 boxes 0
+32.95 end C2 {"t":"32.60","phase":"C2","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+32.95 begin C3 answers 6
+36.34 note C3 boxes 0
+36.34 end C3 {"t":"36.11","phase":"C3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+36.34 begin C4 answers 6
+39.85 note C4 boxes 0
+39.85 end C4 {"t":"39.63","phase":"C4","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+39.85 begin C5 answers 6
+43.35 note C5 boxes 0
+43.35 end C5 {"t":"43.14","phase":"C5","apiInflight":0,"sseInflight":0,"browserToVite":2,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+43.35 begin B1 answers 6
+47.33 in-progress reload B1 restore GET /events true answers 6 held 3760ms
+50.85 end B1 {"t":"50.66","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+50.85 begin B2 answers 7
+54.65 in-progress reload B2 restore GET /events true answers 7 held 3718ms
+58.17 end B2 {"t":"57.76","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+58.17 begin B3 answers 8
+62.18 in-progress reload B3 restore GET /events true answers 8 held 3894ms
+65.99 end B3 {"t":"65.80","phase":"B3","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+65.99 begin B4 answers 9
+69.78 in-progress reload B4 restore GET /events true answers 9 held 3705ms
+73.30 end B4 {"t":"72.89","phase":"B4","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+73.30 begin B5 answers 10
+73.70 console.error Failed to load resource: the server responded with a status of 402 (Payment Required)
+97.18 in-progress reload B5 restore GET /events false answers 10 held 23745ms
+97.18 FAIL B5 새로고침 뒤 진행 중 run에 붙지 않음
+157.35 FAIL B5 unpause 뒤 답변 11개가 되지 않음 (now 10)
+160.36 FAIL B5 진행 상황 박스 0개(기대 1: 이어 받은 run 하나)
+160.36 end B5 {"t":"160.15","phase":"B5","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}

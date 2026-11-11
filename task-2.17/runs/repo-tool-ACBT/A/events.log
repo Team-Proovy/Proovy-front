@@ -1,0 +1,5 @@
+2.40 note http://localhost:5173/app/chat/1
+2.41 begin A1 answers 1
+5.15 end A1 {"t":"5.08","phase":"A1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+5.15 begin A2 answers 2
+8.24 end A2 {"t":"8.07","phase":"A2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}

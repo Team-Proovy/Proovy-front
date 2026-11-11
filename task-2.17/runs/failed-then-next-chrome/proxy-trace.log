@@ -1,0 +1,336 @@
+2026-11-11T11:59:52.779Z start #69 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:52.780Z start #70 GET /api/users/me
+2026-11-11T11:59:52.780Z start #71 GET /api/notes/tools
+2026-11-11T11:59:52.780Z start #72 GET /api/notes?page=0&size=1
+2026-11-11T11:59:52.798Z upstream.response #69 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:52.798Z upstream.end #69 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:52.798Z res.close #69 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:52.798Z upstream.res.close #69 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:52.799Z upstream.response #72 GET /api/notes?page=0&size=1 200
+2026-11-11T11:59:52.799Z upstream.end #72 GET /api/notes?page=0&size=1
+2026-11-11T11:59:52.799Z res.close #72 GET /api/notes?page=0&size=1 finished=true
+2026-11-11T11:59:52.799Z upstream.res.close #72 GET /api/notes?page=0&size=1 complete=true
+2026-11-11T11:59:52.799Z upstream.response #71 GET /api/notes/tools 200
+2026-11-11T11:59:52.800Z upstream.end #71 GET /api/notes/tools
+2026-11-11T11:59:52.800Z res.close #71 GET /api/notes/tools finished=true
+2026-11-11T11:59:52.800Z upstream.res.close #71 GET /api/notes/tools complete=true
+2026-11-11T11:59:52.800Z upstream.close #71 GET /api/notes/tools
+2026-11-11T11:59:52.801Z upstream.close #72 GET /api/notes?page=0&size=1
+2026-11-11T11:59:52.801Z upstream.close #69 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:52.801Z upstream.response #70 GET /api/users/me 200
+2026-11-11T11:59:52.802Z upstream.end #70 GET /api/users/me
+2026-11-11T11:59:52.802Z res.close #70 GET /api/users/me finished=true
+2026-11-11T11:59:52.802Z upstream.res.close #70 GET /api/users/me complete=true
+2026-11-11T11:59:52.803Z upstream.close #70 GET /api/users/me
+2026-11-11T11:59:53.033Z start #73 POST /api/conversations
+2026-11-11T11:59:53.060Z upstream.response #73 POST /api/conversations 200
+2026-11-11T11:59:53.065Z start #74 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.066Z start #75 GET /api/notes?page=0&size=1
+2026-11-11T11:59:53.078Z upstream.response #74 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:53.078Z upstream.end #74 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.079Z res.close #74 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:53.079Z upstream.res.close #74 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:53.079Z upstream.close #74 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.079Z upstream.response #75 GET /api/notes?page=0&size=1 200
+2026-11-11T11:59:53.080Z upstream.end #75 GET /api/notes?page=0&size=1
+2026-11-11T11:59:53.080Z res.close #75 GET /api/notes?page=0&size=1 finished=true
+2026-11-11T11:59:53.080Z upstream.res.close #75 GET /api/notes?page=0&size=1 complete=true
+2026-11-11T11:59:53.080Z upstream.close #75 GET /api/notes?page=0&size=1
+2026-11-11T11:59:53.104Z start #76 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.110Z upstream.response #76 GET /api/conversations/5/messages?limit=30 200
+2026-11-11T11:59:53.110Z upstream.end #76 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.111Z res.close #76 GET /api/conversations/5/messages?limit=30 finished=true
+2026-11-11T11:59:53.111Z upstream.res.close #76 GET /api/conversations/5/messages?limit=30 complete=true
+2026-11-11T11:59:53.111Z upstream.close #76 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.112Z start #77 GET /api/notes/5
+2026-11-11T11:59:53.112Z start #78 GET /api/users/me
+2026-11-11T11:59:53.113Z start #79 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.114Z res.close #73 POST /api/conversations finished=false
+2026-11-11T11:59:53.114Z start #80 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:53.115Z upstream.close #73 POST /api/conversations
+2026-11-11T11:59:53.115Z upstream.res.error #73 POST /api/conversations aborted
+2026-11-11T11:59:53.115Z upstream.res.close #73 POST /api/conversations complete=false
+2026-11-11T11:59:53.115Z start #81 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.120Z upstream.response #77 GET /api/notes/5 200
+2026-11-11T11:59:53.121Z upstream.end #77 GET /api/notes/5
+2026-11-11T11:59:53.121Z res.close #77 GET /api/notes/5 finished=true
+2026-11-11T11:59:53.122Z upstream.res.close #77 GET /api/notes/5 complete=true
+2026-11-11T11:59:53.122Z upstream.close #77 GET /api/notes/5
+2026-11-11T11:59:53.122Z upstream.response #78 GET /api/users/me 200
+2026-11-11T11:59:53.122Z upstream.end #78 GET /api/users/me
+2026-11-11T11:59:53.123Z res.close #78 GET /api/users/me finished=true
+2026-11-11T11:59:53.123Z upstream.res.close #78 GET /api/users/me complete=true
+2026-11-11T11:59:53.123Z upstream.response #79 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:53.123Z upstream.end #79 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.123Z res.close #79 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:53.123Z upstream.res.close #79 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:53.124Z upstream.close #79 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.124Z upstream.close #78 GET /api/users/me
+2026-11-11T11:59:53.124Z start #82 GET /api/users/me
+2026-11-11T11:59:53.125Z upstream.response #80 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T11:59:53.125Z upstream.end #80 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:53.125Z res.close #80 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T11:59:53.125Z upstream.res.close #80 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T11:59:53.125Z upstream.response #81 GET /api/conversations/5/messages?limit=30 200
+2026-11-11T11:59:53.126Z upstream.end #81 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.126Z res.close #81 GET /api/conversations/5/messages?limit=30 finished=true
+2026-11-11T11:59:53.126Z upstream.res.close #81 GET /api/conversations/5/messages?limit=30 complete=true
+2026-11-11T11:59:53.126Z start #83 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.126Z upstream.close #81 GET /api/conversations/5/messages?limit=30
+2026-11-11T11:59:53.127Z upstream.close #80 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:53.131Z upstream.response #82 GET /api/users/me 200
+2026-11-11T11:59:53.132Z upstream.end #82 GET /api/users/me
+2026-11-11T11:59:53.132Z res.close #82 GET /api/users/me finished=true
+2026-11-11T11:59:53.132Z upstream.res.close #82 GET /api/users/me complete=true
+2026-11-11T11:59:53.132Z upstream.close #82 GET /api/users/me
+2026-11-11T11:59:53.133Z start #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events
+2026-11-11T11:59:53.133Z upstream.response #83 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:53.133Z upstream.end #83 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:53.134Z res.close #83 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:53.134Z upstream.res.close #83 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:53.134Z upstream.close #83 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.164Z upstream.response #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events 200
+2026-11-11T11:59:54.186Z upstream.end #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events
+2026-11-11T11:59:54.186Z res.close #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events finished=true
+2026-11-11T11:59:54.186Z upstream.res.close #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events complete=true
+2026-11-11T11:59:54.187Z upstream.close #84 GET /api/ai-runs/04793b32-00e9-42a9-b6fe-e7f0b4865648/events
+2026-11-11T11:59:54.213Z start #85 GET /api/users/me
+2026-11-11T11:59:54.214Z start #86 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:54.214Z start #87 GET /api/notes/5
+2026-11-11T11:59:54.215Z start #88 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.222Z upstream.response #85 GET /api/users/me 200
+2026-11-11T11:59:54.222Z upstream.end #85 GET /api/users/me
+2026-11-11T11:59:54.222Z res.close #85 GET /api/users/me finished=true
+2026-11-11T11:59:54.223Z upstream.res.close #85 GET /api/users/me complete=true
+2026-11-11T11:59:54.223Z upstream.close #85 GET /api/users/me
+2026-11-11T11:59:54.223Z upstream.response #88 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:54.224Z upstream.end #88 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.224Z res.close #88 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:54.224Z upstream.res.close #88 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:54.224Z upstream.response #87 GET /api/notes/5 200
+2026-11-11T11:59:54.224Z upstream.end #87 GET /api/notes/5
+2026-11-11T11:59:54.224Z res.close #87 GET /api/notes/5 finished=true
+2026-11-11T11:59:54.225Z upstream.res.close #87 GET /api/notes/5 complete=true
+2026-11-11T11:59:54.225Z upstream.close #87 GET /api/notes/5
+2026-11-11T11:59:54.225Z upstream.close #88 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.225Z upstream.response #86 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T11:59:54.225Z upstream.end #86 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:54.225Z res.close #86 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T11:59:54.225Z upstream.res.close #86 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T11:59:54.226Z upstream.close #86 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:54.502Z start #89 POST /api/conversations
+2026-11-11T11:59:54.519Z upstream.response #89 POST /api/conversations 200
+2026-11-11T11:59:54.542Z start #90 GET /api/users/me
+2026-11-11T11:59:54.543Z start #91 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:54.543Z start #92 GET /api/notes/5
+2026-11-11T11:59:54.544Z start #93 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.550Z upstream.response #90 GET /api/users/me 200
+2026-11-11T11:59:54.550Z upstream.end #90 GET /api/users/me
+2026-11-11T11:59:54.550Z res.close #90 GET /api/users/me finished=true
+2026-11-11T11:59:54.551Z upstream.res.close #90 GET /api/users/me complete=true
+2026-11-11T11:59:54.551Z upstream.close #90 GET /api/users/me
+2026-11-11T11:59:54.551Z upstream.response #91 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T11:59:54.551Z upstream.end #91 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T11:59:54.551Z res.close #91 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T11:59:54.551Z upstream.res.close #91 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T11:59:54.552Z upstream.response #93 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T11:59:54.552Z upstream.end #93 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.552Z res.close #93 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T11:59:54.552Z upstream.res.close #93 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T11:59:54.552Z upstream.response #92 GET /api/notes/5 200
+2026-11-11T11:59:54.552Z upstream.end #92 GET /api/notes/5
+2026-11-11T11:59:54.552Z res.close #92 GET /api/notes/5 finished=true
+2026-11-11T11:59:54.553Z upstream.res.close #92 GET /api/notes/5 complete=true
+2026-11-11T11:59:54.553Z upstream.close #92 GET /api/notes/5
+2026-11-11T11:59:54.553Z upstream.close #93 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T11:59:54.553Z upstream.close #91 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:35.662Z upstream.end #89 POST /api/conversations
+2026-11-11T12:00:35.662Z res.close #89 POST /api/conversations finished=true
+2026-11-11T12:00:35.663Z upstream.res.close #89 POST /api/conversations complete=true
+2026-11-11T12:00:35.663Z upstream.close #89 POST /api/conversations
+2026-11-11T12:00:35.701Z start #94 GET /api/users/me
+2026-11-11T12:00:35.702Z start #95 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:35.703Z start #96 GET /api/notes/5
+2026-11-11T12:00:35.703Z start #97 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:35.710Z upstream.response #94 GET /api/users/me 200
+2026-11-11T12:00:35.711Z upstream.end #94 GET /api/users/me
+2026-11-11T12:00:35.711Z res.close #94 GET /api/users/me finished=true
+2026-11-11T12:00:35.711Z upstream.res.close #94 GET /api/users/me complete=true
+2026-11-11T12:00:35.711Z upstream.close #94 GET /api/users/me
+2026-11-11T12:00:35.711Z upstream.response #97 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:00:35.712Z upstream.end #97 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:35.712Z res.close #97 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:00:35.712Z upstream.res.close #97 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:00:35.712Z upstream.response #95 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:00:35.712Z upstream.end #95 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:35.712Z res.close #95 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:00:35.713Z upstream.res.close #95 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:00:35.713Z upstream.response #96 GET /api/notes/5 200
+2026-11-11T12:00:35.713Z upstream.end #96 GET /api/notes/5
+2026-11-11T12:00:35.713Z res.close #96 GET /api/notes/5 finished=true
+2026-11-11T12:00:35.713Z upstream.res.close #96 GET /api/notes/5 complete=true
+2026-11-11T12:00:35.714Z upstream.close #96 GET /api/notes/5
+2026-11-11T12:00:35.714Z upstream.close #95 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:35.714Z upstream.close #97 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:39.702Z start #98 POST /api/conversations
+2026-11-11T12:00:39.727Z upstream.response #98 POST /api/conversations 200
+2026-11-11T12:00:39.759Z start #99 GET /api/users/me
+2026-11-11T12:00:39.760Z start #100 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:39.760Z start #101 GET /api/notes/5
+2026-11-11T12:00:39.761Z start #102 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:39.769Z upstream.response #99 GET /api/users/me 200
+2026-11-11T12:00:39.769Z upstream.end #99 GET /api/users/me
+2026-11-11T12:00:39.770Z res.close #99 GET /api/users/me finished=true
+2026-11-11T12:00:39.770Z upstream.res.close #99 GET /api/users/me complete=true
+2026-11-11T12:00:39.770Z upstream.close #99 GET /api/users/me
+2026-11-11T12:00:39.770Z upstream.response #101 GET /api/notes/5 200
+2026-11-11T12:00:39.771Z upstream.end #101 GET /api/notes/5
+2026-11-11T12:00:39.771Z res.close #101 GET /api/notes/5 finished=true
+2026-11-11T12:00:39.771Z upstream.res.close #101 GET /api/notes/5 complete=true
+2026-11-11T12:00:39.771Z upstream.response #100 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:00:39.771Z upstream.end #100 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:39.772Z res.close #100 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:00:39.772Z upstream.res.close #100 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:00:39.772Z upstream.close #100 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:39.772Z upstream.close #101 GET /api/notes/5
+2026-11-11T12:00:39.772Z upstream.response #102 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:00:39.773Z upstream.end #102 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:39.773Z res.close #102 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:00:39.773Z upstream.res.close #102 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:00:39.773Z upstream.close #102 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:40.597Z upstream.end #98 POST /api/conversations
+2026-11-11T12:00:40.598Z res.close #98 POST /api/conversations finished=true
+2026-11-11T12:00:40.598Z upstream.res.close #98 POST /api/conversations complete=true
+2026-11-11T12:00:40.598Z upstream.close #98 POST /api/conversations
+2026-11-11T12:00:40.635Z start #103 GET /api/users/me
+2026-11-11T12:00:40.635Z start #104 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:40.636Z start #105 GET /api/notes/5
+2026-11-11T12:00:40.636Z start #106 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:40.642Z upstream.response #103 GET /api/users/me 200
+2026-11-11T12:00:40.642Z upstream.end #103 GET /api/users/me
+2026-11-11T12:00:40.643Z res.close #103 GET /api/users/me finished=true
+2026-11-11T12:00:40.643Z upstream.res.close #103 GET /api/users/me complete=true
+2026-11-11T12:00:40.643Z upstream.close #103 GET /api/users/me
+2026-11-11T12:00:40.643Z upstream.response #104 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:00:40.643Z upstream.end #104 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:40.643Z res.close #104 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:00:40.644Z upstream.res.close #104 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:00:40.644Z upstream.response #106 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:00:40.644Z upstream.end #106 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:40.644Z res.close #106 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:00:40.644Z upstream.res.close #106 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:00:40.644Z upstream.response #105 GET /api/notes/5 200
+2026-11-11T12:00:40.644Z upstream.end #105 GET /api/notes/5
+2026-11-11T12:00:40.644Z res.close #105 GET /api/notes/5 finished=true
+2026-11-11T12:00:40.644Z upstream.res.close #105 GET /api/notes/5 complete=true
+2026-11-11T12:00:40.645Z upstream.close #105 GET /api/notes/5
+2026-11-11T12:00:40.645Z upstream.close #106 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:40.645Z upstream.close #104 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:46.101Z start #107 POST /api/conversations
+2026-11-11T12:00:46.124Z upstream.response #107 POST /api/conversations 200
+2026-11-11T12:00:46.166Z start #108 GET /api/users/me
+2026-11-11T12:00:46.166Z start #109 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:46.167Z start #110 GET /api/notes/5
+2026-11-11T12:00:46.167Z start #111 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:46.173Z upstream.response #108 GET /api/users/me 200
+2026-11-11T12:00:46.173Z upstream.end #108 GET /api/users/me
+2026-11-11T12:00:46.173Z res.close #108 GET /api/users/me finished=true
+2026-11-11T12:00:46.173Z upstream.res.close #108 GET /api/users/me complete=true
+2026-11-11T12:00:46.174Z upstream.close #108 GET /api/users/me
+2026-11-11T12:00:46.174Z upstream.response #110 GET /api/notes/5 200
+2026-11-11T12:00:46.174Z upstream.end #110 GET /api/notes/5
+2026-11-11T12:00:46.174Z res.close #110 GET /api/notes/5 finished=true
+2026-11-11T12:00:46.174Z upstream.res.close #110 GET /api/notes/5 complete=true
+2026-11-11T12:00:46.174Z upstream.close #110 GET /api/notes/5
+2026-11-11T12:00:46.175Z upstream.response #111 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:00:46.175Z upstream.end #111 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:00:46.175Z res.close #111 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:00:46.175Z upstream.res.close #111 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:00:46.175Z upstream.response #109 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:00:46.175Z upstream.end #109 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:46.175Z res.close #109 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:00:46.175Z upstream.res.close #109 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:00:46.176Z upstream.close #109 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:00:46.176Z upstream.close #111 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:27.302Z upstream.end #107 POST /api/conversations
+2026-11-11T12:01:27.302Z res.close #107 POST /api/conversations finished=true
+2026-11-11T12:01:27.302Z upstream.res.close #107 POST /api/conversations complete=true
+2026-11-11T12:01:27.302Z upstream.close #107 POST /api/conversations
+2026-11-11T12:01:27.349Z start #112 GET /api/users/me
+2026-11-11T12:01:27.349Z start #113 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:27.350Z start #114 GET /api/notes/5
+2026-11-11T12:01:27.350Z start #115 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:27.357Z upstream.response #113 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:01:27.358Z upstream.end #113 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:27.358Z res.close #113 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:01:27.358Z upstream.res.close #113 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:01:27.358Z upstream.close #113 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:27.359Z upstream.response #112 GET /api/users/me 200
+2026-11-11T12:01:27.359Z upstream.end #112 GET /api/users/me
+2026-11-11T12:01:27.359Z res.close #112 GET /api/users/me finished=true
+2026-11-11T12:01:27.359Z upstream.res.close #112 GET /api/users/me complete=true
+2026-11-11T12:01:27.359Z upstream.response #114 GET /api/notes/5 200
+2026-11-11T12:01:27.359Z upstream.end #114 GET /api/notes/5
+2026-11-11T12:01:27.360Z res.close #114 GET /api/notes/5 finished=true
+2026-11-11T12:01:27.360Z upstream.res.close #114 GET /api/notes/5 complete=true
+2026-11-11T12:01:27.360Z upstream.close #114 GET /api/notes/5
+2026-11-11T12:01:27.360Z upstream.close #112 GET /api/users/me
+2026-11-11T12:01:27.361Z upstream.response #115 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:01:27.361Z upstream.end #115 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:27.361Z res.close #115 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:01:27.361Z upstream.res.close #115 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:01:27.362Z upstream.close #115 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:31.344Z start #116 POST /api/conversations
+2026-11-11T12:01:31.373Z upstream.response #116 POST /api/conversations 200
+2026-11-11T12:01:31.421Z start #117 GET /api/users/me
+2026-11-11T12:01:31.422Z start #118 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:31.422Z start #119 GET /api/notes/5
+2026-11-11T12:01:31.423Z start #120 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:31.428Z upstream.response #118 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:01:31.429Z upstream.end #118 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:31.429Z res.close #118 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:01:31.429Z upstream.res.close #118 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:01:31.429Z upstream.close #118 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:31.430Z upstream.response #120 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:01:31.430Z upstream.end #120 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:31.430Z res.close #120 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:01:31.430Z upstream.res.close #120 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:01:31.430Z upstream.response #119 GET /api/notes/5 200
+2026-11-11T12:01:31.430Z upstream.end #119 GET /api/notes/5
+2026-11-11T12:01:31.430Z res.close #119 GET /api/notes/5 finished=true
+2026-11-11T12:01:31.430Z upstream.res.close #119 GET /api/notes/5 complete=true
+2026-11-11T12:01:31.431Z upstream.response #117 GET /api/users/me 200
+2026-11-11T12:01:31.431Z upstream.end #117 GET /api/users/me
+2026-11-11T12:01:31.431Z res.close #117 GET /api/users/me finished=true
+2026-11-11T12:01:31.431Z upstream.res.close #117 GET /api/users/me complete=true
+2026-11-11T12:01:31.431Z upstream.close #117 GET /api/users/me
+2026-11-11T12:01:31.431Z upstream.close #119 GET /api/notes/5
+2026-11-11T12:01:31.431Z upstream.close #120 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:31.963Z upstream.end #116 POST /api/conversations
+2026-11-11T12:01:31.963Z res.close #116 POST /api/conversations finished=true
+2026-11-11T12:01:31.963Z upstream.res.close #116 POST /api/conversations complete=true
+2026-11-11T12:01:31.963Z upstream.close #116 POST /api/conversations
+2026-11-11T12:01:32.012Z start #121 GET /api/users/me
+2026-11-11T12:01:32.013Z start #122 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:32.013Z start #123 GET /api/notes/5
+2026-11-11T12:01:32.014Z start #124 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:32.026Z upstream.response #121 GET /api/users/me 200
+2026-11-11T12:01:32.027Z upstream.end #121 GET /api/users/me
+2026-11-11T12:01:32.027Z res.close #121 GET /api/users/me finished=true
+2026-11-11T12:01:32.027Z upstream.res.close #121 GET /api/users/me complete=true
+2026-11-11T12:01:32.027Z upstream.close #121 GET /api/users/me
+2026-11-11T12:01:32.028Z upstream.response #122 GET /api/notes/5?conversationPage=0&conversationSize=1 200
+2026-11-11T12:01:32.028Z upstream.end #122 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:32.028Z res.close #122 GET /api/notes/5?conversationPage=0&conversationSize=1 finished=true
+2026-11-11T12:01:32.029Z upstream.res.close #122 GET /api/notes/5?conversationPage=0&conversationSize=1 complete=true
+2026-11-11T12:01:32.029Z upstream.close #122 GET /api/notes/5?conversationPage=0&conversationSize=1
+2026-11-11T12:01:32.029Z upstream.response #124 GET /api/notes?sort=lastUsedAt,desc&size=20 200
+2026-11-11T12:01:32.029Z upstream.end #124 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:32.030Z res.close #124 GET /api/notes?sort=lastUsedAt,desc&size=20 finished=true
+2026-11-11T12:01:32.030Z upstream.res.close #124 GET /api/notes?sort=lastUsedAt,desc&size=20 complete=true
+2026-11-11T12:01:32.030Z upstream.close #124 GET /api/notes?sort=lastUsedAt,desc&size=20
+2026-11-11T12:01:32.030Z upstream.response #123 GET /api/notes/5 200
+2026-11-11T12:01:32.030Z upstream.end #123 GET /api/notes/5
+2026-11-11T12:01:32.030Z res.close #123 GET /api/notes/5 finished=true
+2026-11-11T12:01:32.030Z upstream.res.close #123 GET /api/notes/5 complete=true
+2026-11-11T12:01:32.031Z upstream.close #123 GET /api/notes/5

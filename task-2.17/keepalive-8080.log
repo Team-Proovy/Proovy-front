@@ -1,0 +1,14 @@
+0.0 first status 200 reused=false
+10.0 host: node 64358 127.0.0.1:56046->127.0.0.1:8080 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080->127.0.0.1:56046 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 01 
+20.2 host: node 64358 127.0.0.1:56046->127.0.0.1:8080 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080->127.0.0.1:56046 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 01 
+30.3 host: node 64358 127.0.0.1:56046->127.0.0.1:8080 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080->127.0.0.1:56046 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 01 
+40.4 host: node 64358 127.0.0.1:56046->127.0.0.1:8080 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080->127.0.0.1:56046 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 01 
+50.6 host: node 64358 127.0.0.1:56046->127.0.0.1:8080 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080->127.0.0.1:56046 (ESTABLISHED) | com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 01 
+60.6 socket end(FIN) local 56046
+60.6 socket close local undefined
+60.7 host: com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 06 
+70.9 host: com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 06 
+81.0 host: com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 06 
+91.2 host: com.docke 84190 127.0.0.1:8080 (LISTEN) || container states:       1 06 
+91.3 second status 200 reused=false
+91.3 third status 200 reused=true
