@@ -1,8 +1,11 @@
 import type {
   AssistantMessageContent,
+  AssuranceScope,
   AssistantResponseV1,
   ClarificationReason,
   ResponseDisposition,
+  ResponseKind,
+  SolutionCheck,
   SolutionVerificationSummary,
 } from "@/shared/contracts/browser_run_v1";
 
@@ -15,6 +18,10 @@ export interface CompletedAssistantResponse {
   clarificationReason?: ClarificationReason | null;
   assistantResponse: AssistantResponseV1;
   verificationSummary?: SolutionVerificationSummary[];
+  /** v1.1 확장. 셋이 모두 있을 때만 배지·단계 검산을 그린다. 없으면 확장 이전 응답처럼 그린다. */
+  responseKind?: ResponseKind | null;
+  assuranceScope?: AssuranceScope | null;
+  solutionChecks?: SolutionCheck[] | null;
 }
 
 /** COMPLETED 대화 메시지만 canonical 응답이 있다. 그 밖(placeholder·실패·취소)은 null이다. */
@@ -27,5 +34,8 @@ export const toCompletedAssistantResponse = (
         clarificationReason: content.clarificationReason,
         assistantResponse: content.assistantResponse,
         verificationSummary: content.verificationSummary,
+        responseKind: content.responseKind ?? null,
+        assuranceScope: content.assuranceScope ?? null,
+        solutionChecks: content.solutionChecks ?? null,
       }
     : null;

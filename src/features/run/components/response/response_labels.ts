@@ -1,5 +1,8 @@
 import type {
+  AssuranceScope,
   ClarificationReason,
+  StepCheckResult,
+  StepKind,
   StepMarkStatus,
   SummaryCoverage,
   VerificationBadge,
@@ -63,3 +66,57 @@ export const NOTICE_TITLE = "안내";
 export const VERIFICATION_SUMMARY_TITLE = "검증 요약";
 
 export const THREAD_SECTION_DEFAULT_TITLE = "자세히 보기";
+
+/** 보증 범위 배지(응답·문제). 단계 수(n/m)는 배지 본문에 넣지 않는다. */
+export const ASSURANCE_SCOPE_LABELS: Record<AssuranceScope, string> = {
+  verified: "검증됨",
+  unverified: "미검증",
+  not_applicable: "검증 대상 아님",
+};
+
+/** 배지 옆 보조 설명(스크린리더·툴팁). 무엇을 보증하는지 짧게 적는다. */
+export const ASSURANCE_SCOPE_DESCRIPTIONS: Record<AssuranceScope, string> = {
+  verified: "독립 풀이와 답이 일치하고 단계 검산을 마쳤습니다.",
+  unverified:
+    "검증을 마치지 못했습니다. 답을 그대로 쓰기 전에 직접 확인해 주세요.",
+  not_applicable: "증명·설명처럼 답을 검산하는 대상이 아닙니다.",
+};
+
+/** `responseKind === "re_explanation"`: 보증 범위 배지 옆 별도 표시 */
+export const RE_EXPLANATION_LABEL = "추가 설명";
+export const RE_EXPLANATION_DESCRIPTION =
+  "앞서 드린 풀이를 다시 설명한 답변입니다. 이 설명 자체는 새로 검증하지 않았습니다.";
+
+export const STEP_CHECK_SECTION_TITLE = "단계별 검산";
+
+export const STEP_CHECK_RESULT_LABELS: Record<StepCheckResult, string> = {
+  verified: "검산 통과",
+  falsified: "검산 실패",
+  unparseable: "검산 안 됨",
+  not_checked: "검산 대상 아님",
+};
+
+export const STEP_KIND_LABELS: Record<StepKind, string> = {
+  define: "정의",
+  given: "조건",
+  claim: "계산",
+  case: "경우 나눔",
+  choose: "보기 선택",
+  argue: "설명",
+};
+
+export const STEP_WITHHELD_TEXT = "정답 숨김 설정으로 단계 내용을 가렸습니다.";
+export const SOLUTION_HIDDEN_TEXT =
+  "풀이 숨김 설정으로 단계를 보여 주지 않습니다.";
+export const NO_CHECKABLE_STEPS_TEXT = "검산할 단계가 없습니다.";
+
+export const CROSS_CHECK_TEXTS = {
+  agrees: "다른 방법으로 구한 답과 일치합니다.",
+  disagrees: "다른 방법으로 구한 답과 일치하지 않습니다.",
+} as const;
+
+/** 문제 제목. 번호가 없으면(텍스트 입력) 응답 순서로 부른다. */
+export const getProblemTitle = (
+  problemNumber: string | null | undefined,
+  index: number,
+) => (problemNumber ? `${problemNumber}번 문제` : `문제 ${index + 1}`);

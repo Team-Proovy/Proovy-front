@@ -83,7 +83,7 @@ describe("browser-run-v1 검증된 사본", () => {
           /^manifest sha256 .* ≠ PIN.json manifest_sha256 0{64}$/,
         ),
         expect.stringMatching(
-          /^manifest consumer_version browser-run-fixtures-v1 ≠ PIN.json/,
+          /^manifest consumer_version browser-run-fixtures-v1\.1 ≠ PIN.json/,
         ),
       ]),
     );
@@ -92,7 +92,7 @@ describe("browser-run-v1 검증된 사본", () => {
   it("코드의 consumer_version이 pin과 다르면 실패한다", () => {
     expect(verifyContractMirror(pin, files, "browser-run-fixtures-v0")).toEqual(
       [
-        "PIN.json consumer_version browser-run-fixtures-v1 ≠ 코드 기대값 browser-run-fixtures-v0",
+        "PIN.json consumer_version browser-run-fixtures-v1.1 ≠ 코드 기대값 browser-run-fixtures-v0",
       ],
     );
   });

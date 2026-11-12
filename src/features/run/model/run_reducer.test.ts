@@ -78,9 +78,9 @@ const withDuplicates = (frames: BrowserFrame[]) =>
     ...frames.slice(0, index).reverse(),
   ]);
 
-describe("runReducer — fixture 10개 시나리오", () => {
-  it("valid stream fixture가 10개다", () => {
-    expect(streams).toHaveLength(10);
+describe("runReducer — fixture 17개 시나리오", () => {
+  it("valid stream fixture가 17개다(v1 10 + v1.1 확장 7)", () => {
+    expect(streams).toHaveLength(17);
   });
 
   describe.each(streamNames)("%s", (name) => {
@@ -107,6 +107,9 @@ describe("runReducer — fixture 10개 시나리오", () => {
           clarificationReason: lastFrame.payload.clarificationReason ?? null,
           assistantResponse: lastFrame.payload.assistantResponse,
           verificationSummary: lastFrame.payload.verificationSummary ?? [],
+          responseKind: lastFrame.payload.responseKind ?? null,
+          assuranceScope: lastFrame.payload.assuranceScope ?? null,
+          solutionChecks: lastFrame.payload.solutionChecks ?? null,
         });
       } else {
         expect(full.response).toBeNull();
@@ -598,6 +601,90 @@ describe("runReducer — Activity 규칙", () => {
   });
 });
 
+describe("runReducer — v1.1 확장(Read-back·보증 범위)", () => {
+  it("read_back은 첫 Activity이고 완료 payload의 읽은 문제를 순서대로 담는다", () => {
+    const stream = getStreamFixture("mixed-scope-completed");
+    const completed = stream.frames.find(
+      (frame) =>
+        frame.type === "activity.completed" &&
+        frame.payload.kind === "read_back",
+    );
+    if (
+      completed?.type !== "activity.completed" ||
+      completed.payload.kind !== "read_back"
+    )
+      throw new Error("read_back 완료 frame 없음");
+
+    const [first, ...rest] = selectActivities(reduceFrames(stream.frames));
+    expect(first.kind).toBe("read_back");
+    expect(first.label).toBe("reading_back_problems");
+    expect(first.phase).toBe("completed");
+    expect(first.readBackProblems).toEqual(
+      completed.payload.problems.map((problem) => ({
+        ...problem,
+        choices: problem.choices ?? [],
+      })),
+    );
+    expect(first.readBackProblems.map((p) => p.problemNumber)).toEqual([
+      "22",
+      "9",
+      undefined,
+      "3",
+    ]);
+    for (const activity of rest) expect(activity.readBackProblems).toEqual([]);
+  });
+
+  it("read_back 시작만 받았으면 읽은 문제는 아직 비어 있다", () => {
+    const stream = getStreamFixture("verified-multiple-choice-with-read-back");
+    const [readBack] = selectActivities(
+      reduceFrames(stream.frames.slice(0, 2)),
+    );
+    expect(readBack.kind).toBe("read_back");
+    expect(readBack.phase).toBe("running");
+    expect(readBack.readBackProblems).toEqual([]);
+  });
+
+  it("세 필드 중 하나라도 빠진 run.completed는 확장 없음으로 둔다", () => {
+    const stream = getStreamFixture("unverified-disagreement");
+    const frames = structuredClone(stream.frames);
+    const completed = frames.at(-1) as RunCompletedFrame;
+    delete completed.payload.solutionChecks;
+    const { response } = reduceFrames(frames);
+    expect(response).toMatchObject({
+      responseKind: null,
+      assuranceScope: null,
+      solutionChecks: null,
+    });
+  });
+
+  it("대화 조회 assistant의 확장 필드를 그대로 응답에 옮긴다", () => {
+    const page = getConversationFixture(
+      "conversation-verified-then-re-explanation",
+    ).body.result;
+    const assistants = page.messages.filter(
+      (message) => message.role === "assistant",
+    );
+    const responses = assistants.map(
+      (message) =>
+        runReducer(createInitialRunState(), {
+          type: "conversation",
+          page,
+          runId: message.runId,
+        }).response,
+    );
+    expect(
+      responses.map((response) => [
+        response?.responseKind,
+        response?.assuranceScope,
+        response?.solutionChecks?.length,
+      ]),
+    ).toEqual([
+      ["standard", "verified", 1],
+      ["re_explanation", "not_applicable", 0],
+    ]);
+  });
+});
+
 describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음", () => {
   const completedStreams = streams.filter(
     (stream) => stream.frames.at(-1)!.type === "run.completed",
@@ -623,6 +710,10 @@ describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음"
         for (const text of texts)
           expect(serialized).not.toContain(JSON.stringify(text).slice(1, -1));
         expect(serialized).not.toMatch(/resultBlocks|plainText|"body"|"title"/);
+        // 단계·수식·배지는 검증이 끝난 run.completed에서만 온다(Read-back에도 없다).
+        expect(serialized).not.toMatch(
+          /checkableSteps|sympyStatement|solutionChecks|"verified"|"unverified"|"not_applicable"/,
+        );
       }
     },
   );

@@ -1,10 +1,18 @@
 import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { ActivityStatusIcon } from "./ActivityStatusIcon";
-import type { PublicRunStatus } from "@/shared/contracts/browser_run_v1";
+import type {
+  PublicRunStatus,
+  ReadBackProblem,
+} from "@/shared/contracts/browser_run_v1";
+import { SafeMarkdown } from "@/features/run/components/response";
 import {
   ACTIVITY_PHASE_TEXTS,
   CANCELING_TEXT,
+  CHOICE_MARKS,
+  READ_BACK_FIGURE_PREFIX,
+  READ_BACK_LIST_LABEL,
+  getReadBackProblemTitle,
   RUN_OUTCOME_TEXTS,
   getActivityMethodText,
   getActivityProgressText,
@@ -62,6 +70,65 @@ const getSummary = (
   };
 };
 
+/**
+ * Read-back("이렇게 읽었어요")에서 읽은 문제: 번호·본문·보기·그림 설명. 수식은 SafeMarkdown(KaTeX)으로 그린다.
+ * 답·단계는 계약상 오지 않는다. 사용자 확인을 기다리지 않는다(틀리면 정지).
+ */
+const ReadBackProblems = ({
+  problems,
+}: {
+  problems: readonly ReadBackProblem[];
+}) => (
+  <ol
+    aria-label={READ_BACK_LIST_LABEL}
+    className="mt-[6px] ml-[24px] flex flex-col gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[10px] py-[8px] text-[13px] leading-[20px] text-[#2F3440]"
+  >
+    {problems.map((problem, index) => (
+      <li
+        key={index}
+        data-read-back-problem
+      >
+        <p className="text-[12px] font-semibold text-[#6B7280]">
+          {getReadBackProblemTitle(problem.problemNumber, index)}
+        </p>
+        <SafeMarkdown
+          body={problem.questionText}
+          className="break-words"
+        />
+        {!!problem.choices?.length && (
+          <ol
+            aria-label="보기"
+            className="mt-[2px] flex flex-wrap gap-x-[12px] gap-y-[2px]"
+          >
+            {problem.choices.map((choice, choiceIndex) => (
+              <li
+                key={choiceIndex}
+                className="flex items-baseline gap-[4px]"
+              >
+                <span aria-hidden>{CHOICE_MARKS[choiceIndex]}</span>
+                <span className="sr-only">{`${choiceIndex + 1}번 보기`}</span>
+                <SafeMarkdown
+                  body={choice}
+                  className="[&_p]:my-0"
+                />
+              </li>
+            ))}
+          </ol>
+        )}
+        {problem.figureDescription && (
+          <div className="mt-[2px] flex gap-[4px] text-[12px] text-[#6B7280]">
+            <span className="shrink-0">{READ_BACK_FIGURE_PREFIX}:</span>
+            <SafeMarkdown
+              body={problem.figureDescription}
+              className="min-w-0 [&_p]:my-0"
+            />
+          </div>
+        )}
+      </li>
+    ))}
+  </ol>
+);
+
 const ActivityRow = ({
   item,
   isCanceling,
@@ -71,27 +138,43 @@ const ActivityRow = ({
 }) => {
   const methodText = getActivityMethodText(item);
   const progressText = getActivityProgressText(item);
+  const readBackProblems =
+    item.kind === "read_back" ? (item.readBackProblems ?? []) : [];
   return (
     <li
-      className="flex items-center gap-[8px] text-[14px] leading-[20px]"
       data-activity-id={item.activityId}
+      data-activity-kind={item.kind}
     >
-      <ActivityStatusIcon phase={item.phase} />
-      <span className="min-w-0 flex-1 text-[#111827]">
-        {getActivityTitle(item)}
-        {methodText && (
-          <span className="text-[#6B7280]">{` · ${methodText}`}</span>
-        )}
-        {progressText && (
-          <span className="text-[#6B7280]">{` · ${progressText}`}</span>
-        )}
-      </span>
-      <span className="shrink-0 font-medium text-[#374151]">
-        {getActivityStatusText(item, isCanceling)}
-      </span>
+      <div className="flex items-center gap-[8px] text-[14px] leading-[20px]">
+        <ActivityStatusIcon phase={item.phase} />
+        <span className="min-w-0 flex-1 text-[#111827]">
+          {getActivityTitle(item)}
+          {methodText && (
+            <span className="text-[#6B7280]">{` · ${methodText}`}</span>
+          )}
+          {progressText && (
+            <span className="text-[#6B7280]">{` · ${progressText}`}</span>
+          )}
+        </span>
+        <span className="shrink-0 font-medium text-[#374151]">
+          {getActivityStatusText(item, isCanceling)}
+        </span>
+      </div>
+      {readBackProblems.length > 0 && (
+        <ReadBackProblems problems={readBackProblems} />
+      )}
     </li>
   );
 };
+
+/** read_back은 진행의 첫 단계다. 늦게 와도 맨 앞에 두고 나머지는 처음 등장 순서를 지킨다. */
+const orderActivities = (activities: readonly ActivityBoxItem[]) =>
+  activities.some((item, index) => item.kind === "read_back" && index > 0)
+    ? [
+        ...activities.filter((item) => item.kind === "read_back"),
+        ...activities.filter((item) => item.kind !== "read_back"),
+      ]
+    : activities;
 
 /**
  * 실제 진행 Activity를 처음 등장한 순서대로 누적하는 박스.
@@ -142,7 +225,7 @@ export const ActivityBox = ({
             aria-label={BOX_TITLE}
             className="mt-[8px] flex flex-col gap-[6px]"
           >
-            {activities.map((item) => (
+            {orderActivities(activities).map((item) => (
               <ActivityRow
                 key={item.activityId}
                 item={item}

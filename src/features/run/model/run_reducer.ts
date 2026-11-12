@@ -5,12 +5,14 @@ import {
   type ActivityFrame,
   type AssistantConversationMessage,
   type BrowserFrame,
+  type CompletionExtension,
   type ConversationPage,
   type PublicRunStatus,
   type Uuid,
 } from "@/shared/contracts/browser_run_v1";
 import type {
   ActivityEntry,
+  CanonicalResponse,
   ConversationResume,
   RunAction,
   RunIdentity,
@@ -38,6 +40,24 @@ export const createInitialRunState = (): RunState => ({
   failure: null,
   cancel: null,
 });
+
+/**
+ * v1.1 확장 세 필드. 셋이 모두 있을 때만 쓴다(계약상 함께 오거나 모두 없다).
+ * 하나라도 빠지면 확장 이전 응답처럼 모두 null로 둔다 — 근거 없는 배지를 그리지 않는다.
+ */
+const toCompletionExtension = (
+  source: CompletionExtension,
+): Pick<
+  CanonicalResponse,
+  "responseKind" | "assuranceScope" | "solutionChecks"
+> =>
+  source.responseKind && source.assuranceScope && source.solutionChecks
+    ? {
+        responseKind: source.responseKind,
+        assuranceScope: source.assuranceScope,
+        solutionChecks: source.solutionChecks,
+      }
+    : { responseKind: null, assuranceScope: null, solutionChecks: null };
 
 export const isTerminalRunStatus = (status: PublicRunStatus | null) =>
   status !== null &&
@@ -187,6 +207,7 @@ const applyFramePayload = (
           clarificationReason: payload.clarificationReason ?? null,
           assistantResponse: payload.assistantResponse,
           verificationSummary: payload.verificationSummary ?? [],
+          ...toCompletionExtension(payload),
         },
       };
     }
@@ -237,6 +258,7 @@ const createActivityEntry = (
   matchStatus: null,
   limitedPages: [],
   durationMs: null,
+  readBackProblems: [],
   failureCode: null,
   startedSeq: frame.seq,
   updatedSeq: frame.seq,
@@ -294,6 +316,11 @@ const mergeActivityPayload = (
       }
       if (completed.kind === "code_execution")
         next.durationMs = completed.durationMs ?? null;
+      if (completed.kind === "read_back")
+        next.readBackProblems = completed.problems.map((problem) => ({
+          ...problem,
+          choices: [...(problem.choices ?? [])],
+        }));
       break;
     }
     case "activity.failed":
@@ -408,6 +435,7 @@ const applyConversation = (
           clarificationReason: content.clarificationReason,
           assistantResponse: content.assistantResponse,
           verificationSummary: content.verificationSummary,
+          ...toCompletionExtension(content),
         },
       };
     case "FAILED":

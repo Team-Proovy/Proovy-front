@@ -22,7 +22,9 @@ export type ActivityBoxItem = Pick<
   | "pageProgress"
   | "startedSeq"
   | "updatedSeq"
->;
+> &
+  /** read_back 완료에서 읽은 문제. 다른 kind는 비어 있다(없어도 된다). */
+  Partial<Pick<ActivityView, "readBackProblems">>;
 
 export interface ActivityBoxProps {
   /** 처음 등장 순서대로 정렬된 Activity 목록 */

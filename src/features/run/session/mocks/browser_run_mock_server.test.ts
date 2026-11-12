@@ -5,13 +5,16 @@ import type { RunStreamEnd } from "@/features/run/api";
 import { reduceFrames, selectActivities } from "@/features/run/model";
 import type { BrowserFrame } from "@/shared/contracts/browser_run_v1";
 import {
+  CONTRACT_WARM_UP_TIMEOUT_MS,
   getStreamFixture,
   listStreamFixtures,
   readContractJson,
+  warmUpContractFixtures,
 } from "@/test/contracts/browser_run_fixtures";
 import { parseWire } from "@/test/contracts/browser_run_schema";
 import { createBrowserRunMockServer } from "./browser_run_mock_server";
 import {
+  FIXTURE_MODE_TEMPLATE_ROTATION,
   getStreamTemplate,
   STREAM_TEMPLATE_NAMES,
 } from "./browser_run_stream_templates";
@@ -26,6 +29,7 @@ const api = createRunApiClient({
 });
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+beforeAll(warmUpContractFixtures, CONTRACT_WARM_UP_TIMEOUT_MS);
 afterEach(() => mock.reset());
 afterAll(() => server.close());
 
@@ -49,7 +53,7 @@ const question = (noteId?: string) => ({
 });
 
 describe("stream template", () => {
-  it("streams/valid fixture 10개를 모두 template으로 쓴다", () => {
+  it("streams/valid fixture(v1.1 포함 17개)를 모두 template으로 쓴다", () => {
     expect(STREAM_TEMPLATE_NAMES).toEqual(
       listStreamFixtures().map((fixture) => fixture.name),
     );
@@ -453,5 +457,71 @@ describe("조회 응답", () => {
     await expect(api.getRunStatus(crypto.randomUUID())).rejects.toBeInstanceOf(
       RunApiError,
     );
+  });
+});
+
+describe("v1.1 확장 (2.07 fixture)", () => {
+  it("대화 조회는 run.completed의 responseKind·assuranceScope·solutionChecks를 그대로 싣는다", async () => {
+    mock.seedRun({
+      template: "verified-multiple-choice-with-read-back",
+      noteId: "6",
+    });
+    mock.seedRun({ template: "re-explanation-completed", noteId: "6" });
+    mock.seedRun({ template: "substantive-completed", noteId: "6" });
+    const { body } = await rawFetch("/api/conversations/6/messages");
+    const page = parseWire("ConversationPageResponse", body).result;
+    const assistants = page.messages.flatMap((message) =>
+      message.role === "assistant" ? [message.assistant] : [],
+    );
+    expect(
+      assistants.map((assistant) => [
+        assistant.responseKind,
+        assistant.assuranceScope,
+        assistant.solutionChecks?.length,
+      ]),
+    ).toEqual([
+      ["standard", "verified", 1],
+      ["re_explanation", "not_applicable", 0],
+      // 확장 이전 fixture에는 세 필드가 없다.
+      [undefined, undefined, undefined],
+    ]);
+  });
+
+  it("templateRotation: 새 run이 객관식·단답형·검증 대상 아님·재설명 순으로 돈다", async () => {
+    const rotating = createBrowserRunMockServer({
+      baseUrl: "http://rotation.test",
+      templateRotation: FIXTURE_MODE_TEMPLATE_ROTATION,
+    });
+    const rotationServer = setupServer(...rotating.handlers);
+    server.close();
+    rotationServer.listen({ onUnhandledRequest: "error" });
+    try {
+      const rotationApi = createRunApiClient({
+        baseUrl: "http://rotation.test",
+        auth: { getAccessToken: () => "test-token" },
+      });
+      const outcomes: unknown[] = [];
+      for (let index = 0; index < 5; index += 1) {
+        const { frames } = await collect((onFrame) =>
+          rotationApi.streamConversation(question(), { onFrame }),
+        );
+        const completed = frames.at(-1)!;
+        if (completed.type !== "run.completed") throw new Error("완료 아님");
+        outcomes.push([
+          completed.payload.assuranceScope,
+          completed.payload.responseKind,
+        ]);
+      }
+      expect(outcomes).toEqual([
+        ["verified", "standard"],
+        ["unverified", "standard"],
+        ["not_applicable", "standard"],
+        ["not_applicable", "re_explanation"],
+        ["verified", "standard"],
+      ]);
+    } finally {
+      rotationServer.close();
+      server.listen({ onUnhandledRequest: "error" });
+    }
   });
 });

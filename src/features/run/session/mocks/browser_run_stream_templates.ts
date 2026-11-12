@@ -5,7 +5,7 @@ import type {
 } from "@/shared/contracts/browser_run_v1";
 
 /**
- * browser-run-v1 `streams/valid` fixture (1.88 pin 사본)를 mock run의 frame 원본으로 쓴다.
+ * browser-run-v1 `streams/valid` fixture (pin 사본, v1.1)를 mock run의 frame 원본으로 쓴다.
  * `node:fs`가 아니라 `import.meta.glob`으로 읽어 vitest와 브라우저 fixture 모드(Vite) 양쪽에서 같은 값을 쓴다.
  * schema 검사는 테스트(`browser_run_mock_server.test.ts`)가 한다.
  */
@@ -56,7 +56,27 @@ export type StreamTemplateName =
   | "canceled-running"
   | "canceled-pending"
   | "canceled-asset-deleting"
-  | "replay-source-unavailable";
+  | "replay-source-unavailable"
+  // v1.1 확장(2.07): Read-back·보증 범위 배지·단계 검산
+  | "verified-multiple-choice-with-read-back"
+  | "unverified-disagreement"
+  | "mixed-scope-completed"
+  | "not-applicable-proof"
+  | "re-explanation-completed"
+  | "hide-answer-completed"
+  | "hide-solution-completed";
+
+/**
+ * fixture 모드에서 새 run마다 차례로 쓰는 v1.1 template.
+ * 객관식(검증됨)·단답형(미검증)·증명(검증 대상 아님)·재설명(추가 설명) 순서라 질문 네 번이면 배지 세 가지와
+ * "추가 설명"이 모두 보인다.
+ */
+export const FIXTURE_MODE_TEMPLATE_ROTATION: readonly StreamTemplateName[] = [
+  "verified-multiple-choice-with-read-back",
+  "unverified-disagreement",
+  "not-applicable-proof",
+  "re-explanation-completed",
+];
 
 /** template의 깊은 복사본 */
 export const getStreamTemplate = (name: StreamTemplateName): StreamTemplate => {

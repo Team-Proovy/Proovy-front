@@ -1,13 +1,17 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   reduceFrames,
   selectActivities,
   selectRunStatus,
 } from "@/features/run/model";
 import type { BrowserFrame } from "@/shared/contracts/browser_run_v1";
-import { getStreamFixture } from "@/test/contracts/browser_run_fixtures";
+import {
+  CONTRACT_WARM_UP_TIMEOUT_MS,
+  getStreamFixture,
+  warmUpContractFixtures,
+} from "@/test/contracts/browser_run_fixtures";
 import { ActivityBox } from "./ActivityBox";
 import type { ActivityBoxItem } from "./activity_types";
 
@@ -53,6 +57,8 @@ const item = (
   updatedSeq: 0,
   ...overrides,
 });
+
+beforeAll(warmUpContractFixtures, CONTRACT_WARM_UP_TIMEOUT_MS);
 
 describe("ActivityBox fixture 단면", () => {
   it("진행 중: spinner와 '진행 중' 문구, live region에 현재 Activity를 둔다", () => {
@@ -549,5 +555,85 @@ describe("ActivityBox 표시 규칙", () => {
     expect(
       screen.getByRole("button").querySelector("svg[data-phase]"),
     ).toHaveAttribute("data-phase", "failed");
+  });
+});
+
+describe("ActivityBox Read-back (v1.1)", () => {
+  it("read_back을 첫 단계 '이렇게 읽었어요'로 그리고 읽은 문제·보기를 수식과 함께 보인다", () => {
+    const { activities, runStatus } = sliceStream(
+      "verified-multiple-choice-with-read-back",
+    );
+    render(
+      <ActivityBox
+        activities={activities}
+        runStatus={runStatus}
+      />,
+    );
+
+    const [first] = getRows();
+    expect(first).toHaveAttribute("data-activity-kind", "read_back");
+    expect(first).toHaveTextContent("이렇게 읽었어요");
+    expect(first).toHaveTextContent("완료");
+
+    const problems = within(first).getByRole("list", { name: "읽은 문제" });
+    expect(problems).toHaveTextContent("15번");
+    // 문제 본문의 $…$ 수식은 KaTeX로 그린다.
+    expect(problems.querySelector(".katex")).not.toBeNull();
+    const choices = within(problems).getByRole("list", { name: "보기" });
+    expect(within(choices).getAllByRole("listitem")).toHaveLength(5);
+    expect(choices).toHaveTextContent("①");
+    expect(choices).toHaveTextContent("1번 보기");
+  });
+
+  it("번호 없는 문제는 순서로 부르고 그림 설명을 붙인다", () => {
+    const { activities, runStatus } = sliceStream("mixed-scope-completed");
+    render(
+      <ActivityBox
+        activities={activities}
+        runStatus={runStatus}
+      />,
+    );
+    const problems = within(getRows()[0]).getByRole("list", {
+      name: "읽은 문제",
+    });
+    const items = [
+      ...problems.querySelectorAll(":scope > li[data-read-back-problem]"),
+    ];
+    expect(items).toHaveLength(4);
+    expect(items[1]).toHaveTextContent("그림:");
+    expect(items[2]).toHaveTextContent(/^문제 3/);
+    // Read-back에는 답·단계·검산 표시가 없다.
+    expect(problems.textContent).not.toMatch(/검산|검증됨|정답/);
+  });
+
+  it("read_back이 늦게 등장해도 첫 단계로 둔다", () => {
+    render(
+      <ActivityBox
+        activities={[
+          item({
+            activityId: "a-1",
+            kind: "input_analysis",
+            label: "analyzing_input",
+            startedSeq: 2,
+          }),
+          item({
+            activityId: "a-2",
+            kind: "read_back",
+            label: "reading_back_problems",
+            startedSeq: 3,
+          }),
+        ]}
+        runStatus="RUNNING"
+      />,
+    );
+    const rows = getRows().filter((row) =>
+      row.hasAttribute("data-activity-id"),
+    );
+    expect(rows.map((row) => row.getAttribute("data-activity-id"))).toEqual([
+      "a-2",
+      "a-1",
+    ]);
+    expect(rows[0]).toHaveTextContent("이렇게 읽었어요");
+    expect(rows[0]).toHaveTextContent("진행 중");
   });
 });
