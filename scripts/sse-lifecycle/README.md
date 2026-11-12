@@ -27,7 +27,7 @@
 | H4 Server가 두 번째 run SSE를 끝내지 못함            | 기각                  | proxy trace의 모든 run SSE가 terminal 직후 `upstream.end`·`complete=true`                                                                                         |
 | Docker Desktop 포트 전달이 소켓 종료를 전달하지 않음 | 기각(idle keep-alive) | `keepalive-probe.mjs`: Server가 60s 유휴 keep-alive를 닫자 host의 Node 소켓이 곧바로 FIN을 받고 Docker Desktop backend 소켓도 사라짐. 다음 요청은 새 소켓으로 200 |
 
-Linux(1.99, `pr-assets/task-1.99`)에서도 재현되지 않았다. 따라서 원인이 Front 코드 쪽이라는 근거도, Docker Desktop 쪽이라는 근거도 없다.
+Linux에서도 재현되지 않았다. 1.99 하네스로 A·C·B를 돌렸고(`pr-assets/task-1.99`), 2.17 리뷰 반영 도구로 A·C·B·T ×2를 돌려 실패 0이었다(`runs/linux-review1-ACBT`, Docker Engine, Playwright Chromium). 그 전 한 번은 서버 load가 4코어에서 30 안팎이라 B 정지 예산 초과·T 실패 run 미발생이 `harness-` 줄로 기록됐고, 판정에서 뺐다. 따라서 원인이 Front 코드 쪽이라는 근거도, Docker Desktop 쪽이라는 근거도 없다.
 
 원자료(HAR·net-log 제외: token 포함): [`pr-assets/task-2.17`](https://github.com/Team-Proovy/Proovy-front/tree/pr-assets/task-2.17/task-2.17).
 
