@@ -45,12 +45,14 @@ Linux(1.99, `pr-assets/task-1.99`)에서도 재현되지 않았다. 따라서 �
    ```bash
    PROXY_TRACE_LOG=$PWD/proxy-trace.log pnpm exec vite --config scripts/sse-lifecycle/vite.trace.config.ts
    ```
-2. 사람이 화면에서 쓰는 동안 연결 수를 기록한다: `scripts/sse-lifecycle/collect.sh <결과 디렉터리>`(같은 `PROXY_TRACE_LOG`를 주면 trace도 복사한다). 평소 Chrome에서는 `chrome://net-export`(socket pool 상태)와 DevTools Network(Preserve log) HAR을 함께 남긴다.
+2. 사람이 화면에서 쓰는 동안 연결 수를 기록한다: `scripts/sse-lifecycle/collect.sh <결과 디렉터리>`(같은 `PROXY_TRACE_LOG`를 주면 collect.sh를 시작한 뒤의 trace를 복사한다. 원본 trace는 지우지 않으므로 증상이 먼저 나왔으면 원본 파일도 따로 남긴다). 평소 Chrome에서는 `chrome://net-export`(socket pool 상태)와 DevTools Network(Preserve log) HAR을 함께 남긴다.
 3. 같은 Note에서 다음 질문, 진행 중 새로고침, 완료 뒤 새로고침을 반복한다. 증상이 나오면 시각, 오류 코드(`ERR_...`), 주소창 host, 열린 탭 수, `chrome://serviceworker-internals`의 worker 유무를 적는다.
 4. 판정 기준
    - `browserToVite`가 6 이상으로 쌓이고 HAR에서 `GET /events`가 45s마다 `stalled`로 끊기면 H1이다(1.99 watchdog 메모).
    - `viteToServer`·`dockerSide`가 남아 있는데 `serverEstablished`가 0이면 Docker 포트 전달이 종료를 전달하지 않은 것이다.
    - 브라우저 쪽만 남으면 Front·dev proxy 쪽이다.
+   - `viteToServer`는 loopback peer만 센다. Linux에서 docker-proxy가 컨테이너(`172.x:8080`)로 맺은 연결은 세지 않는다.
+5. 재현되면 Docker 포트 전달을 빼고 같은 흐름을 비교해야 한다. 2.17은 재현이 0건이라 이 비교를 하지 않았고, 이 도구에도 그 경로를 띄우는 절차는 없다. 2.18에서 재현되면 먼저 같은 흐름을 Linux(Docker Engine·docker-proxy)에서 돌리고, `upstream-relay.mjs`(`STALE=1`·`/cut?mode=stall`)로 흉내 낸 단절과 증상을 비교해 범위를 좁힌다. 그래도 가를 수 없으면 Server를 host에서 직접 띄워 publish 포트를 거치지 않는 경로를 그때 마련한다(확인 필요).
 
 자동 흐름은 `run-flows.sh`로 돌린다. offline에서 비용은 0이다. 2.17 PR에서 맥북으로 확인한 명령은 다음과 같다(A·C·B·T ×2 실패 0).
 
@@ -62,7 +64,12 @@ COMPOSE_PROJECT=proovy-stack BROWSER_CHANNEL=chrome GAP_MS=2000 \
 ```
 
 - `.env.local`이 없는 checkout은 `VITE_KAKAO_CLIENT_ID`·`VITE_KAKAO_REDIRECT_URI`가 비어 화면이 빈 페이지가 된다. dev server를 띄울 때 env로 placeholder를 준다(`VITE_KAKAO_CLIENT_ID=local-placeholder VITE_KAKAO_REDIRECT_URI=http://localhost:5173/oauth/kakao`).
-- 결과 디렉터리는 저장소 밖에 둔다.
+- 결과 디렉터리는 저장소 밖에 둔다. 상대 경로도 된다(스크립트가 절대 경로로 바꾼다).
+- 흐름 T는 반복마다 2질문이다. 한 사용자 Free 잔액(10질문) 안에 들도록 `run-flows.sh`가 T의 N을 4로 줄인다.
+- `summary.txt`의 `harness-B…`·`harness-T…` 줄은 하네스 조건이 깨진 반복이다. 제품 결함으로 세지 않는다.
+  - B: Brain 정지가 `PAUSE_BUDGET_MS`(25s, Server stream idle timeout 30s보다 짧게)를 넘었다. 이 반복의 답변·박스 판정은 생략한다.
+  - T: Server 로그에 첫 run의 `brain stream failed`가 없다. 그 반복은 실패 run 뒤 질문이 아니었다.
+- `server.log`·`proxy-trace.log`는 흐름(또는 collect.sh) 시작 시각 뒤만 담는다.
 
 ## 도구
 
@@ -72,7 +79,7 @@ COMPOSE_PROJECT=proovy-stack BROWSER_CHANNEL=chrome GAP_MS=2000 \
 | `run-flows.sh`         | 흐름마다 새 사용자 token을 받아 `repro.mjs`를 돌리고 Server 로그·proxy trace를 흐름별로 모은다. token은 출력하지 않는다                                                                                                                                                                                                                      |
 | `collect.sh`           | 사람이 재현하는 동안 1초마다 소켓 수를 기록하고, 끝낼 때 Server 로그·compose 상태·남은 소켓을 저장한다(macOS `lsof`, Linux `ss`)                                                                                                                                                                                                             |
 | `vite.trace.config.ts` | 저장소 `vite.config.ts`에 dev proxy 이벤트 기록만 덧붙인다                                                                                                                                                                                                                                                                                   |
-| `upstream-relay.mjs`   | dev proxy ↔ Server 사이 TCP 중계. reset(RST)·stall(half-open)·`STALE=1`(FIN 미전달)로 단절을 흉내 낸다                                                                                                                                                                                                                                       |
+| `upstream-relay.mjs`   | dev proxy ↔ Server 사이 TCP 중계. reset(dev proxy 쪽 RST)·stall(half-open)·`STALE=1`(FIN 미전달)로 단절을 흉내 낸다. keep-alive 연결도 요청마다 run SSE인지 다시 본다                                                                                                                                                                        |
 | `keepalive-probe.mjs`  | host → Docker publish 포트의 keep-alive 소켓이 Server의 idle close(FIN)를 받는지 본다(macOS)                                                                                                                                                                                                                                                 |
 
 - Playwright는 이 저장소의 의존성이 아니다. 이미 설치된 패키지를 `PLAYWRIGHT_MODULE=<…/node_modules/playwright/index.mjs>`로 가리킨다. 브라우저를 새로 설치하지 않는다.
