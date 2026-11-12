@@ -1,0 +1,7 @@
+11.69 note http://localhost:5173/app/chat/8
+11.70 begin T1 answers 1
+57.24 after failed run T1 answers 2 server failed true
+62.12 end T1 {"t":"61.75","phase":"T1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+62.12 begin T2 answers 3
+107.02 after failed run T2 answers 4 server failed true
+113.69 end T2 {"t":"113.07","phase":"T2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}

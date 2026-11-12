@@ -12,6 +12,7 @@ Front 2.17(1.99 이월) 증상 1(새로고침 문서 로드 실패)·증상 2(�
 | `runs/gap70-chrome-AC` | Google Chrome 157 | A×3·C×3, 간격 70s, proxy 대상 127.0.0.1:8080 | 실패 0 |
 | `runs/failed-then-next-chrome` | Google Chrome 157 | T×2(provider_error 뒤 다음 질문) | 실패 0 |
 | `runs/repo-tool-ACBT` | Google Chrome 157 | 저장소 `run-flows.sh`로 A·C·B·T ×2(흐름별 새 사용자) | 실패 0 |
+| `runs/linux-review1-ACBT` | Playwright Chromium(Linux 서버, Docker Engine) | 리뷰 1회차 반영 도구(`c0a2d95`)로 A·C·B·T ×2. T 첫 run 실패를 Server 로그로 확인, `viteToServer`는 loopback만 | 실패 0 |
 | `keepalive-8080.log` | — | host → Docker Desktop publish keep-alive, Server idle close(60s) 전달 | FIN 전달됨 |
 
 파일: `requests.tsv`(CDP 요청별 시작·header·끝·status·connectionId), `samples.tsv`(500ms: apiInflight·sseInflight·browserToVite·viteToServer·dockerSide·serverEstablished), `proxy-trace.log`(dev proxy 이벤트), `events.log`·`summary.txt`, `server.log`.

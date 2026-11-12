@@ -1,0 +1,40 @@
+start	headersAt	end	how	status	connectionId	method	type	url	lastEventId	error
+1.48	2.14	2.23	finished	200	22	GET	Document	/app/home		
+8.18	9.98	9.98	finished	200	55	GET	XHR	/api/notes/tools		
+8.18	9.98	9.98	finished	200	40	GET	XHR	/api/users/me		
+8.18	9.99	9.99	finished	200	33	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+8.18	9.99	9.99	finished	200	62	GET	XHR	/api/notes?page=0&size=1		
+11.01	11.86	12.74	failed	200	22	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+11.91	12.18	12.18	finished	200	1155	GET	XHR	/api/notes?page=0&size=1		
+11.91	12.18	12.18	finished	200	69	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+12.74		12.74	failed			GET	Fetch	/api/conversations/5/messages?limit=30		net::ERR_ABORTED (canceled)
+12.74	12.96	12.98	finished	200	1176	GET	Fetch	/api/conversations/5/messages?limit=30		
+12.74	13.14	13.14	finished	200	1170	GET	XHR	/api/notes/5		
+12.74	13.17	13.17	finished	200	1199	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		
+12.74	13.19	13.19	finished	200	1190	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+12.74	13.30	13.30	finished	200	1183	GET	XHR	/api/users/me		
+12.74	13.31	13.31	finished	200	1214	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+12.74	13.35	13.36	finished	200	1220	GET	XHR	/api/users/me		
+13.12	14.02	15.25	failed	200	1208	GET	Fetch	/api/ai-runs/f2982d01/events		net::ERR_ABORTED (canceled)
+15.24	15.28	15.28	finished	200	1252	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+15.24	15.30	15.30	finished	200	1231	GET	XHR	/api/users/me		
+15.24	15.30	15.30	finished	200	1238	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		
+15.24	15.39	15.39	finished	200	1245	GET	XHR	/api/notes/5		
+15.92	16.33	18.37	failed	200	1258	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+16.53	16.80	16.80	finished	200	1267	GET	XHR	/api/users/me		
+16.53	16.80	16.80	finished	200	1274	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		
+16.53	16.81	16.81	finished	200	1288	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+16.53	16.95	16.95	finished	200	1281	GET	XHR	/api/notes/5		
+18.36	18.57	18.58	finished	200	1297	GET	XHR	/api/users/me		
+18.36	18.61	18.61	finished	200	1311	GET	XHR	/api/notes/5		
+18.36	18.66	18.66	finished	200	1318	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+18.36	18.66	18.66	finished	200	1304	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		
+20.87	21.12	22.99	failed	200	1326	POST	Fetch	/api/conversations		net::ERR_ABORTED (canceled)
+21.44	21.55	21.56	finished	200	1333	GET	XHR	/api/users/me		
+21.44	21.61	21.61	finished	200	1340	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		
+21.44	21.77	21.77	finished	200	1354	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+21.44	21.79	21.79	finished	200	1347	GET	XHR	/api/notes/5		
+22.98	23.08	23.11	finished	200	1363	GET	XHR	/api/users/me		
+22.98	23.30	23.32	finished	200	1377	GET	XHR	/api/notes/5		
+22.98	23.32	23.32	finished	200	1384	GET	XHR	/api/notes?sort=lastUsedAt,desc&size=20		
+22.98	23.32	23.32	finished	200	1370	GET	XHR	/api/notes/5?conversationPage=0&conversationSize=1		

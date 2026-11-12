@@ -1,0 +1,7 @@
+17.02 note http://localhost:5173/app/chat/7
+17.12 begin B1 answers 1
+26.42 in-progress reload B1 restore GET /events true answers 1 held 8334ms
+30.03 end B1 {"t":"29.41","phase":"B1","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}
+30.03 begin B2 answers 2
+38.13 in-progress reload B2 restore GET /events true answers 2 held 7820ms
+42.07 end B2 {"t":"41.76","phase":"B2","apiInflight":0,"sseInflight":0,"browserToVite":1,"viteToServer":0,"dockerSide":0,"serverEstablished":0}

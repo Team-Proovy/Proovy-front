@@ -1,0 +1,116 @@
+server-1  | 2026-11-12T15:18:01.388Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 1, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:01.389Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 1, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:01.409Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.d.note.controller.NoteController     : 도구 목록 조회 요청 - userId: 8, query: null
+server-1  | 2026-11-12T15:18:01.411Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 0개 조회
+server-1  | 2026-11-12T15:18:01.439Z  INFO 1 --- [proovy-api] [nio-8080-exec-4] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:01.447Z  INFO 1 --- [proovy-api] [nio-8080-exec-4] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:01.479Z  INFO 1 --- [proovy-api] [nio-8080-exec-4] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 0개 조회
+server-1  | 2026-11-12T15:18:04.010Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.usage.service.RequestUsageService  : request usage charged: userId=8, requestId=218abf69-a4aa-467c-941f-a82d769a2913, amount=10
+server-1  | 2026-11-12T15:18:04.049Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.r.a.RunAdmissionTransaction        : run admitted: runId=b84cbed1-85e2-4966-aad3-6a5b6814c542, noteId=8, userId=8
+server-1  | 2026-11-12T15:18:04.175Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:04.181Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:04.193Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 1, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:04.194Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 1, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:04.230Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:04.244Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:04.466Z  INFO 1 --- [proovy-api] [nator-control-2] c.p.d.run.coordinator.RunCoordinator     : run claimed: runId=b84cbed1-85e2-4966-aad3-6a5b6814c542, attempt=1
+server-1  | 2026-11-12T15:18:05.095Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:05.123Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:05.178Z  INFO 1 --- [proovy-api] [nio-8080-exec-1] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:05.197Z  INFO 1 --- [proovy-api] [nio-8080-exec-1] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:05.267Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:05.267Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:05.319Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:05.509Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:05.510Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:05.596Z  INFO 1 --- [proovy-api] [inator-worker-3] c.p.d.run.terminal.RunTerminalService    : run completed: runId=b84cbed1-85e2-4966-aad3-6a5b6814c542, disposition=SUBSTANTIVE, solutions=1, compensation=NOT_COMPENSABLE
+server-1  | 2026-11-12T15:18:05.619Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:05.624Z  INFO 1 --- [proovy-api] [inator-worker-3] c.p.domain.run.coordinator.RunExecution  : run execution finished: runId=b84cbed1-85e2-4966-aad3-6a5b6814c542, attempt=1, mode=DISPATCH, result=SETTLED, resends=0, stop=null
+server-1  | 2026-11-12T15:18:07.333Z  INFO 1 --- [proovy-api] [io-8080-exec-10] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:07.336Z  INFO 1 --- [proovy-api] [io-8080-exec-10] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:07.359Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:07.444Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:07.445Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:07.362Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:07.528Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:08.668Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.usage.service.RequestUsageService  : request usage charged: userId=8, requestId=2b4d191e-8c4d-481e-ac86-f45ea190110f, amount=10
+server-1  | 2026-11-12T15:18:08.787Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.r.a.RunAdmissionTransaction        : run admitted: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, noteId=8, userId=8
+server-1  | 2026-11-12T15:18:09.139Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:09.141Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:09.145Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:09.151Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:09.166Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:09.166Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:09.206Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:09.726Z  INFO 1 --- [proovy-api] [nator-control-2] c.p.d.run.coordinator.RunCoordinator     : run claimed: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, attempt=1
+server-1  | 2026-11-12T15:18:39.746Z  INFO 1 --- [proovy-api] [inator-worker-4] c.p.domain.run.coordinator.RunExecution  : brain stream failed: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, attempt=1, kind=TIMEOUT, httpStatus=null
+server-1  | 2026-11-12T15:18:49.696Z  INFO 1 --- [proovy-api] [inator-worker-4] c.p.domain.run.coordinator.RunExecution  : brain status: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, attempt=1, mode=DISPATCH, state=ABSENT
+server-1  | 2026-11-12T15:18:51.134Z  INFO 1 --- [proovy-api] [inator-worker-4] c.p.d.run.terminal.RunTerminalService    : run completed: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, disposition=SUBSTANTIVE, solutions=1, compensation=NOT_COMPENSABLE
+server-1  | 2026-11-12T15:18:51.156Z  INFO 1 --- [proovy-api] [inator-worker-4] c.p.domain.run.coordinator.RunExecution  : run execution finished: runId=fa949f44-fce9-47c4-8248-4c0c468bfc84, attempt=1, mode=DISPATCH, result=SETTLED, resends=1, stop=null
+server-1  | 2026-11-12T15:18:52.056Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:52.057Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:52.061Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:52.062Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:52.074Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:52.074Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:52.120Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:53.041Z  INFO 1 --- [proovy-api] [io-8080-exec-10] c.p.d.usage.service.RequestUsageService  : request usage charged: userId=8, requestId=742f72c1-8e5a-4768-8e95-bd09470e4531, amount=10
+server-1  | 2026-11-12T15:18:53.091Z  INFO 1 --- [proovy-api] [io-8080-exec-10] c.p.d.r.a.RunAdmissionTransaction        : run admitted: runId=8de2b747-38f7-474d-bd0c-5298bf3bd3bf, noteId=8, userId=8
+server-1  | 2026-11-12T15:18:53.550Z  INFO 1 --- [proovy-api] [nator-control-1] c.p.d.run.coordinator.RunCoordinator     : run claimed: runId=8de2b747-38f7-474d-bd0c-5298bf3bd3bf, attempt=1
+server-1  | 2026-11-12T15:18:54.329Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:54.335Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:54.363Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:54.364Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:54.381Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:54.382Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:54.401Z  INFO 1 --- [proovy-api] [inator-worker-1] c.p.d.run.terminal.RunTerminalService    : run completed: runId=8de2b747-38f7-474d-bd0c-5298bf3bd3bf, disposition=SUBSTANTIVE, solutions=1, compensation=NOT_COMPENSABLE
+server-1  | 2026-11-12T15:18:54.445Z  INFO 1 --- [proovy-api] [inator-worker-1] c.p.domain.run.coordinator.RunExecution  : run execution finished: runId=8de2b747-38f7-474d-bd0c-5298bf3bd3bf, attempt=1, mode=DISPATCH, result=SETTLED, resends=0, stop=null
+server-1  | 2026-11-12T15:18:54.500Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:54.968Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:54.969Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:54.968Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:54.977Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:54.994Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:54.996Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:55.003Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:18:58.415Z  INFO 1 --- [proovy-api] [nio-8080-exec-1] c.p.d.usage.service.RequestUsageService  : request usage charged: userId=8, requestId=87708f6d-46c4-4462-8c2a-1e5311bad2ce, amount=10
+server-1  | 2026-11-12T15:18:58.469Z  INFO 1 --- [proovy-api] [nio-8080-exec-1] c.p.d.r.a.RunAdmissionTransaction        : run admitted: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, noteId=8, userId=8
+server-1  | 2026-11-12T15:18:58.682Z  INFO 1 --- [proovy-api] [nator-control-2] c.p.d.run.coordinator.RunCoordinator     : run claimed: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, attempt=1
+server-1  | 2026-11-12T15:18:59.277Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:59.278Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:18:59.347Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:18:59.350Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:59.354Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:18:59.352Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:18:59.415Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:19:40.010Z  INFO 1 --- [proovy-api] [inator-worker-2] c.p.domain.run.coordinator.RunExecution  : brain stream failed: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, attempt=1, kind=TIMEOUT, httpStatus=null
+server-1  | 2026-11-12T15:19:40.032Z  WARN 1 --- [proovy-api] [l-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=49s778ms262µs772ns).
+server-1  | 2026-11-12T15:19:40.106Z  INFO 1 --- [proovy-api] [inator-worker-2] c.p.domain.run.coordinator.RunExecution  : brain status: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, attempt=1, mode=DISPATCH, state=TERMINAL
+server-1  | 2026-11-12T15:19:40.238Z  INFO 1 --- [proovy-api] [inator-worker-2] c.p.d.run.terminal.RunTerminalService    : run completed: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, disposition=SUBSTANTIVE, solutions=1, compensation=NOT_COMPENSABLE
+server-1  | 2026-11-12T15:19:40.267Z  INFO 1 --- [proovy-api] [inator-worker-2] c.p.domain.run.coordinator.RunExecution  : run execution finished: runId=434b4e03-bf69-40de-8fb9-dbfa8cba4606, attempt=1, mode=DISPATCH, result=SETTLED, resends=0, stop=null
+server-1  | 2026-11-12T15:19:40.962Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:40.975Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:19:40.987Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:40.987Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:41.009Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:41.022Z  INFO 1 --- [proovy-api] [nio-8080-exec-7] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:19:41.093Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:19:42.927Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.usage.service.RequestUsageService  : request usage charged: userId=8, requestId=ed5bbe8d-dc69-4f7a-88a1-a9d90c569715, amount=10
+server-1  | 2026-11-12T15:19:42.968Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.r.a.RunAdmissionTransaction        : run admitted: runId=81970aa6-676c-4df6-acff-21ad0bcebc2c, noteId=8, userId=8
+server-1  | 2026-11-12T15:19:43.196Z  INFO 1 --- [proovy-api] [nator-control-2] c.p.d.run.coordinator.RunCoordinator     : run claimed: runId=81970aa6-676c-4df6-acff-21ad0bcebc2c, attempt=1
+server-1  | 2026-11-12T15:19:44.027Z  INFO 1 --- [proovy-api] [inator-worker-3] c.p.d.run.terminal.RunTerminalService    : run completed: runId=81970aa6-676c-4df6-acff-21ad0bcebc2c, disposition=SUBSTANTIVE, solutions=1, compensation=NOT_COMPENSABLE
+server-1  | 2026-11-12T15:19:44.076Z  INFO 1 --- [proovy-api] [inator-worker-3] c.p.domain.run.coordinator.RunExecution  : run execution finished: runId=81970aa6-676c-4df6-acff-21ad0bcebc2c, attempt=1, mode=DISPATCH, result=SETTLED, resends=0, stop=null
+server-1  | 2026-11-12T15:19:45.413Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:45.416Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:45.417Z  INFO 1 --- [proovy-api] [nio-8080-exec-5] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:19:45.423Z  INFO 1 --- [proovy-api] [nio-8080-exec-9] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:19:45.455Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:45.469Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:45.610Z  INFO 1 --- [proovy-api] [nio-8080-exec-3] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
+server-1  | 2026-11-12T15:19:46.124Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:46.122Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.d.note.controller.NoteController     : 노트 상세 조회 요청 - userId: 8, noteId: 8
+server-1  | 2026-11-12T15:19:46.127Z  INFO 1 --- [proovy-api] [nio-8080-exec-6] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 1
+server-1  | 2026-11-12T15:19:46.136Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.d.note.controller.NoteController     : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:46.124Z  INFO 1 --- [proovy-api] [nio-8080-exec-8] c.p.domain.note.service.NoteServiceImpl  : 노트 상세 조회 요청 - userId: 8, noteId: 8, page: 0, size: 20
+server-1  | 2026-11-12T15:19:46.139Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 요청 - userId: 8, page: 0, size: 20, sort: lastUsedAt,desc
+server-1  | 2026-11-12T15:19:46.235Z  INFO 1 --- [proovy-api] [nio-8080-exec-2] c.p.domain.note.service.NoteServiceImpl  : 노트 목록 조회 완료 - 총 1개 조회
