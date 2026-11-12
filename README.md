@@ -267,6 +267,7 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - 상태·로그: `docker compose ps -a`, `docker compose logs server brain`.
 - offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다). **30초 안에 푼다** — Server는 Brain stream이 30초 동안 조용하면(`proovy.brain.stream-idle-timeout`) run을 `provider_error`로 실패 처리한다.
 - dev proxy ↔ Server 구간이 FIN·RST 없이 끊기면(half-open) Vite dev proxy는 브라우저 응답을 열어 둔다. 브라우저는 마지막 수신(frame·heartbeat) 뒤 heartbeat(15초) 3회분인 45초 동안 아무것도 받지 못하면 연결을 끊고 마지막 frame id로 재접속한다(#315 watchdog). 그동안 화면은 "진행 중"이다. Server가 연결을 닫거나 reset하면 dev proxy가 브라우저 응답을 끝내므로 곧바로 재접속한다.
+- 새로고침 문서 로드 실패·같은 Note 다음 질문 재연결 실패(1.99·2.17, 2026-10-21 macOS live)는 macOS·Linux 자동 재현에서 나오지 않았다. 다시 보이면 [`scripts/sse-lifecycle/`](scripts/sse-lifecycle/README.md)의 수집 도구로 연결 수·proxy trace·Server 로그를 남긴다.
 
 정리:
 
