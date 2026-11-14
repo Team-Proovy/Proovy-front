@@ -1,10 +1,18 @@
-import { useId, useState } from "react";
+import { memo, useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { ActivityStatusIcon } from "./ActivityStatusIcon";
-import type { PublicRunStatus } from "@/shared/contracts/browser_run_v1";
+import type {
+  PublicRunStatus,
+  ReadBackProblem,
+} from "@/shared/contracts/browser_run_v1";
+import { SafeMarkdown } from "../response/SafeMarkdown";
+import { getProblemTitle } from "../problem_label";
 import {
   ACTIVITY_PHASE_TEXTS,
   CANCELING_TEXT,
+  CHOICE_MARKS,
+  READ_BACK_FIGURE_PREFIX,
+  READ_BACK_LIST_LABEL,
   RUN_OUTCOME_TEXTS,
   getActivityMethodText,
   getActivityProgressText,
@@ -62,36 +70,124 @@ const getSummary = (
   };
 };
 
-const ActivityRow = ({
+/** 줄 맨 앞에서 목록·제목·인용·코드 블록이 되는 표식 */
+const LEADING_BLOCK_SYNTAX =
+  /^(\s*)(#{1,6}(?=\s|$)|>|[-+*](?=\s|$)|\d{1,9}[.)](?=\s|$)|```|~~~|\|)/;
+
+/**
+ * 보기는 한 줄 inline 내용이다. 줄바꿈을 공백으로 바꾸고 맨 앞 블록 표식(`1) 3`, `- 2`, `# 4` 등)을
+ * escape해 ① 옆에 목록·제목이 생기지 않게 한다. 인라인 수식(`$…$`)은 그대로 KaTeX로 그린다.
+ */
+const toInlineMarkdown = (text: string) =>
+  text
+    .replace(/\s*\n\s*/g, " ")
+    .trim()
+    .replace(LEADING_BLOCK_SYNTAX, (_match, space: string, marker: string) =>
+      /^\d/.test(marker)
+        ? `${space}${marker.slice(0, -1)}\\${marker.slice(-1)}`
+        : `${space}\\${marker}`,
+    );
+
+/**
+ * Read-back("이렇게 읽었어요")에서 읽은 문제: 번호·본문·보기·그림 설명. 수식은 SafeMarkdown(KaTeX)으로 그린다.
+ * 답·단계는 계약상 오지 않는다. 사용자 확인을 기다리지 않는다(틀리면 정지).
+ */
+const ReadBackProblems = ({
+  problems,
+}: {
+  problems: readonly ReadBackProblem[];
+}) => (
+  <ol
+    aria-label={READ_BACK_LIST_LABEL}
+    className="mt-[6px] ml-[24px] flex flex-col gap-[6px] rounded-[8px] border-[0.5px] border-[#D1D6DE] bg-white px-[10px] py-[8px] text-[13px] leading-[20px] text-[#2F3440]"
+  >
+    {problems.map((problem, index) => (
+      <li
+        key={index}
+        data-read-back-problem
+      >
+        <p className="text-[12px] font-semibold text-[#6B7280]">
+          {getProblemTitle(problem.problemNumber, index)}
+        </p>
+        <SafeMarkdown
+          body={problem.questionText}
+          className="break-words"
+        />
+        {!!problem.choices?.length && (
+          <ol
+            aria-label="보기"
+            className="mt-[2px] flex flex-wrap gap-x-[12px] gap-y-[2px]"
+          >
+            {problem.choices.map((choice, choiceIndex) => (
+              <li
+                key={choiceIndex}
+                className="flex items-baseline gap-[4px]"
+              >
+                <span aria-hidden>{CHOICE_MARKS[choiceIndex]}</span>
+                <span className="sr-only">{`${choiceIndex + 1}번 보기`}</span>
+                <SafeMarkdown
+                  body={toInlineMarkdown(choice)}
+                  className="[&_p]:my-0"
+                />
+              </li>
+            ))}
+          </ol>
+        )}
+        {problem.figureDescription && (
+          <div className="mt-[2px] flex gap-[4px] text-[12px] text-[#6B7280]">
+            <span className="shrink-0">{READ_BACK_FIGURE_PREFIX}:</span>
+            <SafeMarkdown
+              body={problem.figureDescription}
+              className="min-w-0 [&_p]:my-0"
+            />
+          </div>
+        )}
+      </li>
+    ))}
+  </ol>
+);
+
+/**
+ * 행 하나. `selectActivities`가 바뀌지 않은 Activity에 같은 view 객체를 주므로 memo로 다시 그리지 않는다
+ * (Read-back 문제 20개의 KaTeX를 진행 frame마다 다시 파싱하지 않게).
+ */
+const ActivityRow = memo(function ActivityRow({
   item,
   isCanceling,
 }: {
   item: ActivityBoxItem;
   isCanceling: boolean;
-}) => {
+}) {
   const methodText = getActivityMethodText(item);
   const progressText = getActivityProgressText(item);
+  const readBackProblems =
+    item.kind === "read_back" ? (item.readBackProblems ?? []) : [];
   return (
     <li
-      className="flex items-center gap-[8px] text-[14px] leading-[20px]"
       data-activity-id={item.activityId}
+      data-activity-kind={item.kind}
     >
-      <ActivityStatusIcon phase={item.phase} />
-      <span className="min-w-0 flex-1 text-[#111827]">
-        {getActivityTitle(item)}
-        {methodText && (
-          <span className="text-[#6B7280]">{` · ${methodText}`}</span>
-        )}
-        {progressText && (
-          <span className="text-[#6B7280]">{` · ${progressText}`}</span>
-        )}
-      </span>
-      <span className="shrink-0 font-medium text-[#374151]">
-        {getActivityStatusText(item, isCanceling)}
-      </span>
+      <div className="flex items-center gap-[8px] text-[14px] leading-[20px]">
+        <ActivityStatusIcon phase={item.phase} />
+        <span className="min-w-0 flex-1 text-[#111827]">
+          {getActivityTitle(item)}
+          {methodText && (
+            <span className="text-[#6B7280]">{` · ${methodText}`}</span>
+          )}
+          {progressText && (
+            <span className="text-[#6B7280]">{` · ${progressText}`}</span>
+          )}
+        </span>
+        <span className="shrink-0 font-medium text-[#374151]">
+          {getActivityStatusText(item, isCanceling)}
+        </span>
+      </div>
+      {readBackProblems.length > 0 && (
+        <ReadBackProblems problems={readBackProblems} />
+      )}
     </li>
   );
-};
+});
 
 /**
  * 실제 진행 Activity를 처음 등장한 순서대로 누적하는 박스.

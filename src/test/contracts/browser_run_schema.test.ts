@@ -68,8 +68,8 @@ describe("valid fixture는 schema를 통과한다", () => {
   });
 
   it("fixture 로더가 모든 valid fixture를 타입을 붙여 읽는다", () => {
-    expect(listStreamFixtures()).toHaveLength(10);
-    expect(listResponseFixtures()).toHaveLength(28);
+    expect(listStreamFixtures()).toHaveLength(17);
+    expect(listResponseFixtures()).toHaveLength(29);
     expect(listRequestFixtures()).toHaveLength(10);
   });
 });

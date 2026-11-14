@@ -5,6 +5,7 @@ import type {
   CodeExecutionLabel,
   InputAnalysisLabel,
   NoteRetrievalLabel,
+  ReadBackLabel,
   SolutionGenerationLabel,
   VerificationLabel,
 } from "@/shared/contracts/browser_run_v1";
@@ -15,6 +16,7 @@ import type { ActivityBoxItem, ActivityBoxPhase } from "./activity_types";
  *
  * 문구는 계약 enum(kind·label·phase·status)에서만 고른다. 서버 공개 `message`와 단계 내용·후보 답·
  * 통과/실패 판정은 쓰지 않고, 진행은 측정한 수(n/m)로만 보여 준다(퍼센트·순환 문구 없음).
+ * 예외는 read_back 완료의 읽은 문제(번호·본문·보기·그림 설명)뿐이다 — 답·단계가 아니라 입력을 읽은 결과다.
  */
 
 export const ACTIVITY_KIND_TITLES: Record<ActivityKind, string> = {
@@ -24,7 +26,14 @@ export const ACTIVITY_KIND_TITLES: Record<ActivityKind, string> = {
   note_retrieval: "노트 검색",
   code_execution: "코드 실행",
   verification: "검증",
+  read_back: "이렇게 읽었어요",
 };
+
+/** read_back 행의 읽은 문제 목록 이름 */
+export const READ_BACK_LIST_LABEL = "읽은 문제";
+export const READ_BACK_FIGURE_PREFIX = "그림";
+/** 보기 번호 ①~⑤ (보기는 최대 5개) */
+export const CHOICE_MARKS = ["①", "②", "③", "④", "⑤"] as const;
 
 /** kind별 계약 label enum의 고정 문구. 모르는 label은 kind 제목만 쓴다. */
 const ACTIVITY_LABEL_TEXTS: Record<
@@ -33,7 +42,8 @@ const ACTIVITY_LABEL_TEXTS: Record<
   | AssetUnderstandingLabel
   | NoteRetrievalLabel
   | CodeExecutionLabel
-  | VerificationLabel,
+  | VerificationLabel
+  | ReadBackLabel,
   string
 > = {
   analyzing_input: "입력 분석",
@@ -46,6 +56,7 @@ const ACTIVITY_LABEL_TEXTS: Record<
   running_calculation: "계산 실행",
   running_check_code: "확인 코드 실행",
   verifying_steps: "단계 검증",
+  reading_back_problems: "이렇게 읽었어요",
 };
 
 export const ACTIVITY_PHASE_TEXTS: Record<ActivityBoxPhase, string> = {

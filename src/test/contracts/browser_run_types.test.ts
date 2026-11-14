@@ -288,6 +288,69 @@ describe("enum", () => {
       wire.NOTE_RETRIEVAL_MATCH_STATUSES,
       terminalDef("NoteRetrievalMatchStatus").enum,
     ],
+    // v1.1 확장 (2.07): terminal-v2와 browser-run 양쪽 정의가 같아야 한다.
+    ["ReadBackLabel", wire.READ_BACK_LABELS, terminalDef("ReadBackLabel").enum],
+    [
+      "AssuranceScope",
+      wire.ASSURANCE_SCOPES,
+      terminalDef("AssuranceScope").enum,
+    ],
+    [
+      "browser-run AssuranceScope",
+      wire.ASSURANCE_SCOPES,
+      browserDef("AssuranceScope").enum,
+    ],
+    ["ResponseKind", wire.RESPONSE_KINDS, terminalDef("ResponseKind").enum],
+    [
+      "browser-run ResponseKind",
+      wire.RESPONSE_KINDS,
+      browserDef("ResponseKind").enum,
+    ],
+    ["StepKind", wire.STEP_KINDS, terminalDef("StepKind").enum],
+    ["browser-run StepKind", wire.STEP_KINDS, browserDef("StepKind").enum],
+    [
+      "StepCheckResult",
+      wire.STEP_CHECK_RESULTS,
+      terminalDef("StepCheckResult").enum,
+    ],
+    [
+      "browser-run StepCheckResult",
+      wire.STEP_CHECK_RESULTS,
+      browserDef("StepCheckResult").enum,
+    ],
+    [
+      "DescriptionFormat",
+      wire.DESCRIPTION_FORMATS,
+      terminalDef("DescriptionFormat").enum,
+    ],
+    [
+      "browser-run CheckableStep.descriptionFormat",
+      wire.DESCRIPTION_FORMATS,
+      (
+        browserDef("CheckableStep").properties!.descriptionFormat
+          .anyOf as JsonSchemaNode[]
+      )[0].enum,
+    ],
+    [
+      "DisclosureScope",
+      wire.DISCLOSURE_SCOPES,
+      terminalDef("DisclosureScope").enum,
+    ],
+    [
+      "browser-run Disclosure",
+      wire.DISCLOSURE_SCOPES,
+      browserDef("Disclosure").enum,
+    ],
+    [
+      "VerificationStrategy",
+      wire.VERIFICATION_STRATEGIES,
+      terminalDef("VerificationStrategy").enum,
+    ],
+    [
+      "browser-run SolutionCheck.strategy",
+      wire.VERIFICATION_STRATEGIES,
+      browserDef("SolutionCheck").properties!.strategy.enum,
+    ],
   ];
 
   it.each(enumCases)("%s", (_name, actual, expected) => {
@@ -295,7 +358,7 @@ describe("enum", () => {
     expect(sortStrings(actual)).toEqual(sortStrings(expected!));
   });
 
-  it("Activity kind 6종이 schema 순서와 같다", () => {
+  it("Activity kind 7종(read_back 포함)이 schema 순서와 같다", () => {
     const startedPayloads = terminalDef("ActivityStartedEvent").properties!
       .payload.oneOf as unknown[];
     const kinds = startedPayloads.map(
@@ -430,23 +493,57 @@ describe("객체 필드 목록", () => {
       ["cause", "message"],
       ["cause", "message"],
     ),
-    AssistantMessageContent: shapeOf<wire.AssistantMessageContent>()(
+    CompletionExtension: shapeOf<wire.CompletionExtension>()(
+      ["responseKind", "assuranceScope", "solutionChecks"],
+      [],
+    ),
+    SolutionCheck: shapeOf<wire.SolutionCheck>()(
       [
-        "responseDisposition",
-        "clarificationReason",
-        "assistantResponse",
-        "verificationSummary",
-        "failure",
-        "cancel",
+        "problemNumber",
+        "assuranceScope",
+        "strategy",
+        "attempts",
+        "crossCheck",
+        "disclosure",
+        "checkableSteps",
       ],
       [
-        "responseDisposition",
-        "clarificationReason",
-        "assistantResponse",
-        "verificationSummary",
-        "failure",
-        "cancel",
+        "problemNumber",
+        "assuranceScope",
+        "strategy",
+        "attempts",
+        "crossCheck",
+        "disclosure",
+        "checkableSteps",
       ],
+    ),
+    CheckableStep: shapeOf<wire.CheckableStep>()(
+      [
+        "stepIndex",
+        "withheld",
+        "description",
+        "descriptionFormat",
+        "sympyStatement",
+        "stepKind",
+        "checkResult",
+      ],
+      [
+        "stepIndex",
+        "withheld",
+        "description",
+        "descriptionFormat",
+        "sympyStatement",
+        "stepKind",
+        "checkResult",
+      ],
+    ),
+    CrossCheckSummary: shapeOf<wire.CrossCheckView>()(
+      ["independentAnswerAgrees", "stepCheckCompleted"],
+      ["independentAnswerAgrees", "stepCheckCompleted"],
+    ),
+    SympyStatement: shapeOf<wire.SympyStatement>()(
+      ["name", "value", "cond", "covers", "lhs", "rhs", "choice"],
+      [],
     ),
     ActiveRunSummary: shapeOf<wire.ActiveRunSummary>()(
       ["runId", "status", "lastSeq"],
@@ -645,6 +742,9 @@ describe("객체 필드 목록", () => {
         "model",
         "tier",
         "verificationSummary",
+        "responseKind",
+        "assuranceScope",
+        "solutionChecks",
         "assistantMessageId",
       ],
       [
@@ -813,6 +913,72 @@ describe("객체 필드 목록", () => {
       [...closedBase, "methodLabel"],
       ["activityId", "kind", "methodLabel"],
     ),
+
+    // v1.1 확장 (2.07)
+    ReadBackStarted: shapeOf<wire.ReadBackStarted>()(startedBase, [
+      "activityId",
+      "kind",
+      "label",
+    ]),
+    ReadBackUpdated: shapeOf<wire.ReadBackUpdated>()(updatedBase, [
+      "activityId",
+      "kind",
+    ]),
+    ReadBackCompleted: shapeOf<wire.ReadBackCompleted>()(
+      [...closedBase, "problems"],
+      ["activityId", "kind", "problems"],
+    ),
+    ReadBackFailed: shapeOf<wire.ReadBackFailed>()(failedBase, [
+      "activityId",
+      "code",
+      "kind",
+    ]),
+    ReadBackCanceled: shapeOf<wire.ReadBackCanceled>()(closedBase, [
+      "activityId",
+      "kind",
+    ]),
+    ReadBackProblem: shapeOf<wire.ReadBackProblem>()(
+      ["problemNumber", "questionText", "choices", "figureDescription"],
+      ["questionText"],
+    ),
+    SolutionCheckView: shapeOf<wire.SolutionCheckView>()(
+      [
+        "problemNumber",
+        "assuranceScope",
+        "strategy",
+        "attempts",
+        "crossCheck",
+        "disclosure",
+        "checkableSteps",
+      ],
+      [
+        "assuranceScope",
+        "strategy",
+        "attempts",
+        "disclosure",
+        "checkableSteps",
+      ],
+    ),
+    CheckableStepView: shapeOf<wire.CheckableStepView>()(
+      [
+        "stepIndex",
+        "stepKind",
+        "checkResult",
+        "withheld",
+        "description",
+        "descriptionFormat",
+        "sympyStatement",
+      ],
+      ["stepIndex", "stepKind", "checkResult", "withheld"],
+    ),
+    CrossCheckView: shapeOf<wire.CrossCheckView>()(
+      ["independentAnswerAgrees", "stepCheckCompleted"],
+      ["independentAnswerAgrees", "stepCheckCompleted"],
+    ),
+    SympyStatement: shapeOf<wire.SympyStatement>()(
+      ["name", "value", "cond", "covers", "lhs", "rhs", "choice"],
+      [],
+    ),
   };
 
   const expectSameShape = (
@@ -841,6 +1007,44 @@ describe("객체 필드 목록", () => {
       .map(([name]) => name);
     expect(sortStrings(Object.keys(terminalShapes))).toEqual(
       sortStrings(objectDefinitions),
+    );
+  });
+
+  it("AssistantMessageContent = 고유 필드 + CompletionExtension(allOf) 필드", () => {
+    const definition = browserDef("AssistantMessageContent");
+    const extension = browserDef("CompletionExtension");
+    expect(
+      (definition.allOf as unknown[]).map((node) => refName(node)),
+    ).toContain("CompletionExtension");
+    const shape = shapeOf<wire.AssistantMessageContent>()(
+      [
+        "responseDisposition",
+        "clarificationReason",
+        "assistantResponse",
+        "verificationSummary",
+        "failure",
+        "cancel",
+        "responseKind",
+        "assuranceScope",
+        "solutionChecks",
+      ],
+      [
+        "responseDisposition",
+        "clarificationReason",
+        "assistantResponse",
+        "verificationSummary",
+        "failure",
+        "cancel",
+      ],
+    );
+    expect(sortStrings(shape.keys)).toEqual(
+      sortStrings([
+        ...Object.keys(definition.properties!),
+        ...Object.keys(extension.properties!),
+      ]),
+    );
+    expect(sortStrings(shape.required)).toEqual(
+      sortStrings(definition.required!),
     );
   });
 

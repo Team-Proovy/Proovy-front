@@ -8,22 +8,33 @@ import { THREAD_SECTION_DEFAULT_TITLE } from "./response_labels";
 interface ResponsePageSectionProps {
   page: ResponsePage;
   sourceLabels: ReadonlyMap<string, string>;
+  /** false면 solution block의 Phase 1 검증 표시를 그리지 않는다(v1.1 배지가 대신한다). */
+  showLegacyVerification?: boolean;
 }
 
-const ResultBlockList = ({ page, sourceLabels }: ResponsePageSectionProps) => (
+const ResultBlockList = ({
+  page,
+  sourceLabels,
+  showLegacyVerification,
+}: ResponsePageSectionProps) => (
   <div className="flex flex-col gap-3">
     {page.resultBlocks.map((block) => (
       <ResultBlockView
         key={block.blockId}
         block={block}
         sourceLabels={sourceLabels}
+        showLegacyVerification={showLegacyVerification}
       />
     ))}
   </div>
 );
 
 /** main page: 항상 펼친 상태다. */
-const MainPageSection = ({ page, sourceLabels }: ResponsePageSectionProps) => {
+const MainPageSection = ({
+  page,
+  sourceLabels,
+  showLegacyVerification,
+}: ResponsePageSectionProps) => {
   const titleId = useId();
   return (
     <section
@@ -41,6 +52,7 @@ const MainPageSection = ({ page, sourceLabels }: ResponsePageSectionProps) => {
       <ResultBlockList
         page={page}
         sourceLabels={sourceLabels}
+        showLegacyVerification={showLegacyVerification}
       />
     </section>
   );
@@ -54,6 +66,7 @@ const MainPageSection = ({ page, sourceLabels }: ResponsePageSectionProps) => {
 const ThreadLikePageSection = ({
   page,
   sourceLabels,
+  showLegacyVerification,
 }: ResponsePageSectionProps) => {
   const [expanded, setExpanded] = useState(false);
   const contentId = useId();
@@ -94,6 +107,7 @@ const ThreadLikePageSection = ({
           <ResultBlockList
             page={page}
             sourceLabels={sourceLabels}
+            showLegacyVerification={showLegacyVerification}
           />
         )}
       </div>

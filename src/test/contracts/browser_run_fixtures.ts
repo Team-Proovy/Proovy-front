@@ -143,6 +143,16 @@ const findStreamFixture = memoize(() =>
 );
 export const getStreamFixture = (name: string) => findStreamFixture()(name);
 
+/**
+ * schema compile과 fixture 전체 검사는 파일마다 처음 한 번 수 초가 걸린다(v1.1에서 schema·fixture가 늘었다).
+ * 그 비용이 첫 테스트의 5초 제한에 들어가지 않도록 `beforeAll(warmUpContractFixtures, CONTRACT_WARM_UP_TIMEOUT_MS)`로 미리 읽는다.
+ */
+export const CONTRACT_WARM_UP_TIMEOUT_MS = 60_000;
+export const warmUpContractFixtures = () => {
+  listStreamFixtures();
+  listResponseFixtures();
+};
+
 export const listInvalidStreamFixtures = memoizeCopy(() =>
   listFixtureNames("streams/invalid").map((name): InvalidStreamFixture => {
     const raw = readContractJson<{

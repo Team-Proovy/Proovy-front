@@ -2,7 +2,7 @@
  * browser-run-v1 공용 wire 타입 (S08 Front 공용)
  *
  * 계약 의미는 Proovy-server가 소유하고, 판정 기준은 proovy-brain artifact
- * `tests/fixtures/contracts/browser-run-v1`(consumer_version `browser-run-fixtures-v1`)이다.
+ * `tests/fixtures/contracts/browser-run-v1`(consumer_version `browser-run-fixtures-v1.1`)이다.
  * 이 파일은 그 schema(`browser-run.schema.json`, `terminal-v2/browser.schema.json`)를 TS로 옮긴 것이다.
  * 검증된 사본과 pin은 `src/test/contracts/brain/`에 있고, `browser_run_types.test.ts`가
  * 여기 enum·필드 목록이 schema와 같은지 검사한다. 계약이 바뀌면 pin을 먼저 올린 뒤 이 파일을 고친다.
@@ -16,7 +16,7 @@
 // 버전·고정 값
 // ---------------------------------------------------------------------------
 
-export const BROWSER_RUN_CONSUMER_VERSION = "browser-run-fixtures-v1";
+export const BROWSER_RUN_CONSUMER_VERSION = "browser-run-fixtures-v1.1";
 export const BROWSER_RUN_CONTRACT_VERSION = "browser-run-v1";
 /** 모든 durable frame의 `contractVersion` 값 */
 export const FRAME_CONTRACT_VERSION = "brain-source-v1";
@@ -243,7 +243,7 @@ export type SummaryCoverage = (typeof SUMMARY_COVERAGES)[number];
 export const QUOTE_ORIGINS = ["user_submission", "brain_candidate"] as const;
 export type QuoteOrigin = (typeof QUOTE_ORIGINS)[number];
 
-/** Activity box 누적 순서와 같은 kind 6종 */
+/** schema 순서의 Activity kind 7종. `read_back`(v1.1)은 진행의 첫 단계로 온다. */
 export const ACTIVITY_KINDS = [
   "input_analysis",
   "solution_generation",
@@ -251,6 +251,7 @@ export const ACTIVITY_KINDS = [
   "note_retrieval",
   "code_execution",
   "verification",
+  "read_back",
 ] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
@@ -302,6 +303,9 @@ export type CodeExecutionLabel = (typeof CODE_EXECUTION_LABELS)[number];
 export const VERIFICATION_LABELS = ["verifying_steps"] as const;
 export type VerificationLabel = (typeof VERIFICATION_LABELS)[number];
 
+export const READ_BACK_LABELS = ["reading_back_problems"] as const;
+export type ReadBackLabel = (typeof READ_BACK_LABELS)[number];
+
 export const ASSET_UNDERSTANDING_REASONS = [
   "viewer_focus",
   "turn_attachment",
@@ -326,6 +330,56 @@ export const NOTE_RETRIEVAL_MATCH_STATUSES = [
 ] as const;
 export type NoteRetrievalMatchStatus =
   (typeof NOTE_RETRIEVAL_MATCH_STATUSES)[number];
+
+// ---------------------------------------------------------------------------
+// Phase 2 확장 enum (browser-run-fixtures-v1.1, `CompletionExtension`)
+// ---------------------------------------------------------------------------
+
+/** 응답·문제 배지: 검증됨 / 미검증 / 검증 대상 아님 (ADR 0017 §2) */
+export const ASSURANCE_SCOPES = [
+  "verified",
+  "unverified",
+  "not_applicable",
+] as const;
+export type AssuranceScope = (typeof ASSURANCE_SCOPES)[number];
+
+/** `re_explanation`은 기존 풀이의 재설명(검증 없음)이다. Front는 "추가 설명" 표시를 붙인다. */
+export const RESPONSE_KINDS = ["standard", "re_explanation"] as const;
+export type ResponseKind = (typeof RESPONSE_KINDS)[number];
+
+export const STEP_KINDS = [
+  "define",
+  "given",
+  "claim",
+  "case",
+  "choose",
+  "argue",
+] as const;
+export type StepKind = (typeof STEP_KINDS)[number];
+
+/** verified ✓ · falsified ✗ · unparseable 검산 안 됨 · not_checked 검산 대상 아님 */
+export const STEP_CHECK_RESULTS = [
+  "verified",
+  "falsified",
+  "unparseable",
+  "not_checked",
+] as const;
+export type StepCheckResult = (typeof STEP_CHECK_RESULTS)[number];
+
+/** `plain_text`는 SafeMarkdown을 통과하지 못한 설명이다. markdown·수식 없이 글자 그대로 그린다. */
+export const DESCRIPTION_FORMATS = ["safe_markdown", "plain_text"] as const;
+export type DescriptionFormat = (typeof DESCRIPTION_FORMATS)[number];
+
+/** 그 turn의 정답 공개 범위. hide_answer는 모든 단계가 withheld, hide_solution은 단계가 없다. */
+export const DISCLOSURE_SCOPES = [
+  "full",
+  "hide_answer",
+  "hide_solution",
+] as const;
+export type DisclosureScope = (typeof DISCLOSURE_SCOPES)[number];
+
+export const VERIFICATION_STRATEGIES = ["answer_cross_check", "none"] as const;
+export type VerificationStrategy = (typeof VERIFICATION_STRATEGIES)[number];
 
 // ---------------------------------------------------------------------------
 // 요청 (closed)
@@ -463,8 +517,9 @@ export interface AssistantCancel {
 /**
  * PENDING·STREAMING placeholder는 본문·failure·cancel이 모두 null이다(검증 전 본문 비공개).
  * COMPLETED는 responseDisposition·assistantResponse, FAILED는 failure, CANCELED는 cancel만 있다.
+ * COMPLETED는 v1.1 확장 세 필드(`CompletionExtension`)가 함께 붙을 수 있다. 없으면 확장 이전 응답이다.
  */
-export interface AssistantMessageContent {
+export interface AssistantMessageContent extends CompletionExtension {
   responseDisposition: ResponseDisposition | null;
   clarificationReason: ClarificationReason | null;
   assistantResponse: AssistantResponseV1 | null;
@@ -633,6 +688,111 @@ export interface SolutionVerificationSummary {
 }
 
 // ---------------------------------------------------------------------------
+// 단계 검산·보증 범위 (browser-run-fixtures-v1.1)
+// ---------------------------------------------------------------------------
+
+/** 결정적 검산기가 확인한 식. 단계 종류마다 쓰는 필드가 다르다(SymPy 문법, LaTeX가 아니다). */
+export interface SympyStatement {
+  name?: string | null;
+  value?: string | null;
+  cond?: string | null;
+  covers?: string | null;
+  lhs?: string | null;
+  rhs?: string | null;
+  /** 1..5 */
+  choice?: number | null;
+}
+
+/**
+ * terminal-v2 `CheckableStepView` (Brain 투영, null 키 생략 가능).
+ * 화면은 Server가 null 키까지 채운 `CheckableStep`을 받는다.
+ */
+export interface CheckableStepView {
+  /** 0..79 */
+  stepIndex: number;
+  stepKind: StepKind;
+  checkResult: StepCheckResult;
+  /** true(정답 숨김)면 종류·검산 표시만 있고 설명·형식·식은 null이다. */
+  withheld: boolean;
+  description?: string | null;
+  descriptionFormat?: DescriptionFormat | null;
+  sympyStatement?: SympyStatement | null;
+}
+
+/** browser-run `CheckableStep`: 모든 키가 있고 값만 null일 수 있다. `checkReason`은 없다. */
+export type CheckableStep = Required<CheckableStepView>;
+
+/** 독립 답 일치 여부 플래그만 있다(독립 답·프로그램은 비공개). */
+export interface CrossCheckView {
+  independentAnswerAgrees: boolean;
+  stepCheckCompleted: boolean;
+}
+
+/** terminal-v2 `SolutionCheckView` (Brain 투영, null 키 생략 가능) */
+export interface SolutionCheckView {
+  problemNumber?: string | null;
+  assuranceScope: AssuranceScope;
+  strategy: VerificationStrategy;
+  /** 1..3 */
+  attempts: number;
+  crossCheck?: CrossCheckView | null;
+  disclosure: DisclosureScope;
+  /** 최대 80 */
+  checkableSteps: CheckableStepView[];
+}
+
+/**
+ * browser-run `SolutionCheck`: 검증한 풀이 하나(문제 하나). 순서 = Read-back 문제 순서 = 응답 순서.
+ * `problemNumber`가 null이면(텍스트 입력) 순서로 맞춘다.
+ */
+export interface SolutionCheck extends Required<
+  Omit<SolutionCheckView, "checkableSteps">
+> {
+  checkableSteps: CheckableStep[];
+}
+
+/**
+ * `run.completed` payload·대화 조회 assistant의 v1.1 확장. 세 필드는 함께 오거나 모두 없다.
+ * - `assuranceScope`(응답 배지): not_applicable 문제는 빼고 집계한다. 하나라도 unverified면 unverified,
+ *   아니고 verified가 있으면 verified, 전부 not_applicable(또는 없음)이면 not_applicable.
+ * - 재설명(`re_explanation`)은 항상 not_applicable·`solutionChecks: []`다.
+ */
+export interface CompletionExtension {
+  responseKind?: ResponseKind | null;
+  assuranceScope?: AssuranceScope | null;
+  /** 최대 20 */
+  solutionChecks?: SolutionCheck[] | null;
+}
+
+/** 세 필드가 모두 있는 v1.1 확장 */
+export type PresentCompletionExtension = {
+  [K in keyof CompletionExtension]-?: NonNullable<CompletionExtension[K]>;
+};
+
+/**
+ * v1.1 확장 판정(live `run.completed`·대화 조회·mock 공용). 계약상 세 필드는 함께 오거나 모두 없다.
+ * - `present`: 셋 다 있다 → 배지·단계 검산을 그린다.
+ * - `absent`: 셋 다 없다 → 확장 이전 응답.
+ * - `partial`: 일부만 있다(계약 위반) → 근거 없는 배지를 그리지 않도록 `absent`처럼 다룬다.
+ *   화면이 조용히 Phase 1 표시로 돌아가므로 진단할 수 있게 상태를 따로 돌려준다.
+ */
+export const pickCompletionExtension = (
+  source: CompletionExtension,
+):
+  | { status: "present"; extension: PresentCompletionExtension }
+  | { status: "absent" | "partial"; extension: null } => {
+  const { responseKind, assuranceScope, solutionChecks } = source;
+  if (responseKind && assuranceScope && solutionChecks)
+    return {
+      status: "present",
+      extension: { responseKind, assuranceScope, solutionChecks },
+    };
+  const anyPresent =
+    responseKind != null || assuranceScope != null || solutionChecks != null;
+  return { status: anyPresent ? "partial" : "absent", extension: null };
+};
+
+// ---------------------------------------------------------------------------
 // activity payload (activity-v1 browser 투영)
 // ---------------------------------------------------------------------------
 
@@ -701,13 +861,22 @@ export interface VerificationStarted {
   methodLabel: string;
 }
 
+/** Read-back("이렇게 읽었어요")은 진행의 첫 단계다. 사용자 확인을 기다리지 않는다. */
+export interface ReadBackStarted {
+  activityId: string;
+  responsePageId?: string | null;
+  kind: "read_back";
+  label: ReadBackLabel;
+}
+
 export type ActivityStartedPayload =
   | InputAnalysisStarted
   | SolutionGenerationStarted
   | AssetUnderstandingStarted
   | NoteRetrievalStarted
   | CodeExecutionStarted
-  | VerificationStarted;
+  | VerificationStarted
+  | ReadBackStarted;
 
 // updated
 export interface InputAnalysisUpdated {
@@ -757,13 +926,21 @@ export interface VerificationUpdated {
   progress: StepProgress;
 }
 
+export interface ReadBackUpdated {
+  activityId: string;
+  status?: ActivityStatus | null;
+  message?: string | null;
+  kind: "read_back";
+}
+
 export type ActivityUpdatedPayload =
   | InputAnalysisUpdated
   | SolutionGenerationUpdated
   | AssetUnderstandingUpdated
   | NoteRetrievalUpdated
   | CodeExecutionUpdated
-  | VerificationUpdated;
+  | VerificationUpdated
+  | ReadBackUpdated;
 
 // completed: 정상 판정(no match·unreadable 등)도 completed다.
 export interface InputAnalysisCompleted {
@@ -811,13 +988,31 @@ export interface VerificationCompleted {
   progress: StepProgress;
 }
 
+/** 읽은 문제 하나: 번호·본문·보기·그림 설명만 있다(답·단계·수식·내부 id 없음). */
+export interface ReadBackProblem {
+  problemNumber?: string | null;
+  questionText: string;
+  /** 최대 5 */
+  choices?: string[];
+  figureDescription?: string | null;
+}
+
+export interface ReadBackCompleted {
+  activityId: string;
+  message?: string | null;
+  kind: "read_back";
+  /** 읽은 순서. 1..20 */
+  problems: ReadBackProblem[];
+}
+
 export type ActivityCompletedPayload =
   | InputAnalysisCompleted
   | SolutionGenerationCompleted
   | AssetUnderstandingCompleted
   | NoteRetrievalCompleted
   | CodeExecutionCompleted
-  | VerificationCompleted;
+  | VerificationCompleted
+  | ReadBackCompleted;
 
 // failed: 기술적 실패만
 export interface InputAnalysisFailed {
@@ -864,13 +1059,21 @@ export interface VerificationFailed {
   methodLabel: string;
 }
 
+export interface ReadBackFailed {
+  activityId: string;
+  code: ActivityFailureCode;
+  message?: string | null;
+  kind: "read_back";
+}
+
 export type ActivityFailedPayload =
   | InputAnalysisFailed
   | SolutionGenerationFailed
   | AssetUnderstandingFailed
   | NoteRetrievalFailed
   | CodeExecutionFailed
-  | VerificationFailed;
+  | VerificationFailed
+  | ReadBackFailed;
 
 // canceled
 export interface InputAnalysisCanceled {
@@ -911,13 +1114,20 @@ export interface VerificationCanceled {
   methodLabel: string;
 }
 
+export interface ReadBackCanceled {
+  activityId: string;
+  message?: string | null;
+  kind: "read_back";
+}
+
 export type ActivityCanceledPayload =
   | InputAnalysisCanceled
   | SolutionGenerationCanceled
   | AssetUnderstandingCanceled
   | NoteRetrievalCanceled
   | CodeExecutionCanceled
-  | VerificationCanceled;
+  | VerificationCanceled
+  | ReadBackCanceled;
 
 // ---------------------------------------------------------------------------
 // Server 소유 payload
@@ -966,8 +1176,8 @@ export interface RunCanceledPayload {
 // terminal payload (terminal-v2 browser)
 // ---------------------------------------------------------------------------
 
-/** canonical 응답은 이 payload에서만 만든다. */
-export interface RunCompletedPayload {
+/** canonical 응답은 이 payload에서만 만든다. v1.1 확장 세 필드가 함께 붙을 수 있다. */
+export interface RunCompletedPayload extends CompletionExtension {
   responseDisposition: ResponseDisposition;
   clarificationReason?: ClarificationReason | null;
   assistantResponse: AssistantResponseV1;

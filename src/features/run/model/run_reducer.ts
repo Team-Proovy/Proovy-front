@@ -5,12 +5,15 @@ import {
   type ActivityFrame,
   type AssistantConversationMessage,
   type BrowserFrame,
+  pickCompletionExtension,
+  type CompletionExtension,
   type ConversationPage,
   type PublicRunStatus,
   type Uuid,
 } from "@/shared/contracts/browser_run_v1";
 import type {
   ActivityEntry,
+  CanonicalResponse,
   ConversationResume,
   RunAction,
   RunIdentity,
@@ -38,6 +41,30 @@ export const createInitialRunState = (): RunState => ({
   failure: null,
   cancel: null,
 });
+
+/**
+ * v1.1 확장 세 필드(`pickCompletionExtension`). 셋이 모두 있을 때만 쓰고, 하나라도 빠지면 확장 이전 응답처럼
+ * 모두 null로 둔다 — 근거 없는 배지를 그리지 않는다. 일부만 온 계약 위반은 개발 모드에서 경고한다
+ * (배지가 조용히 사라지는 원인을 찾을 수 있게).
+ */
+const toCompletionExtension = (
+  source: CompletionExtension,
+): Pick<
+  CanonicalResponse,
+  "responseKind" | "assuranceScope" | "solutionChecks"
+> => {
+  const picked = pickCompletionExtension(source);
+  if (picked.status === "present") return picked.extension;
+  if (
+    picked.status === "partial" &&
+    import.meta.env.DEV &&
+    import.meta.env.MODE !== "test"
+  )
+    console.warn(
+      "[browser-run v1.1] responseKind·assuranceScope·solutionChecks 중 일부만 왔습니다. 확장 없음으로 그립니다.",
+    );
+  return { responseKind: null, assuranceScope: null, solutionChecks: null };
+};
 
 export const isTerminalRunStatus = (status: PublicRunStatus | null) =>
   status !== null &&
@@ -187,6 +214,7 @@ const applyFramePayload = (
           clarificationReason: payload.clarificationReason ?? null,
           assistantResponse: payload.assistantResponse,
           verificationSummary: payload.verificationSummary ?? [],
+          ...toCompletionExtension(payload),
         },
       };
     }
@@ -237,6 +265,7 @@ const createActivityEntry = (
   matchStatus: null,
   limitedPages: [],
   durationMs: null,
+  readBackProblems: [],
   failureCode: null,
   startedSeq: frame.seq,
   updatedSeq: frame.seq,
@@ -294,6 +323,11 @@ const mergeActivityPayload = (
       }
       if (completed.kind === "code_execution")
         next.durationMs = completed.durationMs ?? null;
+      if (completed.kind === "read_back")
+        next.readBackProblems = completed.problems.map((problem) => ({
+          ...problem,
+          choices: [...(problem.choices ?? [])],
+        }));
       break;
     }
     case "activity.failed":
@@ -305,6 +339,25 @@ const mergeActivityPayload = (
       break;
   }
   return next;
+};
+
+/**
+ * 새 Activity를 순서에 넣는다. 처음 등장 순서대로 뒤에 붙이되, read_back(Read-back)은 진행의 첫 단계라
+ * 늦게 와도 앞쪽 read_back들 다음(다른 kind보다 앞)에 넣는다. 모든 소비자가 같은 순서를 본다.
+ */
+const insertActivityId = (
+  order: string[],
+  activityId: string,
+  kind: ActivityFrame["payload"]["kind"],
+  activities?: RunState["activities"],
+) => {
+  if (kind !== "read_back") return [...order, activityId];
+  const firstOther = order.findIndex(
+    (id) => activities?.[id]?.kind !== "read_back",
+  );
+  return firstOther < 0
+    ? [...order, activityId]
+    : [...order.slice(0, firstOther), activityId, ...order.slice(firstOther)];
 };
 
 const applyActivityFrame = (
@@ -332,7 +385,12 @@ const applyActivityFrame = (
     status: progressed(state.status),
     activityOrder: existing
       ? state.activityOrder
-      : [...state.activityOrder, activityId],
+      : insertActivityId(
+          state.activityOrder,
+          activityId,
+          kind,
+          state.activities,
+        ),
     activities: { ...state.activities, [activityId]: entry },
   };
 };
@@ -408,6 +466,7 @@ const applyConversation = (
           clarificationReason: content.clarificationReason,
           assistantResponse: content.assistantResponse,
           verificationSummary: content.verificationSummary,
+          ...toCompletionExtension(content),
         },
       };
     case "FAILED":

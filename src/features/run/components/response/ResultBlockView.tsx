@@ -100,30 +100,38 @@ const UnverifiedNotice = ({ children }: { children: string }) => (
   </p>
 );
 
+/**
+ * solution block. `showLegacyVerification`이 false면(v1.1 응답) Phase 1 배지·안내·step 상태를 그리지 않는다:
+ * 화면 배지와 ✓는 응답의 `assuranceScope`·`solutionChecks`가 맡는다(둘이 다른 말을 하지 않게).
+ */
 const SolutionBlockView = ({
   block,
   sourceLabels,
+  showLegacyVerification,
 }: {
   block: SolutionBlock;
   sourceLabels: ReadonlyMap<string, string>;
+  showLegacyVerification: boolean;
 }) => (
   <>
-    <p
-      data-verification={block.verification}
-      className="mb-1 text-[12px] font-semibold text-[#4A5A78]"
-    >
-      {VERIFICATION_BADGE_LABELS[block.verification]}
-    </p>
+    {showLegacyVerification && (
+      <p
+        data-verification={block.verification}
+        className="mb-1 text-[12px] font-semibold text-[#4A5A78]"
+      >
+        {VERIFICATION_BADGE_LABELS[block.verification]}
+      </p>
+    )}
     <SafeMarkdown
       body={block.body}
       sourceLabels={sourceLabels}
     />
-    {block.verification !== "verified" && (
+    {showLegacyVerification && block.verification !== "verified" && (
       <UnverifiedNotice>
         {UNVERIFIED_NOTICES[block.verification]}
       </UnverifiedNotice>
     )}
-    {!!block.stepMarks?.length && (
+    {showLegacyVerification && !!block.stepMarks?.length && (
       <StepMarkList
         body={block.body}
         stepMarks={block.stepMarks}
@@ -133,6 +141,11 @@ const SolutionBlockView = ({
   </>
 );
 
+/**
+ * check block = 사용자가 낸 풀이를 점검한 결과다(✗는 사용자 풀이의 오류). AI 답의 보증 범위가 아니므로
+ * v1.1 응답에서도 step 상태·미확인 안내를 그대로 그린다(`showLegacyVerification`과 무관).
+ * 응답 배지·단계 검산(`solutionChecks`)은 AI 풀이에 대한 것이라 두 표시가 같은 대상을 두고 다른 말을 하지 않는다.
+ */
 const CheckBlockView = ({
   block,
   sourceLabels,
@@ -162,12 +175,15 @@ const CheckBlockView = ({
 interface ResultBlockViewProps {
   block: ResultBlock;
   sourceLabels: ReadonlyMap<string, string>;
+  /** 기본 true. false면 solution block의 Phase 1 검증 표시를 숨긴다. */
+  showLegacyVerification?: boolean;
 }
 
 /** ResultBlock 5종 중 하나를 그린다. 공개 body와 step 상태만 쓰고 id·참조는 보이지 않는다. */
 export const ResultBlockView = ({
   block,
   sourceLabels,
+  showLegacyVerification = true,
 }: ResultBlockViewProps) => {
   switch (block.kind) {
     case "solution":
@@ -176,6 +192,7 @@ export const ResultBlockView = ({
           <SolutionBlockView
             block={block}
             sourceLabels={sourceLabels}
+            showLegacyVerification={showLegacyVerification}
           />
         </div>
       );

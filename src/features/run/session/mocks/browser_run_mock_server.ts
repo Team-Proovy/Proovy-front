@@ -3,6 +3,7 @@ import {
   CANCEL_MESSAGES,
   HEARTBEAT_COMMENT,
   isTerminalFrame,
+  pickCompletionExtension,
   RUN_ERROR_MESSAGES,
   SUCCESS_CODE,
   SUCCESS_MESSAGE,
@@ -89,6 +90,11 @@ export interface BrowserRunMockServerOptions {
   baseUrl?: string;
   /** 새 run의 template. 기본 `substantive-completed` */
   template?: StreamTemplateName;
+  /**
+   * 주면 새 run이 이 template들을 차례로 돈다(`template`보다 앞, `useTemplateForNextRun`보다 뒤).
+   * fixture 모드에서 여러 응답 종류를 질문만으로 보이게 한다.
+   */
+  templateRotation?: readonly StreamTemplateName[];
   /** 주면 run.created 뒤 frame을 이 간격(ms)으로 하나씩 commit한다. 없으면 즉시 */
   frameIntervalMs?: number;
   /** 주면 이 간격으로 대기 중인 연결에 heartbeat comment를 보낸다 */
@@ -185,6 +191,7 @@ const findCancelBranch = (frames: BrowserFrame[]) => {
 export const createBrowserRunMockServer = ({
   baseUrl = "*",
   template: defaultTemplate = "substantive-completed",
+  templateRotation = [],
   frameIntervalMs,
   heartbeatMs,
   holdCancelConfirmation = false,
@@ -197,6 +204,13 @@ export const createBrowserRunMockServer = ({
   };
   const admissionRejections: MockAdmissionRejection[] = [];
   const templateQueue: StreamTemplateName[] = [];
+  let rotationIndex = 0;
+  const nextRotationTemplate = (): StreamTemplateName => {
+    if (templateRotation.length === 0) return defaultTemplate;
+    const name = templateRotation[rotationIndex % templateRotation.length];
+    rotationIndex += 1;
+    return name;
+  };
   const requests: MockRequestLog[] = [];
   let nextNoteId = 9001;
   let openConnections = 0;
@@ -423,6 +437,8 @@ export const createBrowserRunMockServer = ({
         clarificationReason: last.payload.clarificationReason ?? null,
         assistantResponse: last.payload.assistantResponse,
         verificationSummary: last.payload.verificationSummary ?? [],
+        // v1.1 확장은 세 필드가 함께 있을 때만 싣는다(대화 조회 = stream 값 그대로).
+        ...pickCompletionExtension(last.payload).extension,
       };
     if (last?.type === "run.failed")
       return {
@@ -739,7 +755,7 @@ export const createBrowserRunMockServer = ({
       }
 
       const run = createRun({
-        templateName: templateQueue.shift() ?? defaultTemplate,
+        templateName: templateQueue.shift() ?? nextRotationTemplate(),
         noteId: runRequest.noteId ?? String(nextNoteId++),
         request: runRequest,
         requestKey,
@@ -890,6 +906,7 @@ export const createBrowserRunMockServer = ({
       faults.events.length = 0;
       admissionRejections.length = 0;
       templateQueue.length = 0;
+      rotationIndex = 0;
       requests.length = 0;
       nextNoteId = 9001;
     },

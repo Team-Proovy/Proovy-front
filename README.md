@@ -219,6 +219,7 @@ pnpm run dev
 - fixture 모드에서는 인증도 mock이다. 로그인·토큰 갱신·로그아웃이 mock 토큰으로 응답한다.
 - fixture 모드에서 대화로 새로 생긴 Note(noteId 9001부터)는 노트 목록·상세 mock에 없다. 그래서 제목이 기본값("노트 9001")으로 보이고 노트 목록에 나타나지 않는다. 그 Note의 이름 변경·삭제는 mock이 없어 proxy로 나가 실패한다.
 - fixture run Server는 페이지 메모리에 있어 새로고침하면 진행 중이던 run이 사라진다.
+- fixture 모드의 새 질문은 browser-run v1.1 fixture를 차례로 돈다: 객관식(검증됨·Read-back) → 단답형(미검증) → 증명(검증 대상 아님) → 재설명(검증 대상 아님 + "추가 설명") → 다시 처음. 질문 네 번이면 배지 세 가지와 "추가 설명"이 모두 보인다(`FIXTURE_MODE_TEMPLATE_ROTATION`).
 
 ### 로컬 Server·Brain stack (실제 연결)
 

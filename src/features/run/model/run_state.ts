@@ -5,6 +5,7 @@ import type {
   AssetUnderstandingOutcome,
   AssetUnderstandingReason,
   AssistantResponseV1,
+  AssuranceScope,
   AttachmentFailureReason,
   BrowserFrame,
   CancelCause,
@@ -18,9 +19,12 @@ import type {
   PagePresentation,
   PageTarget,
   PublicRunStatus,
+  ReadBackProblem,
   RequestedTask,
   ResponseDisposition,
+  ResponseKind,
   Seq,
+  SolutionCheck,
   SolutionVerificationSummary,
   StepProgress,
   Uuid,
@@ -73,6 +77,8 @@ export interface ActivityEntry {
   limitedPages: LimitedPage[];
   /** code_execution 완료 소요 시간 */
   durationMs: number | null;
+  /** read_back 완료 payload의 읽은 문제(읽은 순서). 답·단계·수식은 없다. */
+  readBackProblems: ReadBackProblem[];
   /** `activity.failed`의 기술적 실패 code */
   failureCode: ActivityFailureCode | null;
   /** 처음 등장한 frame seq (순서 고정 기준) */
@@ -96,6 +102,10 @@ export interface CanonicalResponse {
   clarificationReason: ClarificationReason | null;
   assistantResponse: AssistantResponseV1;
   verificationSummary: SolutionVerificationSummary[];
+  /** v1.1 확장. 세 값은 함께 있거나 모두 null(확장 이전 응답)이다. */
+  responseKind: ResponseKind | null;
+  assuranceScope: AssuranceScope | null;
+  solutionChecks: SolutionCheck[] | null;
 }
 
 export interface RunFailureInfo {

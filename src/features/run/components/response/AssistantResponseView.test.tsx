@@ -1,10 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { RunCompletedPayload } from "@/shared/contracts/browser_run_v1";
 import {
+  CONTRACT_WARM_UP_TIMEOUT_MS,
   getConversationFixture,
   getStreamFixture,
+  warmUpContractFixtures,
 } from "@/test/contracts/browser_run_fixtures";
 import {
   AssistantResponseView,
@@ -33,6 +35,8 @@ const substantive = (
   verificationSummary: [],
   ...overrides,
 });
+
+beforeAll(warmUpContractFixtures, CONTRACT_WARM_UP_TIMEOUT_MS);
 
 describe("fixture 응답", () => {
   it("substantive: main은 펼치고 thread_like는 같은 메시지 안 접이식 section이다", async () => {
