@@ -14,8 +14,10 @@ import {
 import { AssistantResponseView, toCompletedAssistantResponse } from ".";
 import { formatSympyStatement } from "./sympy_statement";
 import {
+  ASSURANCE_SCOPE_DESCRIPTIONS,
   CROSS_CHECK_TEXTS,
   SOLUTION_HIDDEN_TEXT,
+  STEP_CHECK_SCOPE_NOTICE,
   STEP_WITHHELD_TEXT,
 } from "./response_labels";
 
@@ -155,7 +157,7 @@ describe("단계별 검산 접이식", () => {
     // 설명의 $…$ 수식은 KaTeX로 그린다.
     expect(steps[2].querySelector(".katex")).not.toBeNull();
     expect(
-      within(steps[2] as HTMLElement).getByText("검산 통과"),
+      within(steps[2] as HTMLElement).getByText("식 검산 통과"),
     ).toBeVisible();
     expect(
       within(steps[0] as HTMLElement).getByText("검산 대상 아님"),
@@ -175,7 +177,7 @@ describe("단계별 검산 접이식", () => {
     const falsified = document.querySelector(
       '[data-check-result="falsified"]',
     ) as HTMLElement;
-    expect(within(falsified).getByText("검산 실패")).toBeVisible();
+    expect(within(falsified).getByText("식 검산 실패")).toBeVisible();
     expect(screen.getByText(CROSS_CHECK_TEXTS.disagrees)).toBeVisible();
   });
 
@@ -196,7 +198,7 @@ describe("단계별 검산 접이식", () => {
     const unparseable = section.querySelector(
       '[data-check-result="unparseable"]',
     ) as HTMLElement;
-    expect(within(unparseable).getByText("검산 안 됨")).toBeVisible();
+    expect(within(unparseable).getByText("식 검산 안 됨")).toBeVisible();
 
     // plain_text 설명은 markdown·수식 없이 글자 그대로 그린다.
     await user.click(toggles[2]);
@@ -220,7 +222,7 @@ describe("단계별 검산 접이식", () => {
       expect(step.querySelector("code")).toBeNull();
     }
     expect(steps[8]).toHaveTextContent("9단계 · 보기 선택");
-    expect(steps[8]).toHaveTextContent("검산 통과");
+    expect(steps[8]).toHaveTextContent("식 검산 통과");
   });
 
   it("풀이 숨김(hide_solution): 단계 목록 없이 배지와 안내만 그린다", async () => {
@@ -230,6 +232,72 @@ describe("단계별 검산 접이식", () => {
     await user.click(screen.getByRole("button", { name: /22번 문제/ }));
     expect(screen.getByText(SOLUTION_HIDDEN_TEXT)).toBeVisible();
     expect(container.querySelector("[data-check-result]")).toBeNull();
+  });
+});
+
+describe("검산 범위 안내 (ADR 0017 §3)", () => {
+  it("설명 문장은 검산 대상이 아니라는 안내를 단계 목록과 함께(접혀 있어도) 보인다", async () => {
+    const user = userEvent.setup();
+    renderStream("verified-multiple-choice-with-read-back");
+    const section = screen.getByRole("region", { name: "단계별 검산" });
+    expect(within(section).getByText(STEP_CHECK_SCOPE_NOTICE)).toBeVisible();
+    expect(STEP_CHECK_SCOPE_NOTICE).toMatch(/설명 문장.*검산 대상이 아닙니다/);
+
+    // 단계 결과 문구는 식에 대한 것임을 드러낸다.
+    await user.click(
+      within(section).getByRole("button", { name: /15번 문제/ }),
+    );
+    const verifiedStep = section.querySelector(
+      '[data-check-result="verified"]',
+    ) as HTMLElement;
+    expect(within(verifiedStep).getByText("식 검산 통과")).toBeVisible();
+    expect(within(section).queryByText(/^검산 통과$/)).toBeNull();
+  });
+
+  it("검증됨 머리글 설명도 설명 문장이 검산 대상이 아님을 적는다", () => {
+    renderStream("verified-multiple-choice-with-read-back");
+    expect(
+      screen.getByText(ASSURANCE_SCOPE_DESCRIPTIONS.verified),
+    ).toBeVisible();
+    expect(ASSURANCE_SCOPE_DESCRIPTIONS.verified).toContain(
+      "설명 문장은 검산 대상이 아닙니다",
+    );
+  });
+
+  it("crossCheck.stepCheckCompleted가 false면 단계 검산을 마치지 못했다고 덧붙인다", async () => {
+    const user = userEvent.setup();
+    const payload = structuredClone(
+      completedPayloadOf("unverified-disagreement"),
+    );
+    payload.solutionChecks![0].crossCheck = {
+      independentAnswerAgrees: true,
+      stepCheckCompleted: false,
+    };
+    render(<AssistantResponseView response={payload} />);
+    await user.click(screen.getByRole("button", { name: /23번 문제/ }));
+    expect(
+      screen.getByText(
+        `${CROSS_CHECK_TEXTS.agrees} ${CROSS_CHECK_TEXTS.stepCheckIncomplete}`,
+      ),
+    ).toBeVisible();
+  });
+});
+
+describe("check block (사용자 풀이 점검)", () => {
+  it("v1.1 응답에서도 사용자 풀이 점검의 step 상태를 그대로 보인다(AI 답 배지와 대상이 다르다)", () => {
+    const payload = completedPayloadOf("hide-answer-completed");
+    const hasCheckBlock = payload.assistantResponse.responsePages.some((page) =>
+      page.resultBlocks.some((block) => block.kind === "check"),
+    );
+    expect(hasCheckBlock).toBe(true);
+    const container = renderStream("hide-answer-completed");
+    expect(badgeGroup()).toHaveTextContent("검증됨");
+    const checkBlock = container.querySelector(
+      '[data-block-kind="check"]',
+    ) as HTMLElement;
+    expect(checkBlock.querySelector("[data-step-status]")).not.toBeNull();
+    // solution block의 Phase 1 배지는 그리지 않는다.
+    expect(container.querySelector("[data-verification]")).toBeNull();
   });
 });
 

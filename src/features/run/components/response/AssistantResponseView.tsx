@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { CircleAlert, MessageCircleQuestion } from "lucide-react";
+import { pickCompletionExtension } from "@/shared/contracts/browser_run_v1";
 import { cn } from "@/shared/utils/cn";
 import type { CompletedAssistantResponse } from "./completed_response";
 import { ResponseAssuranceHeader } from "./AssuranceBadges";
@@ -51,16 +52,6 @@ interface AssistantResponseViewProps {
   className?: string;
 }
 
-/** v1.1 확장 세 필드가 모두 있으면 그 값, 아니면 null(확장 이전 응답) */
-const getAssurance = (response: CompletedAssistantResponse) =>
-  response.responseKind && response.assuranceScope && response.solutionChecks
-    ? {
-        responseKind: response.responseKind,
-        assuranceScope: response.assuranceScope,
-        solutionChecks: response.solutionChecks,
-      }
-    : null;
-
 /**
  * AssistantResponseView - canonical 응답 한 메시지
  *
@@ -90,7 +81,9 @@ export const AssistantResponseView = ({
     [assistantResponse.sourceReferences, responseDisposition],
   );
   const assurance =
-    responseDisposition === "substantive" ? getAssurance(response) : null;
+    responseDisposition === "substantive"
+      ? pickCompletionExtension(response).extension
+      : null;
   const verificationSummary =
     responseDisposition === "substantive" && !assurance
       ? (response.verificationSummary ?? [])

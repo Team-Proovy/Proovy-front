@@ -3,6 +3,7 @@ import {
   CANCEL_MESSAGES,
   HEARTBEAT_COMMENT,
   isTerminalFrame,
+  pickCompletionExtension,
   RUN_ERROR_MESSAGES,
   SUCCESS_CODE,
   SUCCESS_MESSAGE,
@@ -437,13 +438,7 @@ export const createBrowserRunMockServer = ({
         assistantResponse: last.payload.assistantResponse,
         verificationSummary: last.payload.verificationSummary ?? [],
         // v1.1 확장은 세 필드가 함께 있을 때만 싣는다(대화 조회 = stream 값 그대로).
-        ...(last.payload.responseKind &&
-          last.payload.assuranceScope &&
-          last.payload.solutionChecks && {
-            responseKind: last.payload.responseKind,
-            assuranceScope: last.payload.assuranceScope,
-            solutionChecks: last.payload.solutionChecks,
-          }),
+        ...pickCompletionExtension(last.payload).extension,
       };
     if (last?.type === "run.failed")
       return {

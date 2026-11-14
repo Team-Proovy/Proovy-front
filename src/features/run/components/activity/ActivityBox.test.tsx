@@ -606,34 +606,77 @@ describe("ActivityBox Read-back (v1.1)", () => {
     expect(problems.textContent).not.toMatch(/검산|검증됨|정답/);
   });
 
-  it("read_back이 늦게 등장해도 첫 단계로 둔다", () => {
+  it("read_back이 늦게 와도 reducer 순서에서 첫 단계다(박스는 그 순서를 그대로 그린다)", () => {
+    // input_analysis 시작 뒤에 read_back이 오도록 fixture frame 순서를 바꾸고 seq를 다시 매긴다.
+    const original = getStreamFixture(
+      "verified-multiple-choice-with-read-back",
+    ).frames;
+    const isReadBack = (frame: BrowserFrame) =>
+      "kind" in frame.payload && frame.payload.kind === "read_back";
+    const [created, ...rest] = original;
+    const inputStarted = rest.find(
+      (frame) =>
+        frame.type === "activity.started" &&
+        frame.payload.kind === "input_analysis",
+    )!;
+    const frames = [
+      created,
+      inputStarted,
+      ...rest.filter(isReadBack),
+      ...rest.filter((frame) => !isReadBack(frame) && frame !== inputStarted),
+    ].map((frame, index) => ({ ...frame, seq: index + 1 }) as BrowserFrame);
+    const state = reduceFrames(frames.slice(0, 4));
+    expect(state.activityOrder).toEqual(["activity-9", "activity-1"]);
+
     render(
       <ActivityBox
-        activities={[
-          item({
-            activityId: "a-1",
-            kind: "input_analysis",
-            label: "analyzing_input",
-            startedSeq: 2,
-          }),
-          item({
-            activityId: "a-2",
-            kind: "read_back",
-            label: "reading_back_problems",
-            startedSeq: 3,
-          }),
-        ]}
-        runStatus="RUNNING"
+        activities={selectActivities(state)}
+        runStatus={selectRunStatus(state)}
       />,
     );
     const rows = getRows().filter((row) =>
       row.hasAttribute("data-activity-id"),
     );
-    expect(rows.map((row) => row.getAttribute("data-activity-id"))).toEqual([
-      "a-2",
-      "a-1",
+    expect(rows.map((row) => row.getAttribute("data-activity-kind"))).toEqual([
+      "read_back",
+      "input_analysis",
     ]);
     expect(rows[0]).toHaveTextContent("이렇게 읽었어요");
-    expect(rows[0]).toHaveTextContent("진행 중");
+  });
+
+  it("보기는 한 줄로 그려 맨 앞 목록·제목 표식이 블록이 되지 않는다", () => {
+    render(
+      <ActivityBox
+        activities={[
+          item({
+            activityId: "rb",
+            kind: "read_back",
+            label: "reading_back_problems",
+            phase: "completed",
+            readBackProblems: [
+              {
+                problemNumber: "1",
+                questionText: "보기 표식 검사",
+                choices: ["1) 3", "- 2", "# 4", "> 5", "$x^2$\n두 줄"],
+              },
+            ],
+          }),
+        ]}
+        runStatus="RUNNING"
+      />,
+    );
+    const choices = screen.getByRole("list", { name: "보기" });
+    const items = within(choices).getAllByRole("listitem");
+    expect(items).toHaveLength(5);
+    for (const choice of items)
+      expect(
+        choice.querySelector("ol, ul, h1, h2, h3, h4, h5, h6, blockquote, pre"),
+      ).toBeNull();
+    expect(items[0]).toHaveTextContent("1) 3");
+    expect(items[1]).toHaveTextContent("- 2");
+    expect(items[2]).toHaveTextContent("# 4");
+    expect(items[3]).toHaveTextContent("> 5");
+    expect(items[4].querySelector(".katex")).not.toBeNull();
+    expect(items[4]).toHaveTextContent("두 줄");
   });
 });

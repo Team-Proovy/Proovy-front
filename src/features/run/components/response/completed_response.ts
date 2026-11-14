@@ -1,12 +1,13 @@
-import type {
-  AssistantMessageContent,
-  AssuranceScope,
-  AssistantResponseV1,
-  ClarificationReason,
-  ResponseDisposition,
-  ResponseKind,
-  SolutionCheck,
-  SolutionVerificationSummary,
+import {
+  pickCompletionExtension,
+  type AssistantMessageContent,
+  type AssuranceScope,
+  type AssistantResponseV1,
+  type ClarificationReason,
+  type ResponseDisposition,
+  type ResponseKind,
+  type SolutionCheck,
+  type SolutionVerificationSummary,
 } from "@/shared/contracts/browser_run_v1";
 
 /**
@@ -34,8 +35,10 @@ export const toCompletedAssistantResponse = (
         clarificationReason: content.clarificationReason,
         assistantResponse: content.assistantResponse,
         verificationSummary: content.verificationSummary,
-        responseKind: content.responseKind ?? null,
-        assuranceScope: content.assuranceScope ?? null,
-        solutionChecks: content.solutionChecks ?? null,
+        ...(pickCompletionExtension(content).extension ?? {
+          responseKind: null,
+          assuranceScope: null,
+          solutionChecks: null,
+        }),
       }
     : null;

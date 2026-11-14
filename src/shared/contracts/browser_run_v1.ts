@@ -764,6 +764,34 @@ export interface CompletionExtension {
   solutionChecks?: SolutionCheck[] | null;
 }
 
+/** 세 필드가 모두 있는 v1.1 확장 */
+export type PresentCompletionExtension = {
+  [K in keyof CompletionExtension]-?: NonNullable<CompletionExtension[K]>;
+};
+
+/**
+ * v1.1 확장 판정(live `run.completed`·대화 조회·mock 공용). 계약상 세 필드는 함께 오거나 모두 없다.
+ * - `present`: 셋 다 있다 → 배지·단계 검산을 그린다.
+ * - `absent`: 셋 다 없다 → 확장 이전 응답.
+ * - `partial`: 일부만 있다(계약 위반) → 근거 없는 배지를 그리지 않도록 `absent`처럼 다룬다.
+ *   화면이 조용히 Phase 1 표시로 돌아가므로 진단할 수 있게 상태를 따로 돌려준다.
+ */
+export const pickCompletionExtension = (
+  source: CompletionExtension,
+):
+  | { status: "present"; extension: PresentCompletionExtension }
+  | { status: "absent" | "partial"; extension: null } => {
+  const { responseKind, assuranceScope, solutionChecks } = source;
+  if (responseKind && assuranceScope && solutionChecks)
+    return {
+      status: "present",
+      extension: { responseKind, assuranceScope, solutionChecks },
+    };
+  const anyPresent =
+    responseKind != null || assuranceScope != null || solutionChecks != null;
+  return { status: anyPresent ? "partial" : "absent", extension: null };
+};
+
 // ---------------------------------------------------------------------------
 // activity payload (activity-v1 browser 투영)
 // ---------------------------------------------------------------------------

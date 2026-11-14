@@ -21,11 +21,12 @@ import {
   NO_CHECKABLE_STEPS_TEXT,
   SOLUTION_HIDDEN_TEXT,
   STEP_CHECK_RESULT_LABELS,
+  STEP_CHECK_SCOPE_NOTICE,
   STEP_CHECK_SECTION_TITLE,
   STEP_KIND_LABELS,
   STEP_WITHHELD_TEXT,
-  getProblemTitle,
 } from "./response_labels";
+import { getProblemTitle } from "../problem_label";
 
 /** ✓ ✗ ? − 모양과 문구를 함께 쓴다(색에 의존하지 않는다). */
 const RESULT_STYLES: Record<
@@ -38,6 +39,11 @@ const RESULT_STYLES: Record<
   not_checked: { icon: Minus, className: "text-[#6B7280]" },
 };
 
+/**
+ * 단계 설명. 계약상(2.07 plan 28) Brain이 `[[source:…]]` 출처 표식을 먼저 지우고 나서 SafeMarkdown 검사를 하므로
+ * `safe_markdown`·`plain_text` 어느 쪽에도 출처 표식이 없다(solutionChecks에는 출처 목록도 없다).
+ * 그래서 sourceLabels를 넘기지 않는다.
+ */
 const StepDescription = ({ step }: { step: CheckableStep }) => {
   if (step.withheld || !step.description)
     return (
@@ -108,6 +114,8 @@ const SolutionCheckBody = ({ check }: { check: SolutionCheck }) => (
         {check.crossCheck.independentAnswerAgrees
           ? CROSS_CHECK_TEXTS.agrees
           : CROSS_CHECK_TEXTS.disagrees}
+        {!check.crossCheck.stepCheckCompleted &&
+          ` ${CROSS_CHECK_TEXTS.stepCheckIncomplete}`}
       </p>
     )}
     {check.disclosure === "hide_solution" ? (
@@ -197,6 +205,12 @@ export const SolutionCheckList = ({
       >
         {STEP_CHECK_SECTION_TITLE}
       </h3>
+      <p
+        data-step-check-scope
+        className="mb-1.5 text-[12px] leading-[18px] text-[#6B7280]"
+      >
+        {STEP_CHECK_SCOPE_NOTICE}
+      </p>
       <ul className="flex flex-col gap-1.5">
         {solutionChecks.map((check, index) => (
           <SolutionCheckItem

@@ -141,6 +141,11 @@ const SolutionBlockView = ({
   </>
 );
 
+/**
+ * check block = 사용자가 낸 풀이를 점검한 결과다(✗는 사용자 풀이의 오류). AI 답의 보증 범위가 아니므로
+ * v1.1 응답에서도 step 상태·미확인 안내를 그대로 그린다(`showLegacyVerification`과 무관).
+ * 응답 배지·단계 검산(`solutionChecks`)은 AI 풀이에 대한 것이라 두 표시가 같은 대상을 두고 다른 말을 하지 않는다.
+ */
 const CheckBlockView = ({
   block,
   sourceLabels,

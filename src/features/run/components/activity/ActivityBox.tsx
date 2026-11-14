@@ -1,18 +1,18 @@
-import { useId, useState } from "react";
+import { memo, useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { ActivityStatusIcon } from "./ActivityStatusIcon";
 import type {
   PublicRunStatus,
   ReadBackProblem,
 } from "@/shared/contracts/browser_run_v1";
-import { SafeMarkdown } from "@/features/run/components/response";
+import { SafeMarkdown } from "../response/SafeMarkdown";
+import { getProblemTitle } from "../problem_label";
 import {
   ACTIVITY_PHASE_TEXTS,
   CANCELING_TEXT,
   CHOICE_MARKS,
   READ_BACK_FIGURE_PREFIX,
   READ_BACK_LIST_LABEL,
-  getReadBackProblemTitle,
   RUN_OUTCOME_TEXTS,
   getActivityMethodText,
   getActivityProgressText,
@@ -70,6 +70,24 @@ const getSummary = (
   };
 };
 
+/** 줄 맨 앞에서 목록·제목·인용·코드 블록이 되는 표식 */
+const LEADING_BLOCK_SYNTAX =
+  /^(\s*)(#{1,6}(?=\s|$)|>|[-+*](?=\s|$)|\d{1,9}[.)](?=\s|$)|```|~~~|\|)/;
+
+/**
+ * 보기는 한 줄 inline 내용이다. 줄바꿈을 공백으로 바꾸고 맨 앞 블록 표식(`1) 3`, `- 2`, `# 4` 등)을
+ * escape해 ① 옆에 목록·제목이 생기지 않게 한다. 인라인 수식(`$…$`)은 그대로 KaTeX로 그린다.
+ */
+const toInlineMarkdown = (text: string) =>
+  text
+    .replace(/\s*\n\s*/g, " ")
+    .trim()
+    .replace(LEADING_BLOCK_SYNTAX, (_match, space: string, marker: string) =>
+      /^\d/.test(marker)
+        ? `${space}${marker.slice(0, -1)}\\${marker.slice(-1)}`
+        : `${space}\\${marker}`,
+    );
+
 /**
  * Read-back("이렇게 읽었어요")에서 읽은 문제: 번호·본문·보기·그림 설명. 수식은 SafeMarkdown(KaTeX)으로 그린다.
  * 답·단계는 계약상 오지 않는다. 사용자 확인을 기다리지 않는다(틀리면 정지).
@@ -89,7 +107,7 @@ const ReadBackProblems = ({
         data-read-back-problem
       >
         <p className="text-[12px] font-semibold text-[#6B7280]">
-          {getReadBackProblemTitle(problem.problemNumber, index)}
+          {getProblemTitle(problem.problemNumber, index)}
         </p>
         <SafeMarkdown
           body={problem.questionText}
@@ -108,7 +126,7 @@ const ReadBackProblems = ({
                 <span aria-hidden>{CHOICE_MARKS[choiceIndex]}</span>
                 <span className="sr-only">{`${choiceIndex + 1}번 보기`}</span>
                 <SafeMarkdown
-                  body={choice}
+                  body={toInlineMarkdown(choice)}
                   className="[&_p]:my-0"
                 />
               </li>
@@ -129,13 +147,17 @@ const ReadBackProblems = ({
   </ol>
 );
 
-const ActivityRow = ({
+/**
+ * 행 하나. `selectActivities`가 바뀌지 않은 Activity에 같은 view 객체를 주므로 memo로 다시 그리지 않는다
+ * (Read-back 문제 20개의 KaTeX를 진행 frame마다 다시 파싱하지 않게).
+ */
+const ActivityRow = memo(function ActivityRow({
   item,
   isCanceling,
 }: {
   item: ActivityBoxItem;
   isCanceling: boolean;
-}) => {
+}) {
   const methodText = getActivityMethodText(item);
   const progressText = getActivityProgressText(item);
   const readBackProblems =
@@ -165,16 +187,7 @@ const ActivityRow = ({
       )}
     </li>
   );
-};
-
-/** read_back은 진행의 첫 단계다. 늦게 와도 맨 앞에 두고 나머지는 처음 등장 순서를 지킨다. */
-const orderActivities = (activities: readonly ActivityBoxItem[]) =>
-  activities.some((item, index) => item.kind === "read_back" && index > 0)
-    ? [
-        ...activities.filter((item) => item.kind === "read_back"),
-        ...activities.filter((item) => item.kind !== "read_back"),
-      ]
-    : activities;
+});
 
 /**
  * 실제 진행 Activity를 처음 등장한 순서대로 누적하는 박스.
@@ -225,7 +238,7 @@ export const ActivityBox = ({
             aria-label={BOX_TITLE}
             className="mt-[8px] flex flex-col gap-[6px]"
           >
-            {orderActivities(activities).map((item) => (
+            {activities.map((item) => (
               <ActivityRow
                 key={item.activityId}
                 item={item}

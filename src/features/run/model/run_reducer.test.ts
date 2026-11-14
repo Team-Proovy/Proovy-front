@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  pickCompletionExtension,
   toEventId,
   type ActivityStartedFrame,
   type ActivityUpdatedFrame,
@@ -733,4 +734,31 @@ describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음"
       }
     },
   );
+});
+
+describe("pickCompletionExtension (live·조회·mock 공용 판정)", () => {
+  const checks = getStreamFixture("unverified-disagreement").frames.at(
+    -1,
+  ) as RunCompletedFrame;
+  const { responseKind, assuranceScope, solutionChecks } = checks.payload;
+
+  it("셋 다 있으면 present, 셋 다 없으면 absent, 일부만이면 partial(확장 없음으로 다룸)", () => {
+    expect(
+      pickCompletionExtension({ responseKind, assuranceScope, solutionChecks }),
+    ).toEqual({
+      status: "present",
+      extension: { responseKind, assuranceScope, solutionChecks },
+    });
+    expect(pickCompletionExtension({})).toEqual({
+      status: "absent",
+      extension: null,
+    });
+    expect(
+      pickCompletionExtension({ responseKind: null, assuranceScope: null }),
+    ).toEqual({ status: "absent", extension: null });
+    expect(pickCompletionExtension({ responseKind, assuranceScope })).toEqual({
+      status: "partial",
+      extension: null,
+    });
+  });
 });

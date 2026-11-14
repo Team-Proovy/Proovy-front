@@ -34,10 +34,6 @@ export const READ_BACK_LIST_LABEL = "읽은 문제";
 export const READ_BACK_FIGURE_PREFIX = "그림";
 /** 보기 번호 ①~⑤ (보기는 최대 5개) */
 export const CHOICE_MARKS = ["①", "②", "③", "④", "⑤"] as const;
-export const getReadBackProblemTitle = (
-  problemNumber: string | null | undefined,
-  index: number,
-) => (problemNumber ? `${problemNumber}번` : `문제 ${index + 1}`);
 
 /** kind별 계약 label enum의 고정 문구. 모르는 label은 kind 제목만 쓴다. */
 const ACTIVITY_LABEL_TEXTS: Record<
