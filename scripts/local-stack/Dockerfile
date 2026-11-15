@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
 # 로컬 Docker stack(task 1.98)의 Server·도구 이미지. production 배포 이미지가 아니다.
-# Server 소스는 compose의 추가 context `server-src`(기본: 공개 Proovy-server 저장소의 pin한 commit)로 받아
+# Server 소스는 compose의 추가 context `server-src`(기본: 형제 Proovy-server checkout)로 받아
 # 컨테이너 안에서 bootJar를 만든다 — 개발자 컴퓨터에 Java가 필요 없다. amd64·arm64(Apple Silicon) 공통 base만 쓴다.
 
 FROM eclipse-temurin:21-jdk AS server-build

@@ -7,19 +7,43 @@
 set -eu
 q() { psql -qtAX -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" "$@"; }
 
-key="local-$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-id=$(q -d proovy -v key="$key" <<'SQL'
+requested_user=""
+json_output=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --json) json_output=1; shift ;;
+    --user) [ "$#" -ge 2 ] && [ -n "$2" ] || exit 2; requested_user="$2"; shift 2 ;;
+    *) printf '%s\n' 'Unsupported issue-token option' >&2; exit 2 ;;
+  esac
+done
+if [ -n "$requested_user" ]; then
+  case "$requested_user" in *[!0-9]*|0) exit 2 ;; esac
+  id=$(q -d proovy -v id="$requested_user" <<'SQL'
+SELECT user_id FROM users WHERE user_id = :id AND provider_user_id LIKE 'local-%';
+SQL
+)
+  [ -n "$id" ] || { printf '%s\n' 'Local user not found' >&2; exit 1; }
+else
+  key="local-$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  id=$(q -d proovy -v key="$key" <<'SQL'
 INSERT INTO users (nickname, provider, provider_user_id, email, created_at, updated_at)
 VALUES ('local', 'KAKAO', :'key', :'key' || '@example.test',
         now() AT TIME ZONE 'Asia/Seoul', now() AT TIME ZONE 'Asia/Seoul')
 RETURNING user_id;
 SQL
 )
+fi
 q -d proovy -v id="$id" <<'SQL'
 INSERT INTO credit_balance (user_id, daily_free_credit, daily_free_limit, daily_expires_at, free_credit, paid_credit,
                             created_at, updated_at)
 VALUES (:id, 100, 100, (now() AT TIME ZONE 'Asia/Seoul') + interval '1 day', 0, 0,
-        now() AT TIME ZONE 'Asia/Seoul', now() AT TIME ZONE 'Asia/Seoul');
+        now() AT TIME ZONE 'Asia/Seoul', now() AT TIME ZONE 'Asia/Seoul')
+ON CONFLICT (user_id) DO UPDATE SET daily_free_credit = 100, daily_free_limit = 100,
+  daily_expires_at = EXCLUDED.daily_expires_at, updated_at = EXCLUDED.updated_at;
+INSERT INTO user_plans (user_id, plan_type, started_at, is_active)
+VALUES (:id, 'PRO', now() AT TIME ZONE 'Asia/Seoul', TRUE)
+ON CONFLICT (user_id) WHERE is_active = TRUE DO UPDATE SET plan_type = 'PRO', expired_at = NULL,
+  canceled_at = NULL, next_plan_type = NULL;
 SQL
 token=$(q -d postgres -v id="$id" -v secret="$(cat /secrets/jwt-secret)" <<'SQL'
 CREATE FUNCTION pg_temp.b64url(bytea) RETURNS text LANGUAGE sql AS
@@ -33,6 +57,11 @@ WITH claims AS (SELECT extract(epoch FROM now())::bigint AS iat),
 SELECT input || '.' || pg_temp.b64url(hmac(input, :'secret', 'sha256')) FROM signing;
 SQL
 )
+
+if [ "$json_output" = 1 ]; then
+  printf '{"userId":"%s","accessToken":"%s"}\n' "$id" "$token"
+  exit 0
+fi
 
 cat <<EOF
 [local-stack] user $id — access token (1시간 유효):
