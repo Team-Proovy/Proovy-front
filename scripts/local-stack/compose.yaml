@@ -18,7 +18,7 @@ x-tools-build: &tools-build
   context: .
   target: tools
   additional_contexts:
-    server-src: ${SERVER_CONTEXT:-https://github.com/Team-Proovy/Proovy-server.git#b576af30a55c2c2383357bc897b1bdaeb3c49ded}
+    server-src: ${SERVER_CONTEXT:-../../../Proovy-server}
 
 # 1.97(proovy-brain 89520f6) 이후 commit의 checkout. private 저장소라 로컬 checkout에서 빌드한다
 x-brain-build: &brain-build

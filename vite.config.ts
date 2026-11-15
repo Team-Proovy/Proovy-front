@@ -5,11 +5,12 @@ import tailwindcss from "@tailwindcss/vite";
 import fs from "fs";
 import path from "path";
 import { resolveApiMode } from "./src/app/api_mode";
+import { devLoginPlugin } from "./scripts/local-stack/dev-login";
+import { localApiProxy } from "./scripts/local-stack/dev-proxy";
 
 // 개발 proxy의 기본 대상은 로컬 개발 Server다. 다른 Server로 보내려면
 // .env.local 등에 DEV_API_PROXY_TARGET을 둔다(VITE_ 접두사가 없어 브라우저에 노출되지 않는다).
-// 로컬 http Server를 전제로 한다. proxy는 브라우저 Origin을 그대로 넘기므로 Server가 localhost Origin을
-// 허용해야 한다(Server local profile은 http://localhost:* 허용 — 브라우저를 127.0.0.1로 열면 POST가 403).
+// DEV_API_PROXY_REWRITE_ORIGIN=1이면 tailnet에서 온 요청의 Origin을 개발 Server 주소로 바꾼다.
 // 자체 서명 인증서 https는 검증 실패로 연결되지 않는다.
 const DEFAULT_DEV_API_PROXY_TARGET = "http://localhost:8080";
 
@@ -38,20 +39,41 @@ export default defineConfig(({ command, mode }) => {
   }
   const devApiProxyTarget =
     env.DEV_API_PROXY_TARGET || DEFAULT_DEV_API_PROXY_TARGET;
+  const loginCommand =
+    command === "serve" && env.DEV_LOGIN_ISSUE_CMD
+      ? (JSON.parse(env.DEV_LOGIN_ISSUE_CMD) as string[])
+      : undefined;
 
   return {
-    plugins: [react(), tailwindcss(), excludeMswWorkerFromBuild()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      excludeMswWorkerFromBuild(),
+      ...(loginCommand
+        ? [
+            devLoginPlugin(
+              loginCommand,
+              path.resolve(
+                env.DEV_LOGIN_USER_FILE || ".local-stack-user.local",
+              ),
+            ),
+          ]
+        : []),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
     },
     server: {
+      allowedHosts: env.DEV_ALLOWED_HOSTS?.split(",")
+        .map((host) => host.trim())
+        .filter(Boolean),
       proxy: {
-        "/api": {
-          target: devApiProxyTarget,
-          changeOrigin: true,
-        },
+        "/api": localApiProxy(
+          devApiProxyTarget,
+          env.DEV_API_PROXY_REWRITE_ORIGIN === "1",
+        ),
       },
     },
     test: {

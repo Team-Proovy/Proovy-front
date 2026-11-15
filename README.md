@@ -259,7 +259,7 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - 기동 순서: `secrets`(volume이 비어 있을 때 — 처음 또는 `down -v` 뒤 — 개발용 JWT secret·shared token·DB password를 생성하고, 있으면 그대로 쓴다. 같은 volume의 DB가 그 password로 만들어져 있다) → `postgres`·`redis` → `server`(Flyway) → `brain-migrate`(Brain `db bootstrap`·`db migrate`) → `provision`(Server `role-boundary.sql`) → `brain`. secret 값은 compose 파일·이미지에 없다.
 - 이미지는 셋이다: `proovy-local-tools`(`secrets`가 빌드하고 `postgres`·`provision`이 같이 쓴다), `proovy-local-server`(`server`), `proovy-local-brain`(`brain`이 빌드하고 `brain-migrate`가 같이 쓴다). 같은 이미지를 두 서비스가 빌드하지 않으므로 Docker Desktop의 병렬 빌드(bake)·containerd image store에서도 `image ... already exists` 충돌이 나지 않는다. 같이 쓰는 서비스는 `pull_policy: never`라 registry에서 받지 않는다 — 처음에는 전체 `up --build` 또는 `docker compose build`로 이미지를 만든 뒤 개별 서비스를 실행한다. 이미지만 다시 빌드하려면 `docker compose build`(서비스를 고를 때는 `secrets`·`server`·`brain`).
 - Brain DB 명령·runtime은 loopback 대상만 허용하므로 Brain 컨테이너는 Postgres 컨테이너의 network namespace를 공유해 `127.0.0.1:5432`로 붙는다. Server는 `http://postgres:8080`으로 Brain을 부른다. host에는 Server 포트 하나만 열린다.
-- Server 소스는 기본으로 공개 Proovy-server 저장소의 pin한 commit(`.env.example`의 `SERVER_CONTEXT`)을 Docker가 직접 받아 빌드한다. 로컬 checkout을 쓰려면 `SERVER_CONTEXT`에 경로를 준다(Windows checkout은 `core.autocrlf`로 `gradlew`가 CRLF이면 빌드가 실패한다 — 기본 git URL을 쓰거나 LF로 받은 checkout을 쓴다). proovy-brain checkout을 바꿨다면 `--build`로 다시 빌드한다.
+- Server 소스는 기본으로 형제 `Proovy-server` checkout을 사용한다. 다른 checkout 경로 또는 명시적인 Git commit URL을 쓰려면 `SERVER_CONTEXT`로 지정한다. checkout의 `gradlew`는 LF여야 한다. Server·Brain checkout을 바꿨다면 `--build`로 다시 빌드한다.
 - DB는 `down -v` 전까지 volume에 남는다. Server·Brain commit을 바꾼 뒤 Flyway나 `brain-migrate`가 실패하면(migration 이력 불일치) `docker compose down -v`로 지우고 다시 띄운다.
 - `postgres` 컨테이너만 재시작되면(`docker compose restart postgres`, OOM 등) 그 network namespace를 쓰는 Brain이 끊긴다. `docker compose up -d --wait`로 다시 맞춘다.
 - 로컬 개발용이라 모든 서비스가 `secrets` volume 전체를 읽는다(Brain 컨테이너도 DB 관리자 password·JWT secret을 읽을 수 있다). DB role 경계는 Server·Brain 연결 role 사이의 경계이고, 컨테이너 사이의 secret 격리는 하지 않는다.
@@ -532,3 +532,22 @@ Refactor(#13): 아이콘 리팩토링
 - 개발 서버 실행 오류
 - 타입/린트 오류 해결
 - API 연동 관련 문제
+
+### iPad에서 local stack에 로그인 (Task 2.18)
+
+Server 소스의 기본값은 형제 `Proovy-server` checkout이다. 실제 실행은 맥북에서 하고 compose project 이름을 `proovy-stack`으로 고정한다.
+
+Front의 개발 설정에 아래 값을 둔다. `DEV_LOGIN_ISSUE_CMD`는 shell 문자열이 아닌 명령·인자 JSON 배열이다. 아래 Docker 경로는 macOS Docker Desktop 기준이다.
+
+```dotenv
+DEV_API_PROXY_TARGET=http://localhost:8080
+DEV_API_PROXY_REWRITE_ORIGIN=1
+DEV_ALLOWED_HOSTS=node.example.ts.net
+DEV_LOGIN_ISSUE_CMD='["/usr/local/bin/docker","compose","-p","proovy-stack","-f","scripts/local-stack/compose.yaml","exec","-T","postgres","issue-token","--json"]'
+```
+
+`pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행한 Front를 Tailscale Serve로 연결한 뒤 `/dev-login`을 연다. **로그인**은 처음 한 번 계정을 만들고 이후 같은 사용자 ID로 재발급한다. **새 사용자**는 새 계정을 만든다. 개발 사용자는 local DB의 PRO 플랜·개발 크레딧 100으로 준비된다. 사용자 ID만 `.local-stack-user.local`에 저장되고 token은 브라우저에 직접 전달된다. 이 파일은 Git 제외 대상이며 `DEV_LOGIN_USER_FILE`로 위치를 바꿀 수 있다.
+
+`/dev-login`과 `/__local-stack/login`은 `DEV_LOGIN_ISSUE_CMD`가 있는 Vite 개발 서버에서만 제공된다. 로그인 POST는 설정한 Host와 같은 Origin만 허용한다. production build에는 로그인 화면과 token 발급 경로를 포함하지 않는다. 개발 proxy의 Origin 변경도 `DEV_API_PROXY_REWRITE_ORIGIN=1`일 때만 적용한다.
+
+CLI의 `issue-token --user <id> --json`은 기존 local 사용자의 token을 JSON으로 재발급한다. 인자를 생략한 기존 CLI 동작은 새 사용자를 만든다.
