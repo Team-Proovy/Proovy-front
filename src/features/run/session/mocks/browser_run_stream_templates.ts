@@ -64,7 +64,10 @@ export type StreamTemplateName =
   | "not-applicable-proof"
   | "re-explanation-completed"
   | "hide-answer-completed"
-  | "hide-solution-completed";
+  | "hide-solution-completed"
+  // v1.2 확장(2.14): 재설명 실시간 delta 스트리밍·취소
+  | "re-explanation-streaming"
+  | "canceled-during-re-explanation";
 
 /**
  * fixture 모드에서 새 run마다 차례로 쓰는 v1.1 template.

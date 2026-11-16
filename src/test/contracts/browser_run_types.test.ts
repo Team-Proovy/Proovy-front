@@ -367,7 +367,7 @@ describe("enum", () => {
     expect(wire.ACTIVITY_KINDS).toEqual(kinds);
   });
 
-  it("frame type 12종이 schema와 같다", () => {
+  it("frame type 13종이 schema와 같다", () => {
     const serverOwnedFrames = browserDef("ServerOwnedFrame").oneOf as unknown[];
     const terminalFrames = terminalBrowserSchema.oneOf as unknown[];
     const frameTypes = [
@@ -778,6 +778,14 @@ describe("객체 필드 목록", () => {
     ActivityCanceledEvent: shapeOf<wire.ActivityCanceledFrame>()(
       envelopeKeys,
       envelopeKeys,
+    ),
+    ReExplanationDeltaEvent: shapeOf<wire.ReExplanationDeltaFrame>()(
+      envelopeKeys,
+      envelopeKeys,
+    ),
+    ReExplanationDeltaPayload: shapeOf<wire.ReExplanationDeltaPayload>()(
+      ["deltaIndex", "delta"],
+      ["deltaIndex", "delta"],
     ),
     RunCompletedEvent: shapeOf<wire.RunCompletedFrame>()(
       envelopeKeys,

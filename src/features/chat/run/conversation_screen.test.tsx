@@ -20,6 +20,13 @@ import {
   vi,
 } from "vitest";
 import { createRunApiClient } from "@/features/run/api";
+import type { RunStreamEnd, RunStreamOptions } from "@/features/run/api";
+import type {
+  BrowserFrame,
+  RunCreatedFrame,
+  TerminalFrame,
+} from "@/shared/contracts/browser_run_v1";
+import { getStreamFixture } from "@/test/contracts/browser_run_fixtures";
 import { createBrowserRunMockServer } from "@/features/run/session/mocks";
 import type { BrowserRunMockServerOptions } from "@/features/run/session/mocks";
 import { extractInputContent } from "@/features/editor/utils/extract_input_content";
@@ -740,5 +747,203 @@ describe("실패·접수 거부 안내", () => {
     expect(
       await screen.findByText("지원하지 않는 요청입니다"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("재설명 실시간 스트리밍", () => {
+  it("re_explanation.delta 도착 직후 canonical 완료 전부터 SafeMarkdown·KaTeX와 추가 설명 배지를 표시하고 완료 시 교체한다", async () => {
+    const { user, mock } = renderApp("/app/chat/2", {
+      template: "re-explanation-streaming",
+      frameIntervalMs: 5000,
+    });
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "방금 풀이 왜 그렇게 되나요?");
+      await user.click(sendButton());
+
+      await waitFor(() => expect(mock.listRunIds()).toHaveLength(1));
+      const [runId] = mock.listRunIds();
+
+      // 첫 delta(seq 5, deltaIndex=0)까지 반영 — 아직 run.completed 전이다.
+      act(() => mock.commit(runId, 4));
+      const liveArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(liveArticle).toHaveAttribute("data-re-explanation-stream", "live");
+      expect(within(liveArticle).getByText("추가 설명")).toBeInTheDocument();
+      expect(
+        within(liveArticle).getByText("검증 대상 아님"),
+      ).toBeInTheDocument();
+      expect(liveArticle).toHaveTextContent("양변에 같은 연산을");
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // 두 번째 delta(seq 6, $x = 2$) 도착 시 완료 전에도 KaTeX가 렌더된다.
+      act(() => mock.commit(runId, 1));
+      await waitFor(() => {
+        expect(liveArticle).toHaveTextContent(
+          "양변에 같은 연산을 적용하기 때문입니다.",
+        );
+        expect(liveArticle.querySelector(".katex")).not.toBeNull();
+      });
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // run.completed 도착 시 canonical 본문으로 교체되고 live 영역은 제거된다.
+      act(() => mock.commit(runId));
+      const canonicalArticle = await screen.findByRole("article", {
+        name: "AI 응답",
+      });
+      expect(canonicalArticle).toHaveTextContent(
+        "양변에 같은 연산을 적용하는 이유를 설명합니다.",
+      );
+      expect(within(canonicalArticle).getByText("추가 설명")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("article", { name: "재설명 실시간 응답" }),
+      ).toBeNull();
+    } finally {
+      mock.reset();
+    }
+  });
+
+  it("delta 스트리밍 중 중단되면 부분 설명을 partial 배너와 함께 유지하고 VerifiedSolution으로 승격하지 않는다", async () => {
+    const { user, mock } = renderApp("/app/chat/7", {
+      template: "canceled-during-re-explanation",
+      frameIntervalMs: 5000,
+      holdCancelConfirmation: true,
+    });
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "중간에 멈출 재설명");
+      await user.click(sendButton());
+
+      await waitFor(() => expect(mock.listRunIds()).toHaveLength(1));
+      const [runId] = mock.listRunIds();
+      act(() => mock.commit(runId, 4));
+
+      const streamingArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(streamingArticle).toHaveTextContent("먼저 양변에서 3을");
+
+      await user.click(stopButton());
+      await screen.findByRole("button", { name: "중단 중" });
+      act(() => mock.commit(runId));
+
+      await waitFor(() => {
+        expect(
+          document.querySelector('[data-outcome="canceled"]'),
+        ).toBeInTheDocument();
+      });
+      expect(streamingArticle).toHaveAttribute(
+        "data-re-explanation-stream",
+        "partial",
+      );
+      expect(streamingArticle).toHaveTextContent("먼저 양변에서 3을");
+      expect(streamingArticle).toHaveTextContent(
+        "완료 전에 중단된 일부 설명입니다. 검증된 풀이로 저장되지 않았습니다.",
+      );
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+    } finally {
+      mock.reset();
+    }
+  });
+
+  it("수식($...$)이 여러 delta로 갈려 도착해도 깨지지 않고 닫히는 순간 SafeMarkdown·KaTeX로 완성된다", async () => {
+    const fixture = getStreamFixture("re-explanation-streaming");
+    const splitFrames = structuredClone(fixture.frames);
+    const delta0 = splitFrames[4];
+    const delta1 = splitFrames[5];
+    const completed = splitFrames.at(-1);
+    if (
+      delta0.type !== "re_explanation.delta" ||
+      delta1.type !== "re_explanation.delta" ||
+      completed?.type !== "run.completed"
+    ) {
+      throw new Error("fixture shape mismatch");
+    }
+    delta0.payload.delta = "설명: $x^2 ";
+    delta1.payload.delta = "- 5x + 6 = 0$";
+    completed.payload.assistantResponse.responsePages[0].resultBlocks[0].body =
+      "설명: $x^2 - 5x + 6 = 0$";
+    completed.payload.assistantResponse.plainText = "설명: $x^2 - 5x + 6 = 0$";
+
+    let streamOptions: RunStreamOptions | null = null;
+    let finishStream: (end: RunStreamEnd) => void = () => {};
+    const customApi: RunSessionOptions["api"] = {
+      streamConversation: (request, options) => {
+        (splitFrames[0] as RunCreatedFrame).payload.noteId =
+          request.noteId ?? "2";
+        streamOptions = options;
+        options.onOpen?.();
+        return new Promise((resolve) => {
+          finishStream = resolve;
+        });
+      },
+      streamRunEvents: () => new Promise(() => {}),
+      cancelRun: () => Promise.reject(new Error("unused")),
+      getConversationMessages: () => Promise.reject(new Error("unused")),
+    };
+
+    const { user, mock } = renderApp(
+      "/app/chat/2",
+      {},
+      { sessionApi: customApi },
+    );
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "수식 스트리밍 테스트");
+      await user.click(sendButton());
+      await waitFor(() => expect(streamOptions).not.toBeNull());
+
+      // 여는 $만 온 첫 delta
+      act(() => {
+        for (const frame of splitFrames.slice(0, 5)) {
+          streamOptions?.onFrame(frame as BrowserFrame);
+        }
+      });
+      const liveArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(liveArticle).toHaveTextContent("설명:");
+      expect(liveArticle.querySelector(".katex")).toBeNull();
+
+      // 닫는 $가 온 두 번째 delta (여전히 run.completed 전)
+      act(() => {
+        streamOptions?.onFrame(splitFrames[5] as BrowserFrame);
+      });
+      await waitFor(() => {
+        expect(liveArticle.querySelector(".katex")).not.toBeNull();
+      });
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // terminal 완료 후 canonical 교체
+      await act(async () => {
+        for (const frame of splitFrames.slice(6)) {
+          streamOptions?.onFrame(frame as BrowserFrame);
+        }
+        finishStream({
+          reason: "terminal",
+          terminalFrame: completed as TerminalFrame,
+          lastEventId: `${completed.runId}:${completed.seq}`,
+        });
+      });
+      const canonicalArticle = await screen.findByRole("article", {
+        name: "AI 응답",
+      });
+      expect(canonicalArticle.querySelector(".katex")).not.toBeNull();
+      expect(
+        screen.queryByRole("article", { name: "재설명 실시간 응답" }),
+      ).toBeNull();
+    } finally {
+      mock.reset();
+    }
   });
 });

@@ -2,7 +2,7 @@
  * browser-run-v1 공용 wire 타입 (S08 Front 공용)
  *
  * 계약 의미는 Proovy-server가 소유하고, 판정 기준은 proovy-brain artifact
- * `tests/fixtures/contracts/browser-run-v1`(consumer_version `browser-run-fixtures-v1.1`)이다.
+ * `tests/fixtures/contracts/browser-run-v1`(consumer_version `browser-run-fixtures-v1.2`)이다.
  * 이 파일은 그 schema(`browser-run.schema.json`, `terminal-v2/browser.schema.json`)를 TS로 옮긴 것이다.
  * 검증된 사본과 pin은 `src/test/contracts/brain/`에 있고, `browser_run_types.test.ts`가
  * 여기 enum·필드 목록이 schema와 같은지 검사한다. 계약이 바뀌면 pin을 먼저 올린 뒤 이 파일을 고친다.
@@ -16,7 +16,7 @@
 // 버전·고정 값
 // ---------------------------------------------------------------------------
 
-export const BROWSER_RUN_CONSUMER_VERSION = "browser-run-fixtures-v1.1";
+export const BROWSER_RUN_CONSUMER_VERSION = "browser-run-fixtures-v1.2";
 export const BROWSER_RUN_CONTRACT_VERSION = "browser-run-v1";
 /** 모든 durable frame의 `contractVersion` 값 */
 export const FRAME_CONTRACT_VERSION = "brain-source-v1";
@@ -1251,6 +1251,17 @@ export type ActivityCanceledFrame = BrowserFrameEnvelope<
   ActivityCanceledPayload
 >;
 
+/** v1.2 (2.14): 재설명 turn 실시간 본문 chunk */
+export interface ReExplanationDeltaPayload {
+  deltaIndex: number;
+  delta: string;
+}
+
+export type ReExplanationDeltaFrame = BrowserFrameEnvelope<
+  "re_explanation.delta",
+  ReExplanationDeltaPayload
+>;
+
 export type RunCompletedFrame = BrowserFrameEnvelope<
   "run.completed",
   RunCompletedPayload
@@ -1279,10 +1290,11 @@ export type TerminalFrame =
   | RunFailedFrame
   | RunCanceledFrame;
 
-/** `type`으로 구분하는 durable frame 12종 */
+/** `type`으로 구분하는 durable frame 13종 */
 export type BrowserFrame =
   | ServerOwnedFrame
   | ActivityFrame
+  | ReExplanationDeltaFrame
   | RunCompletedFrame
   | RunFailedFrame;
 export type BrowserFrameType = BrowserFrame["type"];
@@ -1294,6 +1306,7 @@ export const BROWSER_FRAME_TYPES = [
   "activity.completed",
   "activity.failed",
   "activity.canceled",
+  "re_explanation.delta",
   "response.page.started",
   "response.page.completed",
   "run.canceling",

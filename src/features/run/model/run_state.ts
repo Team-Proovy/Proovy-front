@@ -34,7 +34,9 @@ import type {
  * browser-run-v1 run 하나의 화면 상태 (v1-only, React·네트워크 독립).
  *
  * - 입력은 stream frame과 대화 조회 응답 두 가지이며 같은 `runReducer`가 처리한다.
- * - 검증 전 본문·후보 답·raw delta·진행 퍼센트는 두지 않는다. 본문은 `response`(run.completed)에만 있다.
+ * - 일반 풀이는 검증 전 본문·후보 답·진행 퍼센트를 두지 않는다(`response`는 `run.completed`에만 있다).
+ * - 재설명 turn(v1.2)에 한해 검증 완료된 기존 풀이의 `re_explanation.delta`만 `reExplanationText`로 누적해 미리 그리고,
+ *   `run.completed` 도착 시 canonical `response`로 바꾼다.
  * - terminal(`COMPLETED`·`FAILED`·`CANCELED`) 뒤에는 어떤 입력도 상태를 바꾸지 않는다.
  */
 
@@ -143,6 +145,13 @@ export interface RunState {
   activities: Record<string, ActivityEntry>;
   /** pageIndex 순서 */
   pages: ResponsePageBoundary[];
+  /** v1.2 (2.14): `re_explanation.delta` chunk 순서대로 모은 실시간 본문. `COMPLETED` 뒤에는 비운다. */
+  reExplanationDeltas: string[];
+  reExplanationText: string;
+  /** 다음에 기대하는 `deltaIndex` (0부터 +1). 재수신 중복·범위 밖 index를 막는다. */
+  nextDeltaIndex: number;
+  /** Known cancellation boundary; older replay deltas remain readable. */
+  cancelingBoundarySeq: Seq | null;
   response: CanonicalResponse | null;
   failure: RunFailureInfo | null;
   cancel: RunCancelInfo | null;

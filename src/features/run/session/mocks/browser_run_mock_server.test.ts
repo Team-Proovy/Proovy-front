@@ -53,7 +53,7 @@ const question = (noteId?: string) => ({
 });
 
 describe("stream template", () => {
-  it("streams/valid fixture(v1.1 포함 17개)를 모두 template으로 쓴다", () => {
+  it("streams/valid fixture(v1.2 포함 19개)를 모두 template으로 쓴다", () => {
     expect(STREAM_TEMPLATE_NAMES).toEqual(
       listStreamFixtures().map((fixture) => fixture.name),
     );

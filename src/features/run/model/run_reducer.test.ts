@@ -79,9 +79,9 @@ const withDuplicates = (frames: BrowserFrame[]) =>
     ...frames.slice(0, index).reverse(),
   ]);
 
-describe("runReducer — fixture 17개 시나리오", () => {
-  it("valid stream fixture가 17개다(v1 10 + v1.1 확장 7)", () => {
-    expect(streams).toHaveLength(17);
+describe("runReducer — fixture 19개 시나리오", () => {
+  it("valid stream fixture가 19개다(v1 10 + v1.1 7 + v1.2 2)", () => {
+    expect(streams).toHaveLength(19);
   });
 
   describe.each(streamNames)("%s", (name) => {
@@ -692,11 +692,14 @@ describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음"
   );
 
   it.each(completedStreams.map((stream) => stream.name))(
-    "%s: run.completed 전 state에는 응답 본문·제목·plainText가 없다",
+    "%s: run.completed 전 state에는 canonical 응답 구조(제목·plainText·검산)가 없다",
     (name) => {
       const stream = getStreamFixture(name);
       const completed = stream.frames.at(-1) as RunCompletedFrame;
       const { assistantResponse } = completed.payload;
+      const hasDeltaFrames = stream.frames.some(
+        (frame) => frame.type === "re_explanation.delta",
+      );
       const texts = [
         assistantResponse.plainText,
         ...assistantResponse.responsePages.flatMap((page) => [
@@ -708,8 +711,10 @@ describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음"
         const state = reduceFrames(stream.frames.slice(0, cut));
         expect(state.response).toBeNull();
         const serialized = JSON.stringify(state);
-        for (const text of texts)
-          expect(serialized).not.toContain(JSON.stringify(text).slice(1, -1));
+        if (!hasDeltaFrames) {
+          for (const text of texts)
+            expect(serialized).not.toContain(JSON.stringify(text).slice(1, -1));
+        }
         expect(serialized).not.toMatch(/resultBlocks|plainText|"body"|"title"/);
         // 단계·수식·배지는 검증이 끝난 run.completed에서만 온다(Read-back에도 없다).
         expect(serialized).not.toMatch(
@@ -720,20 +725,90 @@ describe("runReducer — 검증 전 본문·후보 답·가짜 퍼센트 없음"
   );
 
   it.each(streamNames)(
-    "%s: state 어디에도 퍼센트·delta·candidate 필드가 없다",
+    "%s: 일반 풀이에는 퍼센트·delta·candidate 필드가 없고 재설명에도 허용 delta 필드 외엔 없다",
     (name) => {
       const stream = getStreamFixture(name);
+      const hasDeltaFrames = stream.frames.some(
+        (frame) => frame.type === "re_explanation.delta",
+      );
       for (let cut = 1; cut <= stream.frames.length; cut += 1) {
         const state = reduceFrames(stream.frames.slice(0, cut));
+        if (!hasDeltaFrames) {
+          expect(state.reExplanationDeltas).toEqual([]);
+          expect(state.nextDeltaIndex).toBe(0);
+        }
         const keys = JSON.stringify(
           { ...state, response: null },
           (_key, value: unknown) => value,
         ).match(/"([A-Za-z_]+)":/g);
-        for (const key of keys ?? [])
-          expect(key).not.toMatch(/percent|delta|candidate|token/i);
+        for (const key of keys ?? []) {
+          expect(key).not.toMatch(/percent|candidate|token/i);
+          if (/delta/i.test(key)) {
+            expect(['"reExplanationDeltas":', '"nextDeltaIndex":']).toContain(
+              key,
+            );
+          }
+        }
       }
     },
   );
+});
+
+describe("runReducer — v1.2 re_explanation.delta", () => {
+  const streaming = getStreamFixture("re-explanation-streaming");
+  const canceling = getStreamFixture("canceled-during-re-explanation");
+
+  it("delta를 deltaIndex 순서대로 누적하고 중복·gap·취소 후 delta는 무시한 뒤 run.completed로 교체한다", () => {
+    const deltaFrames = streaming.frames.filter(
+      (frame) => frame.type === "re_explanation.delta",
+    );
+    expect(deltaFrames.length).toBeGreaterThanOrEqual(2);
+
+    const state = reduceFrames(
+      streaming.frames.slice(
+        0,
+        streaming.frames.findIndex((f) => f.type === "re_explanation.delta") +
+          1,
+      ),
+    );
+    expect(state.status).toBe("RUNNING");
+    expect(state.nextDeltaIndex).toBe(1);
+    const firstChunk = state.reExplanationText;
+    expect(firstChunk.length).toBeGreaterThan(0);
+
+    // 같은 seq 또는 다른 seq로 이미 적용된 deltaIndex=0 재전송 → 본문 중복 없음
+    const dupIdx0 = {
+      ...deltaFrames[0],
+      seq: state.lastSeq + 1,
+    } as BrowserFrame;
+    const afterDup = runReducer(state, { type: "frame", frame: dupIdx0 });
+    expect(afterDup.reExplanationText).toBe(firstChunk);
+    expect(afterDup.nextDeltaIndex).toBe(1);
+    expect(afterDup.lastSeq).toBe(state.lastSeq + 1);
+
+    // deltaIndex gap(예: 2) → 본문 누적 안 됨
+    const gapFrame = {
+      ...deltaFrames[0],
+      seq: afterDup.lastSeq + 1,
+      payload: { deltaIndex: 2, delta: "건너뜀" },
+    } as BrowserFrame;
+    const afterGap = runReducer(afterDup, { type: "frame", frame: gapFrame });
+    expect(afterGap.reExplanationText).toBe(firstChunk);
+    expect(afterGap.nextDeltaIndex).toBe(1);
+
+    // 전체 fixture 재생 → COMPLETED 시 canonical response로 교체되고 임시 delta는 비워진다
+    const completed = reduceFrames(streaming.frames);
+    expect(completed.status).toBe("COMPLETED");
+    expect(completed.response).not.toBeNull();
+    expect(completed.reExplanationText).toBe("");
+    expect(completed.reExplanationDeltas).toEqual([]);
+
+    // 취소 중/후 도착하는 delta는 무시하되 중단 전 부분 본문은 보존한다
+    const partial = reduceFrames(canceling.frames);
+    expect(partial.status).toBe("CANCELED");
+    expect(partial.response).toBeNull();
+    expect(partial.reExplanationText).toBe("먼저 양변에서 3을 ");
+  });
 });
 
 describe("pickCompletionExtension (live·조회·mock 공용 판정)", () => {
