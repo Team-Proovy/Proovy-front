@@ -328,4 +328,57 @@ describe("localStorageProxy", () => {
     expect(removed.status).toBe(404);
     expect(received).toEqual([]);
   });
+  it("preserves valid literal percent names without weakening nested traversal rejection", async () => {
+    const seen: string[] = [];
+    const upstream = http.createServer((req, res) => {
+      seen.push(req.url ?? "");
+      res.end();
+    });
+    await new Promise<void>((resolve) =>
+      upstream.listen(0, "127.0.0.1", resolve),
+    );
+    servers.push(
+      () => new Promise<void>((resolve) => upstream.close(() => resolve())),
+    );
+    const vite = await createServer({
+      configFile: false,
+      logLevel: "silent",
+      appType: "custom",
+      server: {
+        host: "127.0.0.1",
+        port: 0,
+        proxy: resolveLocalStorageProxy({
+          DEV_STORAGE_PROXY_TARGET: `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`,
+          DEV_STORAGE_BUCKET: "proovy-local-assets",
+        }),
+      },
+    });
+    await vite.listen();
+    servers.push(() => vite.close());
+    const port = (vite.httpServer!.address() as AddressInfo).port;
+    for (const name of [
+      "100%25.jpg",
+      "100%25%20done.jpg",
+      "literal%2525.jpg",
+      "percent%25AB.jpg",
+    ]) {
+      const path = `/proovy-local-assets/users/7/notes/42/assets/uuid_${name}?X-Goog-Signature=SYNTHETIC`;
+      for (const method of ["PUT", "GET", "HEAD"]) {
+        expect((await sendHttpRequest({ port, method, path })).status).toBe(
+          200,
+        );
+        expect(seen.at(-1)).toBe(path);
+      }
+    }
+    const before = seen.length;
+    for (const path of [
+      "/proovy-local-assets/%252e%252e/storage/v1/b",
+      "/proovy-local-assets/%25252e%25252e/storage/v1/b",
+    ]) {
+      expect(
+        (await sendHttpRequest({ port, method: "GET", path })).status,
+      ).toBe(404);
+    }
+    expect(seen).toHaveLength(before);
+  });
 });

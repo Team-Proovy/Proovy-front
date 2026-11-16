@@ -55,18 +55,27 @@ function validateStorageTarget(target: string): string {
 function isObjectRequest(rawUrl: string, prefix: string): boolean {
   let path = rawUrl.split("?", 1)[0];
   // Inspect decoding variants without rewriting the signed request itself.
-  for (let depth = 0; depth < 5; depth += 1) {
+  if (path.length > 8192) return false;
+  for (let depth = 0; depth <= rawUrl.length; depth += 1) {
     if (
       !path.startsWith(prefix) ||
       path.length === prefix.length ||
       path.includes("\\") ||
-      /[\u0000-\u001f\u007f]/.test(path) ||
+      Array.from(path).some((character) => {
+        const code = character.charCodeAt(0);
+        return code <= 31 || code === 127;
+      }) ||
       path.split("/").some((part) => part === "." || part === "..")
     )
       return false;
     let decoded: string;
     try {
-      decoded = decodeURIComponent(path);
+      decoded =
+        depth === 0
+          ? decodeURIComponent(path)
+          : path.replace(/%([0-9a-f]{2})/gi, (_match, hex: string) =>
+              String.fromCharCode(Number.parseInt(hex, 16)),
+            );
     } catch {
       return false;
     }
