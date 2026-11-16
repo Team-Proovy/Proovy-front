@@ -548,6 +548,16 @@ DEV_LOGIN_ISSUE_CMD='["/usr/local/bin/docker","compose","-p","proovy-stack","-f"
 
 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행한 Front를 Tailscale Serve로 연결한 뒤 `/dev-login`을 연다. **로그인**은 처음 한 번 계정을 만들고 이후 같은 사용자 ID로 재발급한다. **새 사용자**는 새 계정을 만든다. 개발 사용자는 local DB의 PRO 플랜·개발 크레딧 100으로 준비된다. 사용자 ID만 `.local-stack-user.local`에 저장되고 token은 브라우저에 직접 전달된다. 이 파일은 Git 제외 대상이며 `DEV_LOGIN_USER_FILE`로 위치를 바꿀 수 있다.
 
+#### 로컬 사진 저장 E2E (opt-in, `compose.photo.yaml`)
+
+기본 `compose.yaml`은 텍스트 전용 경로(`GCS_ENDPOINT=http://127.0.0.1:9`)를 유지하며 운영 GCS/ADC 설정을 건드리지 않는다. 업로드·썸네일·Brain `read_url`까지 로컬에서 확인하려면 `compose.photo.yaml`과 Vite storage proxy를 명시적으로 함께 켠다.
+
+1. `scripts/local-stack/.env`에 `GCS_PUBLIC_HOST=node.example.ts.net`(Front가 서빙되는 HTTPS DNS host)을 추가한다. live 모델과 함께 쓸 때도 기존 `BRAIN_ENV_FILE`(`.env.local`) 하나만 그대로 사용한다.
+2. `docker compose -f compose.yaml -f compose.photo.yaml up -d --build --wait`로 `fake-gcs-server`(`127.0.0.1:4443`)와 `photo-storage-init`(로컬 RSA PKCS#8 서명 키를 compose `secrets` volume `/secrets/gcs-local-signer.pem`에 생성하고 개발 버킷을 초기화)을 올린다.
+3. Front `.env.local`에 `DEV_STORAGE_PROXY_TARGET=http://127.0.0.1:4443`와 `DEV_STORAGE_BUCKET=proovy-local-assets`를 함께 두고 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`를 실행한다. Vite proxy는 `Host`·메서드·경로·쿼리·`Content-Type`을 바꾸지 않고(`changeOrigin: false`) `fake-gcs-server`로 전달한다.
+
+> **검증 한계 주의**: `fake-gcs-server`는 V4 Signed URL의 RSA 서명·만료 시각·권한을 실제로 검증하지 않는다. 이 구성은 로컬 SDK 서명 조립·Vite proxy 전달·업로드/썸네일/Brain `read_url` 바이트 경로 확인용이며 운영 GCS 서명 수용 근거로 사용하지 않는다.
+
 `/dev-login`과 `/__local-stack/login`은 `DEV_LOGIN_ISSUE_CMD`가 있는 Vite 개발 서버에서만 제공된다. 로그인 POST는 설정한 Host와 같은 Origin만 허용한다. production build에는 로그인 화면과 token 발급 경로를 포함하지 않는다. 개발 proxy의 Origin 변경도 `DEV_API_PROXY_REWRITE_ORIGIN=1`일 때만 적용한다.
 
 CLI의 `issue-token --user <id> --json`은 기존 local 사용자의 token을 JSON으로 재발급한다. 인자를 생략한 기존 CLI 동작은 새 사용자를 만든다.
