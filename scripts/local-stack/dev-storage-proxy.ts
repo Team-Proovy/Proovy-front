@@ -52,11 +52,47 @@ function validateStorageTarget(target: string): string {
   return parsed.origin;
 }
 
-export function localStorageProxy(target: string): ProxyOptions {
+function isObjectRequest(rawUrl: string, prefix: string): boolean {
+  let path = rawUrl.split("?", 1)[0];
+  // Inspect decoding variants without rewriting the signed request itself.
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (
+      !path.startsWith(prefix) ||
+      path.length === prefix.length ||
+      path.includes("\\") ||
+      /[\u0000-\u001f\u007f]/.test(path) ||
+      path.split("/").some((part) => part === "." || part === "..")
+    )
+      return false;
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(path);
+    } catch {
+      return false;
+    }
+    if (decoded === path) return true;
+    path = decoded;
+  }
+  return false;
+}
+
+export function localStorageProxy(
+  target: string,
+  bucket: string,
+): ProxyOptions {
+  const proxyTarget = validateStorageTarget(target);
+  const prefix = `/${validateStorageBucket(bucket)}/`;
   return {
-    target: validateStorageTarget(target),
-    // Host 헤더를 원래 HTTPS DNS host로 유지해 Signed URL V4 서명 host 및 emulator public-host와 일치시킨다.
+    target: proxyTarget,
+    // Preserve the signed Host, raw object path, query and body.
     changeOrigin: false,
+    bypass(request) {
+      if (
+        !["GET", "PUT", "HEAD"].includes(request.method ?? "") ||
+        !isObjectRequest(request.url ?? "", prefix)
+      )
+        return false;
+    },
   };
 }
 
@@ -75,6 +111,6 @@ export function resolveLocalStorageProxy(
   }
   const bucket = validateStorageBucket(rawBucket);
   return {
-    [`/${bucket}`]: localStorageProxy(rawTarget),
+    [`/${bucket}/`]: localStorageProxy(rawTarget, bucket),
   };
 }

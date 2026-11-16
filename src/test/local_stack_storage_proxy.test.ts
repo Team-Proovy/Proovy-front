@@ -106,7 +106,7 @@ describe("localStorageProxy", () => {
       "http://user:pass@127.0.0.1:4443",
       "not-a-url",
     ]) {
-      expect(() => localStorageProxy(badTarget)).toThrow(
+      expect(() => localStorageProxy(badTarget, "proovy-local-assets")).toThrow(
         /DEV_STORAGE_PROXY_TARGET/,
       );
     }
@@ -119,9 +119,10 @@ describe("localStorageProxy", () => {
         DEV_STORAGE_BUCKET: "proovy-local-assets",
       }),
     ).toEqual({
-      "/proovy-local-assets": {
+      "/proovy-local-assets/": {
         target: "http://127.0.0.1:4443",
         changeOrigin: false,
+        bypass: expect.any(Function),
       },
     });
   });
@@ -273,5 +274,58 @@ describe("localStorageProxy", () => {
         contentType: undefined,
       },
     ]);
+  });
+  it("never forwards other buckets, listing or traversal paths to emulator APIs", async () => {
+    const received: string[] = [];
+    const upstream = http.createServer((req, res) => {
+      received.push(req.url ?? "");
+      res.end("upstream");
+    });
+    await new Promise<void>((resolve) =>
+      upstream.listen(0, "127.0.0.1", resolve),
+    );
+    servers.push(
+      () => new Promise<void>((resolve) => upstream.close(() => resolve())),
+    );
+    const vite = await createServer({
+      configFile: false,
+      logLevel: "silent",
+      appType: "custom",
+      server: {
+        host: "127.0.0.1",
+        port: 0,
+        proxy: resolveLocalStorageProxy({
+          DEV_STORAGE_PROXY_TARGET: `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`,
+          DEV_STORAGE_BUCKET: "proovy-local-assets",
+        }),
+      },
+    });
+    await vite.listen();
+    servers.push(() => vite.close());
+    const port = (vite.httpServer!.address() as AddressInfo).port;
+    for (const path of [
+      "/proovy-local-assets-other/object",
+      "/another-bucket/object",
+      "/proovy-local-assets?list-type=2",
+      "/proovy-local-assets/",
+      "/proovy-local-assets/../storage/v1/b",
+      "/proovy-local-assets/%2e%2e/storage/v1/b",
+      "/proovy-local-assets/%252e%252e/storage/v1/b",
+      "/proovy-local-assets/%2f..%2fstorage/v1/b",
+      "/proovy-local-assets/%5c..%5cstorage/v1/b",
+      "/proovy-local-assets/..\\storage/v1/b",
+      "/proovy-local-assets/%00/object",
+      "/proovy-local-assets/%invalid",
+    ]) {
+      const response = await sendHttpRequest({ port, method: "GET", path });
+      expect(response.status, path).toBe(404);
+    }
+    const removed = await sendHttpRequest({
+      port,
+      method: "DELETE",
+      path: "/proovy-local-assets/object",
+    });
+    expect(removed.status).toBe(404);
+    expect(received).toEqual([]);
   });
 });
