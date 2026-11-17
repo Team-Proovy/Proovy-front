@@ -545,6 +545,11 @@ DEV_API_PROXY_TARGET=http://localhost:8080
 DEV_API_PROXY_REWRITE_ORIGIN=1
 DEV_ALLOWED_HOSTS=node.example.ts.net
 DEV_LOGIN_ISSUE_CMD='["/usr/local/bin/docker","compose","-p","proovy-stack","-f","scripts/local-stack/compose.yaml","exec","-T","postgres","issue-token","--json"]'
+# 현재 auth 모듈이 페이지 로드 시 요구하는 공개 설정. 개발 버튼은 OAuth를 호출하지 않는다.
+VITE_KAKAO_CLIENT_ID=local-placeholder
+VITE_KAKAO_REDIRECT_URI=https://node.example.ts.net/oauth/kakao/callback
+VITE_NAVER_CLIENT_ID=local-placeholder
+VITE_NAVER_REDIRECT_URI=https://node.example.ts.net/oauth/naver/callback
 ```
 
 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행한 Front를 Tailscale Serve로 연결한 뒤 `/dev-login`을 연다. **로그인**은 처음 한 번 계정을 만들고 이후 같은 사용자 ID로 재발급한다. **새 사용자**는 새 계정을 만든다. 개발 사용자는 local DB의 PRO 플랜·개발 크레딧 100으로 준비된다. 사용자 ID만 `.local-stack-user.local`에 저장되고 token은 브라우저에 직접 전달된다. 이 파일은 Git 제외 대상이며 `DEV_LOGIN_USER_FILE`로 위치를 바꿀 수 있다.
