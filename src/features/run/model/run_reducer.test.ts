@@ -658,6 +658,29 @@ describe("runReducer — v1.1 확장(Read-back·보증 범위)", () => {
     });
   });
 
+  it("완료 이력을 refetch하면 부분 delta 대신 canonical 응답만 남는다", () => {
+    const page = getConversationFixture(
+      "conversation-verified-then-re-explanation",
+    ).body.result;
+    const assistant = page.messages
+      .filter((message) => message.role === "assistant")
+      .at(-1)!;
+    const partial: RunState = {
+      ...createInitialRunState(),
+      runId: assistant.runId,
+      status: "RUNNING",
+      reExplanationDeltas: ["생성 중인 이전 조각"],
+      reExplanationText: "생성 중인 이전 조각",
+      nextDeltaIndex: 1,
+    };
+    const canonical = runReducer(partial, { type: "conversation", page });
+    expect(canonical.status).toBe("COMPLETED");
+    expect(canonical.response?.responseKind).toBe("re_explanation");
+    expect(canonical.reExplanationText).toBe("");
+    expect(canonical.reExplanationDeltas).toEqual([]);
+    expect(canonical.nextDeltaIndex).toBe(0);
+  });
+
   it("대화 조회 assistant의 확장 필드를 그대로 응답에 옮긴다", () => {
     const page = getConversationFixture(
       "conversation-verified-then-re-explanation",

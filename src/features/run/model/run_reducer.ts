@@ -232,6 +232,7 @@ const applyFramePayload = (
         status: "COMPLETED",
         reExplanationDeltas: [],
         reExplanationText: "",
+        nextDeltaIndex: 0,
         response: {
           assistantMessageId: payload.assistantMessageId,
           responseDisposition: payload.responseDisposition,
@@ -487,6 +488,9 @@ const applyConversation = (
         runId,
         identity,
         status: "COMPLETED",
+        reExplanationDeltas: [],
+        reExplanationText: "",
+        nextDeltaIndex: 0,
         response: {
           assistantMessageId: assistant.messageId,
           responseDisposition: content.responseDisposition,
