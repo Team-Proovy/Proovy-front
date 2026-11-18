@@ -3,12 +3,24 @@ import * as pdfjsLib from "pdfjs-dist";
 import type { RenderTask, PDFDocumentProxy } from "pdfjs-dist";
 import pdfjsWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
 
 // Worker 설정 (로컬 번들 사용)
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
 const PDF_RENDER_QUALITY_SCALE = 2.5;
 const MAX_PDF_RENDER_PIXELS = 8_000_000;
+
+const summarizePdfError = (error: unknown) => {
+  const err =
+    typeof error === "object" && error !== null
+      ? (error as { name?: unknown; status?: unknown })
+      : null;
+  return {
+    name: typeof err?.name === "string" && err.name ? err.name : "PdfError",
+    status: typeof err?.status === "number" ? err.status : null,
+  };
+};
 
 const getClientReachableUrl = (url: string) => {
   if (typeof window === "undefined") return url;
@@ -42,6 +54,8 @@ interface PdfPageCanvasProps {
   pdf: PDFDocumentProxy;
   pageNumber: number;
   contentWidth: number;
+  onRenderStart: (pageNumber: number, renderWidth: number) => void;
+  onRenderSuccess: (pageNumber: number, renderWidth: number) => void;
   onRenderError: () => void;
 }
 
@@ -49,6 +63,8 @@ const PdfPageCanvas = ({
   pdf,
   pageNumber,
   contentWidth,
+  onRenderStart,
+  onRenderSuccess,
   onRenderError,
 }: PdfPageCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,6 +74,7 @@ const PdfPageCanvas = ({
     let cancelled = false;
 
     const renderPage = async () => {
+      onRenderStart(pageNumber, contentWidth);
       try {
         if (renderTaskRef.current) {
           renderTaskRef.current.cancel();
@@ -102,10 +119,13 @@ const PdfPageCanvas = ({
         renderTaskRef.current = renderTask;
 
         await renderTask.promise;
+        if (!cancelled) {
+          onRenderSuccess(pageNumber, contentWidth);
+        }
       } catch (err: unknown) {
         const renderErr = err as { name?: string };
         if (renderErr.name !== "RenderingCancelledException" && !cancelled) {
-          console.error("PDF 렌더링 오류:", err);
+          console.error("PDF 렌더링 오류:", summarizePdfError(err));
           onRenderError();
         }
       }
@@ -119,7 +139,14 @@ const PdfPageCanvas = ({
         renderTaskRef.current.cancel();
       }
     };
-  }, [contentWidth, onRenderError, pageNumber, pdf]);
+  }, [
+    contentWidth,
+    onRenderError,
+    onRenderStart,
+    onRenderSuccess,
+    pageNumber,
+    pdf,
+  ]);
 
   return (
     <canvas
@@ -143,7 +170,16 @@ export const FileRenderer = ({
     doc: PDFDocumentProxy;
   } | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [errorState, setErrorState] = useState<{
+    url: string | null;
+    message: string;
+  } | null>(null);
+  const [loadedImageUrl, setLoadedImageUrl] = useState<string | null>(null);
+  const [renderedPdfPages, setRenderedPdfPages] = useState<{
+    url: string | null;
+    width: number;
+    pages: Record<number, boolean>;
+  }>({ url: null, width: 0, pages: {} });
 
   const [zoom, setZoom] = useState(1.0);
   const zoomRef = useRef(1.0);
@@ -158,8 +194,35 @@ export const FileRenderer = ({
 
   const contentWidth = Math.max(containerWidth - 32, 1);
   const reachableFileUrl = fileUrl ? getClientReachableUrl(fileUrl) : null;
+  const error =
+    errorState?.url === reachableFileUrl ? errorState.message : null;
   const activePdfDoc =
     pdfDoc?.url === reachableFileUrl && fileType === "pdf" ? pdfDoc.doc : null;
+  const setViewerPage = useStorageStore((s) => s.setViewerPage);
+  const setViewerReady = useStorageStore((s) => s.setViewerReady);
+  const effectiveViewerPage = activePdfDoc ? pageNumber : 1;
+  const isImagePixelsReady =
+    fileType === "image" &&
+    Boolean(reachableFileUrl) &&
+    loadedImageUrl === reachableFileUrl;
+  const isPdfPageRendered =
+    fileType === "pdf" &&
+    Boolean(activePdfDoc) &&
+    renderedPdfPages.url === reachableFileUrl &&
+    renderedPdfPages.width === contentWidth &&
+    Boolean(renderedPdfPages.pages[effectiveViewerPage]);
+  const isViewerReady = !error && (isImagePixelsReady || isPdfPageRendered);
+
+  useEffect(() => {
+    setViewerPage(effectiveViewerPage);
+  }, [effectiveViewerPage, setViewerPage]);
+
+  useEffect(() => {
+    setViewerReady(isViewerReady);
+    return () => {
+      setViewerReady(false);
+    };
+  }, [isViewerReady, setViewerReady]);
 
   // 컨테이너 너비 감지 → 다음 프레임에 반영해 드래그 중에도 즉시 크기 동기화
   useEffect(() => {
@@ -275,8 +338,11 @@ export const FileRenderer = ({
       })
       .catch((err) => {
         if (!cancelled) {
-          console.error("PDF 로드 오류:", err);
-          setError("PDF를 불러오는 중 오류가 발생했습니다.");
+          console.error("PDF 로드 오류:", summarizePdfError(err));
+          setErrorState({
+            url: reachableFileUrl,
+            message: "PDF를 불러오는 중 오류가 발생했습니다.",
+          });
         }
       });
 
@@ -287,8 +353,55 @@ export const FileRenderer = ({
   }, [reachableFileUrl, fileType]);
 
   const handlePdfRenderError = useCallback(() => {
-    setError("PDF를 불러오는 중 오류가 발생했습니다.");
-  }, []);
+    setErrorState({
+      url: reachableFileUrl,
+      message: "PDF를 불러오는 중 오류가 발생했습니다.",
+    });
+  }, [reachableFileUrl]);
+
+  const handlePdfRenderStart = useCallback(
+    (startedPageNumber: number, renderWidth: number) => {
+      if (!reachableFileUrl) return;
+      setRenderedPdfPages((prev) =>
+        prev.url === reachableFileUrl && prev.width === renderWidth
+          ? prev.pages[startedPageNumber] === false
+            ? prev
+            : {
+                url: reachableFileUrl,
+                width: renderWidth,
+                pages: { ...prev.pages, [startedPageNumber]: false },
+              }
+          : {
+              url: reachableFileUrl,
+              width: renderWidth,
+              pages: { [startedPageNumber]: false },
+            },
+      );
+    },
+    [reachableFileUrl],
+  );
+
+  const handlePdfRenderSuccess = useCallback(
+    (renderedPageNumber: number, renderWidth: number) => {
+      if (!reachableFileUrl) return;
+      setRenderedPdfPages((prev) =>
+        prev.url === reachableFileUrl && prev.width === renderWidth
+          ? prev.pages[renderedPageNumber]
+            ? prev
+            : {
+                url: reachableFileUrl,
+                width: renderWidth,
+                pages: { ...prev.pages, [renderedPageNumber]: true },
+              }
+          : {
+              url: reachableFileUrl,
+              width: renderWidth,
+              pages: { [renderedPageNumber]: true },
+            },
+      );
+    },
+    [reachableFileUrl],
+  );
 
   const getVisiblePdfPage = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -367,7 +480,7 @@ export const FileRenderer = ({
         updatePageNumberFromScroll();
       }, 700);
       setPageNumber(clampedPage);
-      pageRefs.current[clampedPage - 1]?.scrollIntoView({
+      pageRefs.current[clampedPage - 1]?.scrollIntoView?.({
         block: "start",
         behavior: "smooth",
       });
@@ -418,9 +531,15 @@ export const FileRenderer = ({
                 onLoad={() => {
                   zoomRef.current = 1.0;
                   setZoom(1.0);
+                  setViewerPage(1);
+                  setLoadedImageUrl(reachableFileUrl);
                 }}
                 onError={() => {
-                  setError("이미지를 불러오는 중 오류가 발생했습니다.");
+                  setLoadedImageUrl(null);
+                  setErrorState({
+                    url: reachableFileUrl,
+                    message: "이미지를 불러오는 중 오류가 발생했습니다.",
+                  });
                 }}
                 draggable={false}
               />
@@ -441,6 +560,8 @@ export const FileRenderer = ({
           </span>
           <div className="flex shrink-0 items-center gap-1 text-[14px] font-semibold text-black">
             <button
+              type="button"
+              aria-label="이전 페이지"
               onClick={() => scrollToPage(pageNumber - 1)}
               disabled={pageNumber <= 1}
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
@@ -464,6 +585,8 @@ export const FileRenderer = ({
               {pageNumber} / {numPages || "-"}
             </span>
             <button
+              type="button"
+              aria-label="다음 페이지"
               onClick={() => scrollToPage(pageNumber + 1)}
               disabled={!numPages || pageNumber >= numPages}
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-30"
@@ -514,6 +637,8 @@ export const FileRenderer = ({
                         pdf={activePdfDoc}
                         pageNumber={pdfPageNumber}
                         contentWidth={contentWidth}
+                        onRenderStart={handlePdfRenderStart}
+                        onRenderSuccess={handlePdfRenderSuccess}
                         onRenderError={handlePdfRenderError}
                       />
                     </div>

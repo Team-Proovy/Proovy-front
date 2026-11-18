@@ -14,17 +14,15 @@ import { PdfIcon } from "@/shared/components/icons/HomepageInputIcons";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
 import {
+  resolveUploadErrorMessage,
+  summarizeUploadError,
+} from "@/features/assets/utils/uploadErrorMessage";
+import {
   isValidFileType,
   FILE_ACCEPT,
 } from "@/features/assets/utils/fileValidation";
 import { LoadingSpinner } from "@/shared/components/loading-spinner";
-import { parseSize } from "@/shared/utils/file-utils";
 import { showErrorToast } from "@/shared/lib/toast";
-import {
-  PLAN_DETAILS,
-  normalizePlanType,
-} from "@/features/subscription/types/plan_types";
-import { useAuthStore } from "@/features/auth/store/auth_store";
 
 interface StorageFile {
   id: number;
@@ -76,7 +74,6 @@ export const StorageContent = ({
   const { data: noteDetail, refetch } = useNoteDetail(noteId, undefined, {
     refetchInterval: hasProcessingAssets ? 2000 : false, // 2초로 단축
   });
-  const { user } = useAuthStore();
   const { uploadAsset } = useAssetUpload();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -203,7 +200,7 @@ export const StorageContent = ({
         showErrorToast("파일 삭제에 실패했습니다.");
       }
     } catch (error) {
-      console.error("파일 삭제 중 오류 발생:", error);
+      console.error("파일 삭제 중 오류 발생:", summarizeUploadError(error));
       showErrorToast("파일 삭제 중 오류가 발생했습니다.");
     }
   };
@@ -218,17 +215,6 @@ export const StorageContent = ({
 
     if (!isValidFileType(file)) {
       showErrorToast("PDF 또는 이미지 파일만 업로드 가능합니다.");
-      return;
-    }
-
-    const userPlan = normalizePlanType(user?.plan);
-    const maxUploadSizeStr = PLAN_DETAILS[userPlan].maxUploadSize;
-    const maxSizeBytes = parseSize(maxUploadSizeStr);
-
-    if (file.size > maxSizeBytes) {
-      showErrorToast(
-        `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
-      );
       return;
     }
 
@@ -261,8 +247,8 @@ export const StorageContent = ({
         // 여기서는 업로드 후 목록에 표시되는 것이 우선.
       }
     } catch (err) {
-      console.error("파일 업로드 실패:", err);
-      showErrorToast("파일 업로드에 실패했습니다.");
+      console.error("파일 업로드 실패:", summarizeUploadError(err));
+      showErrorToast(resolveUploadErrorMessage(err));
     } finally {
       setIsUploading(false);
     }

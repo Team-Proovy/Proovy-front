@@ -30,7 +30,11 @@ interface StorageState {
   deleteSelectedNotes: () => Promise<void>;
 
   viewerFileId: number | null;
+  viewerPage: number;
+  viewerReady: boolean;
   setViewerFileId: (id: number | null) => void;
+  setViewerPage: (page: number) => void;
+  setViewerReady: (ready: boolean) => void;
 }
 
 export const useStorageStore = create<StorageState>((set) => ({
@@ -91,5 +95,14 @@ export const useStorageStore = create<StorageState>((set) => ({
   },
 
   viewerFileId: null,
-  setViewerFileId: (id) => set({ viewerFileId: id }),
+  viewerPage: 1,
+  viewerReady: false,
+  setViewerFileId: (id) =>
+    set((state) => ({
+      viewerFileId: id,
+      viewerPage: state.viewerFileId === id ? state.viewerPage : 1,
+      viewerReady: state.viewerFileId === id ? state.viewerReady : false,
+    })),
+  setViewerPage: (page) => set({ viewerPage: page }),
+  setViewerReady: (ready) => set({ viewerReady: ready }),
 }));

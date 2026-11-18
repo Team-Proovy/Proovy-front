@@ -96,7 +96,7 @@ services:
       # run 접수 시 고정하는 request deadline(Server 기본과 같은 3m). live는 compose.live.yaml이 10m로 바꾼다
       PROOVY_RUN_SNAPSHOT_REQUEST_TIMEOUT: ${RUN_REQUEST_TIMEOUT:-3m}
       # 신규 snapshot은 실제 Brain artifact 버전을 고정한다. offline은 live cache와 분리한다.
-      PROOVY_RUN_SNAPSHOT_ASSET_VERSIONS_PAGE_UNDERSTANDING_VERSION: ${PAGE_UNDERSTANDING_VERSION:-page-understanding-v6}-offline
+      PROOVY_RUN_SNAPSHOT_ASSET_VERSIONS_PAGE_UNDERSTANDING_VERSION: ${PAGE_UNDERSTANDING_VERSION:-page-understanding-v7}-offline
       PROOVY_RUN_SNAPSHOT_ASSET_VERSIONS_IMAGE_NORMALIZATION_VERSION: ${IMAGE_NORMALIZATION_VERSION:-image-normalization-v1}
       SPRING_JPA_SHOW_SQL: "false"
     volumes:
@@ -164,7 +164,7 @@ services:
     environment:
       PROFILE: local
       BRAIN_SEAT_MODE: offline
-      PAGE_UNDERSTANDING_VERSION: ${PAGE_UNDERSTANDING_VERSION:-page-understanding-v6}
+      PAGE_UNDERSTANDING_VERSION: ${PAGE_UNDERSTANDING_VERSION:-page-understanding-v7}
       IMAGE_NORMALIZATION_VERSION: ${IMAGE_NORMALIZATION_VERSION:-image-normalization-v1}
     volumes:
       - secrets:/secrets:ro

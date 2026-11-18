@@ -1,5 +1,12 @@
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ChatInput } from "@/features/editor/components/ChatInput";
 import type { ChatSendData } from "@/features/editor/components/ChatInput";
+import type { Attachment } from "@/features/editor/hooks/useAttachments";
+import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
+import { resolveUploadErrorMessage } from "@/features/assets/utils/uploadErrorMessage";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
+import { showErrorToast } from "@/shared/lib/toast";
 import {
   ACTIVE_RUN_INPUT_HINT,
   CANCELING_BUTTON_TEXT,
@@ -9,7 +16,31 @@ import type { NoteConversation } from "../../run/useNoteConversation";
 import { useRetryCountdown } from "../../run/useRetryCountdown";
 import { ConversationMessages } from "./ConversationMessages";
 import { ConversationNotices } from "./ConversationNotices";
-import { hasUnsupportedParts } from "../../run/conversation_notice";
+
+const parsePositiveAssetId = (
+  raw: string | number | null | undefined,
+): number | null => {
+  if (raw == null) return null;
+  const parsed =
+    typeof raw === "number" ? raw : /^\d+$/.test(raw) ? Number(raw) : NaN;
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const toUploadableFile = (attachment: Attachment): File | null => {
+  if (attachment.file) return attachment.file;
+  if (attachment.type === "canvas" && attachment.blob) {
+    const mimeType =
+      attachment.blob.type && attachment.blob.type.startsWith("image/")
+        ? attachment.blob.type
+        : "image/png";
+    const fileName =
+      attachment.name && /\.(png|jpe?g|webp|pdf)$/i.test(attachment.name)
+        ? attachment.name
+        : `canvas_${Date.now()}.png`;
+    return new File([attachment.blob], fileName, { type: mimeType });
+  }
+  return null;
+};
 
 interface ConversationPanelProps {
   conversation: NoteConversation;
@@ -40,14 +71,91 @@ export const ConversationPanel = ({
     draftRestore,
     restoreDraft,
   } = conversation;
+  const [searchParams] = useSearchParams();
+  const viewerFileId = useStorageStore((s) => s.viewerFileId);
+  const viewerPage = useStorageStore((s) => s.viewerPage);
+  const viewerReady = useStorageStore((s) => s.viewerReady);
+  const { uploadAsset } = useAssetUpload();
   const blockedSeconds = useRetryCountdown(composer.blockedUntil);
+  const activeNoteRef = useRef<number | null>(noteNumber);
 
-  const handleSend = (data: ChatSendData) =>
-    send({
+  useEffect(() => {
+    activeNoteRef.current = noteNumber;
+    return () => {
+      activeNoteRef.current = null;
+    };
+  }, [noteNumber]);
+
+  const handleSend = async (data: ChatSendData): Promise<boolean> => {
+    const validNoteId =
+      noteNumber != null && Number.isInteger(noteNumber) && noteNumber > 0
+        ? noteNumber
+        : null;
+    const allowLocalPhotoFallback =
+      import.meta.env.VITE_ENABLE_LOCAL_PHOTO_FALLBACK === "true";
+    const uploadableFile =
+      allowLocalPhotoFallback &&
+      data.attachments.length === 1 &&
+      data.mentionedAssetIds.length === 0 &&
+      data.mentionedToolCodes.length === 0 &&
+      validNoteId !== null
+        ? toUploadableFile(data.attachments[0])
+        : null;
+    const unsupported =
+      data.mentionedAssetIds.length > 0 ||
+      data.mentionedToolCodes.length > 0 ||
+      data.attachments.length > 1 ||
+      (data.attachments.length === 1 && uploadableFile === null);
+
+    if (unsupported) {
+      return send({
+        text: data.message,
+        latex: data.latex ?? null,
+        hasUnsupportedParts: true,
+      });
+    }
+
+    if (uploadableFile && validNoteId !== null) {
+      let uploadedAssetId: number;
+      try {
+        const uploaded = await uploadAsset(validNoteId, uploadableFile);
+        uploadedAssetId = uploaded.assetId;
+      } catch (error) {
+        if (activeNoteRef.current === validNoteId) {
+          showErrorToast(resolveUploadErrorMessage(error));
+        }
+        return false;
+      }
+      if (activeNoteRef.current !== validNoteId) {
+        return false;
+      }
+      return send({
+        text: data.message,
+        latex: data.latex ?? null,
+        viewerFocus: { noteAssetId: String(uploadedAssetId), page: 1 },
+      });
+    }
+
+    const isStorageTab = searchParams.get("panel") === "storage";
+    const urlAssetId = parsePositiveAssetId(searchParams.get("file"));
+    const storeAssetId = parsePositiveAssetId(viewerFileId);
+    const viewerMatches =
+      !isStorageTab &&
+      viewerReady &&
+      storeAssetId !== null &&
+      (urlAssetId === null || urlAssetId === storeAssetId);
+
+    return send({
       text: data.message,
       latex: data.latex ?? null,
-      hasUnsupportedParts: hasUnsupportedParts(data),
+      ...(viewerMatches && {
+        viewerFocus: {
+          noteAssetId: String(storeAssetId),
+          page: Math.max(1, viewerPage || 1),
+        },
+      }),
     });
+  };
 
   return (
     <div className="flex h-full flex-col bg-[#F1F4F8]">

@@ -94,6 +94,7 @@ export const ChatInput = ({
   const inputRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const isSubmitting = isSending || isProcessing;
   const isRunBusy = !!runControl && runControl.phase !== "idle";
 
   // Custom Hooks
@@ -146,8 +147,40 @@ export const ChatInput = ({
     handleDollarKey,
   } = useChatContent({ inputRef });
 
+  // 전송·업로드 중 독립 수식 필드(math-field) 및 열린 @/# 메뉴도 함께 잠근다.
+  useEffect(() => {
+    if (isSubmitting) {
+      setIsAtMenuOpen(false);
+      setIsFileMenuOpen(false);
+    }
+    const root = inputRef.current;
+    if (!root) return;
+    root.querySelectorAll("math-field").forEach((el) => {
+      const mf = el as HTMLElement & { readOnly?: boolean };
+      if ("readOnly" in mf) {
+        mf.readOnly = isSubmitting;
+      }
+      if (isSubmitting) {
+        el.setAttribute("read-only", "true");
+        el.setAttribute("aria-disabled", "true");
+      } else {
+        el.removeAttribute("read-only");
+        el.removeAttribute("aria-disabled");
+      }
+    });
+    root
+      .querySelectorAll<HTMLButtonElement>(".math-field-wrapper button")
+      .forEach((btn) => {
+        btn.disabled = isSubmitting;
+      });
+  }, [isSubmitting, setIsAtMenuOpen, setIsFileMenuOpen]);
+
   // 키보드 이벤트 통합 핸들러
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (isSubmitting) {
+      e.preventDefault();
+      return;
+    }
     // $ 키로 수식 필드 삽입
     handleDollarKey(e);
 
@@ -225,6 +258,10 @@ export const ChatInput = ({
 
   // 파일 선택 핸들러
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSubmitting) {
+      e.target.value = "";
+      return;
+    }
     const files = e.target.files;
     if (files && files.length > 0) {
       addFiles(files);
@@ -238,22 +275,23 @@ export const ChatInput = ({
       ref={containerRef}
       className={`${CHAT_INPUT_CLASSES} ${className}`}
       style={style}
-      {...dragHandlers}
+      {...(!isSubmitting ? dragHandlers : {})}
     >
       {/* 드래그 앤 드롭 오버레이 */}
-      {isDragOver && <DragDropOverlay />}
+      {isDragOver && !isSubmitting && <DragDropOverlay />}
       {/* 숨겨진 파일 입력 */}
       <input
         ref={fileInputRef}
         type="file"
         accept={FILE_ACCEPT}
         multiple
+        disabled={isSubmitting}
         onChange={handleFileChange}
         className="hidden"
       />
 
       {/* @ 도구 메뉴 드롭다운 (fixed: overflow-hidden 부모에 잘리지 않도록) */}
-      {isAtMenuOpen && (
+      {isAtMenuOpen && !isSubmitting && (
         <div
           style={{
             position: "fixed",
@@ -277,7 +315,7 @@ export const ChatInput = ({
       )}
 
       {/* # 파일 멘션 메뉴 드롭다운 (fixed: overflow-hidden 부모에 잘리지 않도록) */}
-      {isFileMenuOpen && (
+      {isFileMenuOpen && !isSubmitting && (
         <div
           style={{
             position: "fixed",
@@ -301,13 +339,18 @@ export const ChatInput = ({
       {/* 첨부 파일 프리뷰 영역 */}
       <AttachmentPreview
         attachments={attachments}
-        onRemove={removeAttachment}
+        onRemove={(id) => {
+          if (!isSubmitting) {
+            removeAttachment(id);
+          }
+        }}
       />
 
       {/* 입력 영역 (남은 공간을 채우며 내부 스크롤) */}
       <ChatInputArea
         ref={inputRef}
         className="min-h-0 flex-1"
+        disabled={isSubmitting}
         onContentClick={() => {}}
         onContentChange={setHasContent}
         onSubmit={handleSend}
@@ -318,17 +361,24 @@ export const ChatInput = ({
       <InputToolbar
         isMathOpen={isMathOpen}
         onToggleMath={() => {
+          if (isSubmitting) return;
           inputRef.current?.focus();
           handleMathToggle();
         }}
         isCanvasOpen={isCanvasOpen}
-        onToggleCanvas={handleCanvasToggle}
+        onToggleCanvas={() => {
+          if (!isSubmitting) handleCanvasToggle();
+        }}
         onSend={handleSend}
-        onToolSelect={(tool) => handleToolSelect(tool, false)}
+        onToolSelect={(tool) => {
+          if (!isSubmitting) handleToolSelect(tool, false);
+        }}
         activeToolName={selectedTool}
         hasContent={hasContent && !isSendBlocked}
-        onClipClick={openFilePicker}
-        isSending={isSending || isProcessing}
+        onClipClick={() => {
+          if (!isSubmitting) openFilePicker();
+        }}
+        isSending={isSubmitting}
         stopControl={
           runControl && isRunBusy
             ? {
