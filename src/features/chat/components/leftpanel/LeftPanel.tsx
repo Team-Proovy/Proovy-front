@@ -5,7 +5,7 @@ import { StorageContent } from "./StorageContent";
 
 interface LeftPanelProps {
   activeTab: PanelTab;
-  onTabChange: (tab: PanelTab) => void;
+  onTabChange: (tab: PanelTab, fileId?: number) => void;
   noteId: string;
   selectedFileId?: string;
 }

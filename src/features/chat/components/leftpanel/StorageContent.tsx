@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { StorageActionButtons } from "./StorageActionButtons";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
@@ -50,7 +49,7 @@ const normalizeOcrStatus = (
 
 interface StorageContentProps {
   noteId: string;
-  onTabChange: (tab: PanelTab) => void;
+  onTabChange: (tab: PanelTab, fileId?: number) => void;
 }
 
 const getMimeType = (fileType: string | undefined | null) => {
@@ -207,7 +206,6 @@ export const StorageContent = ({
 
   /* user duplicated declaration removed */
   const { setViewerFileId } = useStorageStore();
-  const [, setSearchParams] = useSearchParams();
 
   // 파일 업로드 핸들러
   const handleFileSelect = async (file: File) => {
@@ -267,27 +265,15 @@ export const StorageContent = ({
 
     const targetFileId = selectedIds[0];
     setViewerFileId(targetFileId);
-
-    setSearchParams((prev) => {
-      prev.set("panel", "viewer");
-      prev.set("file", targetFileId.toString());
-      return prev;
-    });
-
     setSelectedIds([]);
     setIsSelectMode(false);
-    onTabChange("viewer");
+    onTabChange("viewer", targetFileId);
   };
 
   const handleFileClick = (fileId: number) => {
     if (isSelectMode) return;
     setViewerFileId(fileId);
-    setSearchParams((prev) => {
-      prev.set("panel", "viewer");
-      prev.set("file", fileId.toString());
-      return prev;
-    });
-    onTabChange("viewer");
+    onTabChange("viewer", fileId);
   };
 
   // 노트별 용량 제한은 512MB 고정
