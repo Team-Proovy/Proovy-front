@@ -1,0 +1,67 @@
+# 로컬 Docker stack 사진 저장 opt-in override (task 2.18).
+# 기본 compose.yaml의 텍스트 전용 경로(GCS_ENDPOINT=http://127.0.0.1:9)와
+# 운영 GCS/ADC 경로를 바꾸지 않는다. 사진 E2E가 필요할 때만 명시적으로 함께 사용한다:
+#   docker compose -f compose.yaml -f compose.photo.yaml up -d --build --wait
+#   (live 모드와 함께 쓸 때: -f compose.yaml -f compose.live.yaml -f compose.photo.yaml)
+#
+# 주의: fake-gcs-server는 V4 서명·만료·권한을 검증하지 않는다.
+# 여기서는 SDK 서명 형식·proxy 전달·업로드/썸네일/read_url 바이트 경로만 확인하며
+# 운영 GCS 서명 검증 통과로 간주하지 않는다.
+
+services:
+  gcs:
+    image: fsouza/fake-gcs-server:latest
+    command:
+      - -scheme
+      - http
+      - -port
+      - "4443"
+      - -backend
+      - filesystem
+      - -filesystem-root
+      - /data
+      - -public-host
+      - ${GCS_PUBLIC_HOST:?Set GCS_PUBLIC_HOST (your Front HTTPS DNS host) in scripts/local-stack/.env}
+    ports:
+      - "127.0.0.1:${GCS_PORT:-4443}:4443"
+    volumes:
+      - gcs_data:/data
+
+  photo-storage-init:
+    image: proovy-local-tools
+    pull_policy: never
+    entrypoint: ["/usr/local/bin/init-photo-storage"]
+    command:
+      - /secrets/gcs-local-signer.pem
+      - http://gcs:4443
+      - ${LOCAL_GCS_BUCKET:-proovy-local-assets}
+    volumes:
+      - secrets:/secrets
+    depends_on:
+      secrets:
+        condition: service_completed_successfully
+      gcs:
+        condition: service_started
+
+  # brain은 postgres network namespace를 공유하므로 extra_hosts는 postgres에 건다.
+  postgres:
+    extra_hosts:
+      - "${GCS_PUBLIC_HOST:?Set GCS_PUBLIC_HOST (your Front HTTPS DNS host) in scripts/local-stack/.env}:${GCS_PUBLIC_HOST_IP:-host-gateway}"
+
+  server:
+    depends_on:
+      photo-storage-init:
+        condition: service_completed_successfully
+    environment:
+      GCS_BUCKET: ${LOCAL_GCS_BUCKET:-proovy-local-assets}
+      GCS_ENDPOINT: http://gcs:4443
+      GCS_LOCAL_EMULATOR_ENABLED: "true"
+      GCS_LOCAL_PUBLIC_BASE_URL: https://${GCS_PUBLIC_HOST:?Set GCS_PUBLIC_HOST (your Front HTTPS DNS host) in scripts/local-stack/.env}
+      GCS_LOCAL_SIGNER_KEY_PATH: /secrets/gcs-local-signer.pem
+
+  brain:
+    environment:
+      ASSET_READ_URL_ALLOWED_HOSTS: '["storage.googleapis.com","${GCS_PUBLIC_HOST:?Set GCS_PUBLIC_HOST (your Front HTTPS DNS host) in scripts/local-stack/.env}"]'
+
+volumes:
+  gcs_data:

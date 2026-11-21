@@ -1,4 +1,5 @@
 export { AssistantResponseView } from "./AssistantResponseView";
+export { ResponseAssuranceHeader } from "./AssuranceBadges";
 export {
   toCompletedAssistantResponse,
   type CompletedAssistantResponse,

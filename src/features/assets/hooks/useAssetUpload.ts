@@ -5,6 +5,7 @@ import { getUploadUrl, uploadToS3, confirmUpload } from "../api/assetApi";
 import { noteKeys } from "@/features/notes/hooks/useNotes";
 import { assetKeys } from "@/features/storage/hooks/useAssets";
 import { resolveUploadMimeType } from "../utils/fileValidation";
+import { summarizeUploadError } from "../utils/uploadErrorMessage";
 
 export const useAssetUpload = () => {
   const queryClient = useQueryClient();
@@ -62,7 +63,7 @@ export const useAssetUpload = () => {
       // 4. 업로드 성공 후 반환
       return confirmResponse.result;
     } catch (error) {
-      console.error("업로드 과정 중 오류 발생:", error);
+      console.error("업로드 과정 중 오류 발생:", summarizeUploadError(error));
       throw error;
     } finally {
       // 5. 파일 업로드 완료 후 로딩 상태 해제

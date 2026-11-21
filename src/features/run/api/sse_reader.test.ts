@@ -54,8 +54,8 @@ const splitBlocks = (sse: string) =>
 const streamFixtures = listStreamFixtures();
 
 describe("readRunStream — fixture streams/valid", () => {
-  it("fixture는 17개다(v1 10 + v1.1 확장 7)", () => {
-    expect(streamFixtures).toHaveLength(17);
+  it("fixture는 19개다(v1 10 + v1.1 7 + v1.2 2)", () => {
+    expect(streamFixtures).toHaveLength(19);
   });
 
   it.each(streamFixtures.map((fixture) => [fixture.name, fixture] as const))(

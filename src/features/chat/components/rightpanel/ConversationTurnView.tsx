@@ -6,10 +6,20 @@ import {
 import { ActivityBox } from "@/features/run/components/activity";
 import {
   AssistantResponseView,
+  ResponseAssuranceHeader,
   SafeMarkdown,
   toCompletedAssistantResponse,
 } from "@/features/run/components/response";
-import { selectActivities, selectIsActive } from "@/features/run/model";
+import {
+  RE_EXPLANATION_CANCELING_NOTICE,
+  RE_EXPLANATION_PARTIAL_NOTICE,
+  RE_EXPLANATION_STREAMING_NOTICE,
+} from "@/features/run/components/response/response_labels";
+import {
+  selectActivities,
+  selectIsActive,
+  selectReExplanationText,
+} from "@/features/run/model";
 import type { RunState } from "@/features/run/model";
 import type {
   AssistantCancel,
@@ -124,12 +134,44 @@ const CanceledView = ({ cancel }: { cancel: AssistantCancel }) => (
   </div>
 );
 
+const ReExplanationStreamView = ({
+  body,
+  status,
+}: {
+  body: string;
+  status: RunState["status"];
+}) => {
+  const isPartialTerminal = status === "FAILED" || status === "CANCELED";
+  return (
+    <article
+      aria-label="재설명 실시간 응답"
+      data-re-explanation-stream={isPartialTerminal ? "partial" : "live"}
+      className="flex flex-col gap-2 text-[15px] leading-relaxed"
+    >
+      <ResponseAssuranceHeader
+        assuranceScope="not_applicable"
+        responseKind="re_explanation"
+      />
+      <SafeMarkdown body={body} />
+      <p className="text-[12px] leading-[18px] text-[#6B7280]">
+        {isPartialTerminal
+          ? RE_EXPLANATION_PARTIAL_NOTICE
+          : status === "CANCELING"
+            ? RE_EXPLANATION_CANCELING_NOTICE
+            : RE_EXPLANATION_STREAMING_NOTICE}
+      </p>
+    </article>
+  );
+};
+
 /**
  * 이 화면이 받은 run. Activity 박스는 run 시작부터(Activity 0개여도) mount해 live region을 유지하고,
- * terminal 뒤에도 남겨 진행 기록을 보인다. 본문은 COMPLETED의 canonical 응답만 그린다(검증 전 본문 없음).
+ * terminal 뒤에도 남겨 진행 기록을 보인다. 일반 풀이는 COMPLETED의 canonical 응답만 그리고,
+ * 재설명 turn(v1.2)에 한해 `re_explanation.delta` 누적 본문을 실시간으로 먼저 그린 뒤 완료 시 canonical 응답으로 바꾼다.
  */
 const LiveAssistant = ({ run, onRefill }: { run: RunState } & OutcomeProps) => {
   const activities = selectActivities(run);
+  const streamingText = selectReExplanationText(run);
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-[10px]">
       <ActivityBox
@@ -138,7 +180,14 @@ const LiveAssistant = ({ run, onRefill }: { run: RunState } & OutcomeProps) => {
       />
       {(run.status === null || selectIsActive(run)) &&
         activities.length === 0 &&
+        streamingText === "" &&
         run.status !== "CANCELING" && <PendingLine />}
+      {run.status !== "COMPLETED" && streamingText !== "" && (
+        <ReExplanationStreamView
+          body={streamingText}
+          status={run.status}
+        />
+      )}
       {run.status === "COMPLETED" && run.response && (
         <AssistantResponseView response={run.response} />
       )}

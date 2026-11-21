@@ -37,6 +37,10 @@ export const createInitialRunState = (): RunState => ({
   activityOrder: [],
   activities: {},
   pages: [],
+  reExplanationDeltas: [],
+  reExplanationText: "",
+  nextDeltaIndex: 0,
+  cancelingBoundarySeq: null,
   response: null,
   failure: null,
   cancel: null,
@@ -170,6 +174,24 @@ const applyFramePayload = (
     case "activity.failed":
     case "activity.canceled":
       return applyActivityFrame(state, frame);
+    case "re_explanation.delta": {
+      if (
+        (state.cancelingBoundarySeq !== null &&
+          frame.seq >= state.cancelingBoundarySeq) ||
+        isTerminalRunStatus(state.status)
+      )
+        return null;
+      const { deltaIndex, delta } = frame.payload;
+      // 재전송·단절 복구로 이미 반영한 deltaIndex가 다시 오면 본문을 중복 누적하지 않는다.
+      if (deltaIndex !== state.nextDeltaIndex) return null;
+      return {
+        ...state,
+        status: progressed(state.status),
+        reExplanationDeltas: [...state.reExplanationDeltas, delta],
+        reExplanationText: state.reExplanationText + delta,
+        nextDeltaIndex: deltaIndex + 1,
+      };
+    }
     case "response.page.started": {
       const { payload } = frame;
       if (
@@ -202,12 +224,15 @@ const applyFramePayload = (
       };
     }
     case "run.canceling":
-      return { ...state, status: "CANCELING" };
+      return { ...state, status: "CANCELING", cancelingBoundarySeq: frame.seq };
     case "run.completed": {
       const { payload } = frame;
       return {
         ...state,
         status: "COMPLETED",
+        reExplanationDeltas: [],
+        reExplanationText: "",
+        nextDeltaIndex: 0,
         response: {
           assistantMessageId: payload.assistantMessageId,
           responseDisposition: payload.responseDisposition,
@@ -442,6 +467,9 @@ const applyConversation = (
       runId,
       identity,
       status,
+      cancelingBoundarySeq:
+        state.cancelingBoundarySeq ??
+        (activeRun.status === "CANCELING" ? activeRun.lastSeq + 1 : null),
       ...(adoptCursor && {
         lastSeq: activeRun.lastSeq,
         cursor: toEventId(runId, activeRun.lastSeq),
@@ -460,6 +488,9 @@ const applyConversation = (
         runId,
         identity,
         status: "COMPLETED",
+        reExplanationDeltas: [],
+        reExplanationText: "",
+        nextDeltaIndex: 0,
         response: {
           assistantMessageId: assistant.messageId,
           responseDisposition: content.responseDisposition,

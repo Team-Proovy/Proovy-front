@@ -7,6 +7,7 @@ import path from "path";
 import { resolveApiMode } from "./src/app/api_mode";
 import { devLoginPlugin } from "./scripts/local-stack/dev-login";
 import { localApiProxy } from "./scripts/local-stack/dev-proxy";
+import { resolveLocalStorageProxy } from "./scripts/local-stack/dev-storage-proxy";
 
 // 개발 proxy의 기본 대상은 로컬 개발 Server다. 다른 Server로 보내려면
 // .env.local 등에 DEV_API_PROXY_TARGET을 둔다(VITE_ 접두사가 없어 브라우저에 노출되지 않는다).
@@ -74,6 +75,7 @@ export default defineConfig(({ command, mode }) => {
           devApiProxyTarget,
           env.DEV_API_PROXY_REWRITE_ORIGIN === "1",
         ),
+        ...(command === "serve" ? resolveLocalStorageProxy(env) : {}),
       },
     },
     test: {

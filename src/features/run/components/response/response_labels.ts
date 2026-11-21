@@ -87,6 +87,12 @@ export const ASSURANCE_SCOPE_DESCRIPTIONS: Record<AssuranceScope, string> = {
 export const RE_EXPLANATION_LABEL = "추가 설명";
 export const RE_EXPLANATION_DESCRIPTION =
   "앞서 드린 풀이를 다시 설명한 답변입니다. 이 설명 자체는 새로 검증하지 않았습니다.";
+export const RE_EXPLANATION_STREAMING_NOTICE =
+  "설명을 실시간으로 작성하고 있습니다.";
+export const RE_EXPLANATION_CANCELING_NOTICE =
+  "응답 중단을 처리하고 있습니다.";
+export const RE_EXPLANATION_PARTIAL_NOTICE =
+  "완료 전에 중단된 일부 설명입니다. 검증된 풀이로 저장되지 않았습니다.";
 
 export const STEP_CHECK_SECTION_TITLE = "단계별 검산";
 

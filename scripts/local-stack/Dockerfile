@@ -24,7 +24,9 @@ ENTRYPOINT ["server-entrypoint.sh"]
 # 도구: Postgres 본체이면서 secret 생성·role 경계 적용·검증용 token 발급 명령을 담는다.
 # role 경계 SQL은 같은 Server commit에서 가져온다.
 FROM postgres:15-alpine AS tools
+RUN apk add --no-cache openssl curl
 COPY --from=server-src src/main/resources/db/provisioning/role-boundary.sql /provisioning/role-boundary.sql
 COPY --chmod=755 tools/initdb.sh /docker-entrypoint-initdb.d/10-proovy.sh
 COPY --chmod=755 tools/init-secrets.sh /usr/local/bin/init-secrets.sh
+COPY --chmod=755 tools/init-photo-storage.sh /usr/local/bin/init-photo-storage
 COPY --chmod=755 tools/issue-token.sh /usr/local/bin/issue-token

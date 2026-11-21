@@ -1,8 +1,16 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { http, HttpResponse } from "msw";
+import type { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import {
   Outlet,
@@ -20,6 +28,15 @@ import {
   vi,
 } from "vitest";
 import { createRunApiClient } from "@/features/run/api";
+import type { RunStreamEnd, RunStreamOptions } from "@/features/run/api";
+import type {
+  BrowserFrame,
+  ConversationRunRequest,
+  RunCreatedFrame,
+  TerminalFrame,
+} from "@/shared/contracts/browser_run_v1";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
+import { getStreamFixture } from "@/test/contracts/browser_run_fixtures";
 import { createBrowserRunMockServer } from "@/features/run/session/mocks";
 import type { BrowserRunMockServerOptions } from "@/features/run/session/mocks";
 import { extractInputContent } from "@/features/editor/utils/extract_input_content";
@@ -35,10 +52,26 @@ import type { RunSessionRegistry } from "./run_session_registry";
 
 // mathlive는 jsdom에서 custom element를 등록하지 못한다. 수식 입력은 이 테스트 범위가 아니다.
 vi.mock("mathlive", () => ({ MathfieldElement: class {} }));
-// pdfjs-dist는 jsdom에 없는 DOMMatrix가 필요하다. 뷰어는 이 테스트 범위가 아니다.
+// pdfjs-dist는 jsdom에 없는 DOMMatrix가 필요하다. 테스트용 2페이지 PDF 문서를 제공한다.
 vi.mock("pdfjs-dist", () => ({
   GlobalWorkerOptions: {},
-  getDocument: vi.fn(),
+  getDocument: vi.fn(() => {
+    const doc = {
+      numPages: 2,
+      getPage: vi.fn(async () => ({
+        getViewport: ({ scale }: { scale: number }) => ({
+          width: 400 * scale,
+          height: 600 * scale,
+        }),
+        render: () => ({ promise: Promise.resolve(), cancel: () => {} }),
+      })),
+      destroy: vi.fn(async () => {}),
+    };
+    return {
+      promise: Promise.resolve(doc),
+      destroy: vi.fn(),
+    };
+  }),
   version: "test",
 }));
 
@@ -54,9 +87,42 @@ const api = createRunApiClient({
   auth: { getAccessToken: () => "test-token" },
 });
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+const originalResizeObserver = globalThis.ResizeObserver;
+const originalCreateObjectURL = URL.createObjectURL;
+const originalRevokeObjectURL = URL.revokeObjectURL;
+const originalGetContext = HTMLCanvasElement.prototype.getContext;
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+  HTMLCanvasElement.prototype.getContext = (() =>
+    ({}) as unknown as CanvasRenderingContext2D) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+  if (typeof globalThis.ResizeObserver === "undefined") {
+    globalThis.ResizeObserver = class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    };
+  }
+  if (typeof URL.createObjectURL !== "function") {
+    URL.createObjectURL = () => "blob:mock-preview";
+  }
+  if (typeof URL.revokeObjectURL !== "function") {
+    URL.revokeObjectURL = () => {};
+  }
+});
+afterEach(() => {
+  vi.unstubAllEnvs();
+  server.resetHandlers();
+  useStorageStore.getState().setViewerFileId(null);
+  useStorageStore.getState().setViewerReady(false);
+});
+afterAll(() => {
+  server.close();
+  HTMLCanvasElement.prototype.getContext = originalGetContext;
+  globalThis.ResizeObserver = originalResizeObserver;
+  URL.createObjectURL = originalCreateObjectURL;
+  URL.revokeObjectURL = originalRevokeObjectURL;
+});
 
 const ok = (result: unknown) =>
   HttpResponse.json({
@@ -140,11 +206,13 @@ const renderApp = (
     fastBackoff = false,
     backoff = fastBackoff ? FAST_BACKOFF : undefined,
     sessionApi = api,
+    extraHandlers = [],
   }: {
     strict?: boolean;
     fastBackoff?: boolean;
     backoff?: ReconnectBackoff;
     sessionApi?: RunSessionOptions["api"];
+    extraHandlers?: RequestHandler[];
   } = {},
 ) => {
   let registry: RunSessionRegistry | null = null;
@@ -153,7 +221,7 @@ const renderApp = (
     ...mockOptions,
   });
   const legacy = createLegacyApi();
-  server.use(...mock.handlers, legacy.handler);
+  server.use(...extraHandlers, ...mock.handlers, legacy.handler);
   const router = createMemoryRouter(
     [
       {
@@ -740,5 +808,794 @@ describe("실패·접수 거부 안내", () => {
     expect(
       await screen.findByText("지원하지 않는 요청입니다"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("재설명 실시간 스트리밍", () => {
+  it("re_explanation.delta 도착 직후 canonical 완료 전부터 SafeMarkdown·KaTeX와 추가 설명 배지를 표시하고 완료 시 교체한다", async () => {
+    const { user, mock } = renderApp("/app/chat/2", {
+      template: "re-explanation-streaming",
+      frameIntervalMs: 5000,
+    });
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "방금 풀이 왜 그렇게 되나요?");
+      await user.click(sendButton());
+
+      await waitFor(() => expect(mock.listRunIds()).toHaveLength(1));
+      const [runId] = mock.listRunIds();
+
+      // 첫 delta(seq 5, deltaIndex=0)까지 반영 — 아직 run.completed 전이다.
+      act(() => mock.commit(runId, 4));
+      const liveArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(liveArticle).toHaveAttribute("data-re-explanation-stream", "live");
+      expect(within(liveArticle).getByText("추가 설명")).toBeInTheDocument();
+      expect(
+        within(liveArticle).getByText("검증 대상 아님"),
+      ).toBeInTheDocument();
+      expect(liveArticle).toHaveTextContent("양변에 같은 연산을");
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // 두 번째 delta(seq 6, $x = 2$) 도착 시 완료 전에도 KaTeX가 렌더된다.
+      act(() => mock.commit(runId, 1));
+      await waitFor(() => {
+        expect(liveArticle).toHaveTextContent(
+          "양변에 같은 연산을 적용하기 때문입니다.",
+        );
+        expect(liveArticle.querySelector(".katex")).not.toBeNull();
+      });
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // run.completed 도착 시 canonical 본문으로 교체되고 live 영역은 제거된다.
+      act(() => mock.commit(runId));
+      const canonicalArticle = await screen.findByRole("article", {
+        name: "AI 응답",
+      });
+      expect(canonicalArticle).toHaveTextContent(
+        "양변에 같은 연산을 적용하는 이유를 설명합니다.",
+      );
+      expect(within(canonicalArticle).getByText("추가 설명")).toBeInTheDocument();
+      expect(
+        screen.queryByRole("article", { name: "재설명 실시간 응답" }),
+      ).toBeNull();
+    } finally {
+      mock.reset();
+    }
+  });
+
+  it("delta 스트리밍 중 중단되면 부분 설명을 partial 배너와 함께 유지하고 VerifiedSolution으로 승격하지 않는다", async () => {
+    const { user, mock } = renderApp("/app/chat/7", {
+      template: "canceled-during-re-explanation",
+      frameIntervalMs: 5000,
+      holdCancelConfirmation: true,
+    });
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "중간에 멈출 재설명");
+      await user.click(sendButton());
+
+      await waitFor(() => expect(mock.listRunIds()).toHaveLength(1));
+      const [runId] = mock.listRunIds();
+      act(() => mock.commit(runId, 4));
+
+      const streamingArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(streamingArticle).toHaveTextContent("먼저 양변에서 3을");
+
+      await user.click(stopButton());
+      await screen.findByRole("button", { name: "중단 중" });
+      act(() => mock.commit(runId));
+
+      await waitFor(() => {
+        expect(
+          document.querySelector('[data-outcome="canceled"]'),
+        ).toBeInTheDocument();
+      });
+      expect(streamingArticle).toHaveAttribute(
+        "data-re-explanation-stream",
+        "partial",
+      );
+      expect(streamingArticle).toHaveTextContent("먼저 양변에서 3을");
+      expect(streamingArticle).toHaveTextContent(
+        "완료 전에 중단된 일부 설명입니다. 검증된 풀이로 저장되지 않았습니다.",
+      );
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+    } finally {
+      mock.reset();
+    }
+  });
+
+  it("수식($...$)이 여러 delta로 갈려 도착해도 깨지지 않고 닫히는 순간 SafeMarkdown·KaTeX로 완성된다", async () => {
+    const fixture = getStreamFixture("re-explanation-streaming");
+    const splitFrames = structuredClone(fixture.frames);
+    const delta0 = splitFrames[4];
+    const delta1 = splitFrames[5];
+    const completed = splitFrames.at(-1);
+    if (
+      delta0.type !== "re_explanation.delta" ||
+      delta1.type !== "re_explanation.delta" ||
+      completed?.type !== "run.completed"
+    ) {
+      throw new Error("fixture shape mismatch");
+    }
+    delta0.payload.delta = "설명: $x^2 ";
+    delta1.payload.delta = "- 5x + 6 = 0$";
+    completed.payload.assistantResponse.responsePages[0].resultBlocks[0].body =
+      "설명: $x^2 - 5x + 6 = 0$";
+    completed.payload.assistantResponse.plainText = "설명: $x^2 - 5x + 6 = 0$";
+
+    let streamOptions: RunStreamOptions | null = null;
+    let finishStream: (end: RunStreamEnd) => void = () => {};
+    const customApi: RunSessionOptions["api"] = {
+      streamConversation: (request, options) => {
+        (splitFrames[0] as RunCreatedFrame).payload.noteId =
+          request.noteId ?? "2";
+        streamOptions = options;
+        options.onOpen?.();
+        return new Promise((resolve) => {
+          finishStream = resolve;
+        });
+      },
+      streamRunEvents: () => new Promise(() => {}),
+      cancelRun: () => Promise.reject(new Error("unused")),
+      getConversationMessages: () => Promise.reject(new Error("unused")),
+    };
+
+    const { user, mock } = renderApp(
+      "/app/chat/2",
+      {},
+      { sessionApi: customApi },
+    );
+    try {
+      expect(
+        await screen.findByText("대화를 시작해보세요"),
+      ).toBeInTheDocument();
+
+      await typeQuestion(user, "수식 스트리밍 테스트");
+      await user.click(sendButton());
+      await waitFor(() => expect(streamOptions).not.toBeNull());
+
+      // 여는 $만 온 첫 delta
+      act(() => {
+        for (const frame of splitFrames.slice(0, 5)) {
+          streamOptions?.onFrame(frame as BrowserFrame);
+        }
+      });
+      const liveArticle = await screen.findByRole("article", {
+        name: "재설명 실시간 응답",
+      });
+      expect(liveArticle).toHaveTextContent("설명:");
+      expect(liveArticle.querySelector(".katex")).toBeNull();
+
+      // 닫는 $가 온 두 번째 delta (여전히 run.completed 전)
+      act(() => {
+        streamOptions?.onFrame(splitFrames[5] as BrowserFrame);
+      });
+      await waitFor(() => {
+        expect(liveArticle.querySelector(".katex")).not.toBeNull();
+      });
+      expect(screen.queryByRole("article", { name: "AI 응답" })).toBeNull();
+
+      // terminal 완료 후 canonical 교체
+      await act(async () => {
+        for (const frame of splitFrames.slice(6)) {
+          streamOptions?.onFrame(frame as BrowserFrame);
+        }
+        finishStream({
+          reason: "terminal",
+          terminalFrame: completed as TerminalFrame,
+          lastEventId: `${completed.runId}:${completed.seq}`,
+        });
+      });
+      const canonicalArticle = await screen.findByRole("article", {
+        name: "AI 응답",
+      });
+      expect(canonicalArticle.querySelector(".katex")).not.toBeNull();
+      expect(
+        screen.queryByRole("article", { name: "재설명 실시간 응답" }),
+      ).toBeNull();
+    } finally {
+      mock.reset();
+    }
+  });
+});
+
+describe("사진 첨부·뷰어 포커스 전송", () => {
+  it("이미지 픽셀 로드 전에는 viewerFocus를 생략하고, onLoad 완료 및 파일 전환 뒤에는 반영한다", async () => {
+    const sentBodies: ConversationRunRequest[] = [];
+    const spyingApi: RunSessionOptions["api"] = {
+      ...api,
+      streamConversation: (request, options) => {
+        sentBodies.push(request);
+        return api.streamConversation(request, options);
+      },
+    };
+
+    const withViewer = renderApp(
+      "/app/chat/2?panel=viewer&file=2",
+      {},
+      {
+        sessionApi: spyingApi,
+        extraHandlers: [
+          http.get("*/api/assets/:assetId/download", ({ params }) =>
+            ok({
+              downloadUrl: `http://mock.test/assets/${params.assetId}.png`,
+              fileName: params.assetId === "5" ? "second.png" : "problem.png",
+              mimeType: "image/png",
+            }),
+          ),
+        ],
+      },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+    const img1 = await screen.findByAltText("problem.png");
+
+    // <img>가 onLoad되기 전(픽셀 미준비)에는 viewerFocus를 보내지 않는다.
+    await typeQuestion(withViewer.user, "이미지 로딩 중 질문");
+    await withViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(sentBodies[0].viewerFocus).toBeUndefined();
+    expect(
+      await screen.findByText(COMPLETED_BODY, undefined, { timeout: 3000 }),
+    ).toBeInTheDocument();
+
+    // onLoad 완료 후 1페이지 viewerFocus를 보낸다.
+    fireEvent.load(img1);
+    await waitFor(() => expect(useStorageStore.getState().viewerReady).toBe(true));
+    await typeQuestion(withViewer.user, "이 사진 1번 풀어줘");
+    await withViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(2));
+    expect(sentBodies[1].viewerFocus).toEqual({
+      noteAssetId: "2",
+      page: 1,
+    });
+    await waitFor(() =>
+      expect(screen.getAllByText(COMPLETED_BODY)).toHaveLength(2),
+    );
+
+    // 다른 파일로 전환하면 새 이미지의 onLoad 전까지는 대기하고 onLoad 뒤에 새 ID로 보낸다.
+    await act(async () => {
+      await withViewer.router.navigate("/app/chat/2?panel=viewer&file=5");
+    });
+    const img5 = await screen.findByAltText("second.png");
+    expect(useStorageStore.getState().viewerReady).toBe(false);
+    fireEvent.load(img5);
+    await waitFor(() => expect(useStorageStore.getState().viewerReady).toBe(true));
+    await typeQuestion(withViewer.user, "새 파일 풀어줘");
+    await withViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(3));
+    expect(sentBodies[2].viewerFocus).toEqual({
+      noteAssetId: "5",
+      page: 1,
+    });
+  });
+
+  it("PDF 뷰어는 캔버스 렌더와 페이지 이동(2페이지)을 거쳐 viewerFocus에 반영한다", async () => {
+    const sentBodies: ConversationRunRequest[] = [];
+    const spyingApi: RunSessionOptions["api"] = {
+      ...api,
+      streamConversation: (request, options) => {
+        sentBodies.push(request);
+        return api.streamConversation(request, options);
+      },
+    };
+
+    const withPdf = renderApp(
+      "/app/chat/2?panel=viewer&file=6",
+      {},
+      {
+        sessionApi: spyingApi,
+        extraHandlers: [
+          http.get("*/api/assets/6/download", () =>
+            ok({
+              downloadUrl: "http://mock.test/assets/6.pdf",
+              fileName: "workbook.pdf",
+              mimeType: "application/pdf",
+            }),
+          ),
+        ],
+      },
+    );
+    expect(await screen.findByText("workbook.pdf")).toBeInTheDocument();
+    await waitFor(() => expect(useStorageStore.getState().viewerReady).toBe(true));
+
+    await withPdf.user.click(screen.getByRole("button", { name: "다음 페이지" }));
+    await waitFor(() => expect(useStorageStore.getState().viewerPage).toBe(2));
+    await waitFor(() => expect(useStorageStore.getState().viewerReady).toBe(true));
+
+    await typeQuestion(withPdf.user, "PDF 2페이지 풀어줘");
+    await withPdf.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(sentBodies[0].viewerFocus).toEqual({
+      noteAssetId: "6",
+      page: 2,
+    });
+  });
+
+  it("스토리지 탭 전환과 이미지 로드 실패(onError)·다운로드 실패에서는 viewerFocus를 생략한다", async () => {
+    const sentBodies: ConversationRunRequest[] = [];
+    const spyingApi: RunSessionOptions["api"] = {
+      ...api,
+      streamConversation: (request, options) => {
+        sentBodies.push(request);
+        return api.streamConversation(request, options);
+      },
+    };
+
+    const withViewer = renderApp(
+      "/app/chat/2?panel=viewer&file=2",
+      {},
+      {
+        sessionApi: spyingApi,
+        extraHandlers: [
+          http.get("*/api/assets/:assetId/download", ({ params }) =>
+            ok({
+              downloadUrl: `http://mock.test/assets/${params.assetId}.png`,
+              fileName: "problem.png",
+              mimeType: "image/png",
+            }),
+          ),
+        ],
+      },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+    const img = await screen.findByAltText("problem.png");
+    fireEvent.load(img);
+    await waitFor(() => expect(useStorageStore.getState().viewerReady).toBe(true));
+
+    // Storage 탭으로 전환하면 viewerFocus를 보내지 않는다.
+    await withViewer.user.click(
+      screen.getByRole("button", { name: "Storage" }),
+    );
+    await typeQuestion(withViewer.user, "스토리지 탭 질문");
+    await withViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(sentBodies[0].viewerFocus).toBeUndefined();
+    await waitFor(() =>
+      expect(screen.getAllByText(COMPLETED_BODY)).toHaveLength(1),
+    );
+
+    // 다시 Viewer 탭으로 돌아와 이미지 로드 오류(onError)가 발생하면 viewerFocus를 보내지 않는다.
+    await withViewer.user.click(screen.getByRole("button", { name: "Viewer" }));
+    const brokenImg = await screen.findByAltText("problem.png");
+    fireEvent.error(brokenImg);
+    expect(
+      await screen.findByText(/이미지를 불러오는 중 오류가 발생했습니다/),
+    ).toBeInTheDocument();
+    await typeQuestion(withViewer.user, "깨진 이미지 질문");
+    await withViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(2));
+    expect(sentBodies[1].viewerFocus).toBeUndefined();
+
+    withViewer.view.unmount();
+    useStorageStore.getState().setViewerFileId(null);
+    useStorageStore.getState().setViewerReady(false);
+    server.resetHandlers();
+
+    // 뷰어 파일 다운로드에 실패하면 viewerFocus를 보내지 않는다.
+    const failedViewer = renderApp(
+      "/app/chat/3?panel=viewer&file=2",
+      {},
+      {
+        sessionApi: spyingApi,
+        extraHandlers: [
+          http.get("*/api/assets/2/download", () =>
+            HttpResponse.json(
+              { isSuccess: false, code: "COMMON500", message: "error" },
+              { status: 500 },
+            ),
+          ),
+        ],
+      },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+    expect(
+      await screen.findByText(/파일을 불러오는 데 실패했습니다/),
+    ).toBeInTheDocument();
+
+    await typeQuestion(failedViewer.user, "실패한 뷰어에서 질문");
+    await failedViewer.user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(3));
+    expect(sentBodies[2].viewerFocus).toBeUndefined();
+
+    failedViewer.view.unmount();
+    useStorageStore.getState().setViewerFileId(null);
+    useStorageStore.getState().setViewerReady(false);
+    server.resetHandlers();
+
+    // PDF 문서 로드가 signed URL 포함 오류로 실패하면 viewerFocus를 생략하고 signed URL을 콘솔에 남기지 않는다.
+    const pdfjs = await import("pdfjs-dist");
+    const signedPdfUrl =
+      "https://storage.test/bucket/problem.pdf?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Signature=SECRET_PDF_SIG";
+    const pdfLoadError = Object.assign(
+      new Error(`Unexpected server response (403) while retrieving PDF "${signedPdfUrl}".`),
+      { name: "UnexpectedResponseException", status: 403 },
+    );
+    vi.mocked(pdfjs.getDocument).mockImplementationOnce(() => ({
+      promise: Promise.reject(pdfLoadError),
+      destroy: vi.fn(),
+    }) as unknown as ReturnType<typeof pdfjs.getDocument>);
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    try {
+      const failedPdfViewer = renderApp(
+        "/app/chat/3?panel=viewer&file=2",
+        {},
+        {
+          sessionApi: spyingApi,
+          extraHandlers: [
+            http.get("*/api/notes/3", () =>
+              ok({
+                noteId: 3,
+                title: "노트 3",
+                assets: [
+                  {
+                    assetId: 2,
+                    fileName: "problem.pdf",
+                    fileType: "PDF",
+                    fileSize: 2048,
+                    ocrStatus: "completed",
+                  },
+                ],
+              }),
+            ),
+            http.get("*/api/assets/2/download", () =>
+              ok({
+                assetId: 2,
+                fileName: "problem.pdf",
+                downloadUrl: signedPdfUrl,
+                expiresAt: "2026-11-18T23:59:59Z",
+              }),
+            ),
+          ],
+        },
+      );
+      expect(
+        await screen.findByText(/PDF를 불러오는 중 오류가 발생했습니다/),
+      ).toBeInTheDocument();
+
+      await typeQuestion(failedPdfViewer.user, "깨진 PDF 질문");
+      await failedPdfViewer.user.click(sendButton());
+      await waitFor(() => expect(sentBodies).toHaveLength(4));
+      expect(sentBodies[3].viewerFocus).toBeUndefined();
+
+      const loggedText = consoleErrorSpy.mock.calls
+        .map((call) => JSON.stringify(call))
+        .join("\n");
+      expect(loggedText).not.toContain("SECRET_PDF_SIG");
+      expect(loggedText).not.toContain("X-Goog-Signature");
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("로컬 fallback 비활성 시 단일 사진 첨부도 Note Asset으로 업로드하지 않는다", async () => {
+    vi.stubEnv("VITE_ENABLE_LOCAL_PHOTO_FALLBACK", "false");
+    let uploadUrlCalled = false;
+    const { user, posts } = renderApp(
+      "/app/chat/2",
+      {},
+      {
+        extraHandlers: [
+          http.post("*/api/assets/upload-url", () => {
+            uploadUrlCalled = true;
+            return ok({
+              assetId: 42,
+              uploadUrl: "http://upload.test/42",
+              expiresAt: "2026-11-18T23:59:59Z",
+            });
+          }),
+        ],
+      },
+    );
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+    const fileInput = document.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    if (!fileInput) throw new Error("파일 input 없음");
+    await user.upload(
+      fileInput,
+      new File([new Uint8Array(128)], "photo.png", { type: "image/png" }),
+    );
+    await typeQuestion(user, "fallback off 사진 질문");
+    await user.click(sendButton());
+
+    expect(
+      await screen.findByText(/#파일 멘션·@도구 선택은 아직 질문과 함께/),
+    ).toBeInTheDocument();
+    expect(uploadUrlCalled).toBe(false);
+    expect(posts()).toHaveLength(0);
+  });
+
+  it("단일 사진 첨부 전송 시 현재 turn에만 viewerFocus를 보내고 다음 텍스트 질문엔 남기지 않는다", async () => {
+    vi.stubEnv("VITE_ENABLE_LOCAL_PHOTO_FALLBACK", "true");
+    const sentBodies: ConversationRunRequest[] = [];
+    const uploadSteps: string[] = [];
+    const spyingApi: RunSessionOptions["api"] = {
+      ...api,
+      streamConversation: (request, options) => {
+        sentBodies.push(request);
+        return api.streamConversation(request, options);
+      },
+    };
+
+    const { user, router } = renderApp(
+      "/app/chat/2",
+      {},
+      {
+        sessionApi: spyingApi,
+        extraHandlers: [
+          http.post("*/api/assets/upload-url", () => {
+            uploadSteps.push("upload-url");
+            return ok({
+              assetId: 42,
+              uploadUrl: "http://upload.test/42",
+              expiresAt: "2026-11-18T23:59:59Z",
+            });
+          }),
+          http.put("http://upload.test/42", () => {
+            uploadSteps.push("put");
+            return new HttpResponse(null, { status: 200 });
+          }),
+          http.post("*/api/assets/42/confirm", () => {
+            uploadSteps.push("confirm");
+            return ok({
+              assetId: 42,
+              noteId: 2,
+              source: "upload",
+              fileName: "photo.png",
+              fileSize: 128,
+              mimeType: "image/png",
+              ocrStatus: "completed",
+              createdAt: "2026-11-18T14:00:00Z",
+            });
+          }),
+          http.get("*/api/notes/2", () =>
+            ok({ noteId: 2, title: "노트 2", assets: [] }),
+          ),
+          http.get("*/api/storage", () =>
+            ok({ totalUsed: 0, limit: 1000000, notes: [] }),
+          ),
+        ],
+      },
+    );
+
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+    const fileInput = document.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    if (!fileInput) throw new Error("파일 input 없음");
+    await user.upload(
+      fileInput,
+      new File([new Uint8Array(128)], "photo.png", { type: "image/png" }),
+    );
+    expect(await screen.findByAltText("photo.png")).toBeInTheDocument();
+
+    await typeQuestion(user, "사진 문제 풀어줘");
+    await user.click(sendButton());
+
+    await waitFor(() => expect(sentBodies).toHaveLength(1));
+    expect(uploadSteps).toEqual(["upload-url", "put", "confirm"]);
+    expect(sentBodies[0].viewerFocus).toEqual({
+      noteAssetId: "42",
+      page: 1,
+    });
+    expect(router.state.location.search).not.toContain("file=42");
+    expect(
+      await screen.findByText(COMPLETED_BODY, undefined, { timeout: 3000 }),
+    ).toBeInTheDocument();
+
+    // 다음 일반 텍스트 질문에는 방금 첨부한 사진이 viewerFocus로 따라가지 않는다.
+    await typeQuestion(user, "후속 일반 질문");
+    await user.click(sendButton());
+    await waitFor(() => expect(sentBodies).toHaveLength(2));
+    expect(sentBodies[1].viewerFocus).toBeUndefined();
+  });
+
+  it("confirm 단계에서 검증 거부되면 /api/conversations를 호출하지 않고 입력·첨부를 남기며 민감 헤더를 로깅하지 않는다", async () => {
+    vi.stubEnv("VITE_ENABLE_LOCAL_PHOTO_FALLBACK", "true");
+    let confirmRejected = false;
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const { user, posts } = renderApp(
+        "/app/chat/2",
+        {},
+        {
+          extraHandlers: [
+            http.post("*/api/assets/upload-url", () =>
+              ok({
+                assetId: 42,
+                uploadUrl: "http://upload.test/42?X-Goog-Signature=secret-sig",
+                expiresAt: "2026-11-18T23:59:59Z",
+              }),
+            ),
+            http.put("http://upload.test/42", () =>
+              new HttpResponse(null, { status: 200 }),
+            ),
+            http.post("*/api/assets/42/confirm", () => {
+              confirmRejected = true;
+              return HttpResponse.json(
+                { isSuccess: false, code: "ASSET4001", message: "손상된 이미지" },
+                { status: 400 },
+              );
+            }),
+          ],
+        },
+      );
+
+      expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+      const fileInput = document.querySelector<HTMLInputElement>(
+        'input[type="file"]',
+      );
+      if (!fileInput) throw new Error("파일 input 없음");
+      await user.upload(
+        fileInput,
+        new File([new Uint8Array(128)], "photo.png", { type: "image/png" }),
+      );
+      await typeQuestion(user, "거부될 질문");
+      await user.click(sendButton());
+
+      await waitFor(() => expect(confirmRejected).toBe(true));
+      expect(posts()).toHaveLength(0);
+      expect(getInput().textContent).toBe("거부될 질문");
+      expect(screen.getByAltText("photo.png")).toBeInTheDocument();
+
+      const loggedText = errorSpy.mock.calls
+        .map((args) => JSON.stringify(args))
+        .join(" ");
+      expect(loggedText).not.toContain("test-token");
+      expect(loggedText).not.toContain("X-Goog-Signature");
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
+  it("업로드 완료 전 다른 노트로 이동하면 늦게 끝난 confirm이 run을 보내지 않고, 업로드 중 입력·수식 필드는 잠긴다", async () => {
+    vi.stubEnv("VITE_ENABLE_LOCAL_PHOTO_FALLBACK", "true");
+    let releaseConfirm!: () => void;
+    let resolveStarted!: () => void;
+    const confirmStarted = new Promise<void>((resolve) => {
+      resolveStarted = resolve;
+    });
+    let resolveConfirmHttpDone!: () => void;
+    const confirmHttpDone = new Promise<void>((resolve) => {
+      resolveConfirmHttpDone = resolve;
+    });
+    const onResponseMocked = ({ request }: { request: Request }) => {
+      if (new URL(request.url).pathname.endsWith("/api/assets/42/confirm")) {
+        queueMicrotask(resolveConfirmHttpDone);
+      }
+    };
+    server.events.on("response:mocked", onResponseMocked);
+
+    try {
+      const { user, posts, router, queryClient } = renderApp(
+        "/app/chat/2",
+        {},
+        {
+          extraHandlers: [
+            http.post("*/api/assets/upload-url", () =>
+              ok({
+                assetId: 42,
+                uploadUrl: "http://upload.test/42",
+                expiresAt: "2026-11-18T23:59:59Z",
+              }),
+            ),
+            http.put("http://upload.test/42", () =>
+              new HttpResponse(null, { status: 200 }),
+            ),
+            http.post("*/api/assets/42/confirm", async () => {
+              resolveStarted();
+              await new Promise<void>((resolveRelease) => {
+                releaseConfirm = resolveRelease;
+              });
+              return ok({
+                assetId: 42,
+                noteId: 2,
+                source: "upload",
+                fileName: "photo.png",
+                fileSize: 128,
+                mimeType: "image/png",
+                ocrStatus: "completed",
+                createdAt: "2026-11-18T14:00:00Z",
+              });
+            }),
+            http.get("*/api/notes/:noteId", ({ params }) =>
+              ok({
+                noteId: Number(params.noteId),
+                title: params.noteId === "3" ? "노트 3" : "노트",
+                assets: [],
+              }),
+            ),
+            http.get("*/api/storage", () =>
+              ok({ totalUsed: 0, limit: 1000000, notes: [] }),
+            ),
+          ],
+        },
+      );
+      const refetchSpy = vi.spyOn(queryClient, "refetchQueries");
+      expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+      const fileInput = document.querySelector<HTMLInputElement>(
+        'input[type="file"]',
+      );
+      if (!fileInput) throw new Error("파일 input 없음");
+      await user.upload(
+        fileInput,
+        new File([new Uint8Array(128)], "photo.png", { type: "image/png" }),
+      );
+      const input = getInput();
+      const mathField = document.createElement("math-field");
+      mathField.setAttribute("id", "mf-lock-test");
+      input.appendChild(mathField);
+      await typeQuestion(user, "이동 전 질문");
+      await user.click(sendButton());
+
+      await confirmStarted;
+      expect(document.querySelector('[contenteditable="false"]')).not.toBeNull();
+      expect(fileInput).toBeDisabled();
+      expect(mathField.getAttribute("read-only")).toBe("true");
+
+      await act(async () => {
+        await router.navigate("/app/chat/3");
+      });
+      expect(await screen.findByText("노트 3")).toBeInTheDocument();
+
+      releaseConfirm();
+      await confirmHttpDone;
+      await waitFor(() => {
+        expect(refetchSpy).toHaveBeenCalledTimes(2);
+      });
+      await act(async () => {
+        await Promise.all(refetchSpy.mock.results.map((r) => r.value));
+        await Promise.resolve();
+      });
+      await waitFor(() => {
+        const currentFileInput = document.querySelector<HTMLInputElement>(
+          'input[type="file"]',
+        );
+        expect(currentFileInput).toBeEnabled();
+        expect(document.querySelector('[contenteditable="true"]')).not.toBeNull();
+      });
+      expect(router.state.location.pathname).toBe("/app/chat/3");
+      expect(posts()).toHaveLength(0);
+    } finally {
+      server.events.removeListener("response:mocked", onResponseMocked);
+    }
+  });
+
+  it("파일을 2개 이상 첨부한 질문은 보내지 않고 안내한다", async () => {
+    const { user, posts } = renderApp("/app/chat/2");
+    expect(await screen.findByText("대화를 시작해보세요")).toBeInTheDocument();
+
+    const fileInput = document.querySelector<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    if (!fileInput) throw new Error("파일 input 없음");
+    await user.upload(fileInput, [
+      new File([new Uint8Array(64)], "a.png", { type: "image/png" }),
+      new File([new Uint8Array(64)], "b.png", { type: "image/png" }),
+    ]);
+    await typeQuestion(user, "둘 다 풀어줘");
+    await user.click(sendButton());
+
+    expect(
+      await screen.findByText(/#파일 멘션·@도구 선택은 아직 질문과 함께/),
+    ).toBeInTheDocument();
+    expect(posts()).toHaveLength(0);
   });
 });

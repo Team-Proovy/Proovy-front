@@ -463,7 +463,20 @@ export const createRunSession = ({
   };
 
   const restore = async (page?: ConversationPage) => {
-    if (isConnected(snapshot.connection)) return page ?? null;
+    if (isConnected(snapshot.connection)) {
+      // A completed history response can arrive before the stream terminal.
+      // Accept that canonical response immediately; active/stale pages keep
+      // the current connection and its replay cursor.
+      const restored =
+        page && snapshot.run.runId !== null
+          ? runReducer(snapshot.run, {
+              type: "conversation",
+              page,
+              runId: snapshot.run.runId,
+            })
+          : null;
+      if (!restored || selectIsActive(restored)) return page ?? null;
+    }
     controller?.abort();
     const current = new AbortController();
     controller = current;

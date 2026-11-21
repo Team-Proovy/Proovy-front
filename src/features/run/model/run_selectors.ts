@@ -85,6 +85,10 @@ export const selectPageBoundaries = (state: RunState) => state.pages;
 /** canonical 응답. COMPLETED 전에는 항상 null이다. */
 export const selectResponse = (state: RunState) => state.response;
 
+/** v1.2 (2.14): 재설명 turn의 실시간 누적 본문. COMPLETED 전 또는 중단 시 부분 표시용이며, 완료 후에는 빈 문자열이다. */
+export const selectReExplanationText = (state: RunState) =>
+  state.reExplanationText;
+
 export const selectFailure = (state: RunState) => state.failure;
 
 export const selectCancel = (state: RunState) => state.cancel;

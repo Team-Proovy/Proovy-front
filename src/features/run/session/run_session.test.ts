@@ -10,6 +10,11 @@ import {
   vi,
 } from "vitest";
 import { createRunApiClient } from "@/features/run/api";
+import type { RunStreamOptions } from "@/features/run/api";
+import {
+  getConversationFixture,
+  getStreamFixture,
+} from "@/test/contracts/browser_run_fixtures";
 import {
   reduceFrames,
   selectActivities,
@@ -936,5 +941,62 @@ describe("화면 이탈·Note 전환", () => {
     session.dispose();
     expect(session.getSnapshot().connection).toBe("idle");
     expect(requestsOf(mock, "GET", "/events")).toHaveLength(0);
+  });
+});
+
+describe("완료 이력과 SSE terminal 경합", () => {
+  it("연결 중 완료 이력을 받으면 부분 문장을 canonical로 교체하고 다시 전송할 수 있다", async () => {
+    const stream = getStreamFixture("re-explanation-streaming");
+    const page = structuredClone(
+      getConversationFixture("conversation-verified-then-re-explanation").body
+        .result,
+    );
+    const calls: RunStreamOptions[] = [];
+    const aborted: AbortSignal[] = [];
+    const session = createRunSession({
+      noteId: page.noteId,
+      api: {
+        ...api,
+        streamRunEvents: async (_runId, _cursor, options) => {
+          calls.push(options);
+          if (options.signal) aborted.push(options.signal);
+          options.onOpen?.();
+          return new Promise(() => {});
+        },
+      },
+    });
+    try {
+      await session.restore({
+        ...page,
+        messages: [],
+        activeRun: { runId: stream.runId, status: "RUNNING", lastSeq: 5 },
+      });
+      for (const frame of stream.frames.slice(0, 5)) calls[0].onFrame(frame);
+      expect(session.getSnapshot()).toMatchObject({
+        connection: "streaming",
+        canSend: false,
+      });
+      expect(session.getSnapshot().run.reExplanationText).not.toBe("");
+      const assistant = page.messages
+        .filter((message) => message.role === "assistant")
+        .at(-1)!;
+      assistant.runId = stream.runId;
+      await session.restore(page);
+      expect(session.getSnapshot()).toMatchObject({
+        connection: "idle",
+        canSend: true,
+        run: {
+          status: "COMPLETED",
+          reExplanationText: "",
+          reExplanationDeltas: [],
+          nextDeltaIndex: 0,
+        },
+      });
+      expect(session.getSnapshot().run.response).not.toBeNull();
+      expect(aborted[0].aborted).toBe(true);
+      expect(calls).toHaveLength(1);
+    } finally {
+      session.dispose();
+    }
   });
 });

@@ -248,6 +248,8 @@ VITE_NAVER_CLIENT_ID=local-placeholder
 VITE_NAVER_REDIRECT_URI=http://localhost:5173/oauth/naver/callback
 # Node가 localhost를 ::1로 먼저 풀어도 연결되게 IPv4로 적는다
 DEV_API_PROXY_TARGET=http://127.0.0.1:8080
+# (선택) 로컬 photo stack에서 2.18 단일 사진 Note Asset fallback을 켤 때만 true
+VITE_ENABLE_LOCAL_PHOTO_FALLBACK=true
 ```
 
 ```bash
@@ -265,6 +267,7 @@ pnpm run dev    # 브라우저는 http://localhost:5173
 - 로컬 개발용이라 모든 서비스가 `secrets` volume 전체를 읽는다(Brain 컨테이너도 DB 관리자 password·JWT secret을 읽을 수 있다). DB role 경계는 Server·Brain 연결 role 사이의 경계이고, 컨테이너 사이의 secret 격리는 하지 않는다.
 - 포트·요청 한도·run 마감은 `.env`로 바꾼다(`SERVER_PORT`, `RATE_LIMIT_MAX_REQUESTS`, `RUN_REQUEST_TIMEOUT`). `SERVER_PORT`를 바꾸면 `DEV_API_PROXY_TARGET`도 같이 바꾼다.
 - `RUN_REQUEST_TIMEOUT`은 Server가 run 접수 때 고정하는 request deadline(`proovy.run.snapshot.request-timeout`)이다. 기본은 offline 3m(Server 기본과 같다)·live 10m이고, 허용 범위는 0 초과 30m 이하다. Server는 마감 뒤 stream 여유 3m를 더 기다린다. Brain run 상한이 15m라 그보다 길게 해도 효과가 없다. 로컬 stack 전용 값이며, 운영 값은 바꾸지 않고 별도 Server 이슈에서 다룬다.
+- 사진 판독의 Server 신규 snapshot과 Brain artifact 버전은 stack의 `PAGE_UNDERSTANDING_VERSION`(기본 `page-understanding-v7`)·`IMAGE_NORMALIZATION_VERSION`(기본 `image-normalization-v1`)을 공유한다. offline Server snapshot은 page 버전에 `-offline`을 붙이고 live에서는 붙이지 않는다. Brain checkout의 버전과 함께 변경하며, 기존 snapshot은 수정하지 않는다. 이 두 설정은 Brain `.env.local`보다 우선한다.
 - 상태·로그: `docker compose ps -a`, `docker compose logs server brain`.
 - offline Brain은 한 질문을 1~3초 안에 끝낸다. 진행 중 화면·정지·진행 중 새로고침을 보려면 질문 전에 `docker compose pause brain`으로 Brain을 멈춰 두고, 확인한 뒤 `docker compose unpause brain`으로 이어 간다(Server는 run을 받아 두고 Brain 응답을 기다린다). **30초 안에 푼다** — Server는 Brain stream이 30초 동안 조용하면(`proovy.brain.stream-idle-timeout`) run을 `provider_error`로 실패 처리한다.
 - dev proxy ↔ Server 구간이 FIN·RST 없이 끊기면(half-open) Vite dev proxy는 브라우저 응답을 열어 둔다. 브라우저는 마지막 수신(frame·heartbeat) 뒤 heartbeat(15초) 3회분인 45초 동안 아무것도 받지 못하면 연결을 끊고 마지막 frame id로 재접속한다(#315 watchdog). 그동안 화면은 "진행 중"이다. Server가 연결을 닫거나 reset하면 dev proxy가 브라우저 응답을 끝내므로 곧바로 재접속한다.
@@ -544,9 +547,24 @@ DEV_API_PROXY_TARGET=http://localhost:8080
 DEV_API_PROXY_REWRITE_ORIGIN=1
 DEV_ALLOWED_HOSTS=node.example.ts.net
 DEV_LOGIN_ISSUE_CMD='["/usr/local/bin/docker","compose","-p","proovy-stack","-f","scripts/local-stack/compose.yaml","exec","-T","postgres","issue-token","--json"]'
+# 현재 auth 모듈이 페이지 로드 시 요구하는 공개 설정. 개발 버튼은 OAuth를 호출하지 않는다.
+VITE_KAKAO_CLIENT_ID=local-placeholder
+VITE_KAKAO_REDIRECT_URI=https://node.example.ts.net/oauth/kakao/callback
+VITE_NAVER_CLIENT_ID=local-placeholder
+VITE_NAVER_REDIRECT_URI=https://node.example.ts.net/oauth/naver/callback
 ```
 
 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`로 실행한 Front를 Tailscale Serve로 연결한 뒤 `/dev-login`을 연다. **로그인**은 처음 한 번 계정을 만들고 이후 같은 사용자 ID로 재발급한다. **새 사용자**는 새 계정을 만든다. 개발 사용자는 local DB의 PRO 플랜·개발 크레딧 100으로 준비된다. 사용자 ID만 `.local-stack-user.local`에 저장되고 token은 브라우저에 직접 전달된다. 이 파일은 Git 제외 대상이며 `DEV_LOGIN_USER_FILE`로 위치를 바꿀 수 있다.
+
+#### 로컬 사진 저장 E2E (opt-in, `compose.photo.yaml`)
+
+기본 `compose.yaml`은 텍스트 전용 경로(`GCS_ENDPOINT=http://127.0.0.1:9`)를 유지하며 운영 GCS/ADC 설정을 건드리지 않는다. 업로드·썸네일·Brain `read_url`까지 로컬에서 확인하려면 `compose.photo.yaml`과 Vite storage proxy를 명시적으로 함께 켠다.
+
+1. `scripts/local-stack/.env`에 `GCS_PUBLIC_HOST=node.example.ts.net`(Front가 서빙되는 HTTPS DNS host)을 추가한다. live 모델과 함께 쓸 때도 기존 `BRAIN_ENV_FILE`(`.env.local`) 하나만 그대로 사용한다.
+2. `docker compose -f compose.yaml -f compose.photo.yaml up -d --build --wait`로 `fake-gcs-server`(`127.0.0.1:4443`)와 `photo-storage-init`(로컬 RSA PKCS#8 서명 키를 compose `secrets` volume `/secrets/gcs-local-signer.pem`에 생성하고 개발 버킷을 초기화)을 올린다.
+3. Front `.env.local`에 `DEV_STORAGE_PROXY_TARGET=http://127.0.0.1:4443`와 `DEV_STORAGE_BUCKET=proovy-local-assets`를 함께 두고 `pnpm run dev --host 127.0.0.1 --port 5173 --strictPort`를 실행한다. Vite proxy는 `Host`·메서드·경로·쿼리·`Content-Type`을 바꾸지 않고(`changeOrigin: false`) `fake-gcs-server`로 전달한다.
+
+> **검증 한계 주의**: `fake-gcs-server`는 V4 Signed URL의 RSA 서명·만료 시각·권한을 실제로 검증하지 않는다. 이 구성은 로컬 SDK 서명 조립·Vite proxy 전달·업로드/썸네일/Brain `read_url` 바이트 경로 확인용이며 운영 GCS 서명 수용 근거로 사용하지 않는다.
 
 `/dev-login`과 `/__local-stack/login`은 `DEV_LOGIN_ISSUE_CMD`가 있는 Vite 개발 서버에서만 제공된다. 로그인 POST는 설정한 Host와 같은 Origin만 허용한다. production build에는 로그인 화면과 token 발급 경로를 포함하지 않는다. 개발 proxy의 Origin 변경도 `DEV_API_PROXY_REWRITE_ORIGIN=1`일 때만 적용한다.
 

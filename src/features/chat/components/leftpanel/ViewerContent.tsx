@@ -5,17 +5,15 @@ import { LoadingSpinner } from "@/shared/components/loading-spinner";
 import { useViewerSync } from "@/features/chat/hooks/useViewerSync";
 import { useFileUpload } from "@/shared/hooks/useFileUpload";
 import { useAssetUpload } from "@/features/assets/hooks/useAssetUpload";
-import { useAuthStore } from "@/features/auth/store/auth_store";
+import {
+  resolveUploadErrorMessage,
+  summarizeUploadError,
+} from "@/features/assets/utils/uploadErrorMessage";
 import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import { FILE_ACCEPT } from "@/features/assets/utils/fileValidation";
-import {
-  PLAN_DETAILS,
-  type PlanType,
-} from "@/features/subscription/types/plan_types";
 
 import { ViewerUploadCard } from "@/pages/components/ViewerUploadCard";
 import { FileRenderer } from "./FileRenderer";
-import { parseSize } from "@/shared/utils/file-utils";
 import { showErrorToast } from "@/shared/lib/toast";
 
 interface ViewerContentProps {
@@ -34,7 +32,6 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const [, setSearchParams] = useSearchParams();
-  const { user } = useAuthStore();
   const { setViewerFileId } = useStorageStore();
   const { uploadAsset } = useAssetUpload();
 
@@ -47,17 +44,6 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
 
     if (!isValidType) {
       showErrorToast("PDF 또는 이미지 파일만 업로드 가능합니다.");
-      return;
-    }
-
-    const userPlan = (user?.plan as PlanType) || "Free";
-    const maxUploadSizeStr = PLAN_DETAILS[userPlan]?.maxUploadSize || "10MB";
-    const maxSizeBytes = parseSize(maxUploadSizeStr);
-
-    if (file.size > maxSizeBytes) {
-      showErrorToast(
-        `파일 크기가 너무 큽니다. ${userPlan} 플랜의 최대 업로드 크기는 ${maxUploadSizeStr}입니다.`,
-      );
       return;
     }
 
@@ -82,8 +68,10 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         // 업로드 성공 후 로딩 상태 해제는 activeFileId 변경에 의한 useEffect나 완료 시점에서 처리
       }
     } catch (err) {
-      console.error("파일 업로드 실패:", err);
-      setError("파일 업로드에 실패했습니다.");
+      console.error("파일 업로드 실패:", summarizeUploadError(err));
+      const msg = resolveUploadErrorMessage(err);
+      showErrorToast(msg);
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +137,7 @@ export const ViewerContent = ({ noteId, fileId }: ViewerContentProps) => {
         }
       } catch (err) {
         if (cancelled) return;
-        console.error("파일 URL 가져오기 실패:", err);
+        console.error("파일 URL 가져오기 실패:", summarizeUploadError(err));
         setError("파일을 불러오는 데 실패했습니다. 다시 시도해주세요.");
       } finally {
         if (!cancelled) {

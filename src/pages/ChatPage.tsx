@@ -18,12 +18,14 @@
  * - 제목·자산 목록은 노트 상세(`GET /api/notes/{noteId}`)에서 읽는다.
  */
 
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { LeftPanel, Divider, ChatHeader } from "@/features/chat/components";
 import { ConversationPanel } from "@/features/chat/components/rightpanel/ConversationPanel";
 import { useChatPanel } from "@/features/chat/hooks/useChatPanel";
 import { useNoteConversation } from "@/features/chat/run/useNoteConversation";
 import { useNoteDetail } from "@/features/notes/hooks/useNotes";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
 
 /**
  * noteId가 변경될 때 전체 컴포넌트 리마운트를 강제하는 래퍼.
@@ -48,6 +50,13 @@ const ChatPageContent = ({ noteId }: { noteId: string }) => {
   const conversation = useNoteConversation(noteId);
   const { data: noteDetail } = useNoteDetail(noteId, NOTE_DETAIL_PARAMS);
   const noteTitle = noteDetail?.title ?? `노트 ${noteId}`;
+
+  useEffect(
+    () => () => {
+      useStorageStore.getState().setViewerFileId(null);
+    },
+    [noteId],
+  );
 
   const {
     activeTab,

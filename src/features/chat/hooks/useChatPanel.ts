@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useStorageStore } from "@/features/storage/store/useStorageStore";
 import { useResizable } from "./useResizable";
 import type { PanelTab } from "../components";
 
@@ -46,17 +47,23 @@ export const useChatPanel = ({
   });
 
   const handleTabChange = useCallback(
-    (tab: PanelTab) => {
+    (tab: PanelTab, nextFileId?: number) => {
       setFallbackTab(tab);
       setViewerOpenOverride(true);
       setSearchParams(
         (sp) => {
+          const next = new URLSearchParams(sp);
           if (tab === "viewer") {
-            sp.delete("panel");
+            if (nextFileId !== undefined) {
+              next.set("panel", "viewer");
+              next.set("file", nextFileId.toString());
+            } else {
+              next.delete("panel");
+            }
           } else {
-            sp.set("panel", tab);
+            next.set("panel", tab);
           }
-          return sp;
+          return next;
         },
         { replace: true },
       );
@@ -66,6 +73,7 @@ export const useChatPanel = ({
 
   const handleToggleViewer = useCallback(() => {
     if (isViewerOpen) {
+      useStorageStore.getState().setViewerFileId(null);
       setSearchParams(
         (sp) => {
           sp.delete("panel");
