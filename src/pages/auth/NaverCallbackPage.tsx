@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loginWithNaver } from "@/features/auth/api/auth_api";
+import {
+  getNaverOAuthConfig,
+  loginWithNaver,
+} from "@/features/auth/api/auth_api";
 import { AxiosError } from "axios";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
@@ -11,8 +14,10 @@ export const NaverCallbackPage = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const initialized = useRef(false);
-
   const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    if (!getNaverOAuthConfig()) {
+      return "네이버 로그인이 현재 환경에서 비활성화되어 있습니다.";
+    }
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     if (!code || !state) return "네이버 로그인 정보가 올바르지 않습니다.";
@@ -26,6 +31,7 @@ export const NaverCallbackPage = () => {
   });
 
   useEffect(() => {
+    if (!getNaverOAuthConfig()) return;
     if (initialized.current) return;
 
     const code = searchParams.get("code");

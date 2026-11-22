@@ -14,24 +14,52 @@ export const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
 export const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
 export const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_CLIENT_ID;
 export const NAVER_REDIRECT_URI = import.meta.env.VITE_NAVER_REDIRECT_URI;
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
-if (!KAKAO_CLIENT_ID || !KAKAO_REDIRECT_URI) {
-  throw new Error(
-    "필수 환경변수가 누락되었습니다: VITE_KAKAO_CLIENT_ID, VITE_KAKAO_REDIRECT_URI",
-  );
+export interface OAuthProviderConfig {
+  clientId: string;
+  redirectUri: string;
 }
+
+const readOAuthConfig = (
+  clientId?: string,
+  redirectUri?: string,
+): OAuthProviderConfig | null => {
+  const trimmedClientId = clientId?.trim();
+  const trimmedRedirectUri = redirectUri?.trim();
+  if (!trimmedClientId || !trimmedRedirectUri) {
+    return null;
+  }
+  return {
+    clientId: trimmedClientId,
+    redirectUri: trimmedRedirectUri,
+  };
+};
+
+export const getKakaoOAuthConfig = (): OAuthProviderConfig | null =>
+  readOAuthConfig(
+    import.meta.env.VITE_KAKAO_CLIENT_ID,
+    import.meta.env.VITE_KAKAO_REDIRECT_URI,
+  );
+
+export const getNaverOAuthConfig = (): OAuthProviderConfig | null =>
+  readOAuthConfig(
+    import.meta.env.VITE_NAVER_CLIENT_ID,
+    import.meta.env.VITE_NAVER_REDIRECT_URI,
+  );
 
 const AUTH_BASE = "/api/auth";
 
 export const loginWithKakao = async (
   code: string,
 ): Promise<ApiResponse<LoginResult>> => {
+  const redirectUri =
+    getKakaoOAuthConfig()?.redirectUri ?? KAKAO_REDIRECT_URI;
   const response = await axios.post<ApiResponse<LoginResult>>(
     `${BASE_URL}${AUTH_BASE}/login/kakao`,
     {
       authorizationCode: code,
-      redirectUri: KAKAO_REDIRECT_URI,
+      redirectUri,
     },
   );
   const result = response.data.result;
@@ -49,12 +77,14 @@ export const loginWithNaver = async (
   code: string,
   state: string,
 ): Promise<ApiResponse<LoginResult>> => {
+  const redirectUri =
+    getNaverOAuthConfig()?.redirectUri ?? NAVER_REDIRECT_URI;
   const response = await axios.post<ApiResponse<LoginResult>>(
     `${BASE_URL}${AUTH_BASE}/login/naver`,
     {
       code,
       state,
-      redirectUri: NAVER_REDIRECT_URI,
+      redirectUri,
     },
   );
 

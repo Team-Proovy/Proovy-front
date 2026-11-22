@@ -1,20 +1,28 @@
 name: Deploy Frontend (Firebase Hosting)
 
-# 자동 배포 중지: 운영 Server가 새 실행 API로 바뀌는 S14 전까지 Front만 먼저 나가면 질문 기능이 깨진다.
-# 그 전까지 dev push는 배포하지 않고, 배포는 Actions에서 dev를 골라 수동으로만 실행한다.
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
-  group: frontend-deploy-${{ github.ref }}
+  group: frontend-deploy-${{ inputs.environment }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    if: ${{ github.ref == 'refs/heads/dev' }}
+    if: ${{ inputs.environment == 'staging' || github.ref == 'refs/heads/dev' }}
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
 
     steps:
@@ -45,24 +53,102 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER || format('projects/{0}/locations/global/workloadIdentityPools/github-actions-pool/providers/github-oidc-provider', vars.GCP_PROJECT_NUMBER) }}
+          service_account: ${{ vars.DEPLOY_SA_EMAIL || format('proovy-deploy-sa@{0}.iam.gserviceaccount.com', vars.GCP_PROJECT_ID) }}
+
+      - name: Resolve Server Cloud Run URL
+        id: server_url
+        env:
+          CONFIGURED_SERVER_URL: ${{ vars.VITE_API_BASE_URL || vars.SERVER_URL || secrets.VITE_API_BASE_URL }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || secrets.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION || 'asia-northeast3' }}
+        run: |
+          if [ -z "${GCP_PROJECT_ID// }" ]; then
+            echo "::error::GCP_PROJECT_ID is required"
+            exit 1
+          fi
+          RESOLVED_URL="$(gcloud run services describe proovy-server-api --region="$GCP_REGION" --project="$GCP_PROJECT_ID" --format='value(status.url)')"
+          RESOLVED_URL="${RESOLVED_URL%/}"
+          if [ -z "$RESOLVED_URL" ]; then
+            echo "::error::Failed to resolve proovy-server-api status.url for project $GCP_PROJECT_ID"
+            exit 1
+          fi
+          if [[ ! "$RESOLVED_URL" =~ ^https://[^/]+\.run\.app$ ]]; then
+            echo "::error::Resolved Server URL must be an HTTPS run.app origin, got: $RESOLVED_URL"
+            exit 1
+          fi
+          if [ -n "${CONFIGURED_SERVER_URL// }" ]; then
+            NORMALIZED_OVERRIDE="${CONFIGURED_SERVER_URL%/}"
+            if [ "$NORMALIZED_OVERRIDE" != "$RESOLVED_URL" ]; then
+              echo "::error::Configured Server URL ($NORMALIZED_OVERRIDE) does not match selected project Cloud Run URL ($RESOLVED_URL)"
+              exit 1
+            fi
+          fi
+          echo "SERVER_URL=$RESOLVED_URL" >> "$GITHUB_ENV"
+
+      - name: Resolve OAuth Environment Variables
+        env:
+          TARGET_ENV: ${{ inputs.environment }}
+          RAW_KAKAO_CLIENT_ID: ${{ vars.VITE_KAKAO_CLIENT_ID || secrets.VITE_KAKAO_CLIENT_ID }}
+          RAW_KAKAO_REDIRECT_URI: ${{ vars.VITE_KAKAO_REDIRECT_URI || secrets.VITE_KAKAO_REDIRECT_URI }}
+          RAW_NAVER_CLIENT_ID: ${{ vars.VITE_NAVER_CLIENT_ID || secrets.VITE_NAVER_CLIENT_ID }}
+          RAW_NAVER_REDIRECT_URI: ${{ vars.VITE_NAVER_REDIRECT_URI || secrets.VITE_NAVER_REDIRECT_URI }}
+        run: |
+          if [ -z "${RAW_KAKAO_CLIENT_ID// }" ] || [ -z "${RAW_KAKAO_REDIRECT_URI// }" ]; then
+            echo "::error::VITE_KAKAO_CLIENT_ID and VITE_KAKAO_REDIRECT_URI are required for $TARGET_ENV"
+            exit 1
+          fi
+          {
+            echo "RESOLVED_KAKAO_CLIENT_ID=$RAW_KAKAO_CLIENT_ID"
+            echo "RESOLVED_KAKAO_REDIRECT_URI=$RAW_KAKAO_REDIRECT_URI"
+          } >> "$GITHUB_ENV"
+          if [ "$TARGET_ENV" = "staging" ]; then
+            {
+              echo "RESOLVED_NAVER_CLIENT_ID="
+              echo "RESOLVED_NAVER_REDIRECT_URI="
+            } >> "$GITHUB_ENV"
+          else
+            if [ -z "${RAW_NAVER_CLIENT_ID// }" ] || [ -z "${RAW_NAVER_REDIRECT_URI// }" ]; then
+              echo "::error::VITE_NAVER_CLIENT_ID and VITE_NAVER_REDIRECT_URI are required for $TARGET_ENV"
+              exit 1
+            fi
+            {
+              echo "RESOLVED_NAVER_CLIENT_ID=$RAW_NAVER_CLIENT_ID"
+              echo "RESOLVED_NAVER_REDIRECT_URI=$RAW_NAVER_REDIRECT_URI"
+            } >> "$GITHUB_ENV"
+          fi
+
       - name: Build
         run: pnpm run build
         env:
           NODE_ENV: production
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_AGENT_BASE_URL: ${{ secrets.VITE_AGENT_BASE_URL }}
-
-          VITE_APP_BASE_URL: ${{ secrets.VITE_APP_BASE_URL }}
-          VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
-          VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
-          VITE_NAVER_CLIENT_ID: ${{ secrets.VITE_NAVER_CLIENT_ID }}
-          VITE_NAVER_REDIRECT_URI: ${{ secrets.VITE_NAVER_REDIRECT_URI }}
-          VITE_TLDRAW_LICENSE_KEY: ${{ secrets.VITE_TLDRAW_LICENSE_KEY }}
+          VITE_API_BASE_URL: ${{ env.SERVER_URL }}
+          VITE_APP_BASE_URL: ${{ vars.VITE_APP_BASE_URL || secrets.VITE_APP_BASE_URL }}
+          VITE_KAKAO_CLIENT_ID: ${{ env.RESOLVED_KAKAO_CLIENT_ID }}
+          VITE_KAKAO_REDIRECT_URI: ${{ env.RESOLVED_KAKAO_REDIRECT_URI }}
+          VITE_NAVER_CLIENT_ID: ${{ env.RESOLVED_NAVER_CLIENT_ID }}
+          VITE_NAVER_REDIRECT_URI: ${{ env.RESOLVED_NAVER_REDIRECT_URI }}
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ${{ secrets.GCP_PROJECT_ID }}
+        env:
+          FIREBASE_HOSTING_SITE: ${{ vars.FIREBASE_HOSTING_SITE || secrets.FIREBASE_HOSTING_SITE }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID || secrets.GCP_PROJECT_ID }}
+        run: |
+          if [ -z "${GCP_PROJECT_ID// }" ]; then
+            echo "::error::GCP_PROJECT_ID is required"
+            exit 1
+          fi
+          if [ -z "${FIREBASE_HOSTING_SITE// }" ]; then
+            echo "::error::FIREBASE_HOSTING_SITE is required"
+            exit 1
+          fi
+          node -e '
+            const fs = require("fs");
+            const cfg = JSON.parse(fs.readFileSync("firebase.json", "utf8"));
+            cfg.hosting.site = process.env.FIREBASE_HOSTING_SITE.trim();
+            fs.writeFileSync("firebase.json", JSON.stringify(cfg, null, 2));
+          '
+          pnpm dlx firebase-tools@13 deploy --only hosting --project "${GCP_PROJECT_ID}" --non-interactive

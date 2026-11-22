@@ -6,18 +6,21 @@ import {
 import { SocialLoginButton } from "@/features/auth/components/SocialLoginButton";
 import loginBgImage from "@/shared/assets/images/img_login_bg.png";
 import {
-  KAKAO_CLIENT_ID,
-  KAKAO_REDIRECT_URI,
-  NAVER_CLIENT_ID,
-  NAVER_REDIRECT_URI,
+  getKakaoOAuthConfig,
+  getNaverOAuthConfig,
 } from "@/features/auth/api/auth_api";
 
 export const LoginPage = () => {
+  const kakaoConfig = getKakaoOAuthConfig();
+  const naverConfig = getNaverOAuthConfig();
+
   const handleSocialLogin = (provider: string) => {
     if (provider === "kakao") {
-      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+      if (!kakaoConfig) return;
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${kakaoConfig.clientId}&redirect_uri=${kakaoConfig.redirectUri}&response_type=code`;
       window.location.href = kakaoAuthUrl;
     } else if (provider === "naver") {
+      if (!naverConfig) return;
       // 네이버는 state 값이 필수 (CSRF 방지용 - 암호학적으로 안전한 난수 생성)
       const state =
         crypto.randomUUID?.() ??
@@ -26,7 +29,7 @@ export const LoginPage = () => {
           .join("");
       // state를 sessionStorage에 저장하여 콜백에서 검증
       sessionStorage.setItem("naver_oauth_state", state);
-      const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${NAVER_REDIRECT_URI}&state=${state}`;
+      const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverConfig.clientId}&redirect_uri=${naverConfig.redirectUri}&state=${state}`;
       window.location.href = naverAuthUrl;
     }
   };
@@ -67,18 +70,27 @@ export const LoginPage = () => {
 
               {/* 하단 버튼 영역 */}
               <div className="flex w-full flex-col gap-[16px]">
-                <SocialLoginButton
-                  provider="kakao"
-                  icon={<KakaoIcon className="h-[18px] w-[20px]" />}
-                  label="카카오 로그인"
-                  onClick={() => handleSocialLogin("kakao")}
-                />
-                <SocialLoginButton
-                  provider="naver"
-                  icon={<NaverIcon className="h-[16px] w-[16px]" />}
-                  label="네이버 로그인"
-                  onClick={() => handleSocialLogin("naver")}
-                />
+                {kakaoConfig && (
+                  <SocialLoginButton
+                    provider="kakao"
+                    icon={<KakaoIcon className="h-[18px] w-[20px]" />}
+                    label="카카오 로그인"
+                    onClick={() => handleSocialLogin("kakao")}
+                  />
+                )}
+                {naverConfig && (
+                  <SocialLoginButton
+                    provider="naver"
+                    icon={<NaverIcon className="h-[16px] w-[16px]" />}
+                    label="네이버 로그인"
+                    onClick={() => handleSocialLogin("naver")}
+                  />
+                )}
+                {!kakaoConfig && !naverConfig && (
+                  <p className="text-center font-['Pretendard'] text-[14px] leading-[20px] text-[#666666]">
+                    설정된 소셜 로그인 제공자가 없습니다.
+                  </p>
+                )}
               </div>
             </div>
           </div>

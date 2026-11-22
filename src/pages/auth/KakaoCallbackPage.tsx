@@ -1,5 +1,8 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { loginWithKakao } from "@/features/auth/api/auth_api";
+import {
+  getKakaoOAuthConfig,
+  loginWithKakao,
+} from "@/features/auth/api/auth_api";
 import { useAuthStore } from "@/features/auth/store/auth_store";
 import { tokenUtils } from "@/shared/api/client";
 import { AxiosError } from "axios";
@@ -11,13 +14,18 @@ export const KakaoCallbackPage = () => {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const initialized = useRef(false);
-
   const [errorMsg, setErrorMsg] = useState<string | null>(() => {
+    if (!getKakaoOAuthConfig()) {
+      return "카카오 로그인이 현재 환경에서 비활성화되어 있습니다.";
+    }
     const code = searchParams.get("code");
     return code ? null : "로그인 코드가 없습니다.";
   });
 
   useEffect(() => {
+    if (!getKakaoOAuthConfig()) {
+      return;
+    }
     if (initialized.current) {
       return;
     }
