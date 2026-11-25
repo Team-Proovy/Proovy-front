@@ -1,16 +1,8 @@
 {
   "hosting": {
-    "site": "proovy",
     "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
-      {
-        "source": "/api/**",
-        "run": {
-          "serviceId": "proovy-backend",
-          "region": "asia-northeast3"
-        }
-      },
       {
         "source": "**",
         "destination": "/index.html"
